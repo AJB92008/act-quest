@@ -1,0 +1,753 @@
+// Renders a fully customizable SVG monster from an avatar config. Pure
+// shapes only, no external image assets. Everything (body shape, size,
+// limbs, eyes, mouth, skin texture, and 50 shop accessories across 7
+// categories) is drawn procedurally so the whole game stays a handful of
+// files.
+
+let instanceCounter = 0;
+function uid() {
+  instanceCounter += 1;
+  return `mon${instanceCounter}`;
+}
+
+// Lighten/darken a #rrggbb color by `percent` (-100..100).
+function shade(hex, percent) {
+  const num = parseInt(hex.replace("#", ""), 16);
+  let r = (num >> 16) + Math.round((percent / 100) * 255);
+  let g = ((num >> 8) & 0x00ff) + Math.round((percent / 100) * 255);
+  let b = (num & 0x0000ff) + Math.round((percent / 100) * 255);
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Body shapes                                                             */
+/* ---------------------------------------------------------------------- */
+
+const ROUND_PATH =
+  "M50 6 C 14 6 6 34 8 58 C 10 84 26 100 50 100 C 74 100 90 84 92 58 C 94 34 86 6 50 6 Z";
+const AMORPHOUS_PATH =
+  "M50 10 C 20 8 5 30 12 50 C 4 65 15 90 40 98 C 60 105 85 92 90 70 C 98 55 92 30 75 15 C 65 5 60 12 50 10 Z";
+
+// Humanoid torso: rounded shoulders tapering to a slightly narrower waist,
+// sitting below the head with a small neck gap, rather than a plain rectangle.
+const HUMANOID_TORSO_PATH =
+  "M28 42 Q20 42 20 52 L24 90 Q25 100 35 100 L65 100 Q75 100 76 90 L80 52 Q80 42 72 42 Z";
+// Reptile snout: a rounded jaw bump around the mouth, like a lizard's
+// lower jaw, with two small nostril dots.
+const REPTILE_SNOUT_PATH = "M36 58 Q50 84 64 58 Q62 74 50 79 Q38 74 36 58 Z";
+// Amorphous blob with a couple of drips hanging off the bottom, like ooze.
+const AMORPHOUS_DRIPS = `
+  <path d="M32 92 Q30 104 36 108 Q42 104 38 92 Z" />
+  <path d="M60 96 Q60 108 66 111 Q71 106 66 96 Z" />
+`;
+
+function bodyShapeMarkup(shape, color, colorDark) {
+  switch (shape) {
+    case "humanoid":
+      return {
+        fill: `
+          <path d="${HUMANOID_TORSO_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          <circle cx="50" cy="23" r="16" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+        `,
+        clip: `<path d="${HUMANOID_TORSO_PATH}"/><circle cx="50" cy="23" r="16"/>`,
+        faceCenter: [50, 23],
+        faceScale: 0.6,
+      };
+    case "insect":
+      return {
+        fill: `
+          <path d="M50 58 C 72 60 80 82 64 100 Q50 109 36 100 C 20 82 28 60 50 58 Z" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          <ellipse cx="50" cy="57" rx="6" ry="5" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          <ellipse cx="50" cy="40" rx="17" ry="14" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          <circle cx="50" cy="16" r="13" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+        `,
+        clip: `<path d="M50 58 C 72 60 80 82 64 100 Q50 109 36 100 C 20 82 28 60 50 58 Z"/><ellipse cx="50" cy="40" rx="17" ry="14"/><circle cx="50" cy="16" r="13"/>`,
+        faceCenter: [50, 16],
+        faceScale: 0.52,
+      };
+    case "reptile":
+      return {
+        fill: `
+          <ellipse cx="50" cy="52" rx="44" ry="30" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${[26, 38, 50, 62, 74]
+            .map((x) => spike(x, 24 - Math.abs(x - 50) * 0.25, 4, 10, color, colorDark))
+            .join("")}
+          <path d="${REPTILE_SNOUT_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          <circle cx="44" cy="60" r="1.3" fill="${colorDark}"/>
+          <circle cx="56" cy="60" r="1.3" fill="${colorDark}"/>
+        `,
+        clip: `<ellipse cx="50" cy="52" rx="44" ry="30"/><path d="${REPTILE_SNOUT_PATH}"/>`,
+        faceCenter: [50, 46],
+        faceScale: 0.75,
+      };
+    case "amorphous":
+      return {
+        fill: `
+          <path d="${AMORPHOUS_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          <g fill="${color}" stroke="${colorDark}" stroke-width="3">${AMORPHOUS_DRIPS}</g>
+          <ellipse cx="35" cy="28" rx="12" ry="8" fill="#fff" opacity="0.2"/>
+        `,
+        clip: `<path d="${AMORPHOUS_PATH}"/>`,
+        faceCenter: [50, 52],
+        faceScale: 1,
+      };
+    case "round":
+    default:
+      return {
+        fill: `<path d="${ROUND_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        clip: `<path d="${ROUND_PATH}"/>`,
+        faceCenter: [50, 46],
+        faceScale: 1,
+      };
+  }
+}
+
+export const BODY_SHAPES = [
+  { id: "round", name: "Round" },
+  { id: "humanoid", name: "Humanoid" },
+  { id: "insect", name: "Insect" },
+  { id: "reptile", name: "Reptile" },
+  { id: "amorphous", name: "Amorphous" },
+];
+
+export const SIZES = [
+  { id: "tiny", name: "Tiny", scale: 0.72 },
+  { id: "medium", name: "Medium", scale: 1 },
+  { id: "giant", name: "Giant", scale: 1.18 },
+];
+
+export const LIMB_OPTIONS = [
+  { id: 0, name: "None" },
+  { id: 2, name: "Arms" },
+  { id: 4, name: "Arms + Legs" },
+  { id: 6, name: "Six Legs" },
+];
+
+/* ---------------------------------------------------------------------- */
+/* Eyes & mouth                                                            */
+/* ---------------------------------------------------------------------- */
+
+const EYE_VARIANTS = [
+  () => `
+    <circle cx="38" cy="46" r="11" fill="#fff"/>
+    <circle cx="62" cy="46" r="11" fill="#fff"/>
+    <circle cx="40" cy="47" r="5" fill="#2b2b3a"/>
+    <circle cx="64" cy="47" r="5" fill="#2b2b3a"/>
+    <circle cx="42" cy="45" r="1.6" fill="#fff"/>
+    <circle cx="66" cy="45" r="1.6" fill="#fff"/>
+  `,
+  () => `
+    <path d="M28 46 Q38 38 48 46" stroke="#2b2b3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M52 46 Q62 38 72 46" stroke="#2b2b3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  `,
+  () => `
+    <circle cx="36" cy="45" r="13" fill="#fff"/>
+    <circle cx="66" cy="48" r="7" fill="#fff"/>
+    <circle cx="38" cy="46" r="6" fill="#2b2b3a"/>
+    <circle cx="67" cy="49" r="3" fill="#2b2b3a"/>
+  `,
+  () => `
+    <circle cx="50" cy="46" r="15" fill="#fff"/>
+    <circle cx="50" cy="47" r="7" fill="#2b2b3a"/>
+    <circle cx="53" cy="44" r="2" fill="#fff"/>
+  `,
+  () => `
+    ${[
+      [30, 40],
+      [44, 36],
+      [56, 36],
+      [70, 40],
+      [50, 50],
+    ]
+      .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.5" fill="#fff"/><circle cx="${x}" cy="${y}" r="2" fill="#2b2b3a"/>`)
+      .join("")}
+  `,
+  (id) => `
+    <defs>
+      <filter id="${id}-glow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="4" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <circle cx="38" cy="46" r="8" fill="#7fffea" filter="url(#${id}-glow)"/>
+    <circle cx="62" cy="46" r="8" fill="#7fffea" filter="url(#${id}-glow)"/>
+    <circle cx="38" cy="46" r="3" fill="#0d3b36"/>
+    <circle cx="62" cy="46" r="3" fill="#0d3b36"/>
+  `,
+  () => `
+    <path d="M30 47 L46 47" stroke="#2b2b3a" stroke-width="4" stroke-linecap="round"/>
+    <path d="M54 47 L70 47" stroke="#2b2b3a" stroke-width="4" stroke-linecap="round"/>
+  `,
+];
+export const EYE_NAMES = ["Round", "Sleepy", "Goofy", "Cyclops", "Many Eyes", "Glowing", "Hidden"];
+
+const MOUTH_VARIANTS = [
+  () => `
+    <path d="M35 66 Q50 82 65 66 Q50 74 35 66 Z" fill="#3a2020"/>
+    <path d="M44 68 L44 74 L48 68 Z" fill="#fff"/>
+    <path d="M56 68 L56 74 L52 68 Z" fill="#fff"/>
+  `,
+  () => `<path d="M36 65 Q50 78 64 65" stroke="#3a2020" stroke-width="4" fill="none" stroke-linecap="round"/>`,
+  () => `<ellipse cx="50" cy="70" rx="9" ry="11" fill="#3a2020"/>`,
+  () => `
+    <path d="M38 66 Q50 72 62 66" stroke="#3a2020" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M42 67 L39 78 L45 69 Z" fill="#fff" stroke="#c9c4d8" stroke-width="1"/>
+    <path d="M58 67 L61 78 L55 69 Z" fill="#fff" stroke="#c9c4d8" stroke-width="1"/>
+  `,
+  () => `
+    <path d="M38 63 Q50 60 62 63 Q56 78 50 80 Q44 78 38 63 Z" fill="#e8a23a" stroke="#c9821e" stroke-width="2"/>
+    <path d="M40 65 L60 65" stroke="#c9821e" stroke-width="1.5"/>
+  `,
+  () => `
+    <ellipse cx="50" cy="70" rx="5" ry="6" fill="#3a2020"/>
+    <path d="M30 68 Q40 60 46 70" stroke="#2b2b3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M70 68 Q60 60 54 70" stroke="#2b2b3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  `,
+];
+export const MOUTH_NAMES = ["Toothy Grin", "Smile", "Surprised", "Fangs", "Beak", "Mandibles"];
+
+/* ---------------------------------------------------------------------- */
+/* Skin textures                                                           */
+/* ---------------------------------------------------------------------- */
+
+
+function skinOverlay(skin, clipD, colorDark) {
+  if (!skin || skin === "none" || skin === "smooth") return "";
+  const clipId = `${uid()}-skinclip`;
+  let inner = "";
+  if (skin === "scales") {
+    const rows = [22, 36, 50, 64, 78, 92];
+    inner = rows
+      .map((y, ri) =>
+        [16, 30, 44, 58, 72, 86]
+          .map((x) => (x + (ri % 2 === 0 ? 0 : 7)))
+          .map((x) => `<path d="M${x - 6} ${y} Q${x} ${y + 8} ${x + 6} ${y}" fill="none" stroke="${colorDark}" stroke-width="1.5" opacity="0.55"/>`)
+          .join("")
+      )
+      .join("");
+  } else if (skin === "fur") {
+    const tufts = [];
+    for (let y = 18; y < 98; y += 9) {
+      for (let x = 14; x < 90; x += 9) {
+        tufts.push(`<path d="M${x} ${y} l-2 6" stroke="${colorDark}" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>`);
+      }
+    }
+    inner = tufts.join("");
+  } else if (skin === "bark") {
+    inner = [18, 32, 46, 60, 74, 88]
+      .map((x) => `<path d="M${x} 8 Q${x + 4} 40 ${x - 3} 70 Q${x + 3} 90 ${x} 105" fill="none" stroke="${colorDark}" stroke-width="1.5" opacity="0.5"/>`)
+      .join("");
+  } else if (skin === "crystal") {
+    inner = `
+      <path d="M30 25 L45 15 L50 35 L32 42 Z" fill="#fff" opacity="0.25"/>
+      <path d="M55 20 L75 30 L68 48 L52 40 Z" fill="#fff" opacity="0.2"/>
+      <path d="M25 60 L42 55 L45 78 L28 82 Z" fill="#fff" opacity="0.22"/>
+      <path d="M58 62 L80 58 L82 82 L62 85 Z" fill="#fff" opacity="0.18"/>
+      <path d="M30 25 L45 15 L50 35 L32 42 Z M55 20 L75 30 L68 48 L52 40 Z M25 60 L42 55 L45 78 L28 82 Z M58 62 L80 58 L82 82 L62 85 Z"
+        fill="none" stroke="#fff" stroke-width="1" opacity="0.6"/>
+    `;
+  } else if (skin === "metal") {
+    inner = `
+      <path d="M15 30 L85 15" stroke="#fff" stroke-width="4" opacity="0.18"/>
+      <path d="M12 60 L88 50" stroke="#fff" stroke-width="4" opacity="0.15"/>
+      <path d="M18 90 L82 82" stroke="#fff" stroke-width="4" opacity="0.15"/>
+      ${[24, 42, 60, 78].map((x) => `<circle cx="${x}" cy="30" r="2" fill="${colorDark}" opacity="0.6"/>`).join("")}
+      ${[24, 42, 60, 78].map((x) => `<circle cx="${x}" cy="88" r="2" fill="${colorDark}" opacity="0.6"/>`).join("")}
+    `;
+  } else if (skin === "slime") {
+    inner = `
+      <ellipse cx="50" cy="50" rx="45" ry="48" fill="#fff" opacity="0.12"/>
+      <path d="M30 90 Q30 100 26 106" stroke="${colorDark}" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+      <path d="M52 95 Q52 104 48 110" stroke="${colorDark}" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+      <path d="M70 88 Q72 98 68 104" stroke="${colorDark}" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/>
+      <ellipse cx="38" cy="30" rx="8" ry="5" fill="#fff" opacity="0.3"/>
+    `;
+  }
+  return `<defs><clipPath id="${clipId}">${clipD}</clipPath></defs><g clip-path="url(#${clipId})">${inner}</g>`;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Limbs                                                                    */
+/* ---------------------------------------------------------------------- */
+
+// Every limb function below draws a "root dot" at the point where the limb
+// meets the body, sized so it's guaranteed to sit inside that shape's
+// silhouette (verified against each shape's actual geometry, not just
+// eyeballed); this bridges any small gap between the limb graphic and the
+// body edge so limbs never look like they're floating disconnected.
+function rootDot(x, y, color, colorDark, r = 6) {
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" stroke="${colorDark}" stroke-width="2"/>`;
+}
+
+// Round: simple stubby nubs, anchored just inside the blob's edge.
+function roundLimbs(count, color, colorDark) {
+  const stub = (cx, cy, rx, ry) =>
+    rootDot(cx, cy, color, colorDark, 4) +
+    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`;
+  let out = "";
+  if (count >= 2) out += stub(20, 64, 6, 9) + stub(80, 64, 6, 9);
+  if (count >= 4) out += stub(32, 100, 7, 9) + stub(68, 100, 7, 9);
+  if (count >= 6) out += stub(17, 84, 7, 8) + stub(83, 84, 7, 8);
+  return out;
+}
+
+// Humanoid: elongated capsule arms/legs with a small hand/foot. Start points
+// are checked against the torso path to sit clearly inside it.
+function humanoidLimbs(count, color, colorDark) {
+  const limb = (x1, y1, x2, y2, w) => `
+    ${rootDot(x1, y1, color, colorDark, w / 2 + 2)}
+    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${colorDark}" stroke-width="${w + 3}" stroke-linecap="round"/>
+    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>
+    <circle cx="${x2}" cy="${y2}" r="${w / 2 + 1}" fill="${color}" stroke="${colorDark}" stroke-width="2"/>
+  `;
+  let out = "";
+  if (count >= 2) out += limb(27, 50, 9, 80, 9) + limb(73, 50, 91, 80, 9);
+  if (count >= 4) out += limb(38, 90, 34, 114, 9) + limb(62, 90, 66, 114, 9);
+  if (count >= 6) out += limb(28, 68, 12, 88, 8) + limb(72, 68, 88, 88, 8);
+  return out;
+}
+
+// Insect: thin jointed legs (two segments + a foot point) rooted on the
+// thorax (front/middle pairs) and the narrow abdomen waist (back pair),
+// matching real insect anatomy; legs attach at the thorax, not the belly.
+function insectLegs(count, colorDark) {
+  const leg = (x1, y1, xm, ym, x2, y2) => `
+    ${rootDot(x1, y1, colorDark, colorDark, 2.5)}
+    <path d="M${x1} ${y1} L${xm} ${ym} L${x2} ${y2}" stroke="${colorDark}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${x2}" cy="${y2}" r="2" fill="${colorDark}"/>
+  `;
+  let out = "";
+  if (count >= 2) out += leg(36, 36, 18, 48, 9, 64) + leg(64, 36, 82, 48, 91, 64);
+  if (count >= 4) out += leg(37, 47, 17, 62, 10, 82) + leg(63, 47, 83, 62, 90, 82);
+  if (count >= 6) out += leg(46, 59, 26, 74, 18, 96) + leg(54, 59, 74, 74, 82, 96);
+  return out;
+}
+
+// Reptile: short stubby clawed legs along the underside of the wide oval
+// body, positioned so each leg's center sits inside the body ellipse.
+function reptileLegs(count, color, colorDark) {
+  const leg = (cx, cy) => `
+    ${rootDot(cx, cy - 4, color, colorDark, 5)}
+    <ellipse cx="${cx}" cy="${cy}" rx="7" ry="9" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+    <path d="M${cx - 5} ${cy + 6} L${cx - 5} ${cy + 10} M${cx} ${cy + 7} L${cx} ${cy + 11} M${cx + 5} ${cy + 6} L${cx + 5} ${cy + 10}"
+      stroke="${colorDark}" stroke-width="1.5" stroke-linecap="round"/>
+  `;
+  let out = "";
+  if (count >= 2) out += leg(26, 74) + leg(74, 74);
+  if (count >= 4) out += leg(12, 62) + leg(88, 62);
+  if (count >= 6) out += leg(20, 70) + leg(80, 70);
+  return out;
+}
+
+// Amorphous: tapered pseudopod blobs instead of discrete jointed limbs,
+// rooted well inside the wobbly blob outline.
+function amorphousLimbs(count, color, colorDark) {
+  const pod = (cx, cy, rot) => `
+    ${rootDot(cx, cy, color, colorDark, 6)}
+    <path transform="rotate(${rot} ${cx} ${cy})" d="M${cx - 7} ${cy} Q${cx - 7} ${cy + 14} ${cx} ${cy + 18} Q${cx + 7} ${cy + 14} ${cx + 7} ${cy} Z"
+      fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+  `;
+  let out = "";
+  if (count >= 2) out += pod(22, 58, -24) + pod(78, 58, 24);
+  if (count >= 4) out += pod(32, 90, -10) + pod(68, 90, 10);
+  if (count >= 6) out += pod(14, 76, -34) + pod(86, 76, 34);
+  return out;
+}
+
+function limbsMarkup(count, shape, color, colorDark) {
+  if (!count) return "";
+  switch (shape) {
+    case "humanoid":
+      return humanoidLimbs(count, color, colorDark);
+    case "insect":
+      return insectLegs(count, colorDark);
+    case "reptile":
+      return reptileLegs(count, color, colorDark);
+    case "amorphous":
+      return amorphousLimbs(count, color, colorDark);
+    case "round":
+    default:
+      return roundLimbs(count, color, colorDark);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Accessory renderers                                                     */
+/* Each receives an anchor { x, y, scale } and returns SVG markup.         */
+/* ---------------------------------------------------------------------- */
+
+function spike(x, y, w, h, fill, stroke, rotate = 0) {
+  return `<path transform="rotate(${rotate} ${x} ${y})" d="M${x - w} ${y} L${x} ${y - h} L${x + w} ${y} Z" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+}
+
+const HEAD_RENDERERS = {
+  partyHat: (a) => `
+    <path d="M${a.x - 20} ${a.y} L${a.x} ${a.y - 34} L${a.x + 20} ${a.y} Z" fill="#ffb238" stroke="#cc8a1c" stroke-width="2"/>
+    <circle cx="${a.x}" cy="${a.y - 34}" r="5" fill="#fff6de"/>
+    <rect x="${a.x - 24}" y="${a.y - 4}" width="48" height="8" rx="4" fill="#ffb238" stroke="#cc8a1c" stroke-width="2"/>
+  `,
+  wizardHat: (a) => `
+    <path d="M${a.x - 22} ${a.y} Q${a.x - 6} ${a.y - 20} ${a.x + 4} ${a.y - 46} Q${a.x + 10} ${a.y - 20} ${a.x + 22} ${a.y} Z" fill="#5a48c9" stroke="#392f8a" stroke-width="2"/>
+    <ellipse cx="${a.x}" cy="${a.y}" rx="26" ry="7" fill="#5a48c9" stroke="#392f8a" stroke-width="2"/>
+    <path d="M${a.x - 4} ${a.y - 32} l3 3 l3 -3 l-3 -3 Z" fill="#ffd25f"/>
+  `,
+  topHat: (a) => `
+    <rect x="${a.x - 16}" y="${a.y - 34}" width="32" height="30" fill="#2b2b3a"/>
+    <ellipse cx="${a.x}" cy="${a.y - 34}" rx="16" ry="5" fill="#3a3a4d"/>
+    <ellipse cx="${a.x}" cy="${a.y - 4}" rx="24" ry="7" fill="#2b2b3a"/>
+    <rect x="${a.x - 16}" y="${a.y - 12}" width="32" height="6" fill="#c94747"/>
+  `,
+  crown: (a) => `
+    <path d="M${a.x - 20} ${a.y} L${a.x - 20} ${a.y - 16} L${a.x - 10} ${a.y - 4} L${a.x} ${a.y - 20} L${a.x + 10} ${a.y - 4} L${a.x + 20} ${a.y - 16} L${a.x + 20} ${a.y} Z" fill="#ffd25f" stroke="#c9971c" stroke-width="2"/>
+    <circle cx="${a.x}" cy="${a.y - 10}" r="3" fill="#c94747"/>
+  `,
+  halo: (a) => `<ellipse cx="${a.x}" cy="${a.y - 18}" rx="16" ry="5" fill="none" stroke="#ffe9a8" stroke-width="4"/>`,
+  singleHorn: (a) => spike(a.x, a.y, 8, 24, "#f6e4c1", "#c9a468"),
+  twinHorns: (a) => spike(a.x - 14, a.y + 4, 6, 18, "#f6e4c1", "#c9a468", -12) + spike(a.x + 14, a.y + 4, 6, 18, "#f6e4c1", "#c9a468", 12),
+  ramHorns: (a) => `
+    <path d="M${a.x - 14} ${a.y} Q${a.x - 34} ${a.y - 6} ${a.x - 24} ${a.y - 24} Q${a.x - 18} ${a.y - 10} ${a.x - 14} ${a.y}" fill="#c9a468" stroke="#8f6f38" stroke-width="2"/>
+    <path d="M${a.x + 14} ${a.y} Q${a.x + 34} ${a.y - 6} ${a.x + 24} ${a.y - 24} Q${a.x + 18} ${a.y - 10} ${a.x + 14} ${a.y}" fill="#c9a468" stroke="#8f6f38" stroke-width="2"/>
+  `,
+  antennae: (a) => `
+    <path d="M${a.x - 8} ${a.y} L${a.x - 16} ${a.y - 26}" stroke="#2b2b3a" stroke-width="2.5" fill="none"/>
+    <path d="M${a.x + 8} ${a.y} L${a.x + 16} ${a.y - 26}" stroke="#2b2b3a" stroke-width="2.5" fill="none"/>
+    <circle cx="${a.x - 16}" cy="${a.y - 26}" r="4" fill="#ff9f6e"/>
+    <circle cx="${a.x + 16}" cy="${a.y - 26}" r="4" fill="#ff9f6e"/>
+  `,
+  bandana: (a) => `
+    <path d="M${a.x - 22} ${a.y - 6} Q${a.x} ${a.y - 20} ${a.x + 22} ${a.y - 6} L${a.x + 20} ${a.y + 6} Q${a.x} ${a.y - 6} ${a.x - 20} ${a.y + 6} Z" fill="#e1594f" stroke="#a13a30" stroke-width="2"/>
+    <path d="M${a.x + 18} ${a.y - 2} l10 10 l-4 4 Z" fill="#e1594f" stroke="#a13a30" stroke-width="1.5"/>
+  `,
+  pirateHat: (a) => `
+    <path d="M${a.x - 26} ${a.y - 2} Q${a.x} ${a.y - 26} ${a.x + 26} ${a.y - 2} Q${a.x} ${a.y - 12} ${a.x - 26} ${a.y - 2} Z" fill="#2b2b3a" stroke="#111" stroke-width="2"/>
+    <circle cx="${a.x}" cy="${a.y - 12}" r="3" fill="#e8e8e8"/>
+  `,
+  flowerCrown: (a) =>
+    [-22, -11, 0, 11, 22]
+      .map(
+        (dx, i) =>
+          `<circle cx="${a.x + dx}" cy="${a.y - 6 - Math.abs(dx) * 0.15}" r="5" fill="${["#ff9fc7", "#ffd25f", "#ff9f6e", "#a8e6a1", "#9fc7ff"][i]}" stroke="#fff" stroke-width="1"/>`
+      )
+      .join(""),
+};
+
+const FACE_RENDERERS = {
+  studyGlasses: (a) => `
+    <circle cx="${a.x - 12}" cy="${a.y}" r="13" fill="none" stroke="#2b2b3a" stroke-width="3.5"/>
+    <circle cx="${a.x + 14}" cy="${a.y}" r="13" fill="none" stroke="#2b2b3a" stroke-width="3.5"/>
+    <path d="M${a.x + 1} ${a.y} L${a.x + 1} ${a.y}" stroke="#2b2b3a" stroke-width="3.5"/>
+    <path d="M${a.x - 25} ${a.y} L${a.x - 32} ${a.y - 3}" stroke="#2b2b3a" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M${a.x + 27} ${a.y} L${a.x + 34} ${a.y - 3}" stroke="#2b2b3a" stroke-width="3.5" stroke-linecap="round"/>
+  `,
+  sunglasses: (a) => `
+    <path d="M${a.x - 26} ${a.y - 6} Q${a.x - 12} ${a.y - 14} ${a.x} ${a.y - 6} Q${a.x + 12} ${a.y - 14} ${a.x + 26} ${a.y - 6}
+      L${a.x + 26} ${a.y + 6} Q${a.x + 12} ${a.y + 12} ${a.x} ${a.y + 6} Q${a.x - 12} ${a.y + 12} ${a.x - 26} ${a.y + 6} Z"
+      fill="#1a1a24" stroke="#000" stroke-width="1.5"/>
+  `,
+  monocle: (a) => `
+    <circle cx="${a.x + 13}" cy="${a.y}" r="12" fill="none" stroke="#c9971c" stroke-width="3"/>
+    <path d="M${a.x + 13} ${a.y + 12} Q${a.x + 18} ${a.y + 26} ${a.x + 14} ${a.y + 38}" stroke="#c9971c" stroke-width="1.5" fill="none"/>
+  `,
+  eyepatch: (a) => `
+    <ellipse cx="${a.x - 12}" cy="${a.y}" rx="13" ry="14" fill="#2b2b3a"/>
+    <path d="M${a.x - 24} ${a.y - 10} L${a.x + 30} ${a.y - 18}" stroke="#2b2b3a" stroke-width="3"/>
+  `,
+  faceMask: (a) => `<rect x="${a.x - 20}" y="${a.y + 12}" width="40" height="20" rx="10" fill="#3a6ea5" stroke="#274a70" stroke-width="2"/>`,
+  thirdEyeGem: (a) => `
+    <path d="M${a.x} ${a.y - 30} L${a.x + 6} ${a.y - 24} L${a.x} ${a.y - 18} L${a.x - 6} ${a.y - 24} Z" fill="#a266ff" stroke="#6b3fc9" stroke-width="1.5"/>
+  `,
+};
+
+// Back accessories render behind the body, so their shapes are sized to
+// clearly extend past every body silhouette's edges (max half-width ~47)
+// rather than being fully hidden behind it.
+const BACK_RENDERERS = {
+  batWings: (a) => `
+    <path d="M${a.x - 6} ${a.y} Q${a.x - 60} ${a.y - 26} ${a.x - 56} ${a.y + 8} Q${a.x - 42} ${a.y - 4} ${a.x - 28} ${a.y + 14} Q${a.x - 18} ${a.y + 2} ${a.x - 6} ${a.y + 10} Z" fill="#4a3f6b" stroke="#2e2748" stroke-width="2"/>
+    <path d="M${a.x + 6} ${a.y} Q${a.x + 60} ${a.y - 26} ${a.x + 56} ${a.y + 8} Q${a.x + 42} ${a.y - 4} ${a.x + 28} ${a.y + 14} Q${a.x + 18} ${a.y + 2} ${a.x + 6} ${a.y + 10} Z" fill="#4a3f6b" stroke="#2e2748" stroke-width="2"/>
+  `,
+  angelWings: (a) => `
+    <path d="M${a.x - 6} ${a.y} Q${a.x - 64} ${a.y - 22} ${a.x - 50} ${a.y + 26} Q${a.x - 36} ${a.y + 4} ${a.x - 6} ${a.y + 10} Z" fill="#fdfaf0" stroke="#e2ddc9" stroke-width="2"/>
+    <path d="M${a.x + 6} ${a.y} Q${a.x + 64} ${a.y - 22} ${a.x + 50} ${a.y + 26} Q${a.x + 36} ${a.y + 4} ${a.x + 6} ${a.y + 10} Z" fill="#fdfaf0" stroke="#e2ddc9" stroke-width="2"/>
+  `,
+  dragonflyWings: (a) => `
+    <ellipse cx="${a.x - 42}" cy="${a.y - 12}" rx="24" ry="10" fill="#bfe8ff" opacity="0.8" stroke="#6bb8de" stroke-width="1.5" transform="rotate(-16 ${a.x - 42} ${a.y - 12})"/>
+    <ellipse cx="${a.x + 42}" cy="${a.y - 12}" rx="24" ry="10" fill="#bfe8ff" opacity="0.8" stroke="#6bb8de" stroke-width="1.5" transform="rotate(16 ${a.x + 42} ${a.y - 12})"/>
+    <ellipse cx="${a.x - 38}" cy="${a.y + 14}" rx="19" ry="8" fill="#bfe8ff" opacity="0.65" stroke="#6bb8de" stroke-width="1.5" transform="rotate(-8 ${a.x - 38} ${a.y + 14})"/>
+    <ellipse cx="${a.x + 38}" cy="${a.y + 14}" rx="19" ry="8" fill="#bfe8ff" opacity="0.65" stroke="#6bb8de" stroke-width="1.5" transform="rotate(8 ${a.x + 38} ${a.y + 14})"/>
+  `,
+  butterflyWings: (a) => `
+    <path d="M${a.x - 6} ${a.y - 4} Q${a.x - 58} ${a.y - 38} ${a.x - 54} ${a.y - 2} Q${a.x - 56} ${a.y + 28} ${a.x - 12} ${a.y + 12} Z" fill="#ff9fc7" stroke="#d4679a" stroke-width="2"/>
+    <path d="M${a.x + 6} ${a.y - 4} Q${a.x + 58} ${a.y - 38} ${a.x + 54} ${a.y - 2} Q${a.x + 56} ${a.y + 28} ${a.x + 12} ${a.y + 12} Z" fill="#ff9fc7" stroke="#d4679a" stroke-width="2"/>
+    <circle cx="${a.x - 36}" cy="${a.y - 12}" r="4" fill="#fff" opacity="0.6"/>
+    <circle cx="${a.x + 36}" cy="${a.y - 12}" r="4" fill="#fff" opacity="0.6"/>
+  `,
+  cape: (a) => `<path d="M${a.x - 32} ${a.y - 14} Q${a.x} ${a.y - 4} ${a.x + 32} ${a.y - 14} L${a.x + 40} ${a.y + 56} Q${a.x} ${a.y + 42} ${a.x - 40} ${a.y + 56} Z" fill="#c94747" stroke="#8f2f2f" stroke-width="2"/>`,
+  backpack: (a) => `<rect x="${a.x - 55}" y="${a.y - 10}" width="110" height="34" rx="8" fill="#7a5a3a" stroke="#513a24" stroke-width="2"/>`,
+  shell: (a) => `<path d="M${a.x - 54} ${a.y + 20} Q${a.x - 58} ${a.y - 22} ${a.x} ${a.y - 30} Q${a.x + 58} ${a.y - 22} ${a.x + 54} ${a.y + 20} Z" fill="#7a9c5c" stroke="#4e6b38" stroke-width="2"/>`,
+  finBack: (a) => `<path d="M${a.x - 5} ${a.y - 15} Q${a.x} ${a.y - 70} ${a.x + 7} ${a.y - 13} Q${a.x + 3} ${a.y - 2} ${a.x - 5} ${a.y - 15} Z" fill="#4fb3c9" stroke="#2f7d8f" stroke-width="2"/>`,
+};
+
+const TAIL_RENDERERS = {
+  spikeTail: (a) => spike(a.x, a.y, 8, 26, "#f6e4c1", "#c9a468", 100),
+  fluffyTail: (a) => `<circle cx="${a.x}" cy="${a.y}" r="14" fill="#fff" stroke="#ddd" stroke-width="2"/>`,
+  lizardTail: (a, colorDark, bodyColor) =>
+    `<path d="M${a.x - 6} ${a.y - 10} Q${a.x + 24} ${a.y} ${a.x + 8} ${a.y + 22}" stroke-width="14" stroke="${bodyColor}" fill="none" stroke-linecap="round"/>
+     <path d="M${a.x - 6} ${a.y - 10} Q${a.x + 24} ${a.y} ${a.x + 8} ${a.y + 22}" stroke-width="14" stroke="${colorDark}" fill="none" stroke-linecap="round" opacity="0.35"/>`,
+  fishTail: (a) => `<path d="M${a.x} ${a.y - 14} L${a.x + 22} ${a.y} L${a.x} ${a.y + 14} Q${a.x + 8} ${a.y} ${a.x} ${a.y - 14} Z" fill="#4fb3c9" stroke="#2f7d8f" stroke-width="2"/>`,
+  stingerTail: (a) => `
+    <path d="M${a.x} ${a.y} Q${a.x + 20} ${a.y - 10} ${a.x + 16} ${a.y - 30}" stroke="#c9a468" stroke-width="6" fill="none" stroke-linecap="round"/>
+    ${spike(a.x + 16, a.y - 30, 5, 12, "#8f6f38", "#5c4620", 60)}
+  `,
+};
+
+const OUTFIT_RENDERERS = {
+  bowTie: (a) => `
+    <path d="M${a.x} ${a.y} L${a.x - 16} ${a.y - 10} L${a.x - 16} ${a.y + 10} Z" fill="#ff6f5e" stroke="#d9483a" stroke-width="2"/>
+    <path d="M${a.x} ${a.y} L${a.x + 16} ${a.y - 10} L${a.x + 16} ${a.y + 10} Z" fill="#ff6f5e" stroke="#d9483a" stroke-width="2"/>
+    <circle cx="${a.x}" cy="${a.y}" r="5" fill="#d9483a"/>
+  `,
+  scarf: (a) => `
+    <rect x="${a.x - 22}" y="${a.y - 8}" width="44" height="14" rx="6" fill="#e1594f" stroke="#a13a30" stroke-width="2"/>
+    <rect x="${a.x + 8}" y="${a.y + 4}" width="10" height="24" rx="3" fill="#e1594f" stroke="#a13a30" stroke-width="2"/>
+  `,
+  hoodie: (a) => `<path d="M${a.x - 26} ${a.y - 6} Q${a.x} ${a.y - 18} ${a.x + 26} ${a.y - 6} L${a.x + 24} ${a.y + 30} L${a.x - 24} ${a.y + 30} Z" fill="#6a8caf" stroke="#43607d" stroke-width="2" opacity="0.92"/>`,
+  knightArmor: (a) => `
+    <path d="M${a.x - 26} ${a.y - 6} L${a.x} ${a.y - 16} L${a.x + 26} ${a.y - 6} L${a.x + 22} ${a.y + 34} L${a.x - 22} ${a.y + 34} Z" fill="#9aa5b1" stroke="#5f6771" stroke-width="2"/>
+    <path d="M${a.x} ${a.y - 10} L${a.x} ${a.y + 30}" stroke="#5f6771" stroke-width="2"/>
+  `,
+  wizardRobe: (a) => `<path d="M${a.x - 26} ${a.y - 4} Q${a.x} ${a.y - 14} ${a.x + 26} ${a.y - 4} L${a.x + 30} ${a.y + 40} L${a.x - 30} ${a.y + 40} Z" fill="#5a48c9" stroke="#392f8a" stroke-width="2"/>`,
+  overalls: (a) => `
+    <path d="M${a.x - 22} ${a.y} L${a.x + 22} ${a.y} L${a.x + 20} ${a.y + 32} L${a.x - 20} ${a.y + 32} Z" fill="#3a6ea5" stroke="#274a70" stroke-width="2"/>
+    <rect x="${a.x - 16}" y="${a.y - 14}" width="8" height="16" fill="#3a6ea5" stroke="#274a70" stroke-width="1.5"/>
+    <rect x="${a.x + 8}" y="${a.y - 14}" width="8" height="16" fill="#3a6ea5" stroke="#274a70" stroke-width="1.5"/>
+  `,
+  tutu: (a) => `<path d="M${a.x - 30} ${a.y + 20} Q${a.x} ${a.y - 14} ${a.x + 30} ${a.y + 20} Q${a.x} ${a.y + 10} ${a.x - 30} ${a.y + 20} Z" fill="#ff9fc7" stroke="#d4679a" stroke-width="2" opacity="0.9"/>`,
+  superheroSuit: (a) => `
+    <path d="M${a.x - 22} ${a.y - 4} L${a.x + 22} ${a.y - 4} L${a.x + 18} ${a.y + 30} L${a.x - 18} ${a.y + 30} Z" fill="#3a6ea5" stroke="#274a70" stroke-width="2"/>
+    <path d="M${a.x} ${a.y - 4} L${a.x - 6} ${a.y + 10} L${a.x} ${a.y + 6} L${a.x + 6} ${a.y + 10} Z" fill="#ffd25f"/>
+  `,
+};
+
+const SCAR_RENDERERS = {
+  eyeScar: (a) => `<path d="M${a.x - 30} ${a.y - 20} L${a.x - 14} ${a.y + 14}" stroke="#a13a30" stroke-width="2.5" opacity="0.75" stroke-linecap="round"/>`,
+  stitches: (a) => `
+    <path d="M${a.x - 18} ${a.y + 20} L${a.x + 8} ${a.y + 16}" stroke="#7a3a3a" stroke-width="1.5" opacity="0.8"/>
+    ${[0, 5, 10, 15, 20].map((i) => `<path d="M${a.x - 18 + i} ${a.y + 20 - i * 0.16} l3 -6" stroke="#7a3a3a" stroke-width="1.5" opacity="0.8"/>`).join("")}
+  `,
+  burnMarks: (a) => `
+    <circle cx="${a.x - 20}" cy="${a.y + 10}" r="5" fill="#2b2b3a" opacity="0.3"/>
+    <circle cx="${a.x - 10}" cy="${a.y + 20}" r="3.5" fill="#2b2b3a" opacity="0.3"/>
+    <circle cx="${a.x - 26}" cy="${a.y + 22}" r="3" fill="#2b2b3a" opacity="0.3"/>
+  `,
+  clawMarks: (a) =>
+    [0, 6, 12]
+      .map((dx) => `<path d="M${a.x + 10 + dx} ${a.y - 16} L${a.x + 4 + dx} ${a.y + 18}" stroke="#a13a30" stroke-width="2" opacity="0.6" stroke-linecap="round"/>`)
+      .join(""),
+  bandageWrap: (a) => `
+    <path d="M${a.x - 22} ${a.y + 6} L${a.x + 6} ${a.y - 4}" stroke="#f0e6d2" stroke-width="9" opacity="0.9" stroke-linecap="round"/>
+    <path d="M${a.x - 22} ${a.y + 6} L${a.x + 6} ${a.y - 4}" stroke="#c9bd9e" stroke-width="9" opacity="0.5" stroke-dasharray="2 4" stroke-linecap="round"/>
+  `,
+};
+
+const RENDERERS_BY_CATEGORY = {
+  head: HEAD_RENDERERS,
+  face: FACE_RENDERERS,
+  back: BACK_RENDERERS,
+  tail: TAIL_RENDERERS,
+  outfit: OUTFIT_RENDERERS,
+  scar: SCAR_RENDERERS,
+};
+
+/* ---------------------------------------------------------------------- */
+/* Shop catalog: 50 purchasable items across 7 categories                  */
+/* ---------------------------------------------------------------------- */
+
+export const SHOP_ITEMS = [
+  // Head (12)
+  { id: "partyHat", name: "Party Hat", category: "head", cost: 40 },
+  { id: "wizardHat", name: "Wizard Hat", category: "head", cost: 55 },
+  { id: "topHat", name: "Top Hat", category: "head", cost: 50 },
+  { id: "crown", name: "Royal Crown", category: "head", cost: 70 },
+  { id: "halo", name: "Halo", category: "head", cost: 65 },
+  { id: "singleHorn", name: "Little Horn", category: "head", cost: 30 },
+  { id: "twinHorns", name: "Twin Horns", category: "head", cost: 45 },
+  { id: "ramHorns", name: "Ram Horns", category: "head", cost: 60 },
+  { id: "antennae", name: "Antennae", category: "head", cost: 35 },
+  { id: "bandana", name: "Bandana", category: "head", cost: 25 },
+  { id: "pirateHat", name: "Pirate Hat", category: "head", cost: 55 },
+  { id: "flowerCrown", name: "Flower Crown", category: "head", cost: 45 },
+  // Face (6)
+  { id: "studyGlasses", name: "Study Glasses", category: "face", cost: 35 },
+  { id: "sunglasses", name: "Sunglasses", category: "face", cost: 40 },
+  { id: "monocle", name: "Monocle", category: "face", cost: 50 },
+  { id: "eyepatch", name: "Eyepatch", category: "face", cost: 30 },
+  { id: "faceMask", name: "Face Mask", category: "face", cost: 35 },
+  { id: "thirdEyeGem", name: "Third Eye Gem", category: "face", cost: 60 },
+  // Back (8)
+  { id: "batWings", name: "Bat Wings", category: "back", cost: 70 },
+  { id: "angelWings", name: "Angel Wings", category: "back", cost: 80 },
+  { id: "dragonflyWings", name: "Dragonfly Wings", category: "back", cost: 65 },
+  { id: "butterflyWings", name: "Butterfly Wings", category: "back", cost: 65 },
+  { id: "cape", name: "Hero Cape", category: "back", cost: 55 },
+  { id: "backpack", name: "Backpack", category: "back", cost: 40 },
+  { id: "shell", name: "Turtle Shell", category: "back", cost: 60 },
+  { id: "finBack", name: "Dorsal Fin", category: "back", cost: 45 },
+  // Tail (5)
+  { id: "spikeTail", name: "Spike Tail", category: "tail", cost: 40 },
+  { id: "fluffyTail", name: "Fluffy Tail", category: "tail", cost: 45 },
+  { id: "lizardTail", name: "Lizard Tail", category: "tail", cost: 40 },
+  { id: "fishTail", name: "Fish Tail", category: "tail", cost: 50 },
+  { id: "stingerTail", name: "Stinger Tail", category: "tail", cost: 55 },
+  // Skin (6)
+  { id: "scales", name: "Scaly Skin", category: "skin", cost: 60 },
+  { id: "fur", name: "Furry Coat", category: "skin", cost: 55 },
+  { id: "bark", name: "Bark Skin", category: "skin", cost: 60 },
+  { id: "crystal", name: "Crystal Skin", category: "skin", cost: 75 },
+  { id: "metal", name: "Metal Plating", category: "skin", cost: 75 },
+  { id: "slime", name: "Slime Coat", category: "skin", cost: 50 },
+  // Outfit (8)
+  { id: "bowTie", name: "Bow Tie", category: "outfit", cost: 25 },
+  { id: "scarf", name: "Cozy Scarf", category: "outfit", cost: 30 },
+  { id: "hoodie", name: "Hoodie", category: "outfit", cost: 45 },
+  { id: "knightArmor", name: "Knight Armor", category: "outfit", cost: 80 },
+  { id: "wizardRobe", name: "Wizard Robe", category: "outfit", cost: 65 },
+  { id: "overalls", name: "Overalls", category: "outfit", cost: 40 },
+  { id: "tutu", name: "Tutu", category: "outfit", cost: 35 },
+  { id: "superheroSuit", name: "Superhero Suit", category: "outfit", cost: 60 },
+  // Scars / battle damage (5)
+  { id: "eyeScar", name: "Eye Scar", category: "scar", cost: 20 },
+  { id: "stitches", name: "Stitches", category: "scar", cost: 25 },
+  { id: "burnMarks", name: "Burn Marks", category: "scar", cost: 25 },
+  { id: "clawMarks", name: "Claw Marks", category: "scar", cost: 20 },
+  { id: "bandageWrap", name: "Bandage Wrap", category: "scar", cost: 20 },
+];
+
+export const CATEGORIES = [
+  { id: "head", name: "Head" },
+  { id: "face", name: "Face" },
+  { id: "back", name: "Back" },
+  { id: "tail", name: "Tail" },
+  { id: "skin", name: "Skin" },
+  { id: "outfit", name: "Outfit" },
+  { id: "scar", name: "Scars" },
+];
+
+export function itemsByCategory(category) {
+  return SHOP_ITEMS.filter((i) => i.category === category);
+}
+
+export function getShopItem(id) {
+  return SHOP_ITEMS.find((i) => i.id === id);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Main render                                                             */
+/* ---------------------------------------------------------------------- */
+
+export const BODY_COLORS = [
+  "#7fd1ae",
+  "#ff9f6e",
+  "#7fa8ff",
+  "#d38fff",
+  "#ffd25f",
+  "#ff7fa8",
+  "#6bd4d4",
+  "#c9d46b",
+  "#b08cff",
+  "#ff8c66",
+];
+
+export function monsterSVG(config, { size = 160 } = {}) {
+  const {
+    bodyColor = "#7fd1ae",
+    bodyShape = "round",
+    monsterSize = "medium",
+    limbs = 0,
+    eyeType = 0,
+    mouthType = 0,
+    skin = "smooth",
+    spots = false,
+    head = "none",
+    face = "none",
+    back = "none",
+    tail = "none",
+    outfit = "none",
+    scar = "none",
+  } = config;
+
+  const id = uid();
+  const colorDark = shade(bodyColor, -25);
+  const shapeInfo = bodyShapeMarkup(bodyShape, bodyColor, colorDark);
+  const [fx, fy] = shapeInfo.faceCenter;
+  const fs = shapeInfo.faceScale;
+  const sizeScale = (SIZES.find((s) => s.id === monsterSize) || SIZES[1]).scale;
+
+  const faceTransform = `translate(${fx} ${fy}) scale(${fs}) translate(-50 -46)`;
+  const eyesMarkup = (EYE_VARIANTS[eyeType] || EYE_VARIANTS[0])(id);
+  const mouthMarkup = (MOUTH_VARIANTS[mouthType] || MOUTH_VARIANTS[0])();
+
+  const headAnchor = { x: fx, y: fy - 20 * fs };
+  const faceAnchor = { x: fx, y: fy };
+  const backAnchor = { x: 50, y: 55 };
+  const tailAnchor = { x: 82, y: 82 };
+  const outfitAnchor = { x: 50, y: 70 };
+  const scarAnchor = { x: fx, y: fy };
+
+  const renderItem = (category, itemId, anchor) => {
+    if (!itemId || itemId === "none") return "";
+    const fn = RENDERERS_BY_CATEGORY[category]?.[itemId];
+    return fn ? fn(anchor, colorDark, bodyColor) : "";
+  };
+
+  // Scatter spots generously across the whole possible body area, then clip
+  // to the current body shape's silhouette so they always land on the body
+  // no matter how big, small, or oddly shaped it is.
+  const spotsHTML = spots
+    ? (() => {
+        const spotClipId = `${id}-spotclip`;
+        const positions = [
+          [30, 20, 6],
+          [68, 16, 5],
+          [18, 40, 5],
+          [80, 38, 6],
+          [50, 30, 5],
+          [24, 62, 6],
+          [76, 60, 5],
+          [40, 78, 6],
+          [60, 80, 5],
+          [30, 96, 5],
+          [70, 96, 5],
+          [50, 62, 4],
+        ];
+        const dots = positions
+          .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${colorDark}" opacity="0.55"/>`)
+          .join("");
+        return `<defs><clipPath id="${spotClipId}">${shapeInfo.clip}</clipPath></defs><g clip-path="url(#${spotClipId})">${dots}</g>`;
+      })()
+    : "";
+
+  return `
+  <svg width="${size}" height="${size}" viewBox="-18 -28 136 148" xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(50 55) scale(${sizeScale}) translate(-50 -55)">
+      <ellipse cx="50" cy="103" rx="34" ry="6" fill="#000" opacity="0.08"/>
+      ${renderItem("back", back, backAnchor)}
+      ${renderItem("tail", tail, tailAnchor)}
+      ${shapeInfo.fill}
+      ${skinOverlay(skin, shapeInfo.clip, colorDark)}
+      ${spotsHTML}
+      ${limbsMarkup(limbs, bodyShape, bodyColor, colorDark)}
+      ${renderItem("outfit", outfit, outfitAnchor)}
+      ${renderItem("head", head, headAnchor)}
+      <g transform="${faceTransform}">
+        ${eyesMarkup}
+        ${mouthMarkup}
+      </g>
+      ${renderItem("face", face, faceAnchor)}
+      ${renderItem("scar", scar, scarAnchor)}
+    </g>
+  </svg>`;
+}
