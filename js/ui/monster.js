@@ -31,6 +31,22 @@ const ROUND_PATH =
 const AMORPHOUS_PATH =
   "M50 10 C 20 8 5 30 12 50 C 4 65 15 90 40 98 C 60 105 85 92 90 70 C 98 55 92 30 75 15 C 65 5 60 12 50 10 Z";
 
+// Ten additional body shapes, each paired with its own limb renderer below.
+const SERPENT_PATH =
+  "M42 10 Q66 8 64 26 Q62 40 44 46 Q20 52 24 68 Q26 82 48 84 Q64 85 60 98 Q57 108 44 104 Q32 100 34 90 Q36 80 20 74 Q4 66 10 48 Q14 32 36 28 Q50 25 46 16 Q44 12 42 10 Z";
+const AVIAN_PATH =
+  "M50 8 C 30 8 20 30 24 52 C 18 76 30 102 50 104 C 70 102 82 76 76 52 C 80 30 70 8 50 8 Z";
+const AQUATIC_PATH =
+  "M50 10 C 24 10 14 34 20 54 C 10 66 18 88 34 96 Q50 106 66 96 C 82 88 90 66 80 54 C 86 34 76 10 50 10 Z";
+const CRYSTAL_PATH = "M50 8 L74 30 L82 62 L64 100 L36 100 L18 62 L26 30 Z";
+const CRAB_PATH = "M14 50 Q10 20 50 16 Q90 20 86 50 Q90 70 70 80 L30 80 Q10 70 14 50 Z";
+const SPECTRAL_PATH =
+  "M50 10 C 20 10 14 34 16 55 L16 90 Q22 78 28 90 Q34 100 40 88 Q46 100 50 90 Q54 100 60 88 Q66 100 72 90 Q78 78 84 90 L84 55 C 86 34 80 10 50 10 Z";
+const TREANT_TRUNK_PATH =
+  "M36 30 Q30 30 28 44 L24 96 Q24 104 34 104 L66 104 Q76 104 76 96 L72 44 Q70 30 64 30 Z";
+const CENTIPEDE_PATH =
+  "M12 50 Q8 30 30 28 L70 28 Q92 30 88 50 Q92 70 70 72 L30 72 Q8 70 12 50 Z";
+
 // Humanoid torso: rounded shoulders tapering to a slightly narrower waist,
 // sitting below the head with a small neck gap, rather than a plain rectangle.
 const HUMANOID_TORSO_PATH =
@@ -94,6 +110,84 @@ function bodyShapeMarkup(shape, color, colorDark) {
         faceCenter: [50, 52],
         faceScale: 1,
       };
+    case "serpent":
+      return {
+        fill: `<path d="${SERPENT_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        clip: `<path d="${SERPENT_PATH}"/>`,
+        faceCenter: [48, 22],
+        faceScale: 0.6,
+      };
+    case "arachnid":
+      return {
+        fill: `
+          <ellipse cx="50" cy="66" rx="30" ry="26" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          <ellipse cx="50" cy="34" rx="18" ry="16" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+        `,
+        clip: `<ellipse cx="50" cy="66" rx="30" ry="26"/><ellipse cx="50" cy="34" rx="18" ry="16"/>`,
+        faceCenter: [50, 34],
+        faceScale: 0.85,
+      };
+    case "avian":
+      return {
+        fill: `<path d="${AVIAN_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        clip: `<path d="${AVIAN_PATH}"/>`,
+        faceCenter: [50, 46],
+        faceScale: 0.9,
+      };
+    case "aquatic":
+      return {
+        fill: `<path d="${AQUATIC_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        clip: `<path d="${AQUATIC_PATH}"/>`,
+        faceCenter: [50, 48],
+        faceScale: 0.95,
+      };
+    case "crystalline":
+      return {
+        fill: `<path d="${CRYSTAL_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3" stroke-linejoin="round"/>`,
+        clip: `<path d="${CRYSTAL_PATH}"/>`,
+        faceCenter: [50, 52],
+        faceScale: 0.85,
+      };
+    case "crab":
+      return {
+        fill: `<path d="${CRAB_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        clip: `<path d="${CRAB_PATH}"/>`,
+        faceCenter: [50, 46],
+        faceScale: 0.85,
+      };
+    case "mechanical":
+      return {
+        fill: `<rect x="22" y="20" width="56" height="80" rx="10" ry="10" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          <rect x="30" y="30" width="40" height="6" fill="${colorDark}" opacity="0.3"/>
+          <rect x="30" y="88" width="40" height="6" fill="${colorDark}" opacity="0.3"/>`,
+        clip: `<rect x="22" y="20" width="56" height="80" rx="10" ry="10"/>`,
+        faceCenter: [50, 50],
+        faceScale: 0.85,
+      };
+    case "spectral":
+      return {
+        fill: `<path d="${SPECTRAL_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3" opacity="0.92"/>`,
+        clip: `<path d="${SPECTRAL_PATH}"/>`,
+        faceCenter: [50, 46],
+        faceScale: 0.85,
+      };
+    case "treant":
+      return {
+        fill: `
+          <path d="${TREANT_TRUNK_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          <circle cx="50" cy="24" r="15" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+        `,
+        clip: `<path d="${TREANT_TRUNK_PATH}"/><circle cx="50" cy="24" r="15"/>`,
+        faceCenter: [50, 24],
+        faceScale: 0.62,
+      };
+    case "centipede":
+      return {
+        fill: `<path d="${CENTIPEDE_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        clip: `<path d="${CENTIPEDE_PATH}"/>`,
+        faceCenter: [32, 50],
+        faceScale: 0.6,
+      };
     case "round":
     default:
       return {
@@ -111,6 +205,16 @@ export const BODY_SHAPES = [
   { id: "insect", name: "Insect" },
   { id: "reptile", name: "Reptile" },
   { id: "amorphous", name: "Amorphous" },
+  { id: "serpent", name: "Serpent" },
+  { id: "arachnid", name: "Arachnid" },
+  { id: "avian", name: "Avian" },
+  { id: "aquatic", name: "Aquatic" },
+  { id: "crystalline", name: "Crystalline" },
+  { id: "crab", name: "Crab" },
+  { id: "mechanical", name: "Mechanical" },
+  { id: "spectral", name: "Spectral" },
+  { id: "treant", name: "Treant" },
+  { id: "centipede", name: "Centipede" },
 ];
 
 export const SIZES = [
@@ -336,9 +440,9 @@ function reptileLegs(count, color, colorDark) {
       stroke="${colorDark}" stroke-width="1.5" stroke-linecap="round"/>
   `;
   let out = "";
-  if (count >= 2) out += leg(26, 74) + leg(74, 74);
-  if (count >= 4) out += leg(12, 62) + leg(88, 62);
-  if (count >= 6) out += leg(20, 70) + leg(80, 70);
+  if (count >= 2) out += leg(30, 78) + leg(70, 78);
+  if (count >= 4) out += leg(20, 72) + leg(80, 72);
+  if (count >= 6) out += leg(13, 66) + leg(87, 66);
   return out;
 }
 
@@ -351,9 +455,180 @@ function amorphousLimbs(count, color, colorDark) {
       fill="${color}" stroke="${colorDark}" stroke-width="3"/>
   `;
   let out = "";
-  if (count >= 2) out += pod(22, 58, -24) + pod(78, 58, 24);
-  if (count >= 4) out += pod(32, 90, -10) + pod(68, 90, 10);
-  if (count >= 6) out += pod(14, 76, -34) + pod(86, 76, 34);
+  if (count >= 2) out += pod(16, 42, -25) + pod(84, 38, 25);
+  if (count >= 4) out += pod(8, 72, -15) + pod(92, 68, 15);
+  if (count >= 6) out += pod(28, 98, -8) + pod(64, 100, 8);
+  return out;
+}
+
+// Serpent: small clawed forelimb stubs along the tube's visible curve,
+// anchored at points hand-checked to sit on the tube's body.
+function serpentLimbs(count, color, colorDark) {
+  const stub = (cx, cy, angle) => `
+    ${rootDot(cx, cy, color, colorDark, 4)}
+    <g transform="rotate(${angle} ${cx} ${cy})">
+      <ellipse cx="${cx}" cy="${cy + 8}" rx="4" ry="6" fill="${color}" stroke="${colorDark}" stroke-width="2"/>
+      <path d="M${cx - 3} ${cy + 12} L${cx - 3} ${cy + 15} M${cx} ${cy + 13} L${cx} ${cy + 16} M${cx + 3} ${cy + 12} L${cx + 3} ${cy + 15}"
+        stroke="${colorDark}" stroke-width="1" stroke-linecap="round"/>
+    </g>
+  `;
+  let out = "";
+  if (count >= 2) out += stub(52, 24, 40);
+  if (count >= 4) out += stub(16, 52, -90);
+  if (count >= 6) out += stub(44, 92, 160);
+  return out;
+}
+
+// Arachnid: long jointed legs fanning out from the abdomen, anchor points
+// verified to fall inside the abdomen ellipse (cx50 cy66 rx30 ry26).
+function arachnidLegs(count, colorDark) {
+  const leg = (x1, y1, xm, ym, x2, y2) => `
+    ${rootDot(x1, y1, colorDark, colorDark, 3)}
+    <path d="M${x1} ${y1} L${xm} ${ym} L${x2} ${y2}" stroke="${colorDark}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${x2}" cy="${y2}" r="2" fill="${colorDark}"/>
+  `;
+  let out = "";
+  if (count >= 2) out += leg(35, 44, 14, 34, 2, 44) + leg(65, 44, 86, 34, 98, 44);
+  if (count >= 4) out += leg(22, 58, 2, 54, -8, 68) + leg(78, 58, 98, 54, 108, 68);
+  if (count >= 6) out += leg(26, 72, 8, 78, -2, 94) + leg(74, 72, 92, 78, 102, 94);
+  return out;
+}
+
+// Avian: thin legs with three-toe feet close together at the belly, with
+// small wing-arm stubs at the widest part of the body for 4+.
+function avianLegs(count, color, colorDark) {
+  const leg = (x, yTop, yBottom) => `
+    ${rootDot(x, yTop, color, colorDark, 4)}
+    <line x1="${x}" y1="${yTop}" x2="${x}" y2="${yBottom}" stroke="${colorDark}" stroke-width="4" stroke-linecap="round"/>
+    <path d="M${x - 6} ${yBottom + 5} L${x} ${yBottom} L${x + 6} ${yBottom + 5} M${x} ${yBottom} L${x} ${yBottom + 6}"
+      stroke="#e8a23a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  `;
+  const wing = (cx, cy, flip) => `
+    ${rootDot(cx, cy, color, colorDark, 5)}
+    <path transform="scale(${flip},1) translate(${flip < 0 ? -2 * cx : 0},0)" d="M${cx} ${cy} Q${cx - 16} ${cy + 4} ${cx - 14} ${cy + 20} Q${cx - 4} ${cy + 10} ${cx} ${cy + 4} Z"
+      fill="${color}" stroke="${colorDark}" stroke-width="2.5"/>
+  `;
+  let out = "";
+  if (count >= 2) out += leg(42, 92, 106) + leg(58, 92, 106);
+  if (count >= 4) out += wing(24, 54, 1) + wing(76, 54, -1);
+  if (count >= 6) out += leg(30, 88, 100) + leg(70, 88, 100);
+  return out;
+}
+
+// Aquatic: triangular fins instead of limbs, anchored on the widest part of
+// the fish-like body (pectoral fins) and lower sides (pelvic fins).
+function aquaticLimbs(count, color, colorDark) {
+  const fin = (cx, cy, dir) => `
+    ${rootDot(cx, cy, color, colorDark, 4)}
+    <path d="M${cx} ${cy - 14} L${cx + dir * 22} ${cy} L${cx} ${cy + 14} Q${cx + dir * 8} ${cy} ${cx} ${cy - 14} Z"
+      fill="${color}" stroke="${colorDark}" stroke-width="2.5"/>
+  `;
+  const tailFin = (cx, cy) => `
+    ${rootDot(cx, cy, color, colorDark, 4)}
+    <path d="M${cx - 14} ${cy} L${cx} ${cy + 22} L${cx + 14} ${cy} Q${cx} ${cy + 8} ${cx - 14} ${cy} Z"
+      fill="${color}" stroke="${colorDark}" stroke-width="2.5"/>
+  `;
+  let out = "";
+  if (count >= 2) out += fin(24, 52, -1) + fin(76, 52, 1);
+  if (count >= 4) out += fin(26, 78, -1) + fin(74, 78, 1);
+  if (count >= 6) out += tailFin(50, 98);
+  return out;
+}
+
+// Crystalline: angular crystal shards jutting from the gem body's edges,
+// reusing the existing spike() helper for a faceted look.
+function crystallineLimbs(count, color, colorDark) {
+  let out = "";
+  if (count >= 2) out += rootDot(22, 46, color, colorDark, 4) + spike(20, 46, 6, 20, color, colorDark, -100) + rootDot(78, 46, color, colorDark, 4) + spike(80, 46, 6, 20, color, colorDark, 100);
+  if (count >= 4) out += rootDot(27, 81, color, colorDark, 4) + spike(25, 82, 6, 18, color, colorDark, -130) + rootDot(73, 81, color, colorDark, 4) + spike(75, 82, 6, 18, color, colorDark, 130);
+  if (count >= 6) out += rootDot(50, 8, color, colorDark, 4) + spike(46, 10, 5, 14, color, colorDark, -150) + spike(54, 10, 5, 14, color, colorDark, 150);
+  return out;
+}
+
+// Crab: big pincer claws for arms, small stubby legs along the shell's
+// tapered underside for legs.
+function crabLimbs(count, color, colorDark) {
+  const claw = (cx, cy, flip) => `
+    ${rootDot(cx, cy, color, colorDark, 6)}
+    <path d="M${cx} ${cy} L${cx + flip * 16} ${cy - 6} L${cx + flip * 22} ${cy + 6}" stroke="${colorDark}" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M${cx + flip * 22} ${cy + 6} L${cx + flip * 30} ${cy - 2} M${cx + flip * 22} ${cy + 6} L${cx + flip * 30} ${cy + 12}"
+      stroke="${color}" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M${cx + flip * 22} ${cy + 6} L${cx + flip * 30} ${cy - 2} M${cx + flip * 22} ${cy + 6} L${cx + flip * 30} ${cy + 12}"
+      stroke="${colorDark}" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+  `;
+  const leg = (cx, cy) => `
+    ${rootDot(cx, cy, color, colorDark, 3.5)}
+    <path d="M${cx} ${cy} L${cx} ${cy + 10}" stroke="${colorDark}" stroke-width="4" stroke-linecap="round"/>
+  `;
+  let out = "";
+  if (count >= 2) out += claw(20, 48, -1) + claw(80, 48, 1);
+  if (count >= 4) out += leg(28, 74) + leg(72, 74);
+  if (count >= 6) out += leg(40, 78) + leg(60, 78);
+  return out;
+}
+
+// Mechanical: blocky piston limbs with round joints, anchored inside the
+// rounded-rect chassis.
+function mechanicalLimbs(count, color, colorDark) {
+  const piston = (x1, y1, x2, y2, w) => `
+    ${rootDot(x1, y1, colorDark, colorDark, w / 2 + 2)}
+    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${colorDark}" stroke-width="${w + 3}" stroke-linecap="round"/>
+    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>
+    <circle cx="${x2}" cy="${y2}" r="${w / 2 + 2}" fill="${colorDark}"/>
+  `;
+  let out = "";
+  if (count >= 2) out += piston(26, 50, 8, 78, 9) + piston(74, 50, 92, 78, 9);
+  if (count >= 4) out += piston(34, 96, 30, 116, 9) + piston(66, 96, 70, 116, 9);
+  if (count >= 6) out += piston(24, 64, 2, 58, 7) + piston(76, 64, 98, 58, 7);
+  return out;
+}
+
+// Spectral: thin wavy trailing wisps instead of solid limbs, semi-transparent
+// to read as ghostly rather than physical.
+function spectralLimbs(count, color, colorDark) {
+  const wisp = (cx, cy, rot) => `
+    ${rootDot(cx, cy, color, colorDark, 5)}
+    <path transform="rotate(${rot} ${cx} ${cy})" d="M${cx} ${cy} Q${cx - 4} ${cy + 16} ${cx + 2} ${cy + 26} Q${cx + 8} ${cy + 16} ${cx} ${cy} Z"
+      fill="${color}" stroke="${colorDark}" stroke-width="2" opacity="0.75"/>
+  `;
+  let out = "";
+  if (count >= 2) out += wisp(16, 48, -10) + wisp(84, 48, 10);
+  if (count >= 4) out += wisp(16, 64, -20) + wisp(84, 64, 20);
+  if (count >= 6) out += wisp(16, 80, -30) + wisp(84, 80, 30);
+  return out;
+}
+
+// Treant: forked branch arms, small triangular root nubs for legs.
+function treantLimbs(count, color, colorDark) {
+  const branch = (cx, cy, flip) => `
+    ${rootDot(cx, cy, color, colorDark, 5)}
+    <path d="M${cx} ${cy} L${cx + flip * 20} ${cy - 8}" stroke="${colorDark}" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M${cx + flip * 20} ${cy - 8} L${cx + flip * 30} ${cy - 18} M${cx + flip * 20} ${cy - 8} L${cx + flip * 30} ${cy}"
+      stroke="${colorDark}" stroke-width="4" fill="none" stroke-linecap="round"/>
+  `;
+  const root = (cx, cy) => `
+    ${rootDot(cx, cy, color, colorDark, 4)}
+    <path d="M${cx - 6} ${cy + 10} L${cx} ${cy} L${cx + 6} ${cy + 10} Z" fill="${color}" stroke="${colorDark}" stroke-width="2.5"/>
+  `;
+  let out = "";
+  if (count >= 2) out += branch(30, 50, -1) + branch(70, 50, 1);
+  if (count >= 4) out += root(34, 98) + root(66, 98);
+  if (count >= 6) out += root(42, 100) + root(58, 100);
+  return out;
+}
+
+// Centipede: many small legs all hanging down from the belly, spread along
+// the body's length like a real many-legged bug rather than pointing into
+// the face from the top edge.
+function centipedeLimbs(count, color, colorDark) {
+  const leg = (x, y) => `
+    ${rootDot(x, y, color, colorDark, 3)}
+    <path d="M${x} ${y} L${x} ${y + 10}" stroke="${colorDark}" stroke-width="3" stroke-linecap="round"/>
+  `;
+  let out = "";
+  if (count >= 2) out += leg(35, 70) + leg(65, 70);
+  if (count >= 4) out += leg(24, 68) + leg(76, 68);
+  if (count >= 6) out += leg(46, 72) + leg(54, 72);
   return out;
 }
 
@@ -368,6 +643,26 @@ function limbsMarkup(count, shape, color, colorDark) {
       return reptileLegs(count, color, colorDark);
     case "amorphous":
       return amorphousLimbs(count, color, colorDark);
+    case "serpent":
+      return serpentLimbs(count, color, colorDark);
+    case "arachnid":
+      return arachnidLegs(count, colorDark);
+    case "avian":
+      return avianLegs(count, color, colorDark);
+    case "aquatic":
+      return aquaticLimbs(count, color, colorDark);
+    case "crystalline":
+      return crystallineLimbs(count, color, colorDark);
+    case "crab":
+      return crabLimbs(count, color, colorDark);
+    case "mechanical":
+      return mechanicalLimbs(count, color, colorDark);
+    case "spectral":
+      return spectralLimbs(count, color, colorDark);
+    case "treant":
+      return treantLimbs(count, color, colorDark);
+    case "centipede":
+      return centipedeLimbs(count, color, colorDark);
     case "round":
     default:
       return roundLimbs(count, color, colorDark);

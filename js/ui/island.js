@@ -34,12 +34,27 @@ export function renderIsland(root, navigate, { subjectId }) {
     })
     .join("");
 
+  const backgroundLinkHTML =
+    subjectId === "science"
+      ? `
+        <button class="background-lesson-card" data-background>
+          <span class="background-lesson-icon">📚</span>
+          <span class="background-lesson-text">
+            <strong>ACT Science Background Knowledge</strong>
+            <span>All 18 core science concepts, plus the calculator-free math, in one reference lesson.</span>
+          </span>
+          <span class="background-lesson-arrow">&rarr;</span>
+        </button>
+      `
+      : "";
+
   root.innerHTML = `
     ${hudHTML("map")}
     <main class="screen island-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
       <p class="island-heading-blurb">${subject.blurb}</p>
+      ${backgroundLinkHTML}
       <div class="path-container">${nodes}</div>
     </main>
   `;
@@ -49,4 +64,8 @@ export function renderIsland(root, navigate, { subjectId }) {
   root.querySelectorAll("[data-skill]").forEach((btn) => {
     btn.addEventListener("click", () => navigate("quiz", { skillId: btn.dataset.skill, subjectId }));
   });
+  const backgroundBtn = root.querySelector("[data-background]");
+  if (backgroundBtn) {
+    backgroundBtn.addEventListener("click", () => navigate("background", { subjectId }));
+  }
 }

@@ -97,6 +97,13 @@ export function renderQuiz(root, navigate, { skillId, subjectId }) {
           <h1 class="lesson-title">${skill.name}</h1>
           <p class="lesson-blurb">${skill.blurb}</p>
           ${paragraphs.map((p) => `<p class="lesson-paragraph">${p}</p>`).join("")}
+          <div class="lesson-timer-setting">
+            <label class="toggle-label">
+              <input type="checkbox" id="timerToggle" ${gameState.timerEnabled ? "checked" : ""} />
+              ⏱️ Timed questions
+            </label>
+            <p class="lesson-timer-hint">Turn off if you'd rather take your time on each question.</p>
+          </div>
           <button class="btn-primary lesson-start-btn" data-start-quiz>Start Quiz &rarr;</button>
         </div>
       </main>
@@ -105,6 +112,9 @@ export function renderQuiz(root, navigate, { skillId, subjectId }) {
     wireHud(root, navigate);
     root.querySelector("[data-quit]").addEventListener("click", () => navigate("island", { subjectId }));
     root.querySelector("[data-start-quiz]").addEventListener("click", () => renderQuestion());
+    root.querySelector("#timerToggle").addEventListener("change", (e) => {
+      gameState.setTimerEnabled(e.target.checked);
+    });
   }
 
   function renderQuestion() {
@@ -129,7 +139,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId }) {
           <div class="quiz-streak">🔥 Streak: ${streak}</div>
         </div>
         <h2 class="quiz-skill-name">${skill.name}</h2>
-        <div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>
+        ${gameState.timerEnabled ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
           <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getAvatar(), { size: 90 })}</div>
@@ -153,7 +163,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId }) {
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
     });
-    startTimer();
+    if (gameState.timerEnabled) startTimer();
   }
 
   function selectChoice(choiceIdx) {
@@ -163,7 +173,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId }) {
 
     const q = questions[idx];
     const correct = choiceIdx === q.answer;
-    const fast = timeLeft > QUESTION_TIME / 2;
+    const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
 
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.disabled = true;

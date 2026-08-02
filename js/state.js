@@ -40,6 +40,9 @@ function defaultSave() {
     ownedItems: [],
     skillProgress,
     onboarded: false,
+    settings: {
+      timerEnabled: true,
+    },
   };
 }
 
@@ -61,6 +64,7 @@ class GameState {
       fresh.ownedItems = parsed.ownedItems ?? fresh.ownedItems;
       fresh.createdName = parsed.createdName ?? fresh.createdName;
       fresh.onboarded = parsed.onboarded ?? fresh.onboarded;
+      fresh.settings = { ...fresh.settings, ...parsed.settings };
       for (const id of allSkillIds()) {
         if (parsed.skillProgress && parsed.skillProgress[id]) {
           fresh.skillProgress[id] = { ...fresh.skillProgress[id], ...parsed.skillProgress[id] };
@@ -108,6 +112,16 @@ class GameState {
 
   get ownedItems() {
     return this.data.ownedItems;
+  }
+
+  // --- settings ---
+  get timerEnabled() {
+    return this.data.settings.timerEnabled;
+  }
+
+  setTimerEnabled(enabled) {
+    this.data.settings.timerEnabled = enabled;
+    this.save();
   }
 
   addCoins(n) {

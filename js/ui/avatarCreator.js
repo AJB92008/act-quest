@@ -26,6 +26,16 @@ const SHAPE_FLAVOR = {
   insect: "Skittery, many-legged, and a little bit spooky.",
   reptile: "Scaly and sly, with a snout built for mischief.",
   amorphous: "A wobbly blob with a mind of its own.",
+  serpent: "Long, sinuous, and impossible to pin down.",
+  arachnid: "Eight-legged, quick, and just a little unsettling.",
+  avian: "Feathered, alert, and always ready to take flight.",
+  aquatic: "Sleek, finned, and built for the deep end.",
+  crystalline: "Faceted, sharp-edged, and gleaming all over.",
+  crab: "Armored, side-stepping, and armed with big claws.",
+  mechanical: "Bolted together, sturdy, and powered by gears.",
+  spectral: "Wispy, translucent, and drifting like a ghost.",
+  treant: "Rooted, sturdy, and growing a little every day.",
+  centipede: "Long, low, and covered in scurrying legs.",
 };
 
 const RANDOM_QUIPS = [

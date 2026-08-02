@@ -5,6 +5,8 @@ import { renderQuiz } from "./ui/quiz.js";
 import { renderShop } from "./ui/shop.js";
 import { renderDashboard } from "./ui/dashboard.js";
 import { renderAvatarCreator } from "./ui/avatarCreator.js";
+import { renderBackgroundLesson } from "./ui/background.js";
+import { renderBackgroundQuiz } from "./ui/backgroundQuiz.js";
 
 const root = document.getElementById("app");
 
@@ -15,6 +17,8 @@ const SCREENS = {
   shop: (r, nav) => renderShop(r, nav),
   dashboard: (r, nav) => renderDashboard(r, nav),
   avatarCreator: (r, nav, params) => renderAvatarCreator(r, nav, params),
+  background: (r, nav, params) => renderBackgroundLesson(r, nav, params),
+  backgroundQuiz: (r, nav, params) => renderBackgroundQuiz(r, nav, params),
 };
 
 function navigate(screen, params = {}) {
