@@ -43,6 +43,9 @@ function defaultSave() {
     settings: {
       timerEnabled: true,
     },
+    endless: {
+      bestRun: 0,
+    },
   };
 }
 
@@ -65,6 +68,7 @@ class GameState {
       fresh.createdName = parsed.createdName ?? fresh.createdName;
       fresh.onboarded = parsed.onboarded ?? fresh.onboarded;
       fresh.settings = { ...fresh.settings, ...parsed.settings };
+      fresh.endless = { ...fresh.endless, ...parsed.endless };
       for (const id of allSkillIds()) {
         if (parsed.skillProgress && parsed.skillProgress[id]) {
           fresh.skillProgress[id] = { ...fresh.skillProgress[id], ...parsed.skillProgress[id] };
@@ -122,6 +126,21 @@ class GameState {
   setTimerEnabled(enabled) {
     this.data.settings.timerEnabled = enabled;
     this.save();
+  }
+
+  // --- endless mode ---
+  get endlessBest() {
+    return this.data.endless.bestRun;
+  }
+
+  /** Record the outcome of a finished Endless Mode run. */
+  recordEndlessRun({ correctCount, starsEarned, coinsEarned }) {
+    this.data.totalStars += starsEarned;
+    this.data.coins += coinsEarned;
+    const isNewBest = correctCount > this.data.endless.bestRun;
+    if (isNewBest) this.data.endless.bestRun = correctCount;
+    this.save();
+    return { isNewBest };
   }
 
   addCoins(n) {

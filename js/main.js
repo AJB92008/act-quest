@@ -7,6 +7,7 @@ import { renderDashboard } from "./ui/dashboard.js";
 import { renderAvatarCreator } from "./ui/avatarCreator.js";
 import { renderBackgroundLesson } from "./ui/background.js";
 import { renderBackgroundQuiz } from "./ui/backgroundQuiz.js";
+import { renderEndlessMode } from "./ui/endlessMode.js";
 
 const root = document.getElementById("app");
 
@@ -19,6 +20,7 @@ const SCREENS = {
   avatarCreator: (r, nav, params) => renderAvatarCreator(r, nav, params),
   background: (r, nav, params) => renderBackgroundLesson(r, nav, params),
   backgroundQuiz: (r, nav, params) => renderBackgroundQuiz(r, nav, params),
+  endless: (r, nav) => renderEndlessMode(r, nav),
 };
 
 function navigate(screen, params = {}) {

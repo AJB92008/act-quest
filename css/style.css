@@ -1236,6 +1236,48 @@ input[type="text"] {
   font-weight: 700;
 }
 
+/* ---------- endless mode ---------- */
+.endless-best-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--island-bg, #fff0f4);
+  border: 2px solid var(--island-color, var(--purple));
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 18px 0;
+  width: fit-content;
+}
+
+.endless-best-num {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--island-color, var(--purple));
+}
+
+.endless-lives {
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+}
+
+.endless-score {
+  font-weight: 800;
+  color: var(--island-color);
+}
+
+.endless-tag {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--tag-color, var(--ink));
+  background: var(--tag-bg, #f1eeff);
+  border-radius: 999px;
+  padding: 6px 14px;
+  margin: 4px 0 14px;
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 640px) {
   .screen {

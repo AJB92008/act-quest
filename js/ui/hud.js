@@ -5,6 +5,7 @@ export function hudHTML(activeScreen) {
   const avatar = gameState.getAvatar();
   const nav = [
     { id: "map", icon: "🗺️", label: "Map" },
+    { id: "endless", icon: "🔁", label: "Endless" },
     { id: "dashboard", icon: "📊", label: "Progress" },
     { id: "shop", icon: "🛍️", label: "Shop" },
     { id: "avatarCreator", icon: "🐲", label: "Monster" },
