@@ -71,6 +71,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${HUMANOID_TORSO_PATH}"/><circle cx="50" cy="23" r="16"/>`,
         faceCenter: [50, 23],
         faceScale: 0.6,
+        outfitAnchor: [50, 70],
+        outfitScale: 1,
+        headScale: 1,
+        tailAnchor: [74, 90],
+        tailScale: 0.9,
       };
     case "insect":
       return {
@@ -83,6 +88,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="M50 58 C 72 60 80 82 64 100 Q50 109 36 100 C 20 82 28 60 50 58 Z"/><ellipse cx="50" cy="40" rx="17" ry="14"/><circle cx="50" cy="16" r="13"/>`,
         faceCenter: [50, 16],
         faceScale: 0.52,
+        outfitAnchor: [50, 78],
+        outfitScale: 0.8,
+        headScale: 0.8,
+        tailAnchor: [78, 88],
+        tailScale: 0.75,
       };
     case "reptile":
       return {
@@ -98,6 +108,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<ellipse cx="50" cy="52" rx="44" ry="30"/><path d="${REPTILE_SNOUT_PATH}"/>`,
         faceCenter: [50, 46],
         faceScale: 0.75,
+        outfitAnchor: [50, 66],
+        outfitScale: 0.9,
+        headScale: 0.95,
+        tailAnchor: [78, 74],
+        tailScale: 0.9,
       };
     case "amorphous":
       return {
@@ -109,6 +124,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${AMORPHOUS_PATH}"/>`,
         faceCenter: [50, 52],
         faceScale: 1,
+        outfitAnchor: [50, 55],
+        outfitScale: 0.85,
+        headScale: 1,
+        tailAnchor: [86, 78],
+        tailScale: 0.85,
       };
     case "serpent":
       return {
@@ -116,6 +136,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${SERPENT_PATH}"/>`,
         faceCenter: [48, 22],
         faceScale: 0.6,
+        outfitAnchor: [35, 55],
+        outfitScale: 0.42,
+        headScale: 0.65,
+        tailAnchor: [44, 100],
+        tailScale: 0.6,
       };
     case "arachnid":
       return {
@@ -126,6 +151,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<ellipse cx="50" cy="66" rx="30" ry="26"/><ellipse cx="50" cy="34" rx="18" ry="16"/>`,
         faceCenter: [50, 34],
         faceScale: 0.85,
+        outfitAnchor: [50, 66],
+        outfitScale: 0.85,
+        headScale: 0.95,
+        tailAnchor: [76, 86],
+        tailScale: 0.7,
       };
     case "avian":
       return {
@@ -133,6 +163,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${AVIAN_PATH}"/>`,
         faceCenter: [50, 46],
         faceScale: 0.9,
+        outfitAnchor: [50, 55],
+        outfitScale: 0.85,
+        headScale: 0.92,
+        tailAnchor: [66, 96],
+        tailScale: 0.8,
       };
     case "aquatic":
       return {
@@ -140,6 +175,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${AQUATIC_PATH}"/>`,
         faceCenter: [50, 48],
         faceScale: 0.95,
+        outfitAnchor: [50, 58],
+        outfitScale: 0.9,
+        headScale: 0.95,
+        tailAnchor: [88, 80],
+        tailScale: 0.85,
       };
     case "crystalline":
       return {
@@ -147,6 +187,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${CRYSTAL_PATH}"/>`,
         faceCenter: [50, 52],
         faceScale: 0.85,
+        outfitAnchor: [50, 58],
+        outfitScale: 0.72,
+        headScale: 0.92,
+        tailAnchor: [80, 72],
+        tailScale: 0.65,
       };
     case "crab":
       return {
@@ -154,6 +199,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${CRAB_PATH}"/>`,
         faceCenter: [50, 46],
         faceScale: 0.85,
+        outfitAnchor: [50, 46],
+        outfitScale: 0.78,
+        headScale: 0.85,
+        tailAnchor: [88, 64],
+        tailScale: 0.75,
       };
     case "mechanical":
       return {
@@ -163,6 +213,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<rect x="22" y="20" width="56" height="80" rx="10" ry="10"/>`,
         faceCenter: [50, 50],
         faceScale: 0.85,
+        outfitAnchor: [50, 55],
+        outfitScale: 0.9,
+        headScale: 0.9,
+        tailAnchor: [82, 90],
+        tailScale: 0.85,
       };
     case "spectral":
       return {
@@ -170,6 +225,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${SPECTRAL_PATH}"/>`,
         faceCenter: [50, 46],
         faceScale: 0.85,
+        outfitAnchor: [50, 55],
+        outfitScale: 0.85,
+        headScale: 0.9,
+        tailAnchor: [88, 78],
+        tailScale: 0.8,
       };
     case "treant":
       return {
@@ -180,6 +240,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${TREANT_TRUNK_PATH}"/><circle cx="50" cy="24" r="15"/>`,
         faceCenter: [50, 24],
         faceScale: 0.62,
+        outfitAnchor: [50, 65],
+        outfitScale: 0.58,
+        headScale: 0.95,
+        tailAnchor: [80, 96],
+        tailScale: 0.55,
       };
     case "centipede":
       return {
@@ -187,6 +252,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${CENTIPEDE_PATH}"/>`,
         faceCenter: [32, 50],
         faceScale: 0.6,
+        outfitAnchor: [58, 48],
+        outfitScale: 0.5,
+        headScale: 0.55,
+        tailAnchor: [84, 56],
+        tailScale: 0.55,
       };
     case "round":
     default:
@@ -195,6 +265,11 @@ function bodyShapeMarkup(shape, color, colorDark) {
         clip: `<path d="${ROUND_PATH}"/>`,
         faceCenter: [50, 46],
         faceScale: 1,
+        outfitAnchor: [50, 70],
+        outfitScale: 1,
+        headScale: 1,
+        tailAnchor: [82, 82],
+        tailScale: 1,
       };
   }
 }
@@ -987,16 +1062,44 @@ export function monsterSVG(config, { size = 160 } = {}) {
 
   const headAnchor = { x: fx, y: fy - 20 * fs };
   const faceAnchor = { x: fx, y: fy };
-  const backAnchor = { x: 50, y: 55 };
-  const tailAnchor = { x: 82, y: 82 };
-  const outfitAnchor = { x: 50, y: 70 };
+  const [ox, oy] = shapeInfo.outfitAnchor || [50, 70];
+  const outfitScale = shapeInfo.outfitScale ?? 1;
+  const outfitAnchor = { x: ox, y: oy };
   const scarAnchor = { x: fx, y: fy };
+  const headScale = shapeInfo.headScale ?? 1;
+  // Back accessories (wings, cape, backpack...) mount on the torso just like
+  // outfits do, so they share the same per-shape anchor/scale.
+  const backAnchor = outfitAnchor;
+  const backScale = outfitScale;
+  const [tx, ty] = shapeInfo.tailAnchor || [82, 82];
+  const tailScale = shapeInfo.tailScale ?? 1;
+  const tailAnchor = { x: tx, y: ty };
 
   const renderItem = (category, itemId, anchor) => {
     if (!itemId || itemId === "none") return "";
     const fn = RENDERERS_BY_CATEGORY[category]?.[itemId];
     return fn ? fn(anchor, colorDark, bodyColor) : "";
   };
+
+  // Wrap a rendered accessory in a scale transform pinned at its own anchor
+  // point, so the accessory shrinks/grows to fit the current body shape
+  // without shifting off the spot it was anchored to.
+  const scaledGroup = (markup, ax, ay, scale) =>
+    markup ? `<g transform="translate(${ax} ${ay}) scale(${scale}) translate(${-ax} ${-ay})">${markup}</g>` : "";
+
+  // Outfits, head accessories, back accessories, and tails are all drawn
+  // assuming a torso/head roughly the size of the "round"/"humanoid" shapes;
+  // scale and re-anchor them per body shape so they sit on the actual
+  // silhouette instead of overflowing narrow bodies (treant, serpent) or
+  // floating off flat/horizontal ones (centipede, crab). Face and scar
+  // accessories reuse faceScale so they line up with the (already-scaled)
+  // eyes instead of towering over small faces (insect, serpent, centipede).
+  const outfitGroup = scaledGroup(renderItem("outfit", outfit, outfitAnchor), ox, oy, outfitScale);
+  const headGroup = scaledGroup(renderItem("head", head, headAnchor), headAnchor.x, headAnchor.y, headScale);
+  const backGroup = scaledGroup(renderItem("back", back, backAnchor), ox, oy, backScale);
+  const tailGroup = scaledGroup(renderItem("tail", tail, tailAnchor), tx, ty, tailScale);
+  const faceGroup = scaledGroup(renderItem("face", face, faceAnchor), fx, fy, fs);
+  const scarGroup = scaledGroup(renderItem("scar", scar, scarAnchor), fx, fy, fs);
 
   // Scatter spots generously across the whole possible body area, then clip
   // to the current body shape's silhouette so they always land on the body
@@ -1029,20 +1132,20 @@ export function monsterSVG(config, { size = 160 } = {}) {
   <svg width="${size}" height="${size}" viewBox="-18 -28 136 148" xmlns="http://www.w3.org/2000/svg">
     <g transform="translate(50 55) scale(${sizeScale}) translate(-50 -55)">
       <ellipse cx="50" cy="103" rx="34" ry="6" fill="#000" opacity="0.08"/>
-      ${renderItem("back", back, backAnchor)}
-      ${renderItem("tail", tail, tailAnchor)}
+      ${backGroup}
+      ${tailGroup}
       ${shapeInfo.fill}
       ${skinOverlay(skin, shapeInfo.clip, colorDark)}
       ${spotsHTML}
       ${limbsMarkup(limbs, bodyShape, bodyColor, colorDark)}
-      ${renderItem("outfit", outfit, outfitAnchor)}
-      ${renderItem("head", head, headAnchor)}
+      ${outfitGroup}
+      ${headGroup}
       <g transform="${faceTransform}">
         ${eyesMarkup}
         ${mouthMarkup}
       </g>
-      ${renderItem("face", face, faceAnchor)}
-      ${renderItem("scar", scar, scarAnchor)}
+      ${faceGroup}
+      ${scarGroup}
     </g>
   </svg>`;
 }
