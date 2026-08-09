@@ -72,6 +72,16 @@ export function renderQuiz(root, navigate, { skillId, subjectId }) {
     timerInterval = null;
   }
 
+  // The HUD's nav buttons (Map/Progress/Shop/Monster) navigate away directly;
+  // without this, a running question timer keeps ticking against a screen
+  // that no longer has a #monsterReactor/#timerFill, and throws once it hits
+  // zero and tries to auto-submit. Route HUD navigation through here so the
+  // timer always gets torn down first, same as the explicit quit buttons.
+  function navigateAway(screen, params) {
+    stopTimer();
+    navigate(screen, params);
+  }
+
   function startTimer() {
     timeLeft = QUESTION_TIME;
     stopTimer();
@@ -109,8 +119,8 @@ export function renderQuiz(root, navigate, { skillId, subjectId }) {
       </main>
     `;
 
-    wireHud(root, navigate);
-    root.querySelector("[data-quit]").addEventListener("click", () => navigate("island", { subjectId }));
+    wireHud(root, navigateAway);
+    root.querySelector("[data-quit]").addEventListener("click", () => navigateAway("island", { subjectId }));
     root.querySelector("[data-start-quiz]").addEventListener("click", () => renderQuestion());
     root.querySelector("#timerToggle").addEventListener("change", (e) => {
       gameState.setTimerEnabled(e.target.checked);
@@ -155,11 +165,8 @@ export function renderQuiz(root, navigate, { skillId, subjectId }) {
       </main>
     `;
 
-    wireHud(root, navigate);
-    root.querySelector("[data-quit]").addEventListener("click", () => {
-      stopTimer();
-      navigate("island", { subjectId });
-    });
+    wireHud(root, navigateAway);
+    root.querySelector("[data-quit]").addEventListener("click", () => navigateAway("island", { subjectId }));
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
     });
@@ -253,7 +260,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId }) {
       </main>
     `;
 
-    wireHud(root, navigate);
+    wireHud(root, navigateAway);
     root.querySelector("[data-retry]").addEventListener("click", () => navigate("quiz", { skillId, subjectId }));
     root.querySelector("[data-island]").addEventListener("click", () => navigate("island", { subjectId }));
     root.querySelector("[data-map]").addEventListener("click", () => navigate("map"));

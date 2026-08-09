@@ -6,15 +6,16 @@ export function renderDashboard(root, navigate) {
 
   const rows = overall.subjectStats
     .map(({ subject, accuracy, masteredCount, totalSkills }) => {
-      const pct = accuracy === null ? 0 : Math.round(accuracy * 100);
+      const masteredPct = totalSkills > 0 ? Math.round((masteredCount / totalSkills) * 100) : 0;
+      const accuracyPct = accuracy === null ? 0 : Math.round(accuracy * 100);
       return `
         <div class="dash-row">
           <div class="dash-row-label">
             <span>${subject.icon} ${subject.name}</span>
             <span>${masteredCount}/${totalSkills} mastered</span>
           </div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${subject.color}"></div></div>
-          <div class="dash-row-accuracy">${accuracy === null ? "No attempts yet" : `${pct}% accuracy`}</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${masteredPct}%;background:${subject.color}"></div></div>
+          <div class="dash-row-accuracy">${accuracy === null ? "No attempts yet" : `${accuracyPct}% accuracy`}</div>
         </div>
       `;
     })
