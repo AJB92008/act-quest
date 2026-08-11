@@ -1,5 +1,10 @@
-import { getSkill } from "../data/skills.js";
-import { getLessonQuestions, getLessonCount } from "../data/questions/index.js";
+// Weak Skill Review: an on-demand practice session auto-built from your
+// lowest-accuracy skills across every subject, weighted so the shakiest
+// skills show up more often. Doesn't gate or unlock anything — it's just
+// extra reps where you need them, and it feeds back into each skill's
+// ongoing accuracy stats as you go.
+import { getSkill, getSubject } from "../data/skills.js";
+import { getWeakReviewQuestions } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -7,12 +12,14 @@ import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 
-const QUESTION_TIME = 20; // seconds budgeted per question, for the speed bonus
+const QUESTION_TIME = 20;
+const REVIEW_SIZE = 10;
+const REVIEW_COLOR = "#22b8a3";
+const REVIEW_BG = "#e8fbf7";
 
-export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) {
-  const { subject, skill } = getSkill(skillId);
-  const questions = getLessonQuestions(skillId, lessonIndex);
-  const totalLessons = getLessonCount(skillId);
+export function renderWeakReview(root, navigate) {
+  const weakSkills = gameState.getWeakSkills(5);
+  const questions = weakSkills.length > 0 ? getWeakReviewQuestions(weakSkills, REVIEW_SIZE) : [];
 
   let idx = 0;
   let correctCount = 0;
@@ -22,6 +29,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
   let timerInterval = null;
   let timeLeft = QUESTION_TIME;
   let answered = false;
+  let finished = false;
   let unbindKeys = () => {};
 
   function stopTimer() {
@@ -29,14 +37,21 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     timerInterval = null;
   }
 
-  // Every navigation away from this screen — HUD nav, quit, retry, next
-  // lesson, back to path/map — has to go through here so the running timer
-  // and the keyboard-shortcut listener (which lives on `document`, since
-  // each question is a full innerHTML rebuild with no persistent DOM) both
-  // get torn down instead of leaking onto whatever screen comes next.
+  // Banks whatever stars/coins this session earned so far. Idempotent, and
+  // called on every exit path (finishing normally, quitting early, or
+  // navigating away via the HUD) so nothing is lost either way.
+  function finishSession() {
+    stopTimer();
+    if (finished) return;
+    finished = true;
+    if (starsEarned > 0 || coinsEarned > 0) {
+      gameState.finishWeakReview({ starsEarned, coinsEarned });
+    }
+  }
+
   function goTo(screen, params) {
     unbindKeys();
-    stopTimer();
+    finishSession();
     navigate(screen, params);
   }
 
@@ -54,16 +69,56 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     }, 100);
   }
 
+  function renderIntro() {
+    const skillRows = weakSkills
+      .map(({ id, accuracy }) => {
+        const { skill } = getSkill(id);
+        return `<li>${skill.name} <span class="weak-skill-pct">${Math.round(accuracy * 100)}%</span></li>`;
+      })
+      .join("");
+
+    root.innerHTML = `
+      ${hudHTML("map")}
+      <main class="screen weak-review-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
+        <button class="back-btn" data-back>&larr; Back to Map</button>
+        <div class="lesson-card">
+          <div class="lesson-monster">${monsterSVG(gameState.getAvatar(), { size: 90 })}</div>
+          <h1 class="lesson-title">🎯 Weak Skill Review</h1>
+          <p class="lesson-blurb">A quick ${REVIEW_SIZE}-question session pulled from the skills you're struggling with most, across every subject.</p>
+          ${
+            weakSkills.length === 0
+              ? `<p class="lesson-paragraph">You need a bit more practice history before there's anything to review — complete a few mini-lessons first, then come back here to shore up your weak spots.</p>`
+              : `
+                <p class="lesson-paragraph">Right now that's mostly:</p>
+                <ul class="weak-skill-list">${skillRows}</ul>
+              `
+          }
+          ${
+            weakSkills.length > 0
+              ? `<button class="btn-primary lesson-start-btn" data-start-review>Start Review &rarr;</button>`
+              : `<button class="btn-secondary lesson-start-btn" data-back-2>Back to Map</button>`
+          }
+        </div>
+      </main>
+    `;
+
+    wireHud(root, goTo);
+    root.querySelector("[data-back]").addEventListener("click", () => navigate("map"));
+    root.querySelector("[data-back-2]")?.addEventListener("click", () => navigate("map"));
+    root.querySelector("[data-start-review]")?.addEventListener("click", () => renderQuestion());
+  }
+
   function renderQuestion() {
     answered = false;
     const q = questions[idx];
+    const subject = getSubject(q.subjectId);
     const stimulusHTML = renderQuestionStimulus(q);
 
     root.innerHTML = `
       ${hudHTML("map")}
-      <main class="screen quiz-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
+      <main class="screen weak-review-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
         <div class="quiz-top">
-          <button class="back-btn" data-quit>&larr; Quit to Path</button>
+          <button class="back-btn" data-quit>&larr; End Review</button>
           <div class="quiz-progress-dots">
             ${questions
               .map((_, i) => `<span class="dot ${i < idx ? "done" : ""} ${i === idx ? "current" : ""}"></span>`)
@@ -71,8 +126,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
           </div>
           <div class="quiz-streak">🔥 Streak: ${streak}</div>
         </div>
-        <h2 class="quiz-skill-name">${skill.name}</h2>
-        <p class="quiz-lesson-label">Lesson ${lessonIndex + 1} of ${totalLessons}</p>
+        <div class="endless-tag" style="--tag-color:${subject.color};--tag-bg:${subject.bg}">${subject.icon} ${subject.name} &middot; ${q.skillName}</div>
         ${gameState.timerEnabled ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
@@ -91,7 +145,11 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     `;
 
     wireHud(root, goTo);
-    root.querySelector("[data-quit]").addEventListener("click", () => goTo("skillPath", { skillId, subjectId }));
+    root.querySelector("[data-quit]").addEventListener("click", () => {
+      unbindKeys();
+      finishSession();
+      renderResults();
+    });
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
     });
@@ -127,6 +185,8 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     const reactor = root.querySelector("#monsterReactor");
     reactor.classList.add(correct ? "react-happy" : "react-sad");
 
+    gameState.recordWeakReviewAnswer(q.skillId, correct);
+
     if (correct) {
       correctCount++;
       streak++;
@@ -150,47 +210,36 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
       "click",
       () => {
         idx++;
-        if (idx >= questions.length) showResults();
-        else renderQuestion();
+        if (idx >= questions.length) {
+          unbindKeys();
+          finishSession();
+          showResults();
+        } else {
+          renderQuestion();
+        }
       },
       { once: true }
     );
   }
 
   function showResults() {
-    unbindKeys();
     const total = questions.length;
-    const scorePct = Math.round((correctCount / total) * 100);
-    const outcome = gameState.recordLessonResult(skillId, lessonIndex, {
-      correctCount,
-      totalCount: total,
-      starsEarned,
-      coinsEarned,
-    });
-    const hasNextLesson = outcome.passed && lessonIndex + 1 < totalLessons;
+    const scorePct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
     root.innerHTML = `
       ${hudHTML("map")}
-      <main class="screen results-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
+      <main class="screen results-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
         <div class="results-card">
           <div class="results-monster">${monsterSVG(gameState.getAvatar(), { size: 130 })}</div>
-          <h1>${outcome.passed ? "Lesson Passed!" : "Keep Practicing!"}</h1>
+          <h1>Review Complete!</h1>
           <p class="results-score">${correctCount} / ${total} correct (${scorePct}%)</p>
-          ${
-            outcome.justMastered
-              ? `<p class="results-flag">🏅 Skill mastered!</p>`
-              : outcome.passed
-              ? `<p class="results-flag">✅ Lesson ${lessonIndex + 1} of ${totalLessons} cleared</p>`
-              : `<p class="results-flag results-flag-muted">Score 70% or higher to pass and unlock the next lesson.</p>`
-          }
+          <p class="results-flag">🎯 Great job shoring up your weak spots.</p>
           <div class="results-stats">
             <span>⭐ +${starsEarned} stars</span>
             <span>🪙 +${coinsEarned} coins</span>
           </div>
           <div class="results-actions">
-            ${hasNextLesson ? `<button class="btn-primary" data-next>Next Lesson &rarr;</button>` : ""}
-            <button class="${hasNextLesson ? "btn-secondary" : "btn-primary"}" data-retry>Retry Lesson</button>
-            <button class="btn-secondary" data-path>Back to Path</button>
+            <button class="btn-primary" data-retry>Review Again</button>
             <button class="btn-secondary" data-map>World Map</button>
           </div>
         </div>
@@ -198,12 +247,9 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     `;
 
     wireHud(root, goTo);
-    const nextBtn = root.querySelector("[data-next]");
-    if (nextBtn) nextBtn.addEventListener("click", () => goTo("quiz", { skillId, subjectId, lessonIndex: lessonIndex + 1 }));
-    root.querySelector("[data-retry]").addEventListener("click", () => goTo("quiz", { skillId, subjectId, lessonIndex }));
-    root.querySelector("[data-path]").addEventListener("click", () => goTo("skillPath", { skillId, subjectId }));
+    root.querySelector("[data-retry]").addEventListener("click", () => goTo("weakReview"));
     root.querySelector("[data-map]").addEventListener("click", () => goTo("map"));
   }
 
-  renderQuestion();
+  renderIntro();
 }

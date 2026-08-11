@@ -22,6 +22,7 @@ export function hudHTML(activeScreen) {
           .join("")}
       </nav>
       <div class="hud-stats">
+        <button class="hud-theme-toggle" id="themeToggle" title="Toggle dark mode">${gameState.darkMode ? "☀️" : "🌙"}</button>
         <span class="hud-stat" title="Stars">⭐ ${gameState.totalStars}</span>
         <span class="hud-stat" title="Coins">🪙 ${gameState.coins}</span>
       </div>
@@ -33,4 +34,13 @@ export function wireHud(root, navigate) {
   root.querySelectorAll("[data-nav]").forEach((btn) => {
     btn.addEventListener("click", () => navigate(btn.dataset.nav));
   });
+  const themeBtn = root.querySelector("#themeToggle");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const next = !gameState.darkMode;
+      gameState.setDarkMode(next);
+      document.documentElement.dataset.theme = next ? "dark" : "light";
+      themeBtn.textContent = next ? "☀️" : "🌙";
+    });
+  }
 }

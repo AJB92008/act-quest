@@ -1,5 +1,9 @@
-import { getSkill } from "../data/skills.js";
-import { getLessonQuestions, getLessonCount } from "../data/questions/index.js";
+// Boss Quiz: a capstone challenge for an island, unlocked once every skill
+// on it is mastered. A single bigger mixed-question test (not tied to any
+// one skill's path) drawing from everything you've learned on that island,
+// with a one-time bonus reward the first time you clear it.
+import { getSubject } from "../data/skills.js";
+import { getBossQuizQuestions } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -7,12 +11,14 @@ import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 
-const QUESTION_TIME = 20; // seconds budgeted per question, for the speed bonus
+const QUESTION_TIME = 20;
+const QUESTION_COUNT = 20;
+const FIRST_CLEAR_BONUS_STARS = 30;
+const FIRST_CLEAR_BONUS_COINS = 100;
 
-export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) {
-  const { subject, skill } = getSkill(skillId);
-  const questions = getLessonQuestions(skillId, lessonIndex);
-  const totalLessons = getLessonCount(skillId);
+export function renderBossQuiz(root, navigate, { subjectId }) {
+  const subject = getSubject(subjectId);
+  const questions = getBossQuizQuestions(subjectId, QUESTION_COUNT);
 
   let idx = 0;
   let correctCount = 0;
@@ -29,11 +35,6 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     timerInterval = null;
   }
 
-  // Every navigation away from this screen — HUD nav, quit, retry, next
-  // lesson, back to path/map — has to go through here so the running timer
-  // and the keyboard-shortcut listener (which lives on `document`, since
-  // each question is a full innerHTML rebuild with no persistent DOM) both
-  // get torn down instead of leaking onto whatever screen comes next.
   function goTo(screen, params) {
     unbindKeys();
     stopTimer();
@@ -61,9 +62,9 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
 
     root.innerHTML = `
       ${hudHTML("map")}
-      <main class="screen quiz-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
+      <main class="screen quiz-screen boss-quiz-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
         <div class="quiz-top">
-          <button class="back-btn" data-quit>&larr; Quit to Path</button>
+          <button class="back-btn" data-quit>&larr; Quit to Island</button>
           <div class="quiz-progress-dots">
             ${questions
               .map((_, i) => `<span class="dot ${i < idx ? "done" : ""} ${i === idx ? "current" : ""}"></span>`)
@@ -71,8 +72,8 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
           </div>
           <div class="quiz-streak">🔥 Streak: ${streak}</div>
         </div>
-        <h2 class="quiz-skill-name">${skill.name}</h2>
-        <p class="quiz-lesson-label">Lesson ${lessonIndex + 1} of ${totalLessons}</p>
+        <h2 class="quiz-skill-name">👑 ${subject.name} Boss Quiz</h2>
+        <p class="quiz-lesson-label">Question ${idx + 1} of ${questions.length} &middot; ${q.skillName}</p>
         ${gameState.timerEnabled ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
@@ -91,7 +92,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     `;
 
     wireHud(root, goTo);
-    root.querySelector("[data-quit]").addEventListener("click", () => goTo("skillPath", { skillId, subjectId }));
+    root.querySelector("[data-quit]").addEventListener("click", () => goTo("island", { subjectId }));
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
     });
@@ -161,36 +162,41 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     unbindKeys();
     const total = questions.length;
     const scorePct = Math.round((correctCount / total) * 100);
-    const outcome = gameState.recordLessonResult(skillId, lessonIndex, {
+
+    // Work out the first-clear bonus before recording, since recording is
+    // what flips gameState's `bossCleared` flag.
+    const willFirstClear = scorePct / 100 >= 0.7 && !gameState.isBossCleared(subjectId);
+    const totalStars = starsEarned + (willFirstClear ? FIRST_CLEAR_BONUS_STARS : 0);
+    const totalCoins = coinsEarned + (willFirstClear ? FIRST_CLEAR_BONUS_COINS : 0);
+
+    const outcome = gameState.recordBossQuizResult(subjectId, {
       correctCount,
       totalCount: total,
-      starsEarned,
-      coinsEarned,
+      starsEarned: totalStars,
+      coinsEarned: totalCoins,
     });
-    const hasNextLesson = outcome.passed && lessonIndex + 1 < totalLessons;
 
     root.innerHTML = `
       ${hudHTML("map")}
       <main class="screen results-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
         <div class="results-card">
           <div class="results-monster">${monsterSVG(gameState.getAvatar(), { size: 130 })}</div>
-          <h1>${outcome.passed ? "Lesson Passed!" : "Keep Practicing!"}</h1>
+          <h1>${outcome.justCleared ? "👑 Boss Cleared!" : outcome.passed ? "Cleared Again!" : "Not Quite!"}</h1>
           <p class="results-score">${correctCount} / ${total} correct (${scorePct}%)</p>
           ${
-            outcome.justMastered
-              ? `<p class="results-flag">🏅 Skill mastered!</p>`
+            outcome.justCleared
+              ? `<p class="results-flag">🏆 First clear bonus: +${FIRST_CLEAR_BONUS_STARS} stars, +${FIRST_CLEAR_BONUS_COINS} coins!</p>`
               : outcome.passed
-              ? `<p class="results-flag">✅ Lesson ${lessonIndex + 1} of ${totalLessons} cleared</p>`
-              : `<p class="results-flag results-flag-muted">Score 70% or higher to pass and unlock the next lesson.</p>`
+              ? `<p class="results-flag">✅ Passing score</p>`
+              : `<p class="results-flag results-flag-muted">Score 70% or higher to clear the Boss Quiz.</p>`
           }
           <div class="results-stats">
-            <span>⭐ +${starsEarned} stars</span>
-            <span>🪙 +${coinsEarned} coins</span>
+            <span>⭐ +${totalStars} stars</span>
+            <span>🪙 +${totalCoins} coins</span>
           </div>
           <div class="results-actions">
-            ${hasNextLesson ? `<button class="btn-primary" data-next>Next Lesson &rarr;</button>` : ""}
-            <button class="${hasNextLesson ? "btn-secondary" : "btn-primary"}" data-retry>Retry Lesson</button>
-            <button class="btn-secondary" data-path>Back to Path</button>
+            <button class="btn-primary" data-retry>Retry Boss Quiz</button>
+            <button class="btn-secondary" data-island>Back to Island</button>
             <button class="btn-secondary" data-map>World Map</button>
           </div>
         </div>
@@ -198,10 +204,8 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     `;
 
     wireHud(root, goTo);
-    const nextBtn = root.querySelector("[data-next]");
-    if (nextBtn) nextBtn.addEventListener("click", () => goTo("quiz", { skillId, subjectId, lessonIndex: lessonIndex + 1 }));
-    root.querySelector("[data-retry]").addEventListener("click", () => goTo("quiz", { skillId, subjectId, lessonIndex }));
-    root.querySelector("[data-path]").addEventListener("click", () => goTo("skillPath", { skillId, subjectId }));
+    root.querySelector("[data-retry]").addEventListener("click", () => goTo("bossQuiz", { subjectId }));
+    root.querySelector("[data-island]").addEventListener("click", () => goTo("island", { subjectId }));
     root.querySelector("[data-map]").addEventListener("click", () => goTo("map"));
   }
 

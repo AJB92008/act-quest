@@ -1,43 +1,55 @@
 import { getSubject } from "../data/skills.js";
+import { getLessonCount } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
+import { monsterSVG } from "./monster.js";
+import { pathPositions, pathHeight, renderPathSvg, renderDecorations } from "./pathTrail.js";
 
-function starRating(bestScore) {
-  if (bestScore >= 0.95) return 3;
-  if (bestScore >= 0.7) return 2;
-  if (bestScore > 0) return 1;
-  return 0;
-}
+const ROW_HEIGHT = 148;
 
 export function renderIsland(root, navigate, { subjectId }) {
   const subject = getSubject(subjectId);
+  const positions = pathPositions(subject.skills.length, { rowHeight: ROW_HEIGHT });
+  const totalHeight = pathHeight(subject.skills.length, ROW_HEIGHT);
+  const allMastered = subject.skills.every((skill) => gameState.isMastered(skill.id));
+  const bossCleared = gameState.isBossCleared(subjectId);
 
+  let currentIndex = subject.skills.findIndex((skill) => !gameState.isMastered(skill.id));
+  if (currentIndex === -1) currentIndex = subject.skills.length - 1;
+
+  // Skills within an island are always freely accessible (practice any of
+  // them any time); it's only the mini-lessons *inside* a skill that are
+  // gated to chronological order. The mascot just marks a suggested next
+  // stop, it doesn't block anything.
   const nodes = subject.skills
     .map((skill, i) => {
+      const { x, y } = positions[i];
       const progress = gameState.getSkillProgress(skill.id);
-      const stars = starRating(progress.bestScore);
+      const totalLessons = getLessonCount(skill.id);
       const stateClass = progress.mastered ? "is-mastered" : "is-open";
-      const side = i % 2 === 0 ? "left" : "right";
+      const isCurrent = i === currentIndex;
+      const badge = progress.mastered ? "✓" : String(i + 1);
       return `
-        <div class="path-node ${side}">
+        <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
+          ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getAvatar(), { size: 48 })}</div>` : ""}
           <button class="node-circle ${stateClass}" data-skill="${skill.id}"
             style="--node-color:${subject.color}">
-            ${progress.mastered ? "✓" : i + 1}
+            ${badge}
           </button>
           <div class="node-label">
             <h4>${skill.name}</h4>
             <p>${skill.blurb}</p>
-            <div class="node-stars">${[1, 2, 3].map((n) => (n <= stars ? "⭐" : "☆")).join("")}</div>
+            <div class="node-progress-badge">${progress.lessonsCompleted}/${totalLessons} lessons</div>
           </div>
         </div>
       `;
     })
     .join("");
 
-  const backgroundLinkHTML =
+  const referenceLinkHTML =
     subjectId === "science"
       ? `
-        <button class="background-lesson-card" data-background>
+        <button class="background-lesson-card" data-reference="background">
           <span class="background-lesson-icon">📚</span>
           <span class="background-lesson-text">
             <strong>ACT Science Background Knowledge</strong>
@@ -46,7 +58,33 @@ export function renderIsland(root, navigate, { subjectId }) {
           <span class="background-lesson-arrow">&rarr;</span>
         </button>
       `
+      : subjectId === "english" || subjectId === "reading"
+      ? `
+        <button class="background-lesson-card" data-reference="vocabulary">
+          <span class="background-lesson-icon">🔤</span>
+          <span class="background-lesson-text">
+            <strong>ACT Vocabulary Builder</strong>
+            <span>Words that keep showing up in ACT Reading passages and English answer choices.</span>
+          </span>
+          <span class="background-lesson-arrow">&rarr;</span>
+        </button>
+      `
       : "";
+
+  const bossQuizHTML = `
+    <button class="background-lesson-card boss-quiz-card ${allMastered ? "" : "is-locked-card"}" data-boss ${allMastered ? "" : "disabled"}>
+      <span class="background-lesson-icon">${bossCleared ? "👑" : allMastered ? "⚔️" : "🔒"}</span>
+      <span class="background-lesson-text">
+        <strong>${subject.name} Boss Quiz${bossCleared ? " — Cleared!" : ""}</strong>
+        <span>${
+          allMastered
+            ? "20 mixed questions from everything on this island. Clear it for a big one-time bonus."
+            : `Master all ${subject.skills.length} skills on this island to unlock.`
+        }</span>
+      </span>
+      <span class="background-lesson-arrow">${allMastered ? "&rarr;" : ""}</span>
+    </button>
+  `;
 
   root.innerHTML = `
     ${hudHTML("map")}
@@ -54,18 +92,27 @@ export function renderIsland(root, navigate, { subjectId }) {
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
       <p class="island-heading-blurb">${subject.blurb}</p>
-      ${backgroundLinkHTML}
-      <div class="path-container">${nodes}</div>
+      ${referenceLinkHTML}
+      ${bossQuizHTML}
+      <div class="map-path-container" style="height:${totalHeight}px">
+        ${renderPathSvg(positions, totalHeight, { color: subject.color })}
+        <div class="path-decorations">${renderDecorations(totalHeight, subjectId.length)}</div>
+        ${nodes}
+      </div>
     </main>
   `;
 
   wireHud(root, navigate);
   root.querySelector("[data-back]").addEventListener("click", () => navigate("map"));
   root.querySelectorAll("[data-skill]").forEach((btn) => {
-    btn.addEventListener("click", () => navigate("quiz", { skillId: btn.dataset.skill, subjectId }));
+    btn.addEventListener("click", () => navigate("skillPath", { skillId: btn.dataset.skill, subjectId }));
   });
-  const backgroundBtn = root.querySelector("[data-background]");
-  if (backgroundBtn) {
-    backgroundBtn.addEventListener("click", () => navigate("background", { subjectId }));
+  const referenceBtn = root.querySelector("[data-reference]");
+  if (referenceBtn) {
+    referenceBtn.addEventListener("click", () => navigate(referenceBtn.dataset.reference, { subjectId }));
+  }
+  const bossBtn = root.querySelector("[data-boss]:not(:disabled)");
+  if (bossBtn) {
+    bossBtn.addEventListener("click", () => navigate("bossQuiz", { subjectId }));
   }
 }

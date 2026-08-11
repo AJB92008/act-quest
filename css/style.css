@@ -2,11 +2,48 @@
   --ink: #2b2b3a;
   --paper: #fbfaff;
   --card: #ffffff;
+  --surface-alt: #f1eeff;
   --muted: #6b6b80;
   --border: #e7e4f6;
   --shadow: 0 6px 20px rgba(60, 40, 120, 0.1);
   --radius: 20px;
   --purple: #6a5cff;
+}
+
+/* Dark mode: redefines the same palette variables everything else already
+   uses (--ink/--paper/--card/--surface-alt/--muted/--border/--shadow), so
+   most of the app adapts automatically. A handful of elements set their
+   background from a per-subject inline --island-bg pastel (highest CSS
+   specificity, so it can't be overridden just by redefining root vars) —
+   those get explicit overrides below to use --card instead. */
+:root[data-theme="dark"] {
+  --ink: #e8e6f5;
+  --paper: #14141f;
+  --card: #1f1f2e;
+  --surface-alt: #2a2a3d;
+  --muted: #9b98b5;
+  --border: #35354a;
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"] body {
+  background: radial-gradient(circle at 10% 0%, #23233a 0%, #14141f 45%) fixed, var(--paper);
+}
+
+:root[data-theme="dark"] .hud {
+  background: rgba(20, 20, 31, 0.85);
+}
+
+:root[data-theme="dark"] .map-island-node,
+:root[data-theme="dark"] .node-progress-badge,
+:root[data-theme="dark"] .stimulus-panel,
+:root[data-theme="dark"] .endless-best-tile {
+  background: var(--card);
+}
+
+:root[data-theme="dark"] .island-screen {
+  background: linear-gradient(180deg, var(--surface-alt) 0%, transparent 220px);
 }
 
 * {
@@ -50,6 +87,8 @@ input[type="text"] {
   padding: 10px 14px;
   border-radius: 12px;
   border: 2px solid var(--border);
+  background: var(--card);
+  color: var(--ink);
   width: 100%;
   max-width: 280px;
 }
@@ -98,7 +137,7 @@ input[type="text"] {
 }
 
 .hud-btn:hover {
-  background: #f1eeff;
+  background: var(--surface-alt);
 }
 
 .hud-btn.is-active {
@@ -120,6 +159,21 @@ input[type="text"] {
   font-size: 0.9rem;
   border: 1px solid #ffe6ad;
   white-space: nowrap;
+}
+
+.hud-theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.hud-theme-toggle:hover {
+  background: var(--surface-alt);
 }
 
 /* ---------- buttons ---------- */
@@ -150,7 +204,7 @@ input[type="text"] {
 }
 
 .btn-secondary {
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
   border: 2px solid var(--border);
 }
@@ -220,56 +274,127 @@ input[type="text"] {
   margin-bottom: 24px;
 }
 
-.island-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
+.map-screen {
+  background: radial-gradient(circle at 20% 0%, #eef1ff 0%, transparent 60%), var(--paper);
+  border-radius: var(--radius);
+  padding-bottom: 40px;
 }
 
-.island-card {
-  text-align: left;
+:root[data-theme="dark"] .map-screen {
+  background: radial-gradient(circle at 20% 0%, #2a2a45 0%, transparent 60%), var(--paper);
+}
+
+/* Shared winding-path container: an SVG connector line + scattered
+   decorations sit behind absolutely-positioned stop nodes. Used by the
+   World Map (subject islands), a subject's skill path, and a skill's
+   mini-lesson path. */
+.map-path-container {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 10px auto 0;
+}
+
+.path-trail-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.path-decorations {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.path-decoration {
+  position: absolute;
+  opacity: 0.35;
+  transform: translate(-50%, -50%);
+  filter: saturate(0.9);
+}
+
+.map-node-wrap {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 1;
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  width: 168px;
+}
+
+.map-mascot {
+  position: absolute;
+  top: -46px;
+  line-height: 0;
+  animation: bob 2.4s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.map-island-node {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: none;
+  display: grid;
+  place-items: center;
   background: var(--island-bg, #fff);
-  border: 2px solid var(--island-color, var(--border));
-  border-radius: var(--radius);
-  padding: 18px;
   box-shadow: var(--shadow);
   transition: transform 0.15s ease;
 }
 
-.island-card:hover {
-  transform: translateY(-4px);
+.map-island-node:hover {
+  transform: scale(1.06);
 }
 
-.island-icon {
-  font-size: 2.2rem;
-  flex: 0 0 auto;
+.map-island-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--island-color, var(--purple)) var(--ring-pct, 0%), #ffffff 0);
+  padding: 5px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }
 
-.island-info h3 {
+.map-island-icon {
+  font-size: 2.1rem;
+  z-index: 1;
+}
+
+.map-island-label {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.map-island-label h3 {
   color: var(--island-color, var(--ink));
+  font-size: 1.1rem;
+  margin-bottom: 1px;
 }
 
-.island-place {
+.map-island-place {
   font-weight: 700;
   color: var(--muted);
-  margin: 0 0 6px;
-  font-size: 0.85rem;
+  margin: 0 0 2px;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.island-blurb {
-  margin: 0 0 8px;
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
-.island-progress {
-  margin: 4px 0 0;
-  font-size: 0.85rem;
+.map-island-progress {
+  margin: 0;
+  font-size: 0.82rem;
   color: var(--muted);
   font-weight: 700;
 }
@@ -295,7 +420,7 @@ input[type="text"] {
   gap: 14px;
   width: 100%;
   max-width: 640px;
-  background: #fff;
+  background: var(--card);
   border: 2px solid var(--island-color, var(--border));
   border-radius: var(--radius);
   padding: 16px 20px;
@@ -336,22 +461,47 @@ input[type="text"] {
   flex: 0 0 auto;
 }
 
-.path-container {
+.boss-quiz-card.is-locked-card {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.boss-quiz-card.is-locked-card:hover {
+  transform: none;
+}
+
+.weak-skill-list {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  color: var(--ink);
+}
+
+.weak-skill-list li {
+  margin-bottom: 4px;
+}
+
+.weak-skill-pct {
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.path-node-wrap {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 640px;
-}
-
-.path-node {
-  display: flex;
   align-items: center;
-  gap: 18px;
+  width: 200px;
+  text-align: center;
 }
 
-.path-node.right {
-  flex-direction: row-reverse;
-  text-align: right;
+.path-mascot {
+  position: absolute;
+  top: -40px;
+  line-height: 0;
+  animation: bob 2.4s ease-in-out infinite;
 }
 
 .node-circle {
@@ -365,6 +515,12 @@ input[type="text"] {
   color: #fff;
   background: #cfcbe8;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.node-circle-small {
+  width: 46px;
+  height: 46px;
+  font-size: 1rem;
 }
 
 .node-circle.is-open {
@@ -385,26 +541,36 @@ input[type="text"] {
   transform: scale(1.06);
 }
 
+.node-label {
+  margin-top: 6px;
+}
+
 .node-label h4 {
   margin-bottom: 2px;
+  font-size: 0.95rem;
 }
 
 .node-label p {
   margin: 0 0 4px;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
 }
 
-.node-stars {
-  font-size: 0.95rem;
-  letter-spacing: 2px;
-}
-
-.node-stars-locked {
-  color: var(--muted);
-  font-size: 0.8rem;
-  letter-spacing: normal;
+.node-label-compact h4 {
+  font-size: 0.82rem;
   font-weight: 700;
+  color: var(--muted);
+  margin: 0;
+}
+
+.node-progress-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--island-color, var(--purple));
+  background: var(--island-bg, #f1eeff);
+  border-radius: 999px;
+  padding: 2px 10px;
 }
 
 /* ---------- quiz ---------- */
@@ -445,6 +611,21 @@ input[type="text"] {
 .quiz-skill-name {
   color: var(--island-color);
   margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.quiz-lesson-label {
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.88rem;
+  margin: 2px 0 14px;
+}
+
+.skillpath-hint {
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+  margin: 18px 0 6px;
 }
 
 .timer-bar-track {
@@ -503,7 +684,7 @@ input[type="text"] {
 .stimulus-table {
   border-collapse: collapse;
   width: 100%;
-  background: #fff;
+  background: var(--card);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -517,7 +698,7 @@ input[type="text"] {
 }
 
 .stimulus-table th {
-  background: #f1eeff;
+  background: var(--surface-alt);
 }
 
 .viewpoints {
@@ -528,7 +709,7 @@ input[type="text"] {
 }
 
 .viewpoint-card {
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px 14px;
@@ -622,7 +803,7 @@ input[type="text"] {
 }
 
 .bg-toc-link {
-  background: #f1eeff;
+  background: var(--surface-alt);
   color: var(--purple);
   font-weight: 800;
   font-size: 0.9rem;
@@ -680,7 +861,7 @@ input[type="text"] {
 .flashcard-panel {
   margin-top: 16px;
   padding: 18px;
-  background: #f7f6ff;
+  background: var(--surface-alt);
   border-radius: var(--radius);
   border: 1px solid var(--border);
 }
@@ -719,7 +900,7 @@ input[type="text"] {
 }
 
 .flashcard-front {
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
 }
 
@@ -815,7 +996,7 @@ input[type="text"] {
   padding: 14px 16px;
   border-radius: 14px;
   border: 2px solid var(--border);
-  background: #fff;
+  background: var(--card);
   font-size: 0.98rem;
   font-weight: 600;
   transition: border-color 0.15s, background 0.15s, transform 0.1s;
@@ -834,6 +1015,34 @@ input[type="text"] {
 .choice-btn.is-incorrect {
   border-color: #e1594f;
   background: #fdeceb;
+}
+
+.choice-btn.is-eliminated {
+  opacity: 0.4;
+  text-decoration: line-through;
+  background: var(--surface-alt);
+}
+
+.hint-btn {
+  display: block;
+  margin: 14px auto 0;
+  border: 2px solid #ffd25f;
+  background: #fffaf0;
+  color: #a9791c;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  border-radius: 999px;
+}
+
+.hint-btn:hover:not(:disabled) {
+  background: #fff2d4;
+}
+
+.hint-btn:disabled {
+  opacity: 0.45;
+  border-color: var(--border);
+  color: var(--muted);
 }
 
 .explain-panel {
@@ -1005,7 +1214,7 @@ input[type="text"] {
   border-radius: 999px;
   padding: 8px 16px;
   border: 2px solid var(--border);
-  background: #fff;
+  background: var(--card);
   font-weight: 800;
   font-size: 0.9rem;
   color: var(--muted);
@@ -1018,7 +1227,7 @@ input[type="text"] {
 
 .avatar-tab-btn.is-active {
   border-color: var(--purple);
-  background: #f1eeff;
+  background: var(--surface-alt);
   color: var(--purple);
 }
 
@@ -1071,7 +1280,7 @@ input[type="text"] {
   border-radius: 999px;
   padding: 8px 14px;
   border: 2px solid var(--border);
-  background: #fff;
+  background: var(--card);
   font-weight: 700;
   font-size: 0.85rem;
   transition: transform 0.15s ease, border-color 0.15s ease;
@@ -1083,7 +1292,7 @@ input[type="text"] {
 
 .trait-btn.is-selected {
   border-color: var(--purple);
-  background: #f1eeff;
+  background: var(--surface-alt);
   color: var(--purple);
 }
 
@@ -1121,7 +1330,7 @@ input[type="text"] {
   border-radius: 999px;
   padding: 8px 14px;
   border: 2px solid var(--border);
-  background: #fff;
+  background: var(--card);
   font-weight: 700;
   font-size: 0.85rem;
   transition: transform 0.15s ease, border-color 0.15s ease;
@@ -1133,7 +1342,7 @@ input[type="text"] {
 
 .accessory-btn.is-selected {
   border-color: var(--purple);
-  background: #f1eeff;
+  background: var(--surface-alt);
 }
 
 .accessory-btn.is-locked {
@@ -1267,6 +1476,13 @@ input[type="text"] {
   color: var(--island-color);
 }
 
+.endless-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
 .endless-tag {
   display: inline-block;
   font-weight: 700;
@@ -1275,7 +1491,12 @@ input[type="text"] {
   background: var(--tag-bg, #f1eeff);
   border-radius: 999px;
   padding: 6px 14px;
-  margin: 4px 0 14px;
+}
+
+.endless-difficulty-tag {
+  color: var(--island-color, var(--ink));
+  background: var(--card);
+  border: 1.5px solid var(--island-color, var(--border));
 }
 
 /* ---------- responsive ---------- */
@@ -1315,15 +1536,32 @@ input[type="text"] {
   .hud-btn-label {
     font-size: 0.68rem;
   }
-  .path-node,
-  .path-node.right {
-    flex-direction: row;
-    text-align: left;
+  .map-node-wrap {
+    width: 130px;
+  }
+  .path-node-wrap {
+    width: 150px;
+  }
+  .map-mascot,
+  .path-mascot {
+    top: -34px;
+  }
+  .map-island-node {
+    width: 68px;
+    height: 68px;
+  }
+  .map-island-icon {
+    font-size: 1.6rem;
   }
   .node-circle {
     width: 52px;
     height: 52px;
     font-size: 1.1rem;
+  }
+  .node-circle-small {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
   }
   .avatar-layout {
     flex-direction: column;
