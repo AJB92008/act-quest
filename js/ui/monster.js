@@ -166,7 +166,11 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       let decor = "";
       if (stage >= 1) decor += `<ellipse cx="29" cy="45" rx="9" ry="7" fill="${accent}"/><ellipse cx="71" cy="45" rx="9" ry="7" fill="${accent}"/>`;
       if (stage >= 2) decor += gem(50, 62, 6, accent, outline);
-      if (stage >= 3) decor += `<rect x="24" y="80" width="52" height="9" rx="4" fill="${accent}"/>`;
+      if (stage >= 3)
+        decor +=
+          `<rect x="24" y="80" width="52" height="9" rx="4" fill="${accent}"/>` +
+          spike(29, 40, 5, 12, accent, outline) +
+          spike(71, 40, 5, 12, accent, outline);
       if (stage >= 4) decor += sparkle(16, 28, 6, accent) + sparkle(84, 28, 6, accent) + `<path d="M50 3 L44 16 L56 16 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>`;
       return {
         fill: `
@@ -191,7 +195,10 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
         decor += `<ellipse cx="24" cy="42" rx="9" ry="6" fill="${accent}" opacity="0.75" transform="rotate(-20 24 42)"/><ellipse cx="76" cy="42" rx="9" ry="6" fill="${accent}" opacity="0.75" transform="rotate(20 76 42)"/>`;
       if (stage >= 2)
         decor += `<path d="M50 42 Q16 22 8 48 Q28 58 50 44 Z" fill="${accent}" opacity="0.55" stroke="${outline}" stroke-width="1.2"/><path d="M50 42 Q84 22 92 48 Q72 58 50 44 Z" fill="${accent}" opacity="0.55" stroke="${outline}" stroke-width="1.2"/>`;
-      if (stage >= 3) decor += `<path d="M20 38 L44 46 M80 38 L56 46" stroke="${outline}" stroke-width="1.6" opacity="0.75"/>`;
+      if (stage >= 3)
+        decor +=
+          `<path d="M20 38 L44 46 M80 38 L56 46" stroke="${outline}" stroke-width="1.6" opacity="0.75"/>` +
+          `<ellipse cx="20" cy="34" rx="7" ry="4.5" fill="${accent}" opacity="0.7" transform="rotate(-35 20 34)"/><ellipse cx="80" cy="34" rx="7" ry="4.5" fill="${accent}" opacity="0.7" transform="rotate(35 80 34)"/>`;
       if (stage >= 4) decor += `<circle cx="34" cy="3" r="3.2" fill="${accent}"/><circle cx="66" cy="3" r="3.2" fill="${accent}"/>`;
       return {
         fill: `
@@ -245,7 +252,10 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 1) decor += `<circle cx="62" cy="44" r="8" fill="#fff" opacity="0.3"/><circle cx="42" cy="66" r="6" fill="#fff" opacity="0.25"/>`;
       if (stage >= 2)
         decor += `<path d="M44 90 Q42 104 50 110 Q58 104 54 90 Z" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/><circle cx="26" cy="55" r="6" fill="${accent}" opacity="0.45"/>`;
-      if (stage >= 3) decor += `<circle cx="62" cy="44" r="8" fill="${accent}" opacity="0.5"/>`;
+      if (stage >= 3)
+        decor +=
+          `<path d="M68 84 Q68 96 74 100 Q79 95 75 84 Z" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>` +
+          `<circle cx="62" cy="44" r="8" fill="${accent}" opacity="0.5"/>`;
       if (stage >= 4) decor += `<circle cx="50" cy="55" r="13" fill="${accent}" opacity="0.4"/><circle cx="50" cy="55" r="6" fill="${accent}" opacity="0.9"/>`;
       return {
         fill: `
@@ -292,7 +302,11 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       let decor = "";
       if (stage >= 1) decor += `<circle cx="38" cy="27" r="2.6" fill="${outline}"/><circle cx="62" cy="27" r="2.6" fill="${outline}"/>`;
       if (stage >= 2) decor += `<path d="M50 56 L42 66 L50 76 L58 66 Z" fill="${accent}" opacity="0.7"/>`;
-      if (stage >= 3) decor += `<circle cx="30" cy="32" r="2" fill="${outline}"/><circle cx="70" cy="32" r="2" fill="${outline}"/>`;
+      if (stage >= 3)
+        decor +=
+          `<circle cx="30" cy="32" r="2.4" fill="${accent}"/><circle cx="70" cy="32" r="2.4" fill="${accent}"/>` +
+          spike(28, 50, 3.5, 10, accent, outline) +
+          spike(72, 50, 3.5, 10, accent, outline);
       if (stage >= 4)
         decor += `<path d="M50 56 L42 66 L50 76 L58 66 Z" fill="${accent}"/><circle cx="38" cy="27" r="2.6" fill="${accent}"/><circle cx="62" cy="27" r="2.6" fill="${accent}"/>`;
       return {
@@ -341,14 +355,16 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 1) decor += `<path d="M50 10 Q44 -4 50 -12 Q56 -4 50 10 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>`;
       if (stage >= 2) decor += `<path d="M42 8 L50 -18 L58 8 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>`;
       if (stage >= 3)
-        decor += [
-          [28, 38],
-          [72, 38],
-          [34, 70],
-          [66, 70],
-        ]
-          .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.6" fill="#7fffea" opacity="0.9"/>`)
-          .join("");
+        decor +=
+          `<path d="M32 68 L22 78 L34 76 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/><path d="M68 68 L78 78 L66 76 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>` +
+          [
+            [28, 38],
+            [72, 38],
+            [34, 62],
+            [66, 62],
+          ]
+            .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.4" fill="#7fffea" opacity="0.95"/>`)
+            .join("");
       if (stage >= 4) decor += `<path d="M42 8 L50 -18 L58 8 Z" fill="none" stroke="${accent}" stroke-width="2"/>`;
       return {
         fill: `
@@ -371,7 +387,10 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 1) decor += `<path d="M50 8 L41 -8 L50 -15 L59 -8 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/>`;
       if (stage >= 2)
         decor += `<path d="M26 30 L8 18 L16 34 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/><path d="M74 30 L92 18 L84 34 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/>`;
-      if (stage >= 3) decor += `<path d="M50 8 L50 55 M26 30 L64 62 M74 30 L36 62" stroke="#fff" stroke-width="1.5" opacity="0.55"/>`;
+      if (stage >= 3)
+        decor +=
+          `<path d="M39 100 L50 108 L61 100 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/>` +
+          `<path d="M50 8 L50 55 M26 30 L64 62 M74 30 L36 62" stroke="#fff" stroke-width="1.5" opacity="0.55"/>`;
       if (stage >= 4) decor += `<circle cx="50" cy="55" r="9" fill="${accent}" opacity="0.7"/>`;
       return {
         fill: `
@@ -419,7 +438,11 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
           [26, 74].map((x) => rivet(x, 26, 3, outline)).join("") +
           [26, 74].map((x) => rivet(x, 94, 3, outline)).join("") +
           `<circle cx="50" cy="0" r="4" fill="#7fffea"/>`;
-      if (stage >= 3) decor += `<rect x="14" y="42" width="9" height="24" rx="3" fill="${accent}" opacity="0.85"/><rect x="77" y="42" width="9" height="24" rx="3" fill="${accent}" opacity="0.85"/>`;
+      if (stage >= 3)
+        decor +=
+          `<rect x="12" y="40" width="11" height="28" rx="3" fill="${accent}"/><rect x="77" y="40" width="11" height="28" rx="3" fill="${accent}"/>` +
+          `<line x1="15" y1="46" x2="20" y2="46" stroke="${outline}" stroke-width="1.5"/><line x1="15" y1="54" x2="20" y2="54" stroke="${outline}" stroke-width="1.5"/><line x1="15" y1="62" x2="20" y2="62" stroke="${outline}" stroke-width="1.5"/>` +
+          `<line x1="80" y1="46" x2="85" y2="46" stroke="${outline}" stroke-width="1.5"/><line x1="80" y1="54" x2="85" y2="54" stroke="${outline}" stroke-width="1.5"/><line x1="80" y1="62" x2="85" y2="62" stroke="${outline}" stroke-width="1.5"/>`;
       if (stage >= 4) decor += `<rect x="26" y="28" width="48" height="9" fill="${accent}"/><circle cx="50" cy="60" r="9" fill="${accent}" opacity="0.6"/>`;
       return {
         fill: `
@@ -443,7 +466,10 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       let decor = "";
       if (stage >= 1) decor += `<path d="M26 86 Q22 98 28 106 Q34 98 32 86 Z" fill="${color}" opacity="0.7"/>`;
       if (stage >= 2) decor += `<path d="M50 88 Q46 102 54 110 Q60 102 56 88 Z" fill="${color}" opacity="0.7"/>`;
-      if (stage >= 3) decor += `<path d="M74 86 Q78 98 72 106 Q66 98 68 86 Z" fill="${color}" opacity="0.7"/>`;
+      if (stage >= 3)
+        decor +=
+          `<path d="M74 86 Q78 98 72 106 Q66 98 68 86 Z" fill="${color}" opacity="0.7"/>` +
+          `<circle cx="20" cy="50" r="4.5" fill="${accent}" opacity="0.8"/><circle cx="80" cy="46" r="3.6" fill="${accent}" opacity="0.8"/>`;
       if (stage >= 4) decor += `<ellipse cx="50" cy="10" rx="18" ry="5" fill="none" stroke="${accent}" stroke-width="2.5"/>`;
       return {
         fill: `
@@ -496,7 +522,10 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       let decor = "";
       if (stage >= 1) decor += [30, 50, 70].map((x) => `<ellipse cx="${x}" cy="28" rx="5.5" ry="4.5" fill="${accent}" opacity="0.85"/>`).join("");
       if (stage >= 2) decor += [18, 38, 62, 82].map((x) => `<ellipse cx="${x}" cy="28" rx="5.5" ry="4.5" fill="${accent}" opacity="0.85"/>`).join("");
-      if (stage >= 3) decor += [18, 34, 50, 66, 82].map((x) => `<circle cx="${x}" cy="28" r="2.4" fill="#7fffea" opacity="0.9"/>`).join("");
+      if (stage >= 3)
+        decor +=
+          [18, 34, 50, 66, 82].map((x) => `<circle cx="${x}" cy="28" r="3.2" fill="#7fffea" opacity="0.95"/>`).join("") +
+          [26, 50, 74].map((x) => spike(x, 22, 3, 8, accent, outline)).join("");
       if (stage >= 4) decor += `<circle cx="12" cy="50" r="3" fill="${accent}"/><circle cx="88" cy="50" r="3" fill="${accent}"/>`;
       return {
         fill: `
@@ -519,7 +548,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       let decor = "";
       if (stage >= 1) decor += gem(50, 93, 6, accent, outline);
       if (stage >= 2) decor += sparkle(14, 46, 7, accent);
-      if (stage >= 3) decor += sparkle(86, 46, 7, accent);
+      if (stage >= 3) decor += sparkle(86, 46, 7, accent) + sparkle(24, 12, 5.5, accent) + sparkle(76, 12, 5.5, accent);
       if (stage >= 4) decor += sparkle(50, 6, 6, accent) + gem(50, 93, 7, accent, outline);
       return {
         fill: `
