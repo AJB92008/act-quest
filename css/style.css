@@ -46,6 +46,12 @@
   background: linear-gradient(180deg, var(--surface-alt) 0%, transparent 220px);
 }
 
+:root[data-theme="dark"] .hud-stat {
+  background: #3a3320;
+  color: #ffe6ad;
+  border-color: #5c4d1f;
+}
+
 * {
   box-sizing: border-box;
 }
