@@ -139,6 +139,38 @@ input[type="text"] {
   border: 2px solid var(--card);
 }
 
+.dev-mode-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f1f2e;
+  color: #fff;
+  font-weight: 800;
+  padding: 12px 22px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  animation: dev-toast-in 0.25s ease, dev-toast-out 0.3s ease 2.9s forwards;
+}
+
+@keyframes dev-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes dev-toast-out {
+  to {
+    opacity: 0;
+  }
+}
+
 .hud-nav {
   display: flex;
   gap: 6px;
@@ -1778,4 +1810,83 @@ input[type="text"] {
   .question-card {
     padding: 18px;
   }
+}
+
+/* ---------- developer mode ---------- */
+.dev-mode-subtitle {
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+.dev-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  background: var(--surface-alt);
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.dev-panel {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.dev-panel h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 0;
+}
+
+.dev-panel h3 {
+  margin: 14px 0 8px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.dev-cheat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dev-btn {
+  border-radius: 999px;
+  padding: 8px 14px;
+  border: 2px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.dev-btn:hover {
+  border-color: var(--purple);
+  transform: translateY(-1px);
+}
+
+.dev-btn-quiet {
+  background: transparent;
+  color: var(--muted);
+}
+
+.dev-state-dump {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  max-height: 420px;
+  overflow: auto;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
 }

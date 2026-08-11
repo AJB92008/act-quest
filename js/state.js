@@ -96,6 +96,7 @@ function defaultSave() {
     settings: {
       timerEnabled: true,
       darkMode: false,
+      devModeUnlocked: false,
     },
     endless: {
       bestRun: 0,
@@ -206,6 +207,15 @@ class GameState {
 
   setDarkMode(enabled) {
     this.data.settings.darkMode = enabled;
+    this.save();
+  }
+
+  get devModeUnlocked() {
+    return this.data.settings.devModeUnlocked;
+  }
+
+  setDevModeUnlocked(enabled) {
+    this.data.settings.devModeUnlocked = enabled;
     this.save();
   }
 
@@ -517,6 +527,96 @@ class GameState {
     const levelResult = this._grantXp(starsEarned);
     this.save();
     return { isNewBest, ...levelResult };
+  }
+
+  // --- developer mode cheats (manual testing only, never called from
+  // normal gameplay) ---
+  cheatAddCoins(n) {
+    this.data.coins = Math.max(0, this.data.coins + n);
+    this.save();
+  }
+
+  cheatAddStars(n) {
+    this.data.totalStars = Math.max(0, this.data.totalStars + n);
+    this.save();
+  }
+
+  cheatAddXp(n) {
+    this.data.monster.xp = Math.max(0, this.data.monster.xp + n);
+    this.save();
+  }
+
+  /** Forces a single skill's mastered flag, filling in attempts/correct/
+   * lessonsCompleted so the rest of the UI (accuracy %, lesson badges) reads
+   * consistently rather than showing a mastered skill with 0 lessons done,
+   * or vice versa. */
+  cheatSetSkillMastered(skillId, mastered) {
+    const progress = this.data.skillProgress[skillId];
+    if (!progress) return;
+    const totalLessons = getLessonCount(skillId);
+    if (mastered) {
+      progress.mastered = true;
+      progress.lessonsCompleted = totalLessons;
+      progress.attempts = Math.max(progress.attempts, 20);
+      progress.correct = Math.max(progress.correct, Math.round(progress.attempts * 0.9));
+      progress.bestScore = Math.max(progress.bestScore, 0.9);
+    } else {
+      progress.mastered = false;
+      progress.lessonsCompleted = 0;
+      progress.attempts = 0;
+      progress.correct = 0;
+      progress.bestScore = 0;
+      progress.stars = 0;
+    }
+    this.save();
+  }
+
+  cheatSetSubjectMastered(subjectId, mastered) {
+    const subject = SUBJECTS.find((s) => s.id === subjectId);
+    if (!subject) return;
+    subject.skills.forEach((skill) => this.cheatSetSkillMastered(skill.id, mastered));
+  }
+
+  /** Masters/unmasters skills across every subject until overall mastery %
+   * lands on `pct`, exercising the real evolution/predictor/dashboard math
+   * instead of a separate override — so "jump to a mastery level" cheats
+   * behave exactly like actually playing to that point would. */
+  cheatSetOverallMasteryPct(pct) {
+    const ids = allSkillIds();
+    const targetCount = Math.round(ids.length * Math.max(0, Math.min(1, pct)));
+    ids.forEach((id, i) => this.cheatSetSkillMastered(id, i < targetCount));
+  }
+
+  cheatSetBossCleared(subjectId, cleared) {
+    this.data.bossCleared[subjectId] = cleared;
+    this.save();
+  }
+
+  /** Randomizes every skill's progress (for eyeballing dashboard/weak-review/
+   * boss states without hand-crafting a save), plus a plausible coin/star/xp
+   * pile. */
+  cheatSeedRandomProgress() {
+    for (const id of allSkillIds()) {
+      const progress = this.data.skillProgress[id];
+      const totalLessons = getLessonCount(id);
+      const accuracy = 0.3 + Math.random() * 0.65;
+      const attempts = 5 + Math.floor(Math.random() * 40);
+      const correct = Math.round(attempts * accuracy);
+      const mastered = Math.random() < 0.4;
+      progress.attempts = attempts;
+      progress.correct = correct;
+      progress.bestScore = accuracy;
+      progress.mastered = mastered;
+      progress.lessonsCompleted = mastered ? totalLessons : Math.floor(Math.random() * totalLessons);
+      progress.stars = attempts;
+    }
+    for (const subject of SUBJECTS) {
+      this.data.bossCleared[subject.id] = subject.skills.every((s) => this.data.skillProgress[s.id].mastered) && Math.random() < 0.5;
+    }
+    this.data.coins = 200 + Math.floor(Math.random() * 800);
+    this.data.totalStars = 100 + Math.floor(Math.random() * 900);
+    this.data.monster.xp = Math.floor(Math.random() * 2000);
+    this.save();
   }
 }
 

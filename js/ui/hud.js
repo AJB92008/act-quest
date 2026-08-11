@@ -1,6 +1,34 @@
 import { gameState } from "../state.js";
 import { monsterSVG } from "./monster.js";
 
+const DEV_MODE_CLICKS = 10;
+const DEV_MODE_WINDOW_MS = 5000;
+// Module-level (not per-render) so rapid clicks on the theme toggle keep
+// counting across the innerHTML rebuilds that every navigate() triggers.
+let toggleClickTimestamps = [];
+
+function showToast(text) {
+  const toast = document.createElement("div");
+  toast.className = "dev-mode-toast";
+  toast.textContent = text;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3200);
+}
+
+function registerThemeToggleClick(navigate) {
+  const now = Date.now();
+  toggleClickTimestamps.push(now);
+  toggleClickTimestamps = toggleClickTimestamps.filter((t) => now - t <= DEV_MODE_WINDOW_MS);
+  if (toggleClickTimestamps.length < DEV_MODE_CLICKS) return;
+  toggleClickTimestamps = [];
+  if (!gameState.devModeUnlocked) {
+    gameState.setDevModeUnlocked(true);
+    showToast("🛠️ Developer Mode unlocked!");
+  } else {
+    navigate("devMode");
+  }
+}
+
 export function hudHTML(activeScreen) {
   const avatar = gameState.getDisplayAvatar();
   const nav = [
@@ -10,6 +38,7 @@ export function hudHTML(activeScreen) {
     { id: "shop", icon: "🛍️", label: "Shop" },
     { id: "avatarCreator", icon: "🐲", label: "Monster" },
   ];
+  if (gameState.devModeUnlocked) nav.push({ id: "devMode", icon: "🛠️", label: "Dev" });
   return `
     <header class="hud">
       <div class="hud-avatar" title="Level ${gameState.level}">${monsterSVG(avatar, { size: 48 })}<span class="hud-level-badge">${gameState.level}</span></div>
@@ -41,6 +70,7 @@ export function wireHud(root, navigate) {
       gameState.setDarkMode(next);
       document.documentElement.dataset.theme = next ? "dark" : "light";
       themeBtn.textContent = next ? "☀️" : "🌙";
+      registerThemeToggleClick(navigate);
     });
   }
 }
