@@ -482,13 +482,60 @@ input[type="text"] {
   flex: 0 0 auto;
 }
 
-.boss-quiz-card.is-locked-card {
-  opacity: 0.6;
-  cursor: default;
+.boss-encounter {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px 28px;
+  margin-top: 28px;
+  border: 2px solid transparent;
 }
 
-.boss-quiz-card.is-locked-card:hover {
-  transform: none;
+.boss-encounter-monster {
+  flex: 0 0 auto;
+  line-height: 0;
+  position: relative;
+}
+
+.boss-encounter.is-locked .boss-encounter-monster {
+  filter: grayscale(1) brightness(0.75);
+  opacity: 0.55;
+}
+
+.boss-encounter.is-unlocked {
+  border-color: var(--island-color);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--island-color) 18%, transparent), var(--shadow);
+}
+
+.boss-encounter.is-cleared {
+  border-color: #ffd25f;
+}
+
+.boss-encounter-crown {
+  position: absolute;
+  top: -14px;
+  right: -6px;
+  font-size: 1.6rem;
+}
+
+.boss-encounter-info h3 {
+  margin: 0 0 2px;
+  color: var(--island-color);
+}
+
+.boss-encounter-subtitle {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.boss-encounter-blurb {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .weak-skill-list {

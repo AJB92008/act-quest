@@ -1,5 +1,6 @@
 import { getSubject } from "../data/skills.js";
 import { getLessonCount } from "../data/questions/index.js";
+import { getBossMonster } from "../data/bossMonsters.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -71,19 +72,28 @@ export function renderIsland(root, navigate, { subjectId }) {
       `
       : "";
 
-  const bossQuizHTML = `
-    <button class="background-lesson-card boss-quiz-card ${allMastered ? "" : "is-locked-card"}" data-boss ${allMastered ? "" : "disabled"}>
-      <span class="background-lesson-icon">${bossCleared ? "👑" : allMastered ? "⚔️" : "🔒"}</span>
-      <span class="background-lesson-text">
-        <strong>${subject.name} Boss Quiz${bossCleared ? " — Cleared!" : ""}</strong>
-        <span>${
+  // A unique, subject-themed monster guards the bottom of the path — locked
+  // (silhouette) until every skill above it is mastered, in full color once
+  // the fight is available, and crowned once it's been cleared.
+  const boss = getBossMonster(subjectId);
+  const bossStateClass = bossCleared ? "is-cleared" : allMastered ? "is-unlocked" : "is-locked";
+  const bossEncounterHTML = `
+    <div class="boss-encounter ${bossStateClass}" style="--island-color:${subject.color}">
+      <div class="boss-encounter-monster">
+        ${monsterSVG(boss.avatar, { size: 130 })}
+        ${bossCleared ? `<span class="boss-encounter-crown">👑</span>` : ""}
+      </div>
+      <div class="boss-encounter-info">
+        <h3>${allMastered ? "" : "🔒 "}${boss.name}</h3>
+        <p class="boss-encounter-subtitle">${subject.name} Boss Quiz${bossCleared ? " — Cleared!" : ""}</p>
+        <p class="boss-encounter-blurb">${
           allMastered
             ? "20 mixed questions from everything on this island. Clear it for a big one-time bonus."
             : `Master all ${subject.skills.length} skills on this island to unlock.`
-        }</span>
-      </span>
-      <span class="background-lesson-arrow">${allMastered ? "&rarr;" : ""}</span>
-    </button>
+        }</p>
+        ${allMastered ? `<button class="btn-primary" data-boss>Challenge the Boss &rarr;</button>` : ""}
+      </div>
+    </div>
   `;
 
   root.innerHTML = `
@@ -93,12 +103,12 @@ export function renderIsland(root, navigate, { subjectId }) {
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
       <p class="island-heading-blurb">${subject.blurb}</p>
       ${referenceLinkHTML}
-      ${bossQuizHTML}
       <div class="map-path-container" style="height:${totalHeight}px">
         ${renderPathSvg(positions, totalHeight, { color: subject.color })}
         <div class="path-decorations">${renderDecorations(totalHeight, subjectId.length)}</div>
         ${nodes}
       </div>
+      ${bossEncounterHTML}
     </main>
   `;
 
@@ -111,7 +121,7 @@ export function renderIsland(root, navigate, { subjectId }) {
   if (referenceBtn) {
     referenceBtn.addEventListener("click", () => navigate(referenceBtn.dataset.reference, { subjectId }));
   }
-  const bossBtn = root.querySelector("[data-boss]:not(:disabled)");
+  const bossBtn = root.querySelector("[data-boss]");
   if (bossBtn) {
     bossBtn.addEventListener("click", () => navigate("bossQuiz", { subjectId }));
   }
