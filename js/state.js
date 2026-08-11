@@ -44,6 +44,14 @@ function xpFloorForLevel(level) {
   return Math.pow(level - 1, 2) * 20;
 }
 
+// Rough accuracy -> ACT 1-36 scale mapping, shared by the score predictor
+// (from lesson accuracy) and practice-test section/composite scoring (from
+// section accuracy). Not a real ACT curve — just a simple linear stand-in
+// so players get a ballpark number to track over time.
+export function scoreFromAccuracy(accuracy) {
+  return Math.max(1, Math.min(36, Math.round(1 + accuracy * 35)));
+}
+
 function defaultSave() {
   const skillProgress = {};
   const bossCleared = {};
@@ -463,6 +471,52 @@ class GameState {
     const totalSkills = allSkillIds().length;
     const masteredCount = subjectStats.reduce((sum, s) => sum + s.masteredCount, 0);
     return { subjectStats, totalSkills, masteredCount, totalStars: this.data.totalStars, coins: this.data.coins };
+  }
+
+  // --- score predictor & practice tests ---
+  get practiceTestBest() {
+    return this.data.practiceTests.bestComposite;
+  }
+
+  getPracticeTestHistory() {
+    return this.data.practiceTests.history;
+  }
+
+  /** Rough 1-36 composite estimate. A real practice test's composite is a
+   * much stronger, apples-to-apples signal than lesson accuracy, so the
+   * most recent one wins whenever one exists; otherwise fall back to
+   * overall lesson accuracy (once there's enough of it to mean anything). */
+  getPredictedScore() {
+    const history = this.data.practiceTests.history;
+    if (history.length > 0) {
+      const latest = history[history.length - 1];
+      return { score: latest.composite, source: "practiceTest" };
+    }
+    let attempts = 0;
+    let correct = 0;
+    for (const id of allSkillIds()) {
+      const p = this.data.skillProgress[id];
+      attempts += p.attempts;
+      correct += p.correct;
+    }
+    if (attempts < 20) return { score: null, source: "insufficient" };
+    return { score: scoreFromAccuracy(correct / attempts), source: "lessons" };
+  }
+
+  /** Records a finished full-length practice test. `sectionResults` is
+   * [{ subjectId, label, correctCount, totalCount, subscore }]; composite
+   * is the average of the 4 subscores, same as how the real ACT computes
+   * its composite from section scores. */
+  recordPracticeTestResult({ sectionResults, composite, starsEarned, coinsEarned }) {
+    this.data.totalStars += starsEarned;
+    this.data.coins += coinsEarned;
+    const isNewBest = composite > this.data.practiceTests.bestComposite;
+    if (isNewBest) this.data.practiceTests.bestComposite = composite;
+    this.data.practiceTests.history.push({ date: Date.now(), composite, sectionResults });
+    if (this.data.practiceTests.history.length > 20) this.data.practiceTests.history.shift();
+    const levelResult = this._grantXp(starsEarned);
+    this.save();
+    return { isNewBest, ...levelResult };
   }
 }
 

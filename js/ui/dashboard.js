@@ -7,6 +7,7 @@ export function renderDashboard(root, navigate) {
   const levelProgress = gameState.getLevelProgress();
   const evolutionStageName = gameState.getEvolutionStageName();
   const masteryPct = Math.round(gameState.getMasteryPct() * 100);
+  const predicted = gameState.getPredictedScore();
 
   const rows = overall.subjectStats
     .map(({ subject, accuracy, masteredCount, totalSkills }) => {
@@ -48,12 +49,27 @@ export function renderDashboard(root, navigate) {
           </div>
         </div>
       </div>
+      <div class="dash-predictor-card">
+        <div class="dash-predictor-score">${predicted.score === null ? "?" : predicted.score}</div>
+        <div class="dash-predictor-info">
+          <strong>Predicted ACT Score</strong>
+          <p class="dash-monster-substat">${
+            predicted.score === null
+              ? "Answer more questions in your lessons to see a rough estimate here."
+              : predicted.source === "practiceTest"
+              ? "Based on your most recent full-length practice test."
+              : "A rough estimate from your lesson accuracy — take a full-length practice test for a stronger read."
+          }</p>
+        </div>
+        <button class="btn-secondary" data-practice-test>📝 Practice Test</button>
+      </div>
       <div class="dash-rows">${rows}</div>
       <button class="btn-danger-quiet" data-reset>Reset All Progress</button>
     </main>
   `;
 
   wireHud(root, navigate);
+  root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
   root.querySelector("[data-reset]").addEventListener("click", () => {
     if (confirm("Reset all progress, coins, and your monster's look? This can't be undone.")) {
       gameState.reset();
