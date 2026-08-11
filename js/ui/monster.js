@@ -52,16 +52,34 @@ function mix(hexA, hexB, t) {
 // each stage reads as a clearly bigger "energy field," not a faint tint.
 // Kicks in starting at stage 1 (not just the later stages) so the very
 // first evolution is already obviously different from the base form.
+//
+// The aura is drawn in the same local coordinate space as the body, which
+// then goes through monsterSVG's own outer `sizeScale` transform (Tiny/
+// Medium/Giant, further boosted by the evolution stage's own size bonus).
+// A naive rx/ry here would get multiplied by that transform too, and at
+// the top end (Giant + Legendary) that compounds enough to push the aura
+// past the SVG's viewBox and clip — which is exactly why it only ever
+// looked right at the Tiny body size. Instead, every aura's rendered size
+// is capped to a fixed safe maximum *after* that outer transform, and its
+// local rx/ry are computed by dividing back out `sizeScale` so the final
+// on-screen size hits that cap exactly — independent of body size.
 const AURA_SCALE = [1, 1.22, 1.4, 1.58, 1.8];
 const AURA_FILL_OPACITY = [0, 0.22, 0.3, 0.38, 0.48];
 const AURA_RING_OPACITY = [0, 0.55, 0.7, 0.85, 1];
-function evolutionAura(cx, cy, rx, ry, color, stage) {
+const AURA_SAFE_MAX_RX = 68;
+const AURA_SAFE_MAX_RY = 64;
+function evolutionAura(cx, cy, rx, ry, color, stage, sizeScale = 1) {
   if (stage < 1) return "";
   const scale = AURA_SCALE[stage];
   const auraColor = stageAccentColor(color, stage);
+  const finalRx = Math.min(rx * scale, AURA_SAFE_MAX_RX);
+  const finalRy = Math.min(ry * scale, AURA_SAFE_MAX_RY);
+  const localRx = finalRx / sizeScale;
+  const localRy = finalRy / sizeScale;
+  const ringStrokeWidth = 2.4 / sizeScale;
   return `
-    <ellipse cx="${cx}" cy="${cy}" rx="${rx * scale}" ry="${ry * scale}" fill="${auraColor}" opacity="${AURA_FILL_OPACITY[stage]}"/>
-    <ellipse cx="${cx}" cy="${cy}" rx="${rx * scale}" ry="${ry * scale}" fill="none" stroke="${auraColor}" stroke-width="2.4" opacity="${AURA_RING_OPACITY[stage]}"/>
+    <ellipse cx="${cx}" cy="${cy}" rx="${localRx}" ry="${localRy}" fill="${auraColor}" opacity="${AURA_FILL_OPACITY[stage]}"/>
+    <ellipse cx="${cx}" cy="${cy}" rx="${localRx}" ry="${localRy}" fill="none" stroke="${auraColor}" stroke-width="${ringStrokeWidth}" opacity="${AURA_RING_OPACITY[stage]}"/>
   `;
 }
 
@@ -157,7 +175,7 @@ const AMORPHOUS_DRIPS = `
   <path d="M60 96 Q60 108 66 111 Q71 106 66 96 Z" />
 `;
 
-function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
+function bodyShapeMarkup(shape, color, colorDark, stage = 0, sizeScale = 1) {
   const strokeW = evolvedStrokeWidth(stage);
   const outline = evolvedStrokeColor(colorDark, stage);
   const accent = stageAccentColor(color, stage);
@@ -174,7 +192,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += sparkle(16, 28, 6, accent) + sparkle(84, 28, 6, accent) + `<path d="M50 3 L44 16 L56 16 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 55, 50, 58, color, stage)}
+          ${evolutionAura(50, 55, 50, 58, color, stage, sizeScale)}
           <path d="${HUMANOID_TORSO_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           <circle cx="50" cy="23" r="16" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${decor}
@@ -202,7 +220,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<circle cx="34" cy="3" r="3.2" fill="${accent}"/><circle cx="66" cy="3" r="3.2" fill="${accent}"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 50, 42, 46, color, stage)}
+          ${evolutionAura(50, 50, 42, 46, color, stage, sizeScale)}
           <path d="M50 58 C 72 60 80 82 64 100 Q50 109 36 100 C 20 82 28 60 50 58 Z" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           <ellipse cx="50" cy="57" rx="6" ry="5" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           <ellipse cx="50" cy="40" rx="17" ry="14" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
@@ -229,7 +247,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
           : "";
       return {
         fill: `
-          ${evolutionAura(50, 52, 48, 34, color, stage)}
+          ${evolutionAura(50, 52, 48, 34, color, stage, sizeScale)}
           <ellipse cx="50" cy="52" rx="44" ry="30" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${frill}
           ${spikesMarkup}
@@ -259,7 +277,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<circle cx="50" cy="55" r="13" fill="${accent}" opacity="0.4"/><circle cx="50" cy="55" r="6" fill="${accent}" opacity="0.9"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 55, 48, 52, color, stage)}
+          ${evolutionAura(50, 55, 48, 52, color, stage, sizeScale)}
           <path d="${AMORPHOUS_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           <g fill="${color}" stroke="${outline}" stroke-width="${strokeW}">${AMORPHOUS_DRIPS}</g>
           <ellipse cx="35" cy="28" rx="12" ry="8" fill="#fff" opacity="0.2"/>
@@ -284,7 +302,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<path d="M42 10 Q24 -8 30 16 Q38 8 44 16 Z" fill="none" stroke="${accent}" stroke-width="2"/>`;
       return {
         fill: `
-          ${evolutionAura(45, 55, 40, 55, color, stage)}
+          ${evolutionAura(45, 55, 40, 55, color, stage, sizeScale)}
           <path d="${SERPENT_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${decor}
         `,
@@ -311,7 +329,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
         decor += `<path d="M50 56 L42 66 L50 76 L58 66 Z" fill="${accent}"/><circle cx="38" cy="27" r="2.6" fill="${accent}"/><circle cx="62" cy="27" r="2.6" fill="${accent}"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 55, 38, 42, color, stage)}
+          ${evolutionAura(50, 55, 38, 42, color, stage, sizeScale)}
           <ellipse cx="50" cy="66" rx="30" ry="26" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           <ellipse cx="50" cy="34" rx="18" ry="16" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${decor}
@@ -336,7 +354,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<path d="M50 100 Q50 114 50 126 Z" stroke="${accent}" stroke-width="3" fill="none"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 55, 32, 50, color, stage)}
+          ${evolutionAura(50, 55, 32, 50, color, stage, sizeScale)}
           <path d="${AVIAN_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${decor}
         `,
@@ -368,7 +386,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<path d="M42 8 L50 -18 L58 8 Z" fill="none" stroke="${accent}" stroke-width="2"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 52, 40, 48, color, stage)}
+          ${evolutionAura(50, 52, 40, 48, color, stage, sizeScale)}
           <path d="${AQUATIC_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${decor}
         `,
@@ -394,7 +412,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<circle cx="50" cy="55" r="9" fill="${accent}" opacity="0.7"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 55, 42, 50, color, stage)}
+          ${evolutionAura(50, 55, 42, 50, color, stage, sizeScale)}
           <path d="${CRYSTAL_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}" stroke-linejoin="round"/>
           ${decor}
         `,
@@ -416,7 +434,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<circle cx="30" cy="44" r="2.6" fill="${accent}"/><circle cx="70" cy="44" r="2.6" fill="${accent}"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 50, 42, 36, color, stage)}
+          ${evolutionAura(50, 50, 42, 36, color, stage, sizeScale)}
           <path d="${CRAB_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${decor}
         `,
@@ -446,7 +464,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<rect x="26" y="28" width="48" height="9" fill="${accent}"/><circle cx="50" cy="60" r="9" fill="${accent}" opacity="0.6"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 60, 40, 48, color, stage)}
+          ${evolutionAura(50, 60, 40, 48, color, stage, sizeScale)}
           <rect x="22" y="20" width="56" height="80" rx="10" ry="10" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           <rect x="30" y="30" width="40" height="6" fill="${outline}" opacity="0.3"/>
           <rect x="30" y="88" width="40" height="6" fill="${outline}" opacity="0.3"/>
@@ -473,7 +491,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<ellipse cx="50" cy="10" rx="18" ry="5" fill="none" stroke="${accent}" stroke-width="2.5"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 50, 40, 48, color, stage)}
+          ${evolutionAura(50, 50, 40, 48, color, stage, sizeScale)}
           <path d="${SPECTRAL_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}" opacity="0.92"/>
           ${decor}
         `,
@@ -503,7 +521,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
           blossom(36, 10, 1.3, "#ffb3d1") + blossom(64, 10, 1.3, "#ffb3d1") + blossom(50, 0, 1.4, "#ffb3d1") + blossom(18, 36, 1.1, "#ffb3d1") + blossom(82, 36, 1.1, "#ffb3d1");
       return {
         fill: `
-          ${evolutionAura(50, 55, 40, 55, color, stage)}
+          ${evolutionAura(50, 55, 40, 55, color, stage, sizeScale)}
           <path d="${TREANT_TRUNK_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           <circle cx="50" cy="24" r="15" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${decor}
@@ -529,7 +547,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += `<circle cx="12" cy="50" r="3" fill="${accent}"/><circle cx="88" cy="50" r="3" fill="${accent}"/>`;
       return {
         fill: `
-          ${evolutionAura(50, 50, 44, 26, color, stage)}
+          ${evolutionAura(50, 50, 44, 26, color, stage, sizeScale)}
           <path d="${CENTIPEDE_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${decor}
         `,
@@ -552,7 +570,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
       if (stage >= 4) decor += sparkle(50, 6, 6, accent) + gem(50, 93, 7, accent, outline);
       return {
         fill: `
-          ${evolutionAura(50, 55, 46, 50, color, stage)}
+          ${evolutionAura(50, 55, 46, 50, color, stage, sizeScale)}
           <path d="${ROUND_PATH}" fill="${color}" stroke="${outline}" stroke-width="${strokeW}"/>
           ${decor}
         `,
@@ -1347,14 +1365,16 @@ export function monsterSVG(config, { size = 160 } = {}) {
 
   const id = uid();
   const colorDark = shade(bodyColor, -25);
-  const shapeInfo = bodyShapeMarkup(bodyShape, bodyColor, colorDark, evolutionStage);
-  const [fx, fy] = shapeInfo.faceCenter;
-  const fs = shapeInfo.faceScale;
   // Each evolution stage nudges the monster a little larger on top of the
   // player's own size pick, reinforcing "growing more powerful" alongside
-  // the added decoration.
+  // the added decoration. Computed before bodyShapeMarkup so the aura can
+  // counter-scale itself against it (see evolutionAura) and never clip
+  // regardless of the Tiny/Medium/Giant + evolution-stage combination.
   const stageSizeBonus = [1, 1.06, 1.14, 1.24, 1.35][evolutionStage] ?? 1;
   const sizeScale = (SIZES.find((s) => s.id === monsterSize) || SIZES[1]).scale * stageSizeBonus;
+  const shapeInfo = bodyShapeMarkup(bodyShape, bodyColor, colorDark, evolutionStage, sizeScale);
+  const [fx, fy] = shapeInfo.faceCenter;
+  const fs = shapeInfo.faceScale;
 
   const faceTransform = `translate(${fx} ${fy}) scale(${fs}) translate(-50 -46)`;
   const eyesMarkup = (EYE_VARIANTS[eyeType] || EYE_VARIANTS[0])(id);
