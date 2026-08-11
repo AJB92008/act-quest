@@ -4,6 +4,46 @@ import { getLessonCount } from "./data/questions/index.js";
 const STORAGE_KEY = "act-quest-save-v1";
 const PASS_THRESHOLD = 0.7; // score needed to pass a mini-lesson / master a skill
 
+// Must stay in sync with BODY_SHAPES' id order in ui/monster.js — duplicated
+// here (rather than imported) so state.js, which everything else depends
+// on, doesn't have to depend on the ui layer.
+const BODY_SHAPE_ORDER = [
+  "round",
+  "humanoid",
+  "insect",
+  "reptile",
+  "amorphous",
+  "serpent",
+  "arachnid",
+  "avian",
+  "aquatic",
+  "crystalline",
+  "crab",
+  "mechanical",
+  "spectral",
+  "treant",
+  "centipede",
+];
+// Evolution stages tied to overall mastery %: at each threshold the
+// monster's body shape shifts forward by a fixed offset in BODY_SHAPE_ORDER
+// (wrapping around), so every monster visibly evolves into something new
+// while every other customization choice (color, accessories, limbs...)
+// stays exactly as the player set it.
+const EVOLUTION_STAGE_THRESHOLDS = [0, 0.25, 0.5, 0.75, 1];
+const EVOLUTION_STAGE_OFFSETS = [0, 3, 6, 9, 12];
+export const EVOLUTION_STAGE_NAMES = ["Hatchling", "Adept", "Veteran", "Master", "Legendary"];
+
+// XP needed to reach a given level follows a simple growing curve
+// (level 2 @ 20xp, level 3 @ 80xp, level 4 @ 180xp...); xp is granted
+// 1-for-1 with stars earned, so leveling tracks overall play without a
+// second reward economy to tune.
+function levelFromXp(xp) {
+  return Math.floor(Math.sqrt(Math.max(0, xp) / 20)) + 1;
+}
+function xpFloorForLevel(level) {
+  return Math.pow(level - 1, 2) * 20;
+}
+
 function defaultSave() {
   const skillProgress = {};
   const bossCleared = {};
@@ -53,6 +93,13 @@ function defaultSave() {
       bestRun: 0,
       timerEnabled: true,
     },
+    monster: {
+      xp: 0,
+    },
+    practiceTests: {
+      bestComposite: 0,
+      history: [],
+    },
   };
 }
 
@@ -77,6 +124,8 @@ class GameState {
       fresh.settings = { ...fresh.settings, ...parsed.settings };
       fresh.endless = { ...fresh.endless, ...parsed.endless };
       fresh.bossCleared = { ...fresh.bossCleared, ...parsed.bossCleared };
+      fresh.monster = { ...fresh.monster, ...parsed.monster };
+      fresh.practiceTests = { ...fresh.practiceTests, ...parsed.practiceTests };
       for (const id of allSkillIds()) {
         if (parsed.skillProgress && parsed.skillProgress[id]) {
           fresh.skillProgress[id] = { ...fresh.skillProgress[id], ...parsed.skillProgress[id] };
@@ -152,6 +201,78 @@ class GameState {
     this.save();
   }
 
+  // --- monster progression: XP/level and evolution ---
+  get xp() {
+    return this.data.monster.xp;
+  }
+
+  get level() {
+    return levelFromXp(this.data.monster.xp);
+  }
+
+  /** Level + progress toward the next one, for a progress bar. */
+  getLevelProgress() {
+    const level = this.level;
+    const xp = this.data.monster.xp;
+    const floorXp = xpFloorForLevel(level);
+    const nextXp = xpFloorForLevel(level + 1);
+    const pct = nextXp > floorXp ? (xp - floorXp) / (nextXp - floorXp) : 1;
+    return { level, xp, floorXp, nextXp, pct: Math.max(0, Math.min(1, pct)) };
+  }
+
+  /** Grants xp 1-for-1 with stars earned (call from each reward-recording
+   * method, right after that flow's own starsEarned is known) and reports
+   * whether it crossed a level boundary, for a "Level Up!" moment. */
+  _grantXp(amount) {
+    if (!amount || amount <= 0) return { leveledUp: false, newLevel: this.level };
+    const before = this.level;
+    this.data.monster.xp += amount;
+    const after = this.level;
+    return { leveledUp: after > before, newLevel: after };
+  }
+
+  /** Fraction (0-1) of all skills mastered across every subject — drives
+   * monster evolution stages. */
+  getMasteryPct() {
+    const ids = allSkillIds();
+    if (ids.length === 0) return 0;
+    let masteredCount = 0;
+    for (const id of ids) {
+      if (this.data.skillProgress[id]?.mastered) masteredCount++;
+    }
+    return masteredCount / ids.length;
+  }
+
+  getEvolutionStage() {
+    const pct = this.getMasteryPct();
+    let stage = 0;
+    for (let i = EVOLUTION_STAGE_THRESHOLDS.length - 1; i >= 0; i--) {
+      if (pct >= EVOLUTION_STAGE_THRESHOLDS[i]) {
+        stage = i;
+        break;
+      }
+    }
+    return stage;
+  }
+
+  getEvolutionStageName() {
+    return EVOLUTION_STAGE_NAMES[this.getEvolutionStage()];
+  }
+
+  /** The avatar as it actually looks right now: the player's own
+   * customization (color, accessories, limbs, eyes...) with the body shape
+   * swapped in for the current evolution stage. Every accessory anchor in
+   * monsterSVG is keyed off body shape already, so this is all that's
+   * needed to keep everything aligned as the shape changes. */
+  getDisplayAvatar() {
+    const stage = this.getEvolutionStage();
+    const avatar = this.data.avatar;
+    if (stage === 0) return avatar;
+    const baseIndex = Math.max(0, BODY_SHAPE_ORDER.indexOf(avatar.bodyShape));
+    const shape = BODY_SHAPE_ORDER[(baseIndex + EVOLUTION_STAGE_OFFSETS[stage]) % BODY_SHAPE_ORDER.length];
+    return { ...avatar, bodyShape: shape };
+  }
+
   // --- endless mode ---
   get endlessBest() {
     return this.data.endless.bestRun;
@@ -175,8 +296,9 @@ class GameState {
     this.data.coins += coinsEarned;
     const isNewBest = correctCount > this.data.endless.bestRun;
     if (isNewBest) this.data.endless.bestRun = correctCount;
+    const levelResult = this._grantXp(starsEarned);
     this.save();
-    return { isNewBest };
+    return { isNewBest, ...levelResult };
   }
 
   addCoins(n) {
@@ -229,6 +351,7 @@ class GameState {
   recordLessonResult(skillId, lessonIndex, { correctCount, totalCount, starsEarned, coinsEarned }) {
     const progress = this.data.skillProgress[skillId];
     if (!progress) return;
+    const stageBefore = this.getEvolutionStage();
     progress.attempts += totalCount;
     progress.correct += correctCount;
     const score = totalCount > 0 ? correctCount / totalCount : 0;
@@ -251,8 +374,11 @@ class GameState {
       justMastered = true;
     }
 
+    const stageAfter = this.getEvolutionStage();
+    const justEvolved = stageAfter > stageBefore;
+    const levelResult = this._grantXp(starsEarned);
     this.save();
-    return { score, passed, justAdvanced, justMastered, totalLessons };
+    return { score, passed, justAdvanced, justMastered, totalLessons, justEvolved, evolutionStage: stageAfter, ...levelResult };
   }
 
   /**
@@ -289,7 +415,9 @@ class GameState {
   finishWeakReview({ starsEarned, coinsEarned }) {
     this.data.totalStars += starsEarned;
     this.data.coins += coinsEarned;
+    const levelResult = this._grantXp(starsEarned);
     this.save();
+    return levelResult;
   }
 
   isBossCleared(subjectId) {
@@ -307,8 +435,9 @@ class GameState {
       this.data.bossCleared[subjectId] = true;
       justCleared = true;
     }
+    const levelResult = this._grantXp(starsEarned);
     this.save();
-    return { score, passed, justCleared };
+    return { score, passed, justCleared, ...levelResult };
   }
 
   getSubjectStats(subjectId) {

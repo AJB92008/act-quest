@@ -88,7 +88,7 @@ export function renderFlashcardLesson(root, navigate, { data, backScreen, backPa
       <main class="screen background-screen">
         <button class="back-btn" data-back>&larr; Back</button>
         <div class="lesson-card bg-card">
-          <div class="lesson-monster">${monsterSVG(gameState.getAvatar(), { size: 90 })}</div>
+          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
           <h1 class="lesson-title">${data.title}</h1>
           <p class="lesson-blurb">${data.subtitle}</p>
           <nav class="bg-toc">${tocHTML}</nav>

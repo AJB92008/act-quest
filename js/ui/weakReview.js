@@ -11,6 +11,7 @@ import { monsterSVG } from "./monster.js";
 import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
+import { renderProgressBanners } from "./progressBanner.js";
 
 const QUESTION_TIME = 20;
 const REVIEW_SIZE = 10;
@@ -30,6 +31,7 @@ export function renderWeakReview(root, navigate) {
   let timeLeft = QUESTION_TIME;
   let answered = false;
   let finished = false;
+  let levelResult = {};
   let unbindKeys = () => {};
 
   function stopTimer() {
@@ -45,7 +47,7 @@ export function renderWeakReview(root, navigate) {
     if (finished) return;
     finished = true;
     if (starsEarned > 0 || coinsEarned > 0) {
-      gameState.finishWeakReview({ starsEarned, coinsEarned });
+      levelResult = gameState.finishWeakReview({ starsEarned, coinsEarned }) || {};
     }
   }
 
@@ -82,7 +84,7 @@ export function renderWeakReview(root, navigate) {
       <main class="screen weak-review-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
         <button class="back-btn" data-back>&larr; Back to Map</button>
         <div class="lesson-card">
-          <div class="lesson-monster">${monsterSVG(gameState.getAvatar(), { size: 90 })}</div>
+          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
           <h1 class="lesson-title">🎯 Weak Skill Review</h1>
           <p class="lesson-blurb">A quick ${REVIEW_SIZE}-question session pulled from the skills you're struggling with most, across every subject.</p>
           ${
@@ -130,7 +132,7 @@ export function renderWeakReview(root, navigate) {
         ${gameState.timerEnabled ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
-          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getAvatar(), { size: 90 })}</div>
+          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
           <p class="question-text">${q.q}</p>
           <div class="choices" id="choices">
             ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
@@ -230,10 +232,11 @@ export function renderWeakReview(root, navigate) {
       ${hudHTML("map")}
       <main class="screen results-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
         <div class="results-card">
-          <div class="results-monster">${monsterSVG(gameState.getAvatar(), { size: 130 })}</div>
+          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 130 })}</div>
           <h1>Review Complete!</h1>
           <p class="results-score">${correctCount} / ${total} correct (${scorePct}%)</p>
           <p class="results-flag">🎯 Great job shoring up your weak spots.</p>
+          ${renderProgressBanners(levelResult)}
           <div class="results-stats">
             <span>⭐ +${starsEarned} stars</span>
             <span>🪙 +${coinsEarned} coins</span>

@@ -3,7 +3,7 @@ import { CATEGORIES, itemsByCategory, monsterSVG } from "./monster.js";
 import { hudHTML, wireHud } from "./hud.js";
 
 export function renderShop(root, navigate) {
-  const avatar = gameState.getAvatar();
+  const avatar = gameState.getDisplayAvatar();
 
   const sections = CATEGORIES.map((cat) => {
     const items = itemsByCategory(cat.id)

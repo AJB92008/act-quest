@@ -1,8 +1,12 @@
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
+import { monsterSVG } from "./monster.js";
 
 export function renderDashboard(root, navigate) {
   const overall = gameState.getOverallStats();
+  const levelProgress = gameState.getLevelProgress();
+  const evolutionStageName = gameState.getEvolutionStageName();
+  const masteryPct = Math.round(gameState.getMasteryPct() * 100);
 
   const rows = overall.subjectStats
     .map(({ subject, accuracy, masteredCount, totalSkills }) => {
@@ -29,6 +33,20 @@ export function renderDashboard(root, navigate) {
         <div class="dash-summary-tile"><span class="tile-num">${overall.masteredCount}</span><span>Skills Mastered</span></div>
         <div class="dash-summary-tile"><span class="tile-num">${overall.totalStars}</span><span>Total Stars</span></div>
         <div class="dash-summary-tile"><span class="tile-num">${overall.coins}</span><span>Coins</span></div>
+      </div>
+      <div class="dash-monster-card">
+        <div class="dash-monster-preview">${monsterSVG(gameState.getDisplayAvatar(), { size: 70 })}</div>
+        <div class="dash-monster-info">
+          <div class="dash-monster-row">
+            <strong>Level ${levelProgress.level}</strong>
+            <span class="dash-monster-substat">${Math.round(levelProgress.pct * 100)}% to Level ${levelProgress.level + 1}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(levelProgress.pct * 100)}%;background:var(--purple)"></div></div>
+          <div class="dash-monster-row">
+            <strong>${evolutionStageName} form</strong>
+            <span class="dash-monster-substat">${masteryPct}% overall mastery</span>
+          </div>
+        </div>
       </div>
       <div class="dash-rows">${rows}</div>
       <button class="btn-danger-quiet" data-reset>Reset All Progress</button>

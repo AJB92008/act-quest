@@ -10,6 +10,7 @@ import { monsterSVG } from "./monster.js";
 import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
+import { renderProgressBanners } from "./progressBanner.js";
 
 const QUESTION_TIME = 20;
 const QUESTION_COUNT = 20;
@@ -77,7 +78,7 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
         ${gameState.timerEnabled ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
-          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getAvatar(), { size: 90 })}</div>
+          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
           <p class="question-text">${q.q}</p>
           <div class="choices" id="choices">
             ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
@@ -180,7 +181,7 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
       ${hudHTML("map")}
       <main class="screen results-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
         <div class="results-card">
-          <div class="results-monster">${monsterSVG(gameState.getAvatar(), { size: 130 })}</div>
+          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 130 })}</div>
           <h1>${outcome.justCleared ? "👑 Boss Cleared!" : outcome.passed ? "Cleared Again!" : "Not Quite!"}</h1>
           <p class="results-score">${correctCount} / ${total} correct (${scorePct}%)</p>
           ${
@@ -190,6 +191,7 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
               ? `<p class="results-flag">✅ Passing score</p>`
               : `<p class="results-flag results-flag-muted">Score 70% or higher to clear the Boss Quiz.</p>`
           }
+          ${renderProgressBanners(outcome)}
           <div class="results-stats">
             <span>⭐ +${totalStars} stars</span>
             <span>🪙 +${totalCoins} coins</span>

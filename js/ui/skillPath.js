@@ -26,7 +26,7 @@ export function renderSkillPath(root, navigate, { skillId, subjectId }) {
     const badge = done ? "✓" : unlocked ? String(i + 1) : "🔒";
     return `
       <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
-        ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getAvatar(), { size: 44 })}</div>` : ""}
+        ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 44 })}</div>` : ""}
         <button class="node-circle node-circle-small ${stateClass}" data-lesson="${i}" ${unlocked ? "" : "disabled"}
           style="--node-color:${subject.color}">
           ${badge}
@@ -41,7 +41,7 @@ export function renderSkillPath(root, navigate, { skillId, subjectId }) {
     <main class="screen skillpath-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
       <button class="back-btn" data-back>&larr; Back to Island</button>
       <div class="lesson-card">
-        <div class="lesson-monster">${monsterSVG(gameState.getAvatar(), { size: 80 })}</div>
+        <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 80 })}</div>
         <h1 class="lesson-title">${skill.name}</h1>
         <p class="lesson-blurb">${skill.blurb}</p>
         ${paragraphs.map((p) => `<p class="lesson-paragraph">${p}</p>`).join("")}

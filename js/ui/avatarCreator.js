@@ -225,6 +225,11 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
           <div class="avatar-preview-col">
             <div class="avatar-preview">${monsterSVG(avatar, { size: 220 })}</div>
             ${quip ? `<p class="avatar-quip">${quip}</p>` : ""}
+            ${
+              onboarding
+                ? ""
+                : `<p class="avatar-evolution-note">🌟 This is your monster's base look — it evolves into new forms as you master more skills (currently: <strong>${gameState.getEvolutionStageName()} form</strong>).</p>`
+            }
             <div class="avatar-fun-actions">
               <button class="btn-secondary" data-randomize>🎲 Surprise Me!</button>
               <button class="btn-ghost" data-reset>↺ Reset</button>

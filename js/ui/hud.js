@@ -2,7 +2,7 @@ import { gameState } from "../state.js";
 import { monsterSVG } from "./monster.js";
 
 export function hudHTML(activeScreen) {
-  const avatar = gameState.getAvatar();
+  const avatar = gameState.getDisplayAvatar();
   const nav = [
     { id: "map", icon: "🗺️", label: "Map" },
     { id: "endless", icon: "🔁", label: "Endless" },
@@ -12,7 +12,7 @@ export function hudHTML(activeScreen) {
   ];
   return `
     <header class="hud">
-      <div class="hud-avatar">${monsterSVG(avatar, { size: 48 })}</div>
+      <div class="hud-avatar" title="Level ${gameState.level}">${monsterSVG(avatar, { size: 48 })}<span class="hud-level-badge">${gameState.level}</span></div>
       <nav class="hud-nav">
         ${nav
           .map(

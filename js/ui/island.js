@@ -31,7 +31,7 @@ export function renderIsland(root, navigate, { subjectId }) {
       const badge = progress.mastered ? "✓" : String(i + 1);
       return `
         <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
-          ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getAvatar(), { size: 48 })}</div>` : ""}
+          ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 48 })}</div>` : ""}
           <button class="node-circle ${stateClass}" data-skill="${skill.id}"
             style="--node-color:${subject.color}">
             ${badge}

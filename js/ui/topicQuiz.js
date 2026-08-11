@@ -44,7 +44,7 @@ export function renderTopicQuiz(
         </div>
         <h2 class="quiz-skill-name">${title}</h2>
         <div class="question-card">
-          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getAvatar(), { size: 90 })}</div>
+          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
           <p class="question-text">${q.q}</p>
           <div class="choices" id="choices">
             ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
@@ -128,7 +128,7 @@ export function renderTopicQuiz(
       ${hudHTML("map")}
       <main class="screen results-screen" style="--island-color:${ACCENT_COLOR};--island-bg:${ACCENT_BG}">
         <div class="results-card">
-          <div class="results-monster">${monsterSVG(gameState.getAvatar(), { size: 130 })}</div>
+          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 130 })}</div>
           <h1>${passed ? "Nice Work!" : "Good Effort!"}</h1>
           <p class="results-score">${correctCount} / ${total} correct (${scorePct}%)</p>
           <p class="results-flag ${passed ? "" : "results-flag-muted"}">${
