@@ -121,6 +121,7 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
 
   function render() {
     const avatar = gameState.getAvatar();
+    const displayAvatar = gameState.getDisplayAvatar();
 
     const colorSwatches = BODY_COLORS.map(
       (c) =>
@@ -223,12 +224,12 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
         }</p>
         <div class="avatar-layout">
           <div class="avatar-preview-col">
-            <div class="avatar-preview">${monsterSVG(avatar, { size: 220 })}</div>
+            <div class="avatar-preview">${monsterSVG(displayAvatar, { size: 220 })}</div>
             ${quip ? `<p class="avatar-quip">${quip}</p>` : ""}
             ${
               onboarding
                 ? ""
-                : `<p class="avatar-evolution-note">🌟 This is your monster's base look — the same shape grows more elaborate as you master more skills (currently: <strong>${gameState.getEvolutionStageName()} form</strong>).</p>`
+                : `<p class="avatar-evolution-note">🌟 Shown at its current <strong>${gameState.getEvolutionStageName()} form</strong> — the same shape you pick below keeps growing more elaborate as you master more skills.</p>`
             }
             <div class="avatar-fun-actions">
               <button class="btn-secondary" data-randomize>🎲 Surprise Me!</button>
