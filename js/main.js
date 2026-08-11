@@ -14,7 +14,7 @@ import { renderVocabulary } from "./ui/vocabulary.js";
 import { renderVocabQuiz } from "./ui/vocabQuiz.js";
 import { renderEndlessMode } from "./ui/endlessMode.js";
 import { renderPracticeTest } from "./ui/practiceTest.js";
-import { renderDevMode } from "./ui/devMode.js";
+import { ensureDevPanel } from "./ui/devPanel.js";
 
 const root = document.getElementById("app");
 
@@ -34,7 +34,6 @@ const SCREENS = {
   vocabQuiz: (r, nav, params) => renderVocabQuiz(r, nav, params),
   endless: (r, nav) => renderEndlessMode(r, nav),
   practiceTest: (r, nav) => renderPracticeTest(r, nav),
-  devMode: (r, nav) => renderDevMode(r, nav),
 };
 
 function navigate(screen, params = {}) {
@@ -50,3 +49,8 @@ if (!gameState.data.onboarded) {
 } else {
   navigate("map");
 }
+
+// If dev mode was unlocked in a previous session, the floating panel
+// should already be there on load rather than waiting for another unlock
+// tap sequence.
+ensureDevPanel(navigate);
