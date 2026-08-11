@@ -23,6 +23,59 @@ function shade(hex, percent) {
 }
 
 /* ---------------------------------------------------------------------- */
+/* Evolution decorations                                                   */
+/* Each body shape has 5 stages (0=Hatchling..4=Legendary): the silhouette,  */
+/* clip path, and every anchor point stay identical across stages so       */
+/* accessories never lose alignment — only these additive decorations      */
+/* (rendered behind or on top of the base fill) change, growing in count   */
+/* and intricacy, with a shared gold "Legendary" trim at stage 4.          */
+/* ---------------------------------------------------------------------- */
+
+// Soft glow behind the body. The one evolution cue every shape shares —
+// intensifying at stage 2+ and shifting to a warm gold at the final stage,
+// so "Legendary" reads instantly even before looking at shape-specific
+// decoration.
+function evolutionAura(cx, cy, rx, ry, color, stage) {
+  if (stage < 2) return "";
+  const opacity = stage === 2 ? 0.14 : stage === 3 ? 0.2 : 0.3;
+  const auraColor = stage >= 4 ? "#ffd25f" : color;
+  return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${auraColor}" opacity="${opacity}"/>`;
+}
+
+// Small four-point sparkle accent — used by several shapes at higher
+// stages to read as "gaining a magical/energetic quality."
+function sparkle(x, y, s, color) {
+  return `<path d="M${x} ${y - s} L${x + s * 0.28} ${y - s * 0.28} L${x + s} ${y} L${x + s * 0.28} ${y + s * 0.28} L${x} ${y + s} L${x - s * 0.28} ${y + s * 0.28} L${x - s} ${y} L${x - s * 0.28} ${y - s * 0.28} Z" fill="${color}"/>`;
+}
+
+// Small faceted gem, used as a growing "power core" motif for a few shapes.
+function gem(x, y, r, color, colorDark) {
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" stroke="${colorDark}" stroke-width="1.5"/><circle cx="${x - r * 0.3}" cy="${y - r * 0.3}" r="${r * 0.32}" fill="#fff" opacity="0.55"/>`;
+}
+
+function leafBud(x, y, rot, color) {
+  return `<path transform="rotate(${rot} ${x} ${y})" d="M${x} ${y} Q${x + 3} ${y - 8} ${x} ${y - 14} Q${x - 3} ${y - 8} ${x} ${y} Z" fill="${color}" stroke="${shade(color, -25)}" stroke-width="1"/>`;
+}
+
+function blossom(x, y, petalColor) {
+  return (
+    [-1, 0, 1]
+      .map((dx) => `<circle cx="${x + dx * 3}" cy="${y - Math.abs(dx)}" r="2.1" fill="${petalColor}"/>`)
+      .join("") + `<circle cx="${x}" cy="${y - 1}" r="1.2" fill="#ffd25f"/>`
+  );
+}
+
+function rivet(x, y, color) {
+  return `<circle cx="${x}" cy="${y}" r="1.7" fill="${color}"/>`;
+}
+
+// A stage's gold "Legendary" trim color, else null (used to recolor a
+// shape's signature accessory — spikes, fins, a crest — at stage 4).
+function legendaryTrim(stage) {
+  return stage >= 4 ? "#ffd25f" : null;
+}
+
+/* ---------------------------------------------------------------------- */
 /* Body shapes                                                             */
 /* ---------------------------------------------------------------------- */
 
@@ -60,13 +113,22 @@ const AMORPHOUS_DRIPS = `
   <path d="M60 96 Q60 108 66 111 Q71 106 66 96 Z" />
 `;
 
-function bodyShapeMarkup(shape, color, colorDark) {
+function bodyShapeMarkup(shape, color, colorDark, stage = 0) {
   switch (shape) {
-    case "humanoid":
+    case "humanoid": {
+      const trim = legendaryTrim(stage);
+      let decor = "";
+      if (stage >= 1)
+        decor += `<ellipse cx="30" cy="45" rx="7" ry="5" fill="${trim || colorDark}" opacity="${trim ? 1 : 0.85}"/><ellipse cx="70" cy="45" rx="7" ry="5" fill="${trim || colorDark}" opacity="${trim ? 1 : 0.85}"/>`;
+      if (stage >= 2) decor += gem(50, 62, 4, shade(color, 30), colorDark);
+      if (stage >= 3) decor += `<rect x="27" y="82" width="46" height="6" rx="3" fill="${trim || colorDark}" opacity="${trim ? 1 : 0.7}"/>`;
+      if (stage >= 4) decor += sparkle(18, 30, 4, "#ffd25f") + sparkle(82, 30, 4, "#ffd25f");
       return {
         fill: `
+          ${evolutionAura(50, 55, 50, 58, color, stage)}
           <path d="${HUMANOID_TORSO_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
           <circle cx="50" cy="23" r="16" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
         `,
         clip: `<path d="${HUMANOID_TORSO_PATH}"/><circle cx="50" cy="23" r="16"/>`,
         faceCenter: [50, 23],
@@ -77,13 +139,25 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [74, 90],
         tailScale: 0.9,
       };
-    case "insect":
+    }
+    case "insect": {
+      const trim = legendaryTrim(stage);
+      const wingColor = shade(color, 35);
+      let decor = "";
+      if (stage >= 1)
+        decor += `<ellipse cx="26" cy="44" rx="6" ry="4" fill="${wingColor}" opacity="0.55" transform="rotate(-20 26 44)"/><ellipse cx="74" cy="44" rx="6" ry="4" fill="${wingColor}" opacity="0.55" transform="rotate(20 74 44)"/>`;
+      if (stage >= 2)
+        decor += `<path d="M50 44 Q22 28 15 48 Q30 55 50 46 Z" fill="${wingColor}" opacity="0.45" stroke="${trim || colorDark}" stroke-width="1"/><path d="M50 44 Q78 28 85 48 Q70 55 50 46 Z" fill="${wingColor}" opacity="0.45" stroke="${trim || colorDark}" stroke-width="1"/>`;
+      if (stage >= 3) decor += `<path d="M24 40 L42 46" stroke="${trim || colorDark}" stroke-width="1" opacity="0.6"/><path d="M76 40 L58 46" stroke="${trim || colorDark}" stroke-width="1" opacity="0.6"/>`;
+      if (stage >= 4) decor += `<circle cx="34" cy="4" r="2.4" fill="#ffd25f"/><circle cx="66" cy="4" r="2.4" fill="#ffd25f"/>`;
       return {
         fill: `
+          ${evolutionAura(50, 50, 42, 46, color, stage)}
           <path d="M50 58 C 72 60 80 82 64 100 Q50 109 36 100 C 20 82 28 60 50 58 Z" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
           <ellipse cx="50" cy="57" rx="6" ry="5" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
           <ellipse cx="50" cy="40" rx="17" ry="14" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
           <circle cx="50" cy="16" r="13" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
         `,
         clip: `<path d="M50 58 C 72 60 80 82 64 100 Q50 109 36 100 C 20 82 28 60 50 58 Z"/><ellipse cx="50" cy="40" rx="17" ry="14"/><circle cx="50" cy="16" r="13"/>`,
         faceCenter: [50, 16],
@@ -94,13 +168,24 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [78, 88],
         tailScale: 0.75,
       };
-    case "reptile":
+    }
+    case "reptile": {
+      const trim = legendaryTrim(stage);
+      const spikeXs = stage >= 2 ? [18, 30, 42, 50, 58, 70, 82] : [26, 38, 50, 62, 74];
+      const spikeHeight = 9 + stage * 1.8;
+      const spikesMarkup = spikeXs
+        .map((x) => spike(x, 24 - Math.abs(x - 50) * 0.25, 4, spikeHeight, trim || color, colorDark))
+        .join("");
+      const frill =
+        stage >= 3
+          ? `<path d="M30 34 Q20 14 30 6 Q40 20 42 30 Q50 10 58 30 Q60 20 70 6 Q80 14 70 34 Z" fill="${shade(color, 20)}" opacity="0.75" stroke="${trim || colorDark}" stroke-width="1.5"/>`
+          : "";
       return {
         fill: `
+          ${evolutionAura(50, 52, 48, 34, color, stage)}
           <ellipse cx="50" cy="52" rx="44" ry="30" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
-          ${[26, 38, 50, 62, 74]
-            .map((x) => spike(x, 24 - Math.abs(x - 50) * 0.25, 4, 10, color, colorDark))
-            .join("")}
+          ${frill}
+          ${spikesMarkup}
           <path d="${REPTILE_SNOUT_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
           <circle cx="44" cy="60" r="1.3" fill="${colorDark}"/>
           <circle cx="56" cy="60" r="1.3" fill="${colorDark}"/>
@@ -114,12 +199,22 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [78, 74],
         tailScale: 0.9,
       };
-    case "amorphous":
+    }
+    case "amorphous": {
+      const trim = legendaryTrim(stage);
+      let decor = "";
+      if (stage >= 1) decor += `<circle cx="60" cy="45" r="5" fill="#fff" opacity="0.25"/><circle cx="45" cy="65" r="4" fill="#fff" opacity="0.2"/>`;
+      if (stage >= 2)
+        decor += `<path d="M46 90 Q45 100 50 104 Q55 100 51 90 Z" fill="${color}" stroke="${colorDark}" stroke-width="3"/><circle cx="30" cy="55" r="4" fill="#fff" opacity="0.22"/>`;
+      if (stage >= 3) decor += `<circle cx="60" cy="45" r="5" fill="#fff" opacity="0.42"/>`;
+      if (stage >= 4) decor += `<circle cx="50" cy="55" r="9" fill="${trim}" opacity="0.35"/><circle cx="50" cy="55" r="4" fill="${trim}" opacity="0.85"/>`;
       return {
         fill: `
+          ${evolutionAura(50, 55, 48, 52, color, stage)}
           <path d="${AMORPHOUS_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
           <g fill="${color}" stroke="${colorDark}" stroke-width="3">${AMORPHOUS_DRIPS}</g>
           <ellipse cx="35" cy="28" rx="12" ry="8" fill="#fff" opacity="0.2"/>
+          ${decor}
         `,
         clip: `<path d="${AMORPHOUS_PATH}"/>`,
         faceCenter: [50, 52],
@@ -130,9 +225,22 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [86, 78],
         tailScale: 0.85,
       };
-    case "serpent":
+    }
+    case "serpent": {
+      const trim = legendaryTrim(stage);
+      const finColor = shade(color, 15);
+      let decor = "";
+      if (stage >= 1) decor += spike(46, 14, 3, 8, finColor, colorDark) + spike(22, 66, 3, 7, finColor, colorDark);
+      if (stage >= 2)
+        decor += spike(48, 82, 3, 7, finColor, colorDark) + `<path d="M42 10 Q30 -2 34 14 Q40 8 44 16 Z" fill="${finColor}" opacity="0.8" stroke="${colorDark}" stroke-width="1"/>`;
+      if (stage >= 3) decor += `<path d="M20 74 Q4 82 10 92 Q20 84 26 76 Z" fill="${finColor}" opacity="0.7" stroke="${colorDark}" stroke-width="1"/>`;
+      if (stage >= 4) decor += `<path d="M42 10 Q30 -2 34 14 Q40 8 44 16 Z" fill="none" stroke="${trim}" stroke-width="1.5"/>`;
       return {
-        fill: `<path d="${SERPENT_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        fill: `
+          ${evolutionAura(45, 55, 40, 55, color, stage)}
+          <path d="${SERPENT_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
+        `,
         clip: `<path d="${SERPENT_PATH}"/>`,
         faceCenter: [48, 22],
         faceScale: 0.6,
@@ -142,11 +250,20 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [44, 100],
         tailScale: 0.6,
       };
-    case "arachnid":
+    }
+    case "arachnid": {
+      const trim = legendaryTrim(stage);
+      let decor = "";
+      if (stage >= 1) decor += `<circle cx="40" cy="28" r="1.8" fill="${colorDark}"/><circle cx="60" cy="28" r="1.8" fill="${colorDark}"/>`;
+      if (stage >= 2) decor += `<path d="M50 58 L44 66 L50 74 L56 66 Z" fill="${shade(color, -15)}" opacity="0.5"/>`;
+      if (stage >= 3) decor += `<circle cx="34" cy="32" r="1.4" fill="${colorDark}"/><circle cx="66" cy="32" r="1.4" fill="${colorDark}"/>`;
+      if (stage >= 4) decor += `<path d="M50 58 L44 66 L50 74 L56 66 Z" fill="${trim}" opacity="0.9"/>`;
       return {
         fill: `
+          ${evolutionAura(50, 55, 38, 42, color, stage)}
           <ellipse cx="50" cy="66" rx="30" ry="26" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
           <ellipse cx="50" cy="34" rx="18" ry="16" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
         `,
         clip: `<ellipse cx="50" cy="66" rx="30" ry="26"/><ellipse cx="50" cy="34" rx="18" ry="16"/>`,
         faceCenter: [50, 34],
@@ -157,9 +274,23 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [76, 86],
         tailScale: 0.7,
       };
-    case "avian":
+    }
+    case "avian": {
+      const trim = legendaryTrim(stage);
+      const crestColor = trim || shade(color, 20);
+      let decor = "";
+      if (stage >= 1) decor += `<path d="M50 8 Q46 -4 50 -10 Q54 -4 50 8 Z" fill="${crestColor}"/>`;
+      if (stage >= 2)
+        decor += `<path d="M44 6 Q40 -6 44 -12 Q48 -4 46 6 Z" fill="${crestColor}" opacity="0.9"/><path d="M56 6 Q60 -6 56 -12 Q52 -4 54 6 Z" fill="${crestColor}" opacity="0.9"/>`;
+      if (stage >= 3)
+        decor += `<path d="M50 100 Q40 112 44 122 Q50 112 50 100 Z" fill="${crestColor}" opacity="0.85"/><path d="M50 100 Q60 112 56 122 Q50 112 50 100 Z" fill="${crestColor}" opacity="0.85"/>`;
+      if (stage >= 4) decor += `<path d="M50 100 Q50 116 50 126 Z" stroke="${trim}" stroke-width="2" fill="none"/>`;
       return {
-        fill: `<path d="${AVIAN_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        fill: `
+          ${evolutionAura(50, 55, 32, 50, color, stage)}
+          <path d="${AVIAN_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
+        `,
         clip: `<path d="${AVIAN_PATH}"/>`,
         faceCenter: [50, 46],
         faceScale: 0.9,
@@ -169,9 +300,28 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [66, 96],
         tailScale: 0.8,
       };
-    case "aquatic":
+    }
+    case "aquatic": {
+      const trim = legendaryTrim(stage);
+      let decor = "";
+      if (stage >= 1) decor += `<path d="M50 10 Q46 -2 50 -8 Q54 -2 50 10 Z" fill="${shade(color, -10)}" stroke="${colorDark}" stroke-width="1.5"/>`;
+      if (stage >= 2) decor += `<path d="M44 8 L50 -14 L56 8 Z" fill="${shade(color, -10)}" stroke="${colorDark}" stroke-width="1.5"/>`;
+      if (stage >= 3)
+        decor += [
+          [30, 40],
+          [70, 40],
+          [35, 70],
+          [65, 70],
+        ]
+          .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.8" fill="#7fffea" opacity="0.85"/>`)
+          .join("");
+      if (stage >= 4) decor += `<path d="M44 8 L50 -14 L56 8 Z" fill="none" stroke="${trim}" stroke-width="1.5"/>`;
       return {
-        fill: `<path d="${AQUATIC_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        fill: `
+          ${evolutionAura(50, 52, 40, 48, color, stage)}
+          <path d="${AQUATIC_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
+        `,
         clip: `<path d="${AQUATIC_PATH}"/>`,
         faceCenter: [50, 48],
         faceScale: 0.95,
@@ -181,9 +331,21 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [88, 80],
         tailScale: 0.85,
       };
-    case "crystalline":
+    }
+    case "crystalline": {
+      const trim = legendaryTrim(stage);
+      let decor = "";
+      if (stage >= 1) decor += `<path d="M50 8 L44 -6 L50 -12 L56 -6 Z" fill="${shade(color, 20)}" stroke="${colorDark}" stroke-width="1.5"/>`;
+      if (stage >= 2)
+        decor += `<path d="M26 30 L14 22 L20 34 Z" fill="${shade(color, 20)}" stroke="${colorDark}" stroke-width="1.5"/><path d="M74 30 L86 22 L80 34 Z" fill="${shade(color, 20)}" stroke="${colorDark}" stroke-width="1.5"/>`;
+      if (stage >= 3) decor += `<path d="M50 8 L50 55 M26 30 L64 62 M74 30 L36 62" stroke="#fff" stroke-width="1" opacity="0.4"/>`;
+      if (stage >= 4) decor += `<circle cx="50" cy="55" r="6" fill="${trim}" opacity="0.6"/>`;
       return {
-        fill: `<path d="${CRYSTAL_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3" stroke-linejoin="round"/>`,
+        fill: `
+          ${evolutionAura(50, 55, 42, 50, color, stage)}
+          <path d="${CRYSTAL_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3" stroke-linejoin="round"/>
+          ${decor}
+        `,
         clip: `<path d="${CRYSTAL_PATH}"/>`,
         faceCenter: [50, 52],
         faceScale: 0.85,
@@ -193,9 +355,21 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [80, 72],
         tailScale: 0.65,
       };
-    case "crab":
+    }
+    case "crab": {
+      const trim = legendaryTrim(stage);
+      const spikeColor = shade(color, 10);
+      let decor = "";
+      if (stage >= 1) decor += `<path d="M25 40 Q50 30 75 40" stroke="${colorDark}" stroke-width="1.5" fill="none" opacity="0.5"/>`;
+      if (stage >= 2) decor += spike(20, 30, 3, 7, spikeColor, colorDark) + spike(80, 30, 3, 7, spikeColor, colorDark);
+      if (stage >= 3) decor += `<path d="M30 50 Q50 42 70 50" stroke="${colorDark}" stroke-width="1.5" fill="none" opacity="0.5"/>` + spike(50, 22, 3, 8, spikeColor, colorDark);
+      if (stage >= 4) decor += `<circle cx="30" cy="44" r="1.6" fill="${trim}"/><circle cx="70" cy="44" r="1.6" fill="${trim}"/>`;
       return {
-        fill: `<path d="${CRAB_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        fill: `
+          ${evolutionAura(50, 50, 42, 36, color, stage)}
+          <path d="${CRAB_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
+        `,
         clip: `<path d="${CRAB_PATH}"/>`,
         faceCenter: [50, 46],
         faceScale: 0.85,
@@ -205,11 +379,26 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [88, 64],
         tailScale: 0.75,
       };
-    case "mechanical":
+    }
+    case "mechanical": {
+      const trim = legendaryTrim(stage);
+      let decor = "";
+      if (stage >= 1) decor += `<line x1="50" y1="20" x2="50" y2="8" stroke="${colorDark}" stroke-width="2"/><circle cx="50" cy="6" r="2.5" fill="${shade(color, 20)}"/>`;
+      if (stage >= 2)
+        decor +=
+          [26, 74].map((x) => rivet(x, 26, colorDark)).join("") +
+          [26, 74].map((x) => rivet(x, 94, colorDark)).join("") +
+          `<circle cx="50" cy="6" r="2.5" fill="#7fffea"/>`;
+      if (stage >= 3) decor += `<rect x="18" y="45" width="6" height="18" rx="2" fill="${colorDark}" opacity="0.5"/><rect x="76" y="45" width="6" height="18" rx="2" fill="${colorDark}" opacity="0.5"/>`;
+      if (stage >= 4) decor += `<rect x="30" y="30" width="40" height="6" fill="${trim}" opacity="0.8"/><circle cx="50" cy="60" r="6" fill="${trim}" opacity="0.5"/>`;
       return {
-        fill: `<rect x="22" y="20" width="56" height="80" rx="10" ry="10" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+        fill: `
+          ${evolutionAura(50, 60, 40, 48, color, stage)}
+          <rect x="22" y="20" width="56" height="80" rx="10" ry="10" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
           <rect x="30" y="30" width="40" height="6" fill="${colorDark}" opacity="0.3"/>
-          <rect x="30" y="88" width="40" height="6" fill="${colorDark}" opacity="0.3"/>`,
+          <rect x="30" y="88" width="40" height="6" fill="${colorDark}" opacity="0.3"/>
+          ${decor}
+        `,
         clip: `<rect x="22" y="20" width="56" height="80" rx="10" ry="10"/>`,
         faceCenter: [50, 50],
         faceScale: 0.85,
@@ -219,9 +408,20 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [82, 90],
         tailScale: 0.85,
       };
-    case "spectral":
+    }
+    case "spectral": {
+      const trim = legendaryTrim(stage);
+      let decor = "";
+      if (stage >= 1) decor += `<path d="M30 88 Q28 100 32 106 Q36 100 34 88 Z" fill="${color}" opacity="0.6"/>`;
+      if (stage >= 2) decor += `<path d="M50 90 Q48 104 52 110 Q56 104 54 90 Z" fill="${color}" opacity="0.6"/>`;
+      if (stage >= 3) decor += `<path d="M70 88 Q72 100 68 106 Q64 100 66 88 Z" fill="${color}" opacity="0.6"/>`;
+      if (stage >= 4) decor += `<ellipse cx="50" cy="8" rx="14" ry="4" fill="none" stroke="${trim}" stroke-width="2" opacity="0.9"/>`;
       return {
-        fill: `<path d="${SPECTRAL_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3" opacity="0.92"/>`,
+        fill: `
+          ${evolutionAura(50, 50, 40, 48, color, stage)}
+          <path d="${SPECTRAL_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3" opacity="0.92"/>
+          ${decor}
+        `,
         clip: `<path d="${SPECTRAL_PATH}"/>`,
         faceCenter: [50, 46],
         faceScale: 0.85,
@@ -231,11 +431,21 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [88, 78],
         tailScale: 0.8,
       };
-    case "treant":
+    }
+    case "treant": {
+      const leafColor = shade(color, 25);
+      let decor = "";
+      if (stage >= 1) decor += leafBud(38, 12, -20, leafColor) + leafBud(62, 12, 20, leafColor);
+      if (stage >= 2) decor += leafBud(50, 4, 0, leafColor) + `<path d="M28 40 Q18 36 16 44" stroke="${shade(color, -20)}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+      if (stage >= 3)
+        decor += leafBud(24, 36, -30, leafColor) + leafBud(76, 36, 30, leafColor) + `<path d="M72 40 Q82 36 84 44" stroke="${shade(color, -20)}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+      if (stage >= 4) decor += blossom(38, 12, "#ffb3d1") + blossom(62, 12, "#ffb3d1") + blossom(50, 4, "#ffb3d1");
       return {
         fill: `
+          ${evolutionAura(50, 55, 40, 55, color, stage)}
           <path d="${TREANT_TRUNK_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
           <circle cx="50" cy="24" r="15" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
         `,
         clip: `<path d="${TREANT_TRUNK_PATH}"/><circle cx="50" cy="24" r="15"/>`,
         faceCenter: [50, 24],
@@ -246,9 +456,21 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [80, 96],
         tailScale: 0.55,
       };
-    case "centipede":
+    }
+    case "centipede": {
+      const trim = legendaryTrim(stage);
+      const ridgeColor = shade(color, -10);
+      let decor = "";
+      if (stage >= 1) decor += [30, 50, 70].map((x) => `<ellipse cx="${x}" cy="30" rx="4" ry="3" fill="${ridgeColor}" opacity="0.6"/>`).join("");
+      if (stage >= 2) decor += [20, 40, 60, 80].map((x) => `<ellipse cx="${x}" cy="30" rx="4" ry="3" fill="${ridgeColor}" opacity="0.6"/>`).join("");
+      if (stage >= 3) decor += [20, 35, 50, 65, 80].map((x) => `<circle cx="${x}" cy="30" r="1.5" fill="#7fffea" opacity="0.8"/>`).join("");
+      if (stage >= 4) decor += `<circle cx="14" cy="50" r="2" fill="${trim}"/><circle cx="86" cy="50" r="2" fill="${trim}"/>`;
       return {
-        fill: `<path d="${CENTIPEDE_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        fill: `
+          ${evolutionAura(50, 50, 44, 26, color, stage)}
+          <path d="${CENTIPEDE_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
+        `,
         clip: `<path d="${CENTIPEDE_PATH}"/>`,
         faceCenter: [32, 50],
         faceScale: 0.6,
@@ -258,10 +480,22 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [84, 56],
         tailScale: 0.55,
       };
+    }
     case "round":
-    default:
+    default: {
+      const trim = legendaryTrim(stage);
+      const shineColor = shade(color, 45);
+      let decor = "";
+      if (stage >= 1) decor += gem(50, 95, 3.5, shade(color, 35), colorDark);
+      if (stage >= 2) decor += sparkle(16, 48, 4, shineColor);
+      if (stage >= 3) decor += sparkle(84, 48, 4, shineColor);
+      if (stage >= 4) decor += `<circle cx="50" cy="95" r="5" fill="${trim}" stroke="#c9971c" stroke-width="1.5"/>` + sparkle(16, 48, 4.5, trim) + sparkle(84, 48, 4.5, trim);
       return {
-        fill: `<path d="${ROUND_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>`,
+        fill: `
+          ${evolutionAura(50, 55, 46, 50, color, stage)}
+          <path d="${ROUND_PATH}" fill="${color}" stroke="${colorDark}" stroke-width="3"/>
+          ${decor}
+        `,
         clip: `<path d="${ROUND_PATH}"/>`,
         faceCenter: [50, 46],
         faceScale: 1,
@@ -271,6 +505,7 @@ function bodyShapeMarkup(shape, color, colorDark) {
         tailAnchor: [82, 82],
         tailScale: 1,
       };
+    }
   }
 }
 
@@ -1047,14 +1282,19 @@ export function monsterSVG(config, { size = 160 } = {}) {
     tail = "none",
     outfit = "none",
     scar = "none",
+    evolutionStage = 0,
   } = config;
 
   const id = uid();
   const colorDark = shade(bodyColor, -25);
-  const shapeInfo = bodyShapeMarkup(bodyShape, bodyColor, colorDark);
+  const shapeInfo = bodyShapeMarkup(bodyShape, bodyColor, colorDark, evolutionStage);
   const [fx, fy] = shapeInfo.faceCenter;
   const fs = shapeInfo.faceScale;
-  const sizeScale = (SIZES.find((s) => s.id === monsterSize) || SIZES[1]).scale;
+  // Each evolution stage nudges the monster a little larger on top of the
+  // player's own size pick, reinforcing "growing more powerful" alongside
+  // the added decoration.
+  const stageSizeBonus = [1, 1.04, 1.08, 1.13, 1.18][evolutionStage] ?? 1;
+  const sizeScale = (SIZES.find((s) => s.id === monsterSize) || SIZES[1]).scale * stageSizeBonus;
 
   const faceTransform = `translate(${fx} ${fy}) scale(${fs}) translate(-50 -46)`;
   const eyesMarkup = (EYE_VARIANTS[eyeType] || EYE_VARIANTS[0])(id);

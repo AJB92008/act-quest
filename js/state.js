@@ -4,33 +4,13 @@ import { getLessonCount } from "./data/questions/index.js";
 const STORAGE_KEY = "act-quest-save-v1";
 const PASS_THRESHOLD = 0.7; // score needed to pass a mini-lesson / master a skill
 
-// Must stay in sync with BODY_SHAPES' id order in ui/monster.js — duplicated
-// here (rather than imported) so state.js, which everything else depends
-// on, doesn't have to depend on the ui layer.
-const BODY_SHAPE_ORDER = [
-  "round",
-  "humanoid",
-  "insect",
-  "reptile",
-  "amorphous",
-  "serpent",
-  "arachnid",
-  "avian",
-  "aquatic",
-  "crystalline",
-  "crab",
-  "mechanical",
-  "spectral",
-  "treant",
-  "centipede",
-];
-// Evolution stages tied to overall mastery %: at each threshold the
-// monster's body shape shifts forward by a fixed offset in BODY_SHAPE_ORDER
-// (wrapping around), so every monster visibly evolves into something new
-// while every other customization choice (color, accessories, limbs...)
-// stays exactly as the player set it.
+// Evolution stages tied to overall mastery %: at each threshold monsterSVG
+// renders a more elaborate version of the player's own chosen body shape
+// (more/bigger thematic decoration, a growing aura, extra size) rather than
+// switching to a different shape entirely — see bodyShapeMarkup() in
+// ui/monster.js. The base silhouette, clip path, and every accessory
+// anchor stay identical across stages, so nothing ever misaligns.
 const EVOLUTION_STAGE_THRESHOLDS = [0, 0.25, 0.5, 0.75, 1];
-const EVOLUTION_STAGE_OFFSETS = [0, 3, 6, 9, 12];
 export const EVOLUTION_STAGE_NAMES = ["Hatchling", "Adept", "Veteran", "Master", "Legendary"];
 
 // XP needed to reach a given level follows a simple growing curve
@@ -278,17 +258,11 @@ class GameState {
   }
 
   /** The avatar as it actually looks right now: the player's own
-   * customization (color, accessories, limbs, eyes...) with the body shape
-   * swapped in for the current evolution stage. Every accessory anchor in
-   * monsterSVG is keyed off body shape already, so this is all that's
-   * needed to keep everything aligned as the shape changes. */
+   * customization plus the current evolution stage, which monsterSVG uses
+   * to render a more elaborate version of that same chosen shape (see
+   * bodyShapeMarkup() in ui/monster.js) rather than a different shape. */
   getDisplayAvatar() {
-    const stage = this.getEvolutionStage();
-    const avatar = this.data.avatar;
-    if (stage === 0) return avatar;
-    const baseIndex = Math.max(0, BODY_SHAPE_ORDER.indexOf(avatar.bodyShape));
-    const shape = BODY_SHAPE_ORDER[(baseIndex + EVOLUTION_STAGE_OFFSETS[stage]) % BODY_SHAPE_ORDER.length];
-    return { ...avatar, bodyShape: shape };
+    return { ...this.data.avatar, evolutionStage: this.getEvolutionStage() };
   }
 
   // --- endless mode ---

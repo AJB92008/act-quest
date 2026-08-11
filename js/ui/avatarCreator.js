@@ -228,7 +228,7 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
             ${
               onboarding
                 ? ""
-                : `<p class="avatar-evolution-note">🌟 This is your monster's base look — it evolves into new forms as you master more skills (currently: <strong>${gameState.getEvolutionStageName()} form</strong>).</p>`
+                : `<p class="avatar-evolution-note">🌟 This is your monster's base look — the same shape grows more elaborate as you master more skills (currently: <strong>${gameState.getEvolutionStageName()} form</strong>).</p>`
             }
             <div class="avatar-fun-actions">
               <button class="btn-secondary" data-randomize>🎲 Surprise Me!</button>
