@@ -115,9 +115,9 @@ function buildBodyHTML() {
     <h3>Overall Mastery / Evolution Stage</h3>
     <div class="dev-cheat-row">
       <button class="dev-btn" data-mastery="0">0%</button>
-      <button class="dev-btn" data-mastery="0.25">25%</button>
-      <button class="dev-btn" data-mastery="0.5">50%</button>
-      <button class="dev-btn" data-mastery="0.75">75%</button>
+      <button class="dev-btn" data-mastery="0.26">26%</button>
+      <button class="dev-btn" data-mastery="0.51">51%</button>
+      <button class="dev-btn" data-mastery="0.76">76%</button>
       <button class="dev-btn" data-mastery="1">100%</button>
     </div>
 
