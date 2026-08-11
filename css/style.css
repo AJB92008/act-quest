@@ -1261,6 +1261,11 @@ input[type="text"] {
   position: sticky;
   top: 90px;
   flex-shrink: 0;
+  /* Flex items shrink-to-fit their max-content width by default; without an
+     explicit width, a long unwrapped line of text in here (the evolution
+     note, an unlucky quip...) would balloon this column and squeeze
+     .avatar-controls down to its min-width instead of wrapping normally. */
+  width: 280px;
 }
 
 .avatar-preview {
