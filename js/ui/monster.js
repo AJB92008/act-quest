@@ -1397,24 +1397,48 @@ export function monsterSVG(config, { size = 160 } = {}) {
   const ACCESSORY_SCALE_CAP = 1.6;
   const accessoryDamping = Math.min(1, ACCESSORY_SCALE_CAP / sizeScale);
 
+  // Accessory anchors (head, outfit/back, tail) are body-local coordinates
+  // like everything else, so their distance from the body's own pivot
+  // (50, 55) scales right along with sizeScale. That's invisible for
+  // anchors that already sit close to center, but a handful of shapes
+  // place an anchor far from it (e.g. insect's headAnchor, well above its
+  // small head) — at max level + evolution, that anchor alone can land
+  // past the viewBox before a tall accessory (a wizard hat's peak, a long
+  // tail) even adds its own capped geometry on top. Same fix as the aura:
+  // cap each anchor's final (post-sizeScale) distance from center, then
+  // divide back out sizeScale so it lands exactly on that cap instead of
+  // drifting further out as level climbs.
+  const ANCHOR_SAFE_MAX_OFFSET = 40;
+  function dampAnchor(point) {
+    const dx = point.x - 50;
+    const dy = point.y - 55;
+    const dist = Math.hypot(dx, dy);
+    if (dist === 0) return point;
+    const finalDist = dist * sizeScale;
+    if (finalDist <= ANCHOR_SAFE_MAX_OFFSET) return point;
+    const pull = ANCHOR_SAFE_MAX_OFFSET / finalDist;
+    return { x: 50 + dx * pull, y: 55 + dy * pull };
+  }
+
   const faceTransform = `translate(${fx} ${fy}) scale(${fs}) translate(-50 -46)`;
   const eyesMarkup = (EYE_VARIANTS[eyeType] || EYE_VARIANTS[0])(id);
   const mouthMarkup = (MOUTH_VARIANTS[mouthType] || MOUTH_VARIANTS[0])();
 
-  const headAnchor = { x: fx, y: fy - 20 * fs };
+  const headAnchor = dampAnchor({ x: fx, y: fy - 20 * fs });
   const faceAnchor = { x: fx, y: fy };
   const [ox, oy] = shapeInfo.outfitAnchor || [50, 70];
   const outfitScale = shapeInfo.outfitScale ?? 1;
-  const outfitAnchor = { x: ox, y: oy };
+  const outfitAnchor = dampAnchor({ x: ox, y: oy });
   const scarAnchor = { x: fx, y: fy };
   const headScale = shapeInfo.headScale ?? 1;
   // Back accessories (wings, cape, backpack...) mount on the torso just like
   // outfits do, so they share the same per-shape anchor/scale.
   const backAnchor = outfitAnchor;
   const backScale = outfitScale;
-  const [tx, ty] = shapeInfo.tailAnchor || [82, 82];
+  const [rawTx, rawTy] = shapeInfo.tailAnchor || [82, 82];
   const tailScale = shapeInfo.tailScale ?? 1;
-  const tailAnchor = { x: tx, y: ty };
+  const tailAnchor = dampAnchor({ x: rawTx, y: rawTy });
+  const { x: tx, y: ty } = tailAnchor;
 
   const renderItem = (category, itemId, anchor) => {
     if (!itemId || itemId === "none") return "";
@@ -1435,9 +1459,9 @@ export function monsterSVG(config, { size = 160 } = {}) {
   // floating off flat/horizontal ones (centipede, crab). Face and scar
   // accessories reuse faceScale so they line up with the (already-scaled)
   // eyes instead of towering over small faces (insect, serpent, centipede).
-  const outfitGroup = scaledGroup(renderItem("outfit", outfit, outfitAnchor), ox, oy, outfitScale * accessoryDamping);
+  const outfitGroup = scaledGroup(renderItem("outfit", outfit, outfitAnchor), outfitAnchor.x, outfitAnchor.y, outfitScale * accessoryDamping);
   const headGroup = scaledGroup(renderItem("head", head, headAnchor), headAnchor.x, headAnchor.y, headScale * accessoryDamping);
-  const backGroup = scaledGroup(renderItem("back", back, backAnchor), ox, oy, backScale * accessoryDamping);
+  const backGroup = scaledGroup(renderItem("back", back, backAnchor), backAnchor.x, backAnchor.y, backScale * accessoryDamping);
   const tailGroup = scaledGroup(renderItem("tail", tail, tailAnchor), tx, ty, tailScale * accessoryDamping);
   const faceGroup = scaledGroup(renderItem("face", face, faceAnchor), fx, fy, fs * accessoryDamping);
   const scarGroup = scaledGroup(renderItem("scar", scar, scarAnchor), fx, fy, fs * accessoryDamping);

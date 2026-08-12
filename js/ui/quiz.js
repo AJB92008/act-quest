@@ -77,7 +77,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
         ${gameState.timerEnabled ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
-          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
+          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <p class="question-text">${q.q}</p>
           <div class="choices" id="choices">
             ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
@@ -174,7 +174,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
       ${hudHTML("map")}
       <main class="screen results-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
         <div class="results-card">
-          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 130 })}</div>
+          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 160 })}</div>
           <h1>${outcome.passed ? "Lesson Passed!" : "Keep Practicing!"}</h1>
           <p class="results-score">${correctCount} / ${total} correct (${scorePct}%)</p>
           ${

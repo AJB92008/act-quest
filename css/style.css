@@ -1296,8 +1296,10 @@ input[type="text"] {
   /* Flex items shrink-to-fit their max-content width by default; without an
      explicit width, a long unwrapped line of text in here (the evolution
      note, an unlucky quip...) would balloon this column and squeeze
-     .avatar-controls down to its min-width instead of wrapping normally. */
-  width: 280px;
+     .avatar-controls down to its min-width instead of wrapping normally.
+     320px matches the mobile breakpoint's max-width below, leaving enough
+     room for the bumped-up preview size the monster now renders at. */
+  width: 320px;
 }
 
 .avatar-preview {
@@ -1596,6 +1598,15 @@ input[type="text"] {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.dash-monster-headline {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.dash-monster-caption {
+  margin: 0;
 }
 
 .dash-monster-row {

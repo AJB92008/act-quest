@@ -154,7 +154,7 @@ function syncHud() {
   const avatarWrap = document.querySelector(".hud-avatar");
   if (avatarWrap) {
     avatarWrap.title = `Level ${gameState.level}`;
-    avatarWrap.innerHTML = `${monsterSVG(gameState.getDisplayAvatar(), { size: 48 })}<span class="hud-level-badge">${gameState.level}</span>`;
+    avatarWrap.innerHTML = `${monsterSVG(gameState.getDisplayAvatar(), { size: 59 })}<span class="hud-level-badge">${gameState.level}</span>`;
   }
 }
 

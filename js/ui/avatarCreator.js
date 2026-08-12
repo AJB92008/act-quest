@@ -216,7 +216,7 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
         }</p>
         <div class="avatar-layout">
           <div class="avatar-preview-col">
-            <div class="avatar-preview">${monsterSVG(displayAvatar, { size: 220 })}</div>
+            <div class="avatar-preview">${monsterSVG(displayAvatar, { size: 270 })}</div>
             ${quip ? `<p class="avatar-quip">${quip}</p>` : ""}
             ${
               onboarding

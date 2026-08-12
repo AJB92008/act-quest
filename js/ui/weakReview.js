@@ -15,12 +15,24 @@ import { renderProgressBanners } from "./progressBanner.js";
 
 const QUESTION_TIME = 20;
 const REVIEW_SIZE = 10;
+const PREVIEW_SIZE = 5;
 const REVIEW_COLOR = "#22b8a3";
 const REVIEW_BG = "#e8fbf7";
 
 export function renderWeakReview(root, navigate) {
-  const weakSkills = gameState.getWeakSkills(5);
-  const questions = weakSkills.length > 0 ? getWeakReviewQuestions(weakSkills, REVIEW_SIZE) : [];
+  let weakSkills = gameState.getWeakSkills(5);
+  // A brand-new (or lightly-played) account won't have 5+ attempts on
+  // anything yet, so the real "weakest skills" read above comes back
+  // empty. Rather than hard-blocking until that history exists, fall back
+  // to whatever's been attempted at all (even just once) and offer a
+  // shorter warm-up session instead — some reps beat a dead end.
+  let isPreview = false;
+  if (weakSkills.length === 0) {
+    weakSkills = gameState.getWeakSkills(5, 1, 1.01);
+    isPreview = weakSkills.length > 0;
+  }
+  const reviewSize = isPreview ? PREVIEW_SIZE : REVIEW_SIZE;
+  const questions = weakSkills.length > 0 ? getWeakReviewQuestions(weakSkills, reviewSize) : [];
 
   let idx = 0;
   let correctCount = 0;
@@ -84,14 +96,18 @@ export function renderWeakReview(root, navigate) {
       <main class="screen weak-review-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
         <button class="back-btn" data-back>&larr; Back to Map</button>
         <div class="lesson-card">
-          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
-          <h1 class="lesson-title">🎯 Weak Skill Review</h1>
-          <p class="lesson-blurb">A quick ${REVIEW_SIZE}-question session pulled from the skills you're struggling with most, across every subject.</p>
+          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
+          <h1 class="lesson-title">${isPreview ? "🔍 Warm-up Preview" : "🎯 Weak Skill Review"}</h1>
+          <p class="lesson-blurb">${
+            isPreview
+              ? `Not enough history yet for a full weak-skill read, so here's a quick ${PREVIEW_SIZE}-question warm-up from what you've tried so far.`
+              : `A quick ${REVIEW_SIZE}-question session pulled from the skills you're struggling with most, across every subject.`
+          }</p>
           ${
             weakSkills.length === 0
-              ? `<p class="lesson-paragraph">You need a bit more practice history before there's anything to review — complete a few mini-lessons first, then come back here to shore up your weak spots.</p>`
+              ? `<p class="lesson-paragraph">You haven't attempted any questions yet — complete a mini-lesson first, then come back here for a warm-up or a full weak-spot review.</p>`
               : `
-                <p class="lesson-paragraph">Right now that's mostly:</p>
+                <p class="lesson-paragraph">${isPreview ? "Skills you've touched so far:" : "Right now that's mostly:"}</p>
                 <ul class="weak-skill-list">${skillRows}</ul>
               `
           }
@@ -132,7 +148,7 @@ export function renderWeakReview(root, navigate) {
         ${gameState.timerEnabled ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
-          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
+          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <p class="question-text">${q.q}</p>
           <div class="choices" id="choices">
             ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
@@ -232,7 +248,7 @@ export function renderWeakReview(root, navigate) {
       ${hudHTML("map")}
       <main class="screen results-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
         <div class="results-card">
-          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 130 })}</div>
+          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 160 })}</div>
           <h1>Review Complete!</h1>
           <p class="results-score">${correctCount} / ${total} correct (${scorePct}%)</p>
           <p class="results-flag">🎯 Great job shoring up your weak spots.</p>

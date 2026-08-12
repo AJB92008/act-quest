@@ -36,17 +36,14 @@ export function renderDashboard(root, navigate) {
         <div class="dash-summary-tile"><span class="tile-num">${overall.coins}</span><span>Coins</span></div>
       </div>
       <div class="dash-monster-card">
-        <div class="dash-monster-preview">${monsterSVG(gameState.getDisplayAvatar(), { size: 70 })}</div>
+        <div class="dash-monster-preview">${monsterSVG(gameState.getDisplayAvatar(), { size: 86 })}</div>
         <div class="dash-monster-info">
+          <div class="dash-monster-headline">Level ${levelProgress.level} · ${evolutionStageName} · ${masteryPct}% mastery</div>
+          <p class="dash-monster-substat dash-monster-caption">Size grows with level, look evolves with mastery — two separate tracks.</p>
           <div class="dash-monster-row">
-            <strong>Level ${levelProgress.level}</strong>
             <span class="dash-monster-substat">${Math.round(levelProgress.pct * 100)}% to Level ${levelProgress.level + 1}</span>
           </div>
           <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(levelProgress.pct * 100)}%;background:var(--purple)"></div></div>
-          <div class="dash-monster-row">
-            <strong>${evolutionStageName} form</strong>
-            <span class="dash-monster-substat">${masteryPct}% overall mastery</span>
-          </div>
         </div>
       </div>
       <div class="dash-predictor-card">

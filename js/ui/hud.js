@@ -42,7 +42,7 @@ export function hudHTML(activeScreen) {
   ];
   return `
     <header class="hud">
-      <div class="hud-avatar" title="Level ${gameState.level}">${monsterSVG(avatar, { size: 48 })}<span class="hud-level-badge">${gameState.level}</span></div>
+      <div class="hud-avatar" title="Level ${gameState.level} · ${gameState.getEvolutionStageName()} · ${Math.round(gameState.getMasteryPct() * 100)}% mastery">${monsterSVG(avatar, { size: 59 })}<span class="hud-level-badge">${gameState.level}</span></div>
       <nav class="hud-nav">
         ${nav
           .map(

@@ -23,7 +23,7 @@ export function renderWorldMap(root, navigate) {
     const isCurrent = i === currentIndex;
     return `
       <div class="map-node-wrap" style="left:${x}%;top:${y}px;">
-        ${isCurrent ? `<div class="map-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 56 })}</div>` : ""}
+        ${isCurrent ? `<div class="map-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 69 })}</div>` : ""}
         <button class="map-island-node" data-subject="${subject.id}" style="--island-color:${subject.color};--island-bg:${subject.bg};--ring-pct:${pct}%">
           <span class="map-island-ring"></span>
           <span class="map-island-icon">${subject.icon}</span>

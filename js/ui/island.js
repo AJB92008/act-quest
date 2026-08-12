@@ -32,7 +32,7 @@ export function renderIsland(root, navigate, { subjectId }) {
       const badge = progress.mastered ? "✓" : String(i + 1);
       return `
         <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
-          ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 48 })}</div>` : ""}
+          ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 59 })}</div>` : ""}
           <button class="node-circle ${stateClass}" data-skill="${skill.id}"
             style="--node-color:${subject.color}">
             ${badge}
@@ -80,7 +80,7 @@ export function renderIsland(root, navigate, { subjectId }) {
   const bossEncounterHTML = `
     <div class="boss-encounter ${bossStateClass}" style="--island-color:${subject.color}">
       <div class="boss-encounter-monster">
-        ${monsterSVG(boss.avatar, { size: 130 })}
+        ${monsterSVG(boss.avatar, { size: 160 })}
         ${bossCleared ? `<span class="boss-encounter-crown">👑</span>` : ""}
       </div>
       <div class="boss-encounter-info">

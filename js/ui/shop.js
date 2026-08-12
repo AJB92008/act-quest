@@ -13,7 +13,7 @@ export function renderShop(root, navigate) {
         const previewAvatar = { ...avatar, [cat.id]: item.id };
         return `
           <div class="shop-item">
-            <div class="shop-item-preview">${monsterSVG(previewAvatar, { size: 90 })}</div>
+            <div class="shop-item-preview">${monsterSVG(previewAvatar, { size: 110 })}</div>
             <h4>${item.name}</h4>
             <p class="shop-item-cost">🪙 ${item.cost}</p>
             <button class="btn-primary" data-buy="${item.id}" data-category="${cat.id}" data-cost="${item.cost}" ${

@@ -100,7 +100,7 @@ export function renderEndlessMode(root, navigate) {
       <main class="screen endless-screen" style="--island-color:${ENDLESS_COLOR};--island-bg:${ENDLESS_BG}">
         <button class="back-btn" data-back>&larr; Back to Map</button>
         <div class="lesson-card">
-          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
+          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <h1 class="lesson-title">🔁 Endless Mode</h1>
           <p class="lesson-blurb">Mixed questions from every subject, one after another, getting harder the longer you last.</p>
           <p class="lesson-paragraph">Every question can come from any skill on any island, starting easy and ramping up in difficulty as you go. You get ${MAX_LIVES} lives (❤️❤️❤️) — a wrong or timed-out answer costs one, and the run ends when you're out. Answer in a row for a combo bonus on stars and coins.</p>
@@ -166,7 +166,7 @@ export function renderEndlessMode(root, navigate) {
         ${timed ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
-          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
+          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <p class="question-text">${q.q}</p>
           <div class="choices" id="choices">
             ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
@@ -264,7 +264,7 @@ export function renderEndlessMode(root, navigate) {
       ${hudHTML("endless")}
       <main class="screen results-screen" style="--island-color:${ENDLESS_COLOR};--island-bg:${ENDLESS_BG}">
         <div class="results-card">
-          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 130 })}</div>
+          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 160 })}</div>
           <h1>${lastRunNewBest ? "New Best!" : "Run Over!"}</h1>
           <p class="results-score">${correctCount} correct this run</p>
           ${

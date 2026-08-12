@@ -64,7 +64,7 @@ export function renderPracticeTest(root, navigate) {
       <main class="screen practice-test-screen" style="--island-color:${ACCENT_COLOR};--island-bg:${ACCENT_BG}">
         <button class="back-btn" data-back>&larr; Back to Progress</button>
         <div class="lesson-card">
-          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
+          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <h1 class="lesson-title">📝 Full-Length Practice Test</h1>
           <p class="lesson-blurb">All four ACT sections back-to-back, each on its own countdown &mdash; no answer feedback until the very end, just like test day.</p>
           <ul class="practice-test-sections">${rows}</ul>
@@ -133,7 +133,7 @@ export function renderPracticeTest(root, navigate) {
         <p class="quiz-lesson-label">Question ${idx + 1} of ${questions.length}</p>
         ${stimulusHTML}
         <div class="question-card">
-          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
+          <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <p class="question-text">${q.q}</p>
           <div class="choices" id="choices">
             ${q.choices
@@ -211,7 +211,7 @@ export function renderPracticeTest(root, navigate) {
       ${hudHTML("dashboard")}
       <main class="screen practice-test-screen" style="--island-color:${nextSubject.color};--island-bg:${nextSubject.bg}">
         <div class="lesson-card">
-          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 90 })}</div>
+          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <h1 class="lesson-title">✅ ${finishedSubject.name} Section Complete</h1>
           <p class="lesson-blurb">${justFinished.correctCount} / ${justFinished.totalCount} correct.</p>
           <p class="lesson-paragraph">Next up: ${nextSubject.icon} <strong>${nextSubject.name}</strong> &mdash; ${nextSection.questionCount} questions, ${nextSection.timeMinutes} minutes. Take a breath, then start whenever you're ready.</p>
@@ -254,7 +254,7 @@ export function renderPracticeTest(root, navigate) {
       ${hudHTML("dashboard")}
       <main class="screen results-screen" style="--island-color:${ACCENT_COLOR};--island-bg:${ACCENT_BG}">
         <div class="results-card">
-          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 130 })}</div>
+          <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 160 })}</div>
           <h1>${outcome.isNewBest ? "New Best Composite!" : "Test Complete!"}</h1>
           <p class="results-score">Composite: ${composite} / 36</p>
           ${
