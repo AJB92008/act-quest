@@ -24,12 +24,56 @@ function xpFloorForLevel(level) {
   return Math.pow(level - 1, 2) * 20;
 }
 
-// Rough accuracy -> ACT 1-36 scale mapping, shared by the score predictor
-// (from lesson accuracy) and practice-test section/composite scoring (from
-// section accuracy). Not a real ACT curve — just a simple linear stand-in
-// so players get a ballpark number to track over time.
+// Rough accuracy -> ACT 1-36 scale mapping used by the score predictor when
+// all it has to go on is overall lesson accuracy (no section structure to
+// build a real per-section table from). Deliberately just a simple linear
+// stand-in — see scaledScoreFromRaw() below for the full-length Practice
+// Test's more realistic, section-shaped conversion.
 export function scoreFromAccuracy(accuracy) {
   return Math.max(1, Math.min(36, Math.round(1 + accuracy * 35)));
+}
+
+// Approximates the *shape* of a real ACT raw-score -> scaled-score
+// conversion table: steep through the middle (a few more right answers
+// swing the scaled score noticeably) and flatter — more forgiving — near
+// the extremes, with Math/Science historically more forgiving at the very
+// top than English/Reading (missing a handful there can still land a 36,
+// missing even one or two in English/Reading more often costs a point).
+// This is *not* any single real test form's actual table — ACT scores each
+// form against its own unpublished curve, so there's no one true table to
+// copy — just a consistently-shaped, honest approximation, built once per
+// section into a real lookup table (raw score -> scaled score) rather than
+// computed on the fly.
+const SECTION_CURVE_PARAMS = {
+  english: { maxRaw: 75, p0: 0.5, k: 7 },
+  math: { maxRaw: 60, p0: 0.44, k: 7 },
+  reading: { maxRaw: 40, p0: 0.5, k: 7 },
+  science: { maxRaw: 40, p0: 0.44, k: 7 },
+};
+
+function buildScoreTable(maxRaw, p0, k) {
+  const logistic = (p) => 1 / (1 + Math.exp(-k * (p - p0)));
+  const lo = logistic(0);
+  const hi = logistic(1);
+  const table = [];
+  for (let raw = 0; raw <= maxRaw; raw++) {
+    const norm = (logistic(raw / maxRaw) - lo) / (hi - lo);
+    table.push(Math.max(1, Math.min(36, Math.round(1 + norm * 35))));
+  }
+  return table;
+}
+
+export const ACT_SCORE_TABLES = Object.fromEntries(
+  Object.entries(SECTION_CURVE_PARAMS).map(([subjectId, { maxRaw, p0, k }]) => [subjectId, buildScoreTable(maxRaw, p0, k)])
+);
+
+/** Raw correct-answer count for one full-length Practice Test section ->
+ * that section's 1-36 scaled score, via ACT_SCORE_TABLES. */
+export function scaledScoreFromRaw(subjectId, correctCount) {
+  const table = ACT_SCORE_TABLES[subjectId];
+  if (!table) return 1;
+  const clamped = Math.max(0, Math.min(table.length - 1, Math.round(correctCount)));
+  return table[clamped];
 }
 
 function defaultSave() {

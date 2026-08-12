@@ -7,19 +7,24 @@
 // becomes the dashboard's score predictor going forward.
 import { getSubject } from "../data/skills.js";
 import { getBossQuizQuestions, preloadAllSubjects } from "../data/questions/index.js";
-import { gameState, scoreFromAccuracy } from "../state.js";
+import { gameState, scaledScoreFromRaw } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderProgressBanners } from "./progressBanner.js";
 
+// Real ACT section order, question counts, and official time limits — this
+// is genuinely full-length (215 questions, 2h55m total across the four
+// sections), not a scaled-down sample, so the intro screen is upfront
+// about the time commitment before anyone starts.
 const SECTIONS = [
-  { subjectId: "english", questionCount: 20, timeMinutes: 12 },
-  { subjectId: "math", questionCount: 20, timeMinutes: 20 },
-  { subjectId: "reading", questionCount: 20, timeMinutes: 14 },
-  { subjectId: "science", questionCount: 20, timeMinutes: 14 },
+  { subjectId: "english", questionCount: 75, timeMinutes: 45 },
+  { subjectId: "math", questionCount: 60, timeMinutes: 60 },
+  { subjectId: "reading", questionCount: 40, timeMinutes: 35 },
+  { subjectId: "science", questionCount: 40, timeMinutes: 35 },
 ];
+const TOTAL_MINUTES = SECTIONS.reduce((sum, s) => sum + s.timeMinutes, 0);
 const ACCENT_COLOR = "#6a5cff";
 const ACCENT_BG = "#f0eeff";
 
@@ -72,7 +77,8 @@ export function renderPracticeTest(root, navigate) {
           <h1 class="lesson-title">📝 Full-Length Practice Test</h1>
           <p class="lesson-blurb">All four ACT sections back-to-back, each on its own countdown &mdash; no answer feedback until the very end, just like test day.</p>
           <ul class="practice-test-sections">${rows}</ul>
-          <p class="lesson-paragraph">You'll get a short break between sections and can start the next one whenever you're ready. Your score is a composite (1-36) averaged across all four sections, and it becomes your new predicted score on the Progress page.</p>
+          <p class="lesson-paragraph">⏱️ ${TOTAL_MINUTES} minutes of testing time total (${Math.floor(TOTAL_MINUTES / 60)}h ${TOTAL_MINUTES % 60}m) &mdash; this is the real, full-length test, not a shortened sample. You'll get an untimed break between sections and can start the next one whenever you're ready.</p>
+          <p class="lesson-paragraph">Your score is a composite (1-36) averaged across all four sections' own scaled scores, the same way the real ACT computes it, and it becomes your new predicted score on the Progress page.</p>
           ${
             best > 0
               ? `<div class="endless-best-tile"><span class="endless-best-num">${best}</span><span>Best Composite</span></div>`
@@ -129,15 +135,20 @@ export function renderPracticeTest(root, navigate) {
       <main class="screen quiz-screen practice-test-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
         <div class="quiz-top">
           <button class="back-btn" data-quit>&larr; Quit Test</button>
-          <div class="quiz-progress-dots">
-            ${questions
-              .map((_, i) => `<span class="dot ${i < idx ? "done" : ""} ${i === idx ? "current" : ""}"></span>`)
-              .join("")}
-          </div>
           <div class="practice-test-timer" id="sectionTimer">${formatTime(timeLeft)}</div>
         </div>
         <h2 class="quiz-skill-name">${subject.icon} ${subject.name} Section</h2>
         <p class="quiz-lesson-label">Question ${idx + 1} of ${questions.length}</p>
+        <div
+          class="progress-bar practice-test-progress"
+          role="progressbar"
+          aria-valuenow="${idx + 1}"
+          aria-valuemin="0"
+          aria-valuemax="${questions.length}"
+          aria-label="${subject.name} section progress"
+        >
+          <div class="progress-fill" style="width:${Math.round(((idx + 1) / questions.length) * 100)}%;background:${subject.color}"></div>
+        </div>
         ${stimulusHTML}
         <div class="question-card">
           <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
@@ -201,7 +212,7 @@ export function renderPracticeTest(root, navigate) {
       if (sectionAnswers[i] === q.answer) correctCount++;
     });
     const totalCount = questions.length;
-    const subscore = scoreFromAccuracy(totalCount > 0 ? correctCount / totalCount : 0);
+    const subscore = scaledScoreFromRaw(section.subjectId, correctCount);
     sectionResults.push({ subjectId: section.subjectId, label: subject.name, correctCount, totalCount, subscore });
 
     if (sectionIndex + 1 < SECTIONS.length) renderSectionBreak();
