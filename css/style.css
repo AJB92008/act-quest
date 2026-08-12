@@ -558,6 +558,18 @@ input[type="text"] {
   color: var(--island-color);
 }
 
+.boss-encounter-level {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-radius: 999px;
+  padding: 2px 8px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
 .boss-encounter-subtitle {
   margin: 0 0 6px;
   font-weight: 700;

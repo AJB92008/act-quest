@@ -75,7 +75,7 @@ export function renderIsland(root, navigate, { subjectId }) {
   // A unique, subject-themed monster guards the bottom of the path — locked
   // (silhouette) until every skill above it is mastered, in full color once
   // the fight is available, and crowned once it's been cleared.
-  const boss = getBossMonster(subjectId);
+  const boss = getBossMonster(subjectId, gameState.level);
   const bossStateClass = bossCleared ? "is-cleared" : allMastered ? "is-unlocked" : "is-locked";
   const bossEncounterHTML = `
     <div class="boss-encounter ${bossStateClass}" style="--island-color:${subject.color}">
@@ -84,7 +84,7 @@ export function renderIsland(root, navigate, { subjectId }) {
         ${bossCleared ? `<span class="boss-encounter-crown">👑</span>` : ""}
       </div>
       <div class="boss-encounter-info">
-        <h3>${allMastered ? "" : "🔒 "}${boss.name}</h3>
+        <h3>${allMastered ? "" : "🔒 "}${boss.name} <span class="boss-encounter-level">Lv. ${boss.avatar.level}</span></h3>
         <p class="boss-encounter-subtitle">${subject.name} Boss Quiz${bossCleared ? " — Cleared!" : ""}</p>
         <p class="boss-encounter-blurb">${
           allMastered

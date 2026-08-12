@@ -117,10 +117,10 @@ function evolvedStrokeWidth(stage) {
 // (combined with the evolution stage's own size bonus above) is exactly
 // what the viewBox and evolutionAura's counter-scaling were calibrated
 // against, so nothing clips no matter the level.
-const LEVEL_SIZE_CAP = 1.45;
+export const LEVEL_SIZE_CAP = 1.45;
 const LEVEL_FIRST_STEP_GROWTH = 0.25;
 const LEVEL_GROWTH_RATIO = 1 - LEVEL_FIRST_STEP_GROWTH / (LEVEL_SIZE_CAP - 1);
-function levelSizeBonus(level) {
+export function levelSizeBonus(level) {
   const steps = Math.max(0, level - 1);
   return LEVEL_SIZE_CAP - (LEVEL_SIZE_CAP - 1) * Math.pow(LEVEL_GROWTH_RATIO, steps);
 }

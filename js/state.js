@@ -91,7 +91,7 @@ function defaultSave() {
   };
 }
 
-class GameState {
+export class GameState {
   constructor() {
     this.data = this._load();
   }

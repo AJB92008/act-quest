@@ -2,14 +2,16 @@
 // island's path, rendered with the same procedural monsterSVG() renderer
 // as the player's own monster (so it's just another avatar config — no
 // separate art pipeline, and it automatically inherits every alignment fix
-// made to monster.js's per-shape accessory anchors).
+// made to monster.js's per-shape accessory anchors). `level` is intentionally
+// left out of these configs — getBossMonster() fills it in relative to the
+// player's own level, so the boss keeps feeling like a real step up instead
+// of freezing at a fixed size that a high-level player quickly outgrows.
 export const BOSS_MONSTERS = {
   english: {
     name: "The Grammar Golem",
     avatar: {
       bodyColor: "#8a6a3a",
       bodyShape: "treant",
-      level: 8, // imposing size via the same level-based growth curve players get
       limbs: 4,
       eyeType: 3,
       mouthType: 1,
@@ -28,7 +30,6 @@ export const BOSS_MONSTERS = {
     avatar: {
       bodyColor: "#6a5cff",
       bodyShape: "crystalline",
-      level: 8, // imposing size via the same level-based growth curve players get
       limbs: 4,
       eyeType: 5,
       mouthType: 2,
@@ -47,7 +48,6 @@ export const BOSS_MONSTERS = {
     avatar: {
       bodyColor: "#22b8a3",
       bodyShape: "aquatic",
-      level: 8, // imposing size via the same level-based growth curve players get
       limbs: 4,
       eyeType: 0,
       mouthType: 0,
@@ -66,7 +66,6 @@ export const BOSS_MONSTERS = {
     avatar: {
       bodyColor: "#ffb238",
       bodyShape: "mechanical",
-      level: 8, // imposing size via the same level-based growth curve players get
       limbs: 4,
       eyeType: 5,
       mouthType: 2,
@@ -82,6 +81,19 @@ export const BOSS_MONSTERS = {
   },
 };
 
-export function getBossMonster(subjectId) {
-  return BOSS_MONSTERS[subjectId];
+// A boss always renders a few levels ahead of the player — enough to read
+// as "still a real challenge" even once mastery makes the fight itself
+// trivial — but never below BOSS_LEVEL_MIN, so it stays imposing for a
+// player who's just unlocked the fight at a low level too. The level-based
+// growth curve (see levelSizeBonus in ui/monster.js) is asymptotic, so
+// this scales the boss's *apparent* size without ever letting it run away
+// unboundedly at very high player levels.
+export const BOSS_LEVEL_BONUS = 3;
+export const BOSS_LEVEL_MIN = 8;
+
+export function getBossMonster(subjectId, playerLevel = 1) {
+  const boss = BOSS_MONSTERS[subjectId];
+  if (!boss) return boss;
+  const level = Math.max(BOSS_LEVEL_MIN, playerLevel + BOSS_LEVEL_BONUS);
+  return { ...boss, avatar: { ...boss.avatar, level } };
 }

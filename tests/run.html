@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Act Quest — Test Suite</title>
+    <style>
+      body {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        background: #1a1a24;
+        color: #e4e4ee;
+        padding: 24px;
+        line-height: 1.5;
+      }
+      h1 {
+        font-size: 1.1rem;
+      }
+      .line {
+        white-space: pre-wrap;
+      }
+      .pass {
+        color: #5fd68a;
+      }
+      .fail {
+        color: #ff6b6b;
+      }
+      #summary {
+        font-weight: bold;
+        margin-top: 16px;
+        font-size: 1.05rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Act Quest — Test Suite</h1>
+    <div id="out">Running...</div>
+    <div id="summary"></div>
+    <script type="module">
+      // No build step / no Node in this project's toolchain, so this suite
+      // runs directly against the real ES modules in a browser tab — same
+      // environment the app itself runs in. Serve with the project's normal
+      // dev server (e.g. `python3 -m http.server`) and open /tests/run.html.
+
+      // Never let a stale save in this origin's localStorage leak into
+      // tests — every GameState instance created in a test must start from
+      // a clean default save.
+      localStorage.removeItem("act-quest-save-v1");
+
+      const { getResults } = await import("./assert.js");
+      await import("./leveling.test.js");
+      await import("./evolution.test.js");
+      await import("./boss.test.js");
+      await import("./monster-bbox.test.js");
+
+      const results = getResults();
+      const out = document.getElementById("out");
+      out.innerHTML = results
+        .map((r) =>
+          r.pass
+            ? `<div class="line pass">✅ ${r.name}</div>`
+            : `<div class="line fail">❌ ${r.name}\n   ${r.error}</div>`
+        )
+        .join("");
+
+      const passCount = results.filter((r) => r.pass).length;
+      const summary = document.getElementById("summary");
+      const allPass = passCount === results.length;
+      summary.textContent = `${passCount}/${results.length} passed`;
+      summary.className = allPass ? "pass" : "fail";
+      document.title = `${allPass ? "✅" : "❌"} ${passCount}/${results.length} — Act Quest Tests`;
+    </script>
+  </body>
+</html>

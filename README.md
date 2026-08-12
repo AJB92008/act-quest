@@ -33,6 +33,16 @@ Progress (avatar, coins, stars, per-skill mastery) is saved to the browser's
   creator, shop, dashboard
 - `js/main.js` — simple screen router
 
+## Tests
+
+There's no Node/npm in this project's toolchain, so tests run directly
+against the real ES modules in a browser tab instead of a separate test
+runner. With the dev server above running, open
+http://localhost:8080/tests/run.html — it covers the level/xp growth curve,
+evolution-stage thresholds, boss level scaling, and a bounding-box sweep
+that catches monster-rendering clipping regressions across every body
+shape/limb/accessory combo.
+
 ## Adding content
 
 Each skill's questions live in `js/data/questions/<subject>.js`, keyed by
