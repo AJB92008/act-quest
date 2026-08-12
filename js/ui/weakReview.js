@@ -4,7 +4,7 @@
 // extra reps where you need them, and it feeds back into each skill's
 // ongoing accuracy stats as you go.
 import { getSkill, getSubject } from "../data/skills.js";
-import { getWeakReviewQuestions } from "../data/questions/index.js";
+import { getWeakReviewQuestions, preloadSubjectForSkill } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -32,7 +32,12 @@ export function renderWeakReview(root, navigate) {
     isPreview = weakSkills.length > 0;
   }
   const reviewSize = isPreview ? PREVIEW_SIZE : REVIEW_SIZE;
-  const questions = weakSkills.length > 0 ? getWeakReviewQuestions(weakSkills, reviewSize) : [];
+  // Kicked off immediately (fire-and-forget) so the handful of subjects
+  // these weak skills actually span have a head start loading while the
+  // player reads the intro screen below — awaited for real just before
+  // "Start Review" builds the question set, in case they click fast.
+  const dataReady = Promise.all(weakSkills.map((s) => preloadSubjectForSkill(s.id)));
+  let questions = [];
 
   let idx = 0;
   let correctCount = 0;
@@ -123,7 +128,17 @@ export function renderWeakReview(root, navigate) {
     wireHud(root, goTo);
     root.querySelector("[data-back]").addEventListener("click", () => navigate("map"));
     root.querySelector("[data-back-2]")?.addEventListener("click", () => navigate("map"));
-    root.querySelector("[data-start-review]")?.addEventListener("click", () => renderQuestion());
+    const startBtn = root.querySelector("[data-start-review]");
+    if (startBtn) {
+      startBtn.addEventListener("click", () => {
+        startBtn.disabled = true;
+        startBtn.textContent = "Loading…";
+        dataReady.then(() => {
+          questions = weakSkills.length > 0 ? getWeakReviewQuestions(weakSkills, reviewSize) : [];
+          renderQuestion();
+        });
+      });
+    }
   }
 
   function renderQuestion() {

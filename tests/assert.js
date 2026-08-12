@@ -3,11 +3,24 @@
 // tests/run.html, since there's no Node/npm in this project's toolchain.
 
 const results = [];
+const pending = [];
 
+// `fn` may be async (return a promise) — its result/rejection is tracked in
+// `pending` so getResults() can await everything before the runner reads
+// the final list, instead of racing ahead while an async test is mid-flight.
 export function test(name, fn) {
   try {
-    fn();
-    results.push({ name, pass: true });
+    const ret = fn();
+    if (ret && typeof ret.then === "function") {
+      pending.push(
+        ret.then(
+          () => results.push({ name, pass: true }),
+          (e) => results.push({ name, pass: false, error: e.message })
+        )
+      );
+    } else {
+      results.push({ name, pass: true });
+    }
   } catch (e) {
     results.push({ name, pass: false, error: e.message });
   }
@@ -29,6 +42,7 @@ export function assertTrue(condition, msg = "") {
   if (!condition) throw new Error(msg || "expected condition to be true");
 }
 
-export function getResults() {
+export async function getResults() {
+  await Promise.all(pending);
   return results;
 }

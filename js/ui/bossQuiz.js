@@ -3,7 +3,7 @@
 // one skill's path) drawing from everything you've learned on that island,
 // with a one-time bonus reward the first time you clear it.
 import { getSubject } from "../data/skills.js";
-import { getBossQuizQuestions } from "../data/questions/index.js";
+import { getBossQuizQuestions, preloadSubject } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -11,6 +11,7 @@ import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
+import { renderLoadingScreen } from "./loadingScreen.js";
 
 const QUESTION_TIME = 20;
 const QUESTION_COUNT = 20;
@@ -19,6 +20,14 @@ const FIRST_CLEAR_BONUS_COINS = 100;
 
 export function renderBossQuiz(root, navigate, { subjectId }) {
   const subject = getSubject(subjectId);
+
+  // A boss fight only unlocks after the player already mastered every
+  // skill on this island, so this subject was preloaded (from island.js)
+  // ages ago in practice — this just guards the rare case it wasn't.
+  renderLoadingScreen(root, { subject });
+  preloadSubject(subjectId).then(() => startQuiz());
+
+  function startQuiz() {
   const questions = getBossQuizQuestions(subjectId, QUESTION_COUNT);
 
   let idx = 0;
@@ -212,4 +221,5 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
   }
 
   renderQuestion();
+  }
 }

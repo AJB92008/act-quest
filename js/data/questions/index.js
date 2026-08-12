@@ -1,15 +1,80 @@
-import { english } from "./english.js";
-import { math } from "./math.js";
-import { reading, passages } from "./reading.js";
-import { science, stimuli } from "./science.js";
-import { SUBJECTS } from "../skills.js";
-
-const ALL_QUESTIONS = { ...english, ...math, ...reading, ...science };
+import { SUBJECTS, allSkillIds } from "../skills.js";
 
 // Each skill's bank is chunked into fixed-size mini-lessons — bite-sized
 // stops on that skill's path rather than one long quiz — matching how
 // "Teach Your Monster" paces its games.
 export const LESSON_SIZE = 5;
+
+// Every skill's question bank is exactly 100 questions (enforced by
+// tests/run.html's data, not hand-verified per file), so lesson count is a
+// fixed constant rather than something derived from the loaded bank's
+// length. That matters beyond just avoiding a redundant computation: it
+// means `getLessonCount` — called constantly from state.js's mastery
+// tracking and from every skill-path/island screen — never needs a
+// subject's question data loaded at all, which is what makes lazy-loading
+// each subject's ~300-600KB file (only when the player actually heads
+// toward it) possible without a much bigger rewrite of the UI layer.
+const LESSON_COUNT_PER_SKILL = Math.ceil(100 / LESSON_SIZE);
+const KNOWN_SKILL_IDS = new Set(allSkillIds());
+
+export function getLessonCount(skillId) {
+  return KNOWN_SKILL_IDS.has(skillId) ? LESSON_COUNT_PER_SKILL : 1;
+}
+
+// skillId -> { skillName, subjectId }, built once from the skill tree —
+// this never needs question data, just the (tiny, always-loaded) skill
+// tree in data/skills.js.
+const SKILL_META = {};
+for (const subject of SUBJECTS) {
+  subject.skills.forEach((skill) => {
+    SKILL_META[skill.id] = { skillName: skill.name, subjectId: subject.id };
+  });
+}
+
+// The four question banks are the large part of this app's payload (each
+// several hundred KB to over a megabyte for English) — loading all of them
+// upfront, before the player has even picked an island, was pure waste on
+// first paint. Each is now fetched via dynamic import() only once the
+// player actually heads toward that subject, and cached here after that.
+const SUBJECT_LOADERS = {
+  english: () => import("./english.js").then((m) => ({ questions: m.english })),
+  math: () => import("./math.js").then((m) => ({ questions: m.math })),
+  reading: () => import("./reading.js").then((m) => ({ questions: m.reading, passages: m.passages })),
+  science: () => import("./science.js").then((m) => ({ questions: m.science, stimuli: m.stimuli })),
+};
+
+const loadedSubjects = {}; // subjectId -> { questions, passages?, stimuli? }
+const loadingPromises = {}; // subjectId -> in-flight promise, so concurrent callers share one fetch
+
+// Kicks off (or reuses) a subject's data fetch and resolves once it's
+// cached. Safe to call repeatedly/redundantly — screens call this as soon
+// as the player heads toward a subject (e.g. opening its island) so the
+// fetch has a head start in the background while they browse, well before
+// they actually need a question rendered.
+export function preloadSubject(subjectId) {
+  if (loadedSubjects[subjectId]) return Promise.resolve(loadedSubjects[subjectId]);
+  if (!loadingPromises[subjectId]) {
+    const loader = SUBJECT_LOADERS[subjectId];
+    if (!loader) return Promise.resolve(null);
+    loadingPromises[subjectId] = loader().then((entry) => {
+      loadedSubjects[subjectId] = entry;
+      return entry;
+    });
+  }
+  return loadingPromises[subjectId];
+}
+
+export function preloadSubjectForSkill(skillId) {
+  const meta = SKILL_META[skillId];
+  return meta ? preloadSubject(meta.subjectId) : Promise.resolve(null);
+}
+
+// Every screen that can draw from more than one subject at once (Endless
+// Mode, Weak Skill Review, the full-length Practice Test) needs all four
+// loaded — there's no meaningful "lazy" subset for those.
+export function preloadAllSubjects() {
+  return Promise.all(Object.keys(SUBJECT_LOADERS).map(preloadSubject));
+}
 
 function shuffled(arr) {
   const copy = arr.slice();
@@ -20,42 +85,89 @@ function shuffled(arr) {
   return copy;
 }
 
+// Every getter below assumes the relevant subject(s) are already loaded —
+// callers must await preloadSubject()/preloadSubjectForSkill()/
+// preloadAllSubjects() first. Returns [] / null rather than throwing if
+// called too early, so a stray render doesn't hard-crash the screen.
 export function getFullBank(skillId) {
-  return ALL_QUESTIONS[skillId] || [];
+  const meta = SKILL_META[skillId];
+  if (!meta) return [];
+  return loadedSubjects[meta.subjectId]?.questions?.[skillId] || [];
 }
 
-export function getLessonCount(skillId) {
-  return Math.max(1, Math.ceil(getFullBank(skillId).length / LESSON_SIZE));
+// Individual questions aren't hand-tagged with a difficulty rating, so this
+// is a lightweight proxy, not a guarantee: longer question/choice text and
+// ACT's classic "trap" negation words (NOT/EXCEPT/LEAST, which require
+// double-checking every choice against an inverted condition) read as
+// harder. Good enough to gently order a skill's own 100 questions from
+// simplest to toughest without needing to hand-author a difficulty score
+// for every question.
+function questionDifficulty(q) {
+  const stemLen = q.q.length;
+  const choicesLen = q.choices.reduce((sum, c) => sum + c.length, 0);
+  const hasNegation = /\b(NOT|EXCEPT|LEAST)\b/.test(q.q);
+  let score = stemLen + choicesLen * 0.4;
+  if (hasNegation) score += 60;
+  return score;
 }
 
-// A mini-lesson's question *content* is a fixed slice of the bank (so it's
-// a stable, repeatable curriculum stop, not a random grab-bag), but the
-// order they're presented in is reshuffled on every attempt.
+// Sorted once per skill and cached (sorting 100 questions on every lesson
+// render would be wasted work — the bank itself never changes at runtime).
+const sortedBankCache = {};
+function getDifficultySortedBank(skillId) {
+  if (sortedBankCache[skillId]) return sortedBankCache[skillId];
+  const sorted = getFullBank(skillId)
+    .map((q, originalIndex) => ({ q, originalIndex }))
+    .sort((a, b) => questionDifficulty(a.q) - questionDifficulty(b.q) || a.originalIndex - b.originalIndex)
+    .map((entry) => entry.q);
+  sortedBankCache[skillId] = sorted;
+  return sorted;
+}
+
+// A handful of random adjacent swaps nudge the presentation order on every
+// attempt (so a repeat lesson doesn't always show the exact same sequence)
+// without undoing the easy-to-hard trend a full shuffle would erase.
+function gentleReorder(arr) {
+  const copy = arr.slice();
+  for (let i = 0; i < copy.length - 1; i++) {
+    if (Math.random() < 0.3) [copy[i], copy[i + 1]] = [copy[i + 1], copy[i]];
+  }
+  return copy;
+}
+
+// A mini-lesson's question *content* is a fixed slice of the skill's
+// difficulty-sorted bank (so it's a stable, repeatable curriculum stop, not
+// a random grab-bag) — lesson 1 draws from the skill's easiest questions,
+// the last lesson from its toughest, and presentation order within that
+// slice is only gently reshuffled rather than fully randomized, so early
+// questions in a lesson still tend to be a bit easier than the later ones.
 export function getLessonQuestions(skillId, lessonIndex) {
-  const bank = getFullBank(skillId);
+  const bank = getDifficultySortedBank(skillId);
   const start = lessonIndex * LESSON_SIZE;
-  return shuffled(bank.slice(start, start + LESSON_SIZE));
-}
-
-// skillId -> { skillName, subjectId }, built once from the skill tree.
-const SKILL_META = {};
-for (const subject of SUBJECTS) {
-  subject.skills.forEach((skill) => {
-    SKILL_META[skill.id] = { skillName: skill.name, subjectId: subject.id };
-  });
+  return gentleReorder(bank.slice(start, start + LESSON_SIZE));
 }
 
 export function getPassageById(id) {
-  return passages.find((p) => p.id === id);
+  for (const entry of Object.values(loadedSubjects)) {
+    const found = entry.passages?.find((p) => p.id === id);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 export function getStimulusById(id) {
-  return stimuli.find((s) => s.id === id);
+  for (const entry of Object.values(loadedSubjects)) {
+    const found = entry.stimuli?.find((s) => s.id === id);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 // A single flat list of every question across all four subjects, each
 // tagged with which skill/subject it came from, for Endless Mode's mixed
-// question stream. Built once and cached, since it never changes at runtime.
+// question stream. Built once and cached, since it never changes at
+// runtime (within a session — the cache is keyed off nothing because all
+// four subjects are always loaded together by the time this is called).
 //
 // Each question also gets a `difficultyPct` (0-1): questions have no
 // individual difficulty rating, but every subject's skill list is itself
@@ -70,7 +182,7 @@ export function getAllQuestionsFlat() {
   for (const subject of SUBJECTS) {
     const lastIndex = Math.max(1, subject.skills.length - 1);
     subject.skills.forEach((skill, skillIndex) => {
-      const qs = ALL_QUESTIONS[skill.id] || [];
+      const qs = loadedSubjects[subject.id]?.questions?.[skill.id] || [];
       const difficultyPct = skillIndex / lastIndex;
       for (const q of qs) {
         flat.push({ ...q, skillId: skill.id, skillName: skill.name, subjectId: subject.id, difficultyPct });

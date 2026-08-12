@@ -43,6 +43,13 @@ evolution-stage thresholds, boss level scaling, and a bounding-box sweep
 that catches monster-rendering clipping regressions across every body
 shape/limb/accessory combo.
 
+`tests/audit-duplicates.html` is a separate report (not pass/fail) that
+flags question stems repeated within a skill's bank — useful after bulk
+content edits, since it's easy for near-duplicate questions to sneak in.
+It auto-clears pairs whose `passageId`/`stimulusId` differ (legitimate
+reuse of a question template against different content) and flags the
+rest for a human read.
+
 ## Adding content
 
 Each skill's questions live in `js/data/questions/<subject>.js`, keyed by

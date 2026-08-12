@@ -22415,7 +22415,7 @@ export const english = {
       explain: "This choice uses vivid, specific details to show the chaos rather than simply labeling the day as \"chaotic.\"",
     },
     {
-      q: "If the writer wants to acknowledge a counterargument before responding to it, which choice best accomplishes this goal?",
+      q: "Which choice most effectively lets the writer concede the opposing side's point before countering it?",
       choices: [
         "Critics argue the regulation is too expensive for small businesses, but the long-term health savings outweigh the initial cost.",
         "The regulation is clearly necessary and cost-effective.",
@@ -22437,7 +22437,7 @@ export const english = {
       explain: "This choice looks ahead to a future challenge rather than restating what the essay already covered.",
     },
     {
-      q: "If the writer's goal is to provide a specific, vivid example rather than a general statement, which choice best accomplishes this goal?",
+      q: "The writer wants a concrete, specific detail in place of a vague general statement. Which choice supplies that?",
       choices: [
         "Many neighbors got involved in the community garden.",
         "People in the neighborhood were very supportive.",
@@ -22569,7 +22569,7 @@ export const english = {
       explain: "This choice provides a specific, concrete example with a named city and a real detail.",
     },
     {
-      q: "The writer wants to acknowledge a counterargument before responding to it. Which choice best accomplishes this goal?",
+      q: "The writer is looking for a sentence that both raises an objection and then answers it. Which choice does this?",
       choices: [
         "Critics argue that remote learning weakens social skills, but the flexibility it offers has helped many students stay enrolled.",
         "Remote learning is clearly the superior option.",
@@ -22657,7 +22657,7 @@ export const english = {
       explain: "This choice directly contrasts the crowded summer scene with the empty winter one, matching the writer's goal.",
     },
     {
-      q: "If the writer's goal is to introduce the topic of the essay without giving away its central argument, which choice best accomplishes this goal? \"This essay will ___.\"",
+      q: "Which choice introduces the essay's subject while still keeping its ultimate stance a surprise? \"This essay will ___.\"",
       choices: [
         "prove conclusively that social media has ruined modern friendship.",
         "examine how social media has reshaped the way friendships form and endure.",
@@ -22679,7 +22679,7 @@ export const english = {
       explain: "This choice uses specific, observable details to show the tension rather than simply labeling the office as \"tense.\"",
     },
     {
-      q: "If the writer wants to acknowledge a counterargument before responding to it, which choice best accomplishes this goal?",
+      q: "Which of the following choices best lets the writer address a likely objection before moving past it?",
       choices: [
         "Opponents claim a higher minimum wage will cost jobs, but studies of similar increases show minimal effect on employment.",
         "A higher minimum wage is obviously good for everyone.",
@@ -22701,7 +22701,7 @@ export const english = {
       explain: "This choice looks ahead to a future development rather than restating what the essay already covered.",
     },
     {
-      q: "If the writer's goal is to provide a specific, vivid example rather than a general statement, which choice best accomplishes this goal?",
+      q: "The writer wants a sentence built around a specific person, action, or detail rather than a general claim. Which choice provides that?",
       choices: [
         "Several neighbors decided to plan a block party.",
         "People on the street were friendly with one another.",
@@ -22833,7 +22833,7 @@ export const english = {
       explain: "This choice provides a specific, concrete example with a named country and a real detail.",
     },
     {
-      q: "The writer wants to acknowledge a counterargument before responding to it. Which choice best accomplishes this goal?",
+      q: "Before making her case, the writer wants to fairly represent the other side first. Which choice does that?",
       choices: [
         "Critics argue standardized tests fail to capture true ability, but the tests still provide one consistent measure across schools.",
         "Standardized tests are clearly the fairest way to evaluate students.",
@@ -23042,7 +23042,7 @@ export const english = {
       explain: "This choice provides a specific, concrete example with a named country and a real detail.",
     },
     {
-      q: "The writer wants to acknowledge a counterargument before responding to it. Which choice best accomplishes this goal?",
+      q: "Which choice gives the strongest concession-then-rebuttal structure the writer is going for?",
       choices: [
         "Critics argue that heavy homework loads harm students' well-being, but moderate homework has been linked to stronger study habits.",
         "Homework is obviously good for every student.",

@@ -2,6 +2,7 @@ import { gameState } from "../state.js";
 import {
   monsterSVG,
   BODY_COLORS,
+  BODY_COLOR_NAMES,
   BODY_SHAPES,
   LIMB_OPTIONS,
   EYE_NAMES,
@@ -122,7 +123,7 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
 
     const colorSwatches = BODY_COLORS.map(
       (c) =>
-        `<button class="swatch ${avatar.bodyColor === c ? "is-selected" : ""}" data-color="${c}" style="background:${c}"></button>`
+        `<button class="swatch ${avatar.bodyColor === c ? "is-selected" : ""}" data-color="${c}" style="background:${c}" aria-label="${BODY_COLOR_NAMES[c] || c}" aria-pressed="${avatar.bodyColor === c}"></button>`
     ).join("");
 
     const shapeButtons = BODY_SHAPES.map((s) => traitButton(avatar.bodyShape === s.id, s.name, "shape", s.id)).join("");

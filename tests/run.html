@@ -50,8 +50,9 @@
       await import("./evolution.test.js");
       await import("./boss.test.js");
       await import("./monster-bbox.test.js");
+      await import("./questionData.test.js");
 
-      const results = getResults();
+      const results = await getResults();
       const out = document.getElementById("out");
       out.innerHTML = results
         .map((r) =>

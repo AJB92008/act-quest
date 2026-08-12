@@ -1356,6 +1356,22 @@ export const BODY_COLORS = [
   "#ff8c66",
 ];
 
+// Same order as BODY_COLORS — the color swatch buttons are just a filled
+// circle with no visible text, so this gives screen readers something to
+// announce for each one instead of an unlabeled button.
+export const BODY_COLOR_NAMES = {
+  "#7fd1ae": "Mint green",
+  "#ff9f6e": "Coral orange",
+  "#7fa8ff": "Sky blue",
+  "#d38fff": "Lavender",
+  "#ffd25f": "Golden yellow",
+  "#ff7fa8": "Pink",
+  "#6bd4d4": "Teal",
+  "#c9d46b": "Olive green",
+  "#b08cff": "Violet purple",
+  "#ff8c66": "Orange",
+};
+
 export function monsterSVG(config, { size = 160 } = {}) {
   const {
     bodyColor = "#7fd1ae",
@@ -1494,7 +1510,7 @@ export function monsterSVG(config, { size = 160 } = {}) {
     : "";
 
   return `
-  <svg width="${size}" height="${size}" viewBox="-54 -80 224 268" xmlns="http://www.w3.org/2000/svg">
+  <svg width="${size}" height="${size}" viewBox="-54 -80 224 268" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
     <g transform="translate(50 55) scale(${sizeScale}) translate(-50 -55)">
       <ellipse cx="50" cy="103" rx="34" ry="6" fill="#000" opacity="0.08"/>
       ${backGroup}

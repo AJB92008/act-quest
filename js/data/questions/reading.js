@@ -4080,15 +4080,15 @@ export const reading = {
     },
     {
       passageId: "p2",
-      q: "According to the passage, how does the geographic reach of the historical Silk Road compare to that of the modern infrastructure initiative?",
+      q: "According to the passage, how does the primary mode of transport for the historical Silk Road differ from that of the modern initiative?",
       choices: [
-        "The historical route connected China to the Mediterranean, while the modern initiative stretches from East Asia through Central Asia into Europe, a broadly similar but not identical geographic scope.",
-        "The historical route covered a far larger area than the modern initiative.",
-        "The modern initiative is confined entirely within a single country.",
-        "The two routes share no geographic overlap whatsoever.",
+        "The historical route relied on camel caravans, while the modern initiative relies on railways, highways, and shipping lanes.",
+        "Both routes rely primarily on shipping lanes.",
+        "The historical route used railways, while the modern initiative uses camel caravans.",
+        "The passage does not describe the mode of transport for either route.",
       ],
       answer: 0,
-      explain: "Both routes span from East Asia toward Europe/the Mediterranean, though the passage describes them using somewhat different specific endpoints and modern infrastructure.",
+      explain: "The passage contrasts the historical Silk Road's camel caravans and dusty trails with the modern initiative's railways, highways, and shipping lanes.",
     },
     {
       passageId: "p2",

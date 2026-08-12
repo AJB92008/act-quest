@@ -57,7 +57,7 @@ export function hudHTML(activeScreen) {
         }
       </nav>
       <div class="hud-stats">
-        <button class="hud-theme-toggle" id="themeToggle" title="Toggle dark mode">${gameState.darkMode ? "☀️" : "🌙"}</button>
+        <button class="hud-theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="${gameState.darkMode ? "Switch to light mode" : "Switch to dark mode"}">${gameState.darkMode ? "☀️" : "🌙"}</button>
         <span class="hud-stat" title="Stars">⭐ ${gameState.totalStars}</span>
         <span class="hud-stat" title="Coins">🪙 ${gameState.coins}</span>
       </div>

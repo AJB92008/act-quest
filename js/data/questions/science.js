@@ -2098,10 +2098,10 @@ export const science = {
     },
     {
       stimulusId: "s4",
-      q: "According to Experiment 2, what was the average leaf count for the group grown at 50% intensity?",
-      choices: ["5", "6", "9", "10"],
-      answer: 1,
-      explain: "Group 5, at 50% intensity, had an average leaf count of 6.",
+      q: "According to Experiment 2, what was the average stem growth for the group grown at 150% light intensity?",
+      choices: ["8.1 cm", "14.2 cm", "15.8 cm", "9 cm"],
+      answer: 2,
+      explain: "Group 7, at 150% intensity, had an average stem growth of 15.8 cm.",
     },
     {
       stimulusId: "s4",

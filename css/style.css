@@ -56,6 +56,17 @@
   box-sizing: border-box;
 }
 
+/* The app's buttons are almost all pill/circle shapes on colorful
+   backgrounds — the browser's default focus outline is easy to lose
+   against them (or, on some of the rounder shapes, barely shows at all).
+   :focus-visible (not plain :focus) so this only appears for keyboard
+   navigation, not every mouse click. */
+:focus-visible {
+  outline: 3px solid var(--purple);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 html,
 body {
   margin: 0;
@@ -864,6 +875,13 @@ input[type="text"] {
   display: block;
   margin: 0 auto 10px;
   width: fit-content;
+}
+
+.loading-text {
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+  margin: 0;
 }
 
 .lesson-title {

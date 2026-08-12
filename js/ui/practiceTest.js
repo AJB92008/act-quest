@@ -6,7 +6,7 @@
 // a 1-36 composite averaged from each section's own estimate, which then
 // becomes the dashboard's score predictor going forward.
 import { getSubject } from "../data/skills.js";
-import { getBossQuizQuestions } from "../data/questions/index.js";
+import { getBossQuizQuestions, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState, scoreFromAccuracy } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -30,6 +30,10 @@ function formatTime(sec) {
 }
 
 export function renderPracticeTest(root, navigate) {
+  // All four sections (one per subject) will be needed over the course of
+  // a single test, so there's no per-section lazy load worth doing here —
+  // just kick everything off as soon as the player opens this screen.
+  const dataReady = preloadAllSubjects();
   let sectionIndex = 0;
   let questions = [];
   let idx = 0;
@@ -81,10 +85,13 @@ export function renderPracticeTest(root, navigate) {
 
     wireHud(root, goTo);
     root.querySelector("[data-back]").addEventListener("click", () => navigate("dashboard"));
-    root.querySelector("[data-start]").addEventListener("click", () => {
+    const startBtn = root.querySelector("[data-start]");
+    startBtn.addEventListener("click", () => {
+      startBtn.disabled = true;
+      startBtn.textContent = "Loading…";
       sectionIndex = 0;
       sectionResults = [];
-      startSection();
+      dataReady.then(() => startSection());
     });
   }
 

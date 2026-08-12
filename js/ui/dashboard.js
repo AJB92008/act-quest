@@ -19,7 +19,7 @@ export function renderDashboard(root, navigate) {
             <span>${subject.icon} ${subject.name}</span>
             <span>${masteredCount}/${totalSkills} mastered</span>
           </div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${masteredPct}%;background:${subject.color}"></div></div>
+          <div class="progress-bar" role="progressbar" aria-valuenow="${masteredPct}" aria-valuemin="0" aria-valuemax="100" aria-label="${subject.name} skills mastered"><div class="progress-fill" style="width:${masteredPct}%;background:${subject.color}"></div></div>
           <div class="dash-row-accuracy">${accuracy === null ? "No attempts yet" : `${accuracyPct}% accuracy`}</div>
         </div>
       `;
@@ -43,7 +43,7 @@ export function renderDashboard(root, navigate) {
           <div class="dash-monster-row">
             <span class="dash-monster-substat">${Math.round(levelProgress.pct * 100)}% to Level ${levelProgress.level + 1}</span>
           </div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(levelProgress.pct * 100)}%;background:var(--purple)"></div></div>
+          <div class="progress-bar" role="progressbar" aria-valuenow="${Math.round(levelProgress.pct * 100)}" aria-valuemin="0" aria-valuemax="100" aria-label="Progress to level ${levelProgress.level + 1}"><div class="progress-fill" style="width:${Math.round(levelProgress.pct * 100)}%;background:var(--purple)"></div></div>
         </div>
       </div>
       <div class="dash-predictor-card">

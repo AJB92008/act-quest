@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Act Quest — Duplicate Question Audit</title>
+    <style>
+      body {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        background: #1a1a24;
+        color: #e4e4ee;
+        padding: 24px;
+        line-height: 1.5;
+        max-width: 1000px;
+      }
+      h1 {
+        font-size: 1.1rem;
+      }
+      p.note {
+        color: #9a9ab0;
+        font-size: 0.85rem;
+      }
+      .skill {
+        margin: 16px 0;
+        padding: 12px 16px;
+        background: #23232f;
+        border-radius: 8px;
+      }
+      .skill h3 {
+        margin: 0 0 8px;
+        color: #ffb238;
+      }
+      .pair {
+        margin: 6px 0 6px 12px;
+        font-size: 0.85rem;
+      }
+      .verdict-real {
+        color: #ff6b6b;
+        font-weight: bold;
+      }
+      .verdict-ok {
+        color: #5fd68a;
+      }
+      #summary {
+        font-weight: bold;
+        margin: 16px 0;
+        font-size: 1.05rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 Act Quest — Duplicate Question Audit</h1>
+    <p class="note">
+      Flags questions within the same skill whose stems normalize to identical text. A flagged
+      pair is only a real problem if it also shares the same <code>passageId</code>/<code>stimulusId</code>
+      (or has none at all, like standalone English/grammar questions) — reused stems paired with a
+      <em>different</em> passage/stimulus id are legitimate ACT-style template reuse (same question
+      type, different underlying content requiring new reading/reasoning), not padding. Verdicts
+      below are automatic on that basis; skills with no reference id still need a human read to
+      judge whether the choices are a genuine reskin (no new reasoning) or coincidentally similar.
+    </p>
+    <div id="out">Running…</div>
+    <div id="summary"></div>
+    <script type="module">
+      const eng = await import("../js/data/questions/english.js");
+      const math = await import("../js/data/questions/math.js");
+      const reading = await import("../js/data/questions/reading.js");
+      const science = await import("../js/data/questions/science.js");
+      const all = { ...eng.english, ...math.math, ...reading.reading, ...science.science };
+
+      // Deliberately keeps non-ASCII characters (superscripts like i²³, √,
+      // °, etc.) intact — stripping them collapses genuinely different
+      // questions (e.g. "Simplify: i²³" vs "Simplify: i¹⁴") into the same
+      // normalized string and produces false positives.
+      function normalize(s) {
+        return s
+          .toLowerCase()
+          .replace(/[.,;:!?()'"]/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      const bySkill = {};
+      let totalPairs = 0,
+        totalReal = 0;
+      for (const [skillId, qs] of Object.entries(all)) {
+        const norm = qs.map((q) => normalize(q.q));
+        const seen = {};
+        const pairs = [];
+        norm.forEach((n, i) => {
+          if (seen[n] !== undefined) pairs.push([seen[n], i]);
+          else seen[n] = i;
+        });
+        if (pairs.length) {
+          bySkill[skillId] = pairs.map(([i, j]) => {
+            const refKey = qs[i].passageId ? "passageId" : qs[i].stimulusId ? "stimulusId" : null;
+            const sameRef = refKey ? qs[i][refKey] === qs[j][refKey] : null;
+            const isReal = refKey === null || sameRef === true;
+            totalPairs++;
+            if (isReal) totalReal++;
+            return { i, j, refKey, sameRef, isReal, qi: qs[i].q, qj: qs[j].q };
+          });
+        }
+      }
+
+      const out = document.getElementById("out");
+      out.innerHTML = Object.entries(bySkill)
+        .map(([skillId, pairs]) => {
+          const rows = pairs
+            .map(
+              (p) => `
+            <div class="pair">
+              [${p.i}, ${p.j}] ${p.refKey ? `${p.refKey} ${p.sameRef ? "MATCHES" : "differs"}` : "no ref id — needs a human read"}
+              — <span class="${p.isReal ? "verdict-real" : "verdict-ok"}">${p.isReal ? "check this one" : "likely fine (different content)"}</span><br/>
+              <em>a:</em> ${p.qi}<br/>
+              <em>b:</em> ${p.qj}
+            </div>`
+            )
+            .join("");
+          return `<div class="skill"><h3>${skillId} (${pairs.length})</h3>${rows}</div>`;
+        })
+        .join("");
+
+      const summary = document.getElementById("summary");
+      summary.textContent = `${totalPairs} stem-duplicate pair(s) across ${Object.keys(bySkill).length} skill(s) — ${totalReal} flagged for review, ${totalPairs - totalReal} auto-cleared as legitimate template reuse.`;
+    </script>
+  </body>
+</html>

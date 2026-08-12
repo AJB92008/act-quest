@@ -1,5 +1,5 @@
 import { getSubject } from "../data/skills.js";
-import { getLessonCount } from "../data/questions/index.js";
+import { getLessonCount, preloadSubject } from "../data/questions/index.js";
 import { getBossMonster } from "../data/bossMonsters.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
@@ -9,6 +9,13 @@ import { pathPositions, pathHeight, renderPathSvg, renderDecorations } from "./p
 const ROW_HEIGHT = 148;
 
 export function renderIsland(root, navigate, { subjectId }) {
+  // Fire-and-forget: the player will very likely start a lesson (or the
+  // boss fight) on this island soon, so give that subject's question data
+  // a head start loading in the background while they read the skill
+  // list — by the time they actually click into a lesson it's usually
+  // already cached, and getLessonCount below doesn't need it either way.
+  preloadSubject(subjectId);
+
   const subject = getSubject(subjectId);
   const positions = pathPositions(subject.skills.length, { rowHeight: ROW_HEIGHT });
   const totalHeight = pathHeight(subject.skills.length, ROW_HEIGHT);

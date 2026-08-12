@@ -1,5 +1,5 @@
 import { getSkill } from "../data/skills.js";
-import { getLessonQuestions, getLessonCount } from "../data/questions/index.js";
+import { getLessonQuestions, getLessonCount, preloadSubjectForSkill } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -7,11 +7,21 @@ import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
+import { renderLoadingScreen } from "./loadingScreen.js";
 
 const QUESTION_TIME = 20; // seconds budgeted per question, for the speed bonus
 
 export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) {
   const { subject, skill } = getSkill(skillId);
+
+  // The island page already kicked this subject's data off loading as soon
+  // as the player opened it, so this almost always resolves instantly; the
+  // loading screen only actually shows up on a very fast click or a slow
+  // connection, rather than the player ever waiting on a blank screen.
+  renderLoadingScreen(root, { subject });
+  preloadSubjectForSkill(skillId).then(() => startQuiz());
+
+  function startQuiz() {
   const questions = getLessonQuestions(skillId, lessonIndex);
   const totalLessons = getLessonCount(skillId);
 
@@ -208,4 +218,5 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
   }
 
   renderQuestion();
+  }
 }

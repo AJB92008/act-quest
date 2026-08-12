@@ -6,7 +6,7 @@
 // answered correctly is your score, and the best score you've ever reached
 // is saved permanently.
 import { getSubject } from "../data/skills.js";
-import { getEndlessQuestion } from "../data/questions/index.js";
+import { getEndlessQuestion, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -35,6 +35,10 @@ function difficultyLabel(level) {
 }
 
 export function renderEndlessMode(root, navigate) {
+  // Endless Mode draws from all four subjects at once, so there's no
+  // meaningful per-subject lazy load here — just kick everything off as
+  // soon as the player opens this screen, well before they hit "Start Run".
+  const dataReady = preloadAllSubjects();
   let lives = MAX_LIVES;
   let correctCount = 0;
   let combo = 0;
@@ -126,17 +130,22 @@ export function renderEndlessMode(root, navigate) {
     root.querySelector("#timerToggle").addEventListener("change", (e) => {
       gameState.setEndlessTimerEnabled(e.target.checked);
     });
-    root.querySelector("[data-start-run]").addEventListener("click", () => {
-      lives = MAX_LIVES;
-      correctCount = 0;
-      combo = 0;
-      bestComboThisRun = 0;
-      starsEarned = 0;
-      coinsEarned = 0;
-      questionsSeen = 0;
-      previousQuestion = null;
-      runEnded = false;
-      renderQuestion();
+    const startBtn = root.querySelector("[data-start-run]");
+    startBtn.addEventListener("click", () => {
+      startBtn.disabled = true;
+      startBtn.textContent = "Loading…";
+      dataReady.then(() => {
+        lives = MAX_LIVES;
+        correctCount = 0;
+        combo = 0;
+        bestComboThisRun = 0;
+        starsEarned = 0;
+        coinsEarned = 0;
+        questionsSeen = 0;
+        previousQuestion = null;
+        runEnded = false;
+        renderQuestion();
+      });
     });
   }
 
