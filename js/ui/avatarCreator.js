@@ -3,7 +3,6 @@ import {
   monsterSVG,
   BODY_COLORS,
   BODY_SHAPES,
-  SIZES,
   LIMB_OPTIONS,
   EYE_NAMES,
   MOUTH_NAMES,
@@ -81,7 +80,6 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
     gameState.setAvatar({
       bodyColor: randomChoice(BODY_COLORS),
       bodyShape: randomChoice(BODY_SHAPES).id,
-      monsterSize: randomChoice(SIZES).id,
       limbs: randomChoice(LIMB_OPTIONS).id,
       eyeType: Math.floor(Math.random() * EYE_NAMES.length),
       mouthType: Math.floor(Math.random() * MOUTH_NAMES.length),
@@ -102,7 +100,6 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
     gameState.setAvatar({
       bodyColor: BODY_COLORS[0],
       bodyShape: "round",
-      monsterSize: "medium",
       limbs: 2,
       eyeType: 0,
       mouthType: 0,
@@ -129,7 +126,6 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
     ).join("");
 
     const shapeButtons = BODY_SHAPES.map((s) => traitButton(avatar.bodyShape === s.id, s.name, "shape", s.id)).join("");
-    const sizeButtons = SIZES.map((s) => traitButton(avatar.monsterSize === s.id, s.name, "size", s.id)).join("");
     const limbButtons = LIMB_OPTIONS.map((l) => traitButton(avatar.limbs === l.id, l.name, "limbs", l.id)).join("");
     const ownedCount = gameState.ownedItems.length;
 
@@ -148,10 +144,6 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
         <h4>Body Shape</h4>
         <div class="trait-row">${shapeButtons}</div>
         <p class="trait-flavor">${SHAPE_FLAVOR[avatar.bodyShape] || ""}</p>
-      </div>
-      <div class="control-group">
-        <h4>Size</h4>
-        <div class="trait-row">${sizeButtons}</div>
       </div>
       <div class="control-group">
         <h4>Limbs</h4>
@@ -229,7 +221,8 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
             ${
               onboarding
                 ? ""
-                : `<p class="avatar-evolution-note">🌟 Shown at its current <strong>${gameState.getEvolutionStageName()} form</strong> — the same shape you pick below keeps growing more elaborate as you master more skills.</p>`
+                : `<p class="avatar-evolution-note">🌟 Shown at its current <strong>${gameState.getEvolutionStageName()} form</strong> — the same shape you pick below keeps growing more elaborate as you master more skills.</p>
+                   <p class="avatar-evolution-note">📏 Size grows automatically with level — currently <strong>Level ${gameState.level}</strong>. There's no manual size pick anymore; keep earning stars to grow bigger.</p>`
             }
             <div class="avatar-fun-actions">
               <button class="btn-secondary" data-randomize>🎲 Surprise Me!</button>
@@ -283,14 +276,6 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
     root.querySelectorAll("[data-shape]").forEach((btn) => {
       btn.addEventListener("click", () => {
         gameState.setAvatar({ bodyShape: btn.dataset.shape });
-        quip = "";
-        render();
-      });
-    });
-
-    root.querySelectorAll("[data-size]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        gameState.setAvatar({ monsterSize: btn.dataset.size });
         quip = "";
         render();
       });

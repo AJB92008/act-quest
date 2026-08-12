@@ -54,7 +54,6 @@ function defaultSave() {
     avatar: {
       bodyColor: "#7fd1ae",
       bodyShape: "round",
-      monsterSize: "medium",
       limbs: 0,
       eyeType: 0,
       mouthType: 0,
@@ -258,11 +257,13 @@ class GameState {
   }
 
   /** The avatar as it actually looks right now: the player's own
-   * customization plus the current evolution stage, which monsterSVG uses
-   * to render a more elaborate version of that same chosen shape (see
-   * bodyShapeMarkup() in ui/monster.js) rather than a different shape. */
+   * customization plus the current evolution stage (which monsterSVG uses
+   * to render a more elaborate version of that same chosen shape — see
+   * bodyShapeMarkup() in ui/monster.js — rather than a different shape)
+   * and current level (which drives the monster's automatic size growth,
+   * replacing the old manual size picker). */
   getDisplayAvatar() {
-    return { ...this.data.avatar, evolutionStage: this.getEvolutionStage() };
+    return { ...this.data.avatar, evolutionStage: this.getEvolutionStage(), level: this.level };
   }
 
   // --- endless mode ---

@@ -107,6 +107,24 @@ function evolvedStrokeWidth(stage) {
   return 3 + stage * 0.9;
 }
 
+// Monster size is no longer a player choice — it grows automatically with
+// level instead. The very first level-up is a full +25%, matching the
+// design spec exactly, but growth can't compound forever (level 50 at a
+// literal 1.25^49 would be thousands of times larger than the SVG's fixed
+// viewBox could ever render) — so each subsequent level-up contributes a
+// shrinking share of a diminishing-returns series that asymptotically
+// approaches a hard ceiling, however high level climbs. That ceiling
+// (combined with the evolution stage's own size bonus above) is exactly
+// what the viewBox and evolutionAura's counter-scaling were calibrated
+// against, so nothing clips no matter the level.
+const LEVEL_SIZE_CAP = 1.45;
+const LEVEL_FIRST_STEP_GROWTH = 0.25;
+const LEVEL_GROWTH_RATIO = 1 - LEVEL_FIRST_STEP_GROWTH / (LEVEL_SIZE_CAP - 1);
+function levelSizeBonus(level) {
+  const steps = Math.max(0, level - 1);
+  return LEVEL_SIZE_CAP - (LEVEL_SIZE_CAP - 1) * Math.pow(LEVEL_GROWTH_RATIO, steps);
+}
+
 // Small four-point sparkle accent — used by several shapes at higher
 // stages to read as "gaining a magical/energetic quality."
 function sparkle(x, y, s, color) {
@@ -346,12 +364,12 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0, sizeScale = 1) {
     }
     case "avian": {
       let decor = "";
-      if (stage >= 1) decor += `<path d="M50 8 Q45 -6 50 -14 Q55 -6 50 8 Z" fill="${accent}"/>`;
+      if (stage >= 1) decor += `<path d="M50 8 Q46 0 50 -8 Q54 0 50 8 Z" fill="${accent}"/>`;
       if (stage >= 2)
-        decor += `<path d="M41 6 Q34 -8 39 -16 Q45 -4 43 6 Z" fill="${accent}" opacity="0.9"/><path d="M59 6 Q66 -8 61 -16 Q55 -4 57 6 Z" fill="${accent}" opacity="0.9"/>`;
+        decor += `<path d="M42 6 Q37 -4 41 -10 Q46 -2 44 6 Z" fill="${accent}" opacity="0.9"/><path d="M58 6 Q63 -4 59 -10 Q54 -2 56 6 Z" fill="${accent}" opacity="0.9"/>`;
       if (stage >= 3)
-        decor += `<path d="M50 100 Q37 112 41 122 Q50 110 50 100 Z" fill="${accent}" opacity="0.85"/><path d="M50 100 Q63 112 59 122 Q50 110 50 100 Z" fill="${accent}" opacity="0.85"/>`;
-      if (stage >= 4) decor += `<path d="M50 100 Q50 114 50 126 Z" stroke="${accent}" stroke-width="3" fill="none"/>`;
+        decor += `<path d="M50 100 Q41 108 44 116 Q50 106 50 100 Z" fill="${accent}" opacity="0.85"/><path d="M50 100 Q59 108 56 116 Q50 106 50 100 Z" fill="${accent}" opacity="0.85"/>`;
+      if (stage >= 4) decor += `<path d="M50 100 Q50 108 50 118 Z" stroke="${accent}" stroke-width="3" fill="none"/>`;
       return {
         fill: `
           ${evolutionAura(50, 55, 32, 50, color, stage, sizeScale)}
@@ -370,8 +388,8 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0, sizeScale = 1) {
     }
     case "aquatic": {
       let decor = "";
-      if (stage >= 1) decor += `<path d="M50 10 Q44 -4 50 -12 Q56 -4 50 10 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>`;
-      if (stage >= 2) decor += `<path d="M42 8 L50 -18 L58 8 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>`;
+      if (stage >= 1) decor += `<path d="M50 10 Q46 2 50 -4 Q54 2 50 10 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>`;
+      if (stage >= 2) decor += `<path d="M44 8 L50 -10 L56 8 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>`;
       if (stage >= 3)
         decor +=
           `<path d="M32 68 L22 78 L34 76 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/><path d="M68 68 L78 78 L66 76 Z" fill="${accent}" stroke="${outline}" stroke-width="1.5"/>` +
@@ -383,7 +401,7 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0, sizeScale = 1) {
           ]
             .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.4" fill="#7fffea" opacity="0.95"/>`)
             .join("");
-      if (stage >= 4) decor += `<path d="M42 8 L50 -18 L58 8 Z" fill="none" stroke="${accent}" stroke-width="2"/>`;
+      if (stage >= 4) decor += `<path d="M44 8 L50 -10 L56 8 Z" fill="none" stroke="${accent}" stroke-width="2"/>`;
       return {
         fill: `
           ${evolutionAura(50, 52, 40, 48, color, stage, sizeScale)}
@@ -402,9 +420,9 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0, sizeScale = 1) {
     }
     case "crystalline": {
       let decor = "";
-      if (stage >= 1) decor += `<path d="M50 8 L41 -8 L50 -15 L59 -8 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/>`;
+      if (stage >= 1) decor += `<path d="M50 8 L43 -2 L50 -8 L57 -2 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/>`;
       if (stage >= 2)
-        decor += `<path d="M26 30 L8 18 L16 34 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/><path d="M74 30 L92 18 L84 34 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/>`;
+        decor += `<path d="M26 30 L12 22 L18 34 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/><path d="M74 30 L88 22 L82 34 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/>`;
       if (stage >= 3)
         decor +=
           `<path d="M39 100 L50 108 L61 100 Z" fill="${accent}" stroke="${outline}" stroke-width="1.8"/>` +
@@ -508,13 +526,13 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0, sizeScale = 1) {
     case "treant": {
       const leafColor = shade(color, 25);
       let decor = "";
-      if (stage >= 1) decor += leafBud(36, 10, -25, 1.3, leafColor) + leafBud(64, 10, 25, 1.3, leafColor);
+      if (stage >= 1) decor += leafBud(36, 12, -25, 1.0, leafColor) + leafBud(64, 12, 25, 1.0, leafColor);
       if (stage >= 2)
-        decor += leafBud(50, 3, 0, 1.2, leafColor) + `<path d="M26 40 Q12 34 10 44" stroke="${shade(color, -20)}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+        decor += leafBud(50, 9, 0, 0.9, leafColor) + `<path d="M26 40 Q12 34 10 44" stroke="${shade(color, -20)}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
       if (stage >= 3)
         decor +=
-          leafBud(18, 36, -35, 1.2, leafColor) +
-          leafBud(82, 36, 35, 1.2, leafColor) +
+          leafBud(18, 36, -35, 1.0, leafColor) +
+          leafBud(82, 36, 35, 1.0, leafColor) +
           `<path d="M74 40 Q88 34 90 44" stroke="${shade(color, -20)}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
       if (stage >= 4)
         decor +=
@@ -603,12 +621,6 @@ export const BODY_SHAPES = [
   { id: "spectral", name: "Spectral" },
   { id: "treant", name: "Treant" },
   { id: "centipede", name: "Centipede" },
-];
-
-export const SIZES = [
-  { id: "tiny", name: "Tiny", scale: 0.72 },
-  { id: "medium", name: "Medium", scale: 1 },
-  { id: "giant", name: "Giant", scale: 1.18 },
 ];
 
 export const LIMB_OPTIONS = [
@@ -1348,7 +1360,6 @@ export function monsterSVG(config, { size = 160 } = {}) {
   const {
     bodyColor = "#7fd1ae",
     bodyShape = "round",
-    monsterSize = "medium",
     limbs = 0,
     eyeType = 0,
     mouthType = 0,
@@ -1361,20 +1372,30 @@ export function monsterSVG(config, { size = 160 } = {}) {
     outfit = "none",
     scar = "none",
     evolutionStage = 0,
+    level = 1,
   } = config;
 
   const id = uid();
   const colorDark = shade(bodyColor, -25);
-  // Each evolution stage nudges the monster a little larger on top of the
-  // player's own size pick, reinforcing "growing more powerful" alongside
-  // the added decoration. Computed before bodyShapeMarkup so the aura can
+  // Each evolution stage nudges the monster a little larger on top of its
+  // level-based growth, reinforcing "growing more powerful" alongside the
+  // added decoration. Computed before bodyShapeMarkup so the aura can
   // counter-scale itself against it (see evolutionAura) and never clip
-  // regardless of the Tiny/Medium/Giant + evolution-stage combination.
+  // regardless of how big the combined level + evolution-stage growth gets.
   const stageSizeBonus = [1, 1.06, 1.14, 1.24, 1.35][evolutionStage] ?? 1;
-  const sizeScale = (SIZES.find((s) => s.id === monsterSize) || SIZES[1]).scale * stageSizeBonus;
+  const sizeScale = levelSizeBonus(level) * stageSizeBonus;
   const shapeInfo = bodyShapeMarkup(bodyShape, bodyColor, colorDark, evolutionStage, sizeScale);
   const [fx, fy] = shapeInfo.faceCenter;
   const fs = shapeInfo.faceScale;
+  // Accessories (hats, wings, tails...) are pre-authored at a fixed size
+  // and would otherwise grow right along with sizeScale — fine on its own,
+  // but stacked with a maxed-out level, evolution stage, and six limbs all
+  // at once, a big item like wings or a robe pushes well past what any
+  // fixed viewBox could hold. Damping keeps their effective scale from
+  // ever exceeding what's already verified safe, while leaving the body
+  // itself free to keep growing with level as far as it wants.
+  const ACCESSORY_SCALE_CAP = 1.6;
+  const accessoryDamping = Math.min(1, ACCESSORY_SCALE_CAP / sizeScale);
 
   const faceTransform = `translate(${fx} ${fy}) scale(${fs}) translate(-50 -46)`;
   const eyesMarkup = (EYE_VARIANTS[eyeType] || EYE_VARIANTS[0])(id);
@@ -1414,12 +1435,12 @@ export function monsterSVG(config, { size = 160 } = {}) {
   // floating off flat/horizontal ones (centipede, crab). Face and scar
   // accessories reuse faceScale so they line up with the (already-scaled)
   // eyes instead of towering over small faces (insect, serpent, centipede).
-  const outfitGroup = scaledGroup(renderItem("outfit", outfit, outfitAnchor), ox, oy, outfitScale);
-  const headGroup = scaledGroup(renderItem("head", head, headAnchor), headAnchor.x, headAnchor.y, headScale);
-  const backGroup = scaledGroup(renderItem("back", back, backAnchor), ox, oy, backScale);
-  const tailGroup = scaledGroup(renderItem("tail", tail, tailAnchor), tx, ty, tailScale);
-  const faceGroup = scaledGroup(renderItem("face", face, faceAnchor), fx, fy, fs);
-  const scarGroup = scaledGroup(renderItem("scar", scar, scarAnchor), fx, fy, fs);
+  const outfitGroup = scaledGroup(renderItem("outfit", outfit, outfitAnchor), ox, oy, outfitScale * accessoryDamping);
+  const headGroup = scaledGroup(renderItem("head", head, headAnchor), headAnchor.x, headAnchor.y, headScale * accessoryDamping);
+  const backGroup = scaledGroup(renderItem("back", back, backAnchor), ox, oy, backScale * accessoryDamping);
+  const tailGroup = scaledGroup(renderItem("tail", tail, tailAnchor), tx, ty, tailScale * accessoryDamping);
+  const faceGroup = scaledGroup(renderItem("face", face, faceAnchor), fx, fy, fs * accessoryDamping);
+  const scarGroup = scaledGroup(renderItem("scar", scar, scarAnchor), fx, fy, fs * accessoryDamping);
 
   // Scatter spots generously across the whole possible body area, then clip
   // to the current body shape's silhouette so they always land on the body
@@ -1449,7 +1470,7 @@ export function monsterSVG(config, { size = 160 } = {}) {
     : "";
 
   return `
-  <svg width="${size}" height="${size}" viewBox="-24 -40 148 168" xmlns="http://www.w3.org/2000/svg">
+  <svg width="${size}" height="${size}" viewBox="-54 -80 224 268" xmlns="http://www.w3.org/2000/svg">
     <g transform="translate(50 55) scale(${sizeScale}) translate(-50 -55)">
       <ellipse cx="50" cy="103" rx="34" ry="6" fill="#000" opacity="0.08"/>
       ${backGroup}
@@ -1457,7 +1478,7 @@ export function monsterSVG(config, { size = 160 } = {}) {
       ${shapeInfo.fill}
       ${skinOverlay(skin, shapeInfo.clip, colorDark)}
       ${spotsHTML}
-      ${limbsMarkup(limbs, bodyShape, bodyColor, colorDark)}
+      ${scaledGroup(limbsMarkup(limbs, bodyShape, bodyColor, colorDark), 50, 55, accessoryDamping)}
       ${outfitGroup}
       ${headGroup}
       <g transform="${faceTransform}">

@@ -9,7 +9,7 @@ export const BOSS_MONSTERS = {
     avatar: {
       bodyColor: "#8a6a3a",
       bodyShape: "treant",
-      monsterSize: "giant",
+      level: 8, // imposing size via the same level-based growth curve players get
       limbs: 4,
       eyeType: 3,
       mouthType: 1,
@@ -28,7 +28,7 @@ export const BOSS_MONSTERS = {
     avatar: {
       bodyColor: "#6a5cff",
       bodyShape: "crystalline",
-      monsterSize: "giant",
+      level: 8, // imposing size via the same level-based growth curve players get
       limbs: 4,
       eyeType: 5,
       mouthType: 2,
@@ -47,7 +47,7 @@ export const BOSS_MONSTERS = {
     avatar: {
       bodyColor: "#22b8a3",
       bodyShape: "aquatic",
-      monsterSize: "giant",
+      level: 8, // imposing size via the same level-based growth curve players get
       limbs: 4,
       eyeType: 0,
       mouthType: 0,
@@ -66,7 +66,7 @@ export const BOSS_MONSTERS = {
     avatar: {
       bodyColor: "#ffb238",
       bodyShape: "mechanical",
-      monsterSize: "giant",
+      level: 8, // imposing size via the same level-based growth curve players get
       limbs: 4,
       eyeType: 5,
       mouthType: 2,
