@@ -84,7 +84,7 @@ export function renderIsland(root, navigate, { subjectId }) {
         ${bossCleared ? `<span class="boss-encounter-crown">👑</span>` : ""}
       </div>
       <div class="boss-encounter-info">
-        <h3>${allMastered ? "" : "🔒 "}${boss.name} <span class="boss-encounter-level">Lv. ${boss.avatar.level}</span></h3>
+        <h3>${allMastered ? "" : "🔒 "}${boss.name}</h3>
         <p class="boss-encounter-subtitle">${subject.name} Boss Quiz${bossCleared ? " — Cleared!" : ""}</p>
         <p class="boss-encounter-blurb">${
           allMastered
