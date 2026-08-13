@@ -15,6 +15,7 @@ import { renderVocabQuiz } from "./ui/vocabQuiz.js";
 import { renderEndlessMode } from "./ui/endlessMode.js";
 import { renderPracticeTest } from "./ui/practiceTest.js";
 import { ensureDevPanel } from "./ui/devPanel.js";
+import { runDevBootstrap } from "./devBootstrap.js";
 
 const root = document.getElementById("app");
 
@@ -44,7 +45,10 @@ function navigate(screen, params = {}) {
 
 document.documentElement.dataset.theme = gameState.darkMode ? "dark" : "light";
 
-if (!gameState.data.onboarded) {
+const devTarget = runDevBootstrap(gameState);
+if (devTarget) {
+  navigate(devTarget.screen, devTarget.params);
+} else if (!gameState.data.onboarded) {
   navigate("avatarCreator", { onboarding: true });
 } else {
   navigate("map");

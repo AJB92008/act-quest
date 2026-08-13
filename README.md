@@ -56,3 +56,37 @@ Each skill's questions live in `js/data/questions/<subject>.js`, keyed by
 skill id (see `js/data/skills.js` for the id list). A question is
 `{ q, choices, answer (index), explain }`; Reading questions add
 `passageId`, Science questions add `stimulusId`.
+
+`tools/admin_server.py` runs a small local content-editing tool — a
+drop-in replacement for the plain `python3 -m http.server` above (same
+port, same static files, plus it disables browser caching, which avoids
+the "stale JS after an edit" confusion a plain static server can cause
+during active development):
+
+```
+python3 tools/admin_server.py 8080
+```
+
+Then open http://localhost:8080/tools/admin/ to browse every skill's
+question bank, see which questions are flagged as likely duplicates or
+have unusually low personal accuracy, and edit a question's text/choices/
+explanation in place — saves write straight back into the real
+`js/data/questions/*.js` source files (a precise in-place replacement of
+just that one question, not a full-file rewrite), so review the git diff
+afterward like any other change. It only edits existing questions in
+place; it never adds or removes one, since several things (lesson counts,
+`tests/`) assume every skill stays at exactly 100 questions.
+
+## Dev bootstrap
+
+For fast manual testing, `js/devBootstrap.js` reads a handful of URL query
+params (only when `?dev=1` is present, so it never affects a normal link)
+to seed game state and jump straight to a screen in one page load instead
+of clicking through the UI each time. For example:
+
+```
+http://localhost:8080/?dev=1&onboarded=1&xp=2000&mastered=english&screen=island&subjectId=math
+```
+
+See the comment at the top of `js/devBootstrap.js` for the full list of
+recognized params.

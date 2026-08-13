@@ -209,7 +209,12 @@ export function renderPracticeTest(root, navigate) {
     const subject = getSubject(section.subjectId);
     let correctCount = 0;
     questions.forEach((q, i) => {
-      if (sectionAnswers[i] === q.answer) correctCount++;
+      const correct = sectionAnswers[i] === q.answer;
+      if (correct) correctCount++;
+      // Skipped questions (sectionAnswers[i] === null) were never actually
+      // attempted, so they shouldn't count as a personal "miss" for the
+      // adaptive review weighting.
+      if (sectionAnswers[i] !== null) gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
     });
     const totalCount = questions.length;
     const subscore = scaledScoreFromRaw(section.subjectId, correctCount);

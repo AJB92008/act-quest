@@ -119,7 +119,13 @@ function getDifficultySortedBank(skillId) {
   const sorted = getFullBank(skillId)
     .map((q, originalIndex) => ({ q, originalIndex }))
     .sort((a, b) => questionDifficulty(a.q) - questionDifficulty(b.q) || a.originalIndex - b.originalIndex)
-    .map((entry) => entry.q);
+    // bankIndex is the question's *original* (pre-sort) position in this
+    // skill's bank — stable across app restarts since the source file's
+    // array order never changes at runtime, which is what lets
+    // gameState.recordQuestionAnswer()/getQuestionStat() key personal
+    // per-question stats off it regardless of which lesson surfaces the
+    // question or how the difficulty sort reorders things.
+    .map((entry) => ({ ...entry.q, bankIndex: entry.originalIndex }));
   sortedBankCache[skillId] = sorted;
   return sorted;
 }
@@ -184,9 +190,9 @@ export function getAllQuestionsFlat() {
     subject.skills.forEach((skill, skillIndex) => {
       const qs = loadedSubjects[subject.id]?.questions?.[skill.id] || [];
       const difficultyPct = skillIndex / lastIndex;
-      for (const q of qs) {
-        flat.push({ ...q, skillId: skill.id, skillName: skill.name, subjectId: subject.id, difficultyPct });
-      }
+      qs.forEach((q, bankIndex) => {
+        flat.push({ ...q, skillId: skill.id, skillName: skill.name, subjectId: subject.id, difficultyPct, bankIndex });
+      });
     });
   }
   allQuestionsFlatCache = flat;
@@ -201,19 +207,38 @@ export function getBossQuizQuestions(subjectId, count = 20) {
   return shuffled(pool).slice(0, count);
 }
 
-// Builds a review session weighted toward the weakest skills' questions.
-// `weakSkills` is [{ id, accuracy }] (worst-accuracy first, as returned by
-// gameState.getWeakSkills) — lower accuracy means a higher chance a given
-// question gets drawn, but every weak skill still gets some coverage.
-export function getWeakReviewQuestions(weakSkills, count = 10) {
+// A question needs at least this many personal attempts before its own
+// accuracy overrides the skill-level weight below — enough to not overreact
+// to a single lucky guess or careless slip, not so many that a genuinely
+// tricky question waits a long time to get prioritized.
+const MIN_ATTEMPTS_FOR_PERSONAL_WEIGHT = 2;
+
+// Builds a review session weighted toward the weakest skills' questions —
+// and, adaptively, toward the *specific* questions this player has
+// personally struggled with most, not just a uniform weight across every
+// question in a weak skill. `weakSkills` is [{ id, accuracy }] (worst-
+// accuracy first, as returned by gameState.getWeakSkills).
+// `getQuestionStat(skillId, bankIndex)` is an optional injected callback
+// (rather than importing gameState directly — state.js already imports
+// *this* module, so a direct import back would be circular) returning that
+// player's own {attempts, correct} for one specific question, or undefined
+// if they've never seen it; omitting it just falls back to the flat
+// skill-level weighting every question in a weak skill used to get.
+export function getWeakReviewQuestions(weakSkills, count = 10, { getQuestionStat } = {}) {
   const pool = [];
   for (const { id, accuracy } of weakSkills) {
     const meta = SKILL_META[id];
     if (!meta) continue;
-    const weight = Math.max(0.15, 1 - accuracy);
-    for (const q of getFullBank(id)) {
-      pool.push({ ...q, skillId: id, skillName: meta.skillName, subjectId: meta.subjectId, weight });
-    }
+    const skillWeight = Math.max(0.15, 1 - accuracy);
+    getFullBank(id).forEach((q, bankIndex) => {
+      let weight = skillWeight;
+      const stat = getQuestionStat?.(id, bankIndex);
+      if (stat && stat.attempts >= MIN_ATTEMPTS_FOR_PERSONAL_WEIGHT) {
+        const personalAccuracy = stat.correct / stat.attempts;
+        weight = Math.max(0.15, 1 - personalAccuracy);
+      }
+      pool.push({ ...q, skillId: id, skillName: meta.skillName, subjectId: meta.subjectId, weight, bankIndex });
+    });
   }
   if (pool.length === 0) return [];
 

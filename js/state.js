@@ -88,6 +88,7 @@ function defaultSave() {
         bestScore: 0,
         stars: 0,
         lessonsCompleted: 0,
+        questionStats: {},
       };
     });
     bossCleared[subject.id] = false;
@@ -444,6 +445,33 @@ export class GameState {
     if (!progress) return;
     progress.attempts += 1;
     if (correct) progress.correct += 1;
+  }
+
+  /** Records one answer against a *specific* question's own stats —
+   * identified by its skill plus its stable position in that skill's
+   * 100-question bank (`bankIndex`, attached to every question object
+   * returned from data/questions/index.js). This is separate from the
+   * skill-level attempts/correct tallies above: it's what lets
+   * getWeakReviewQuestions() weight by a player's personal history with
+   * one specific question, not just their overall accuracy on the skill it
+   * belongs to. Sparse by design — most of a skill's 100 questions will
+   * never appear here if the player hasn't happened to hit them yet. */
+  recordQuestionAnswer(skillId, bankIndex, correct) {
+    const progress = this.data.skillProgress[skillId];
+    if (!progress || bankIndex == null) return;
+    if (!progress.questionStats) progress.questionStats = {};
+    const key = String(bankIndex);
+    const stat = progress.questionStats[key] || { attempts: 0, correct: 0 };
+    stat.attempts += 1;
+    if (correct) stat.correct += 1;
+    progress.questionStats[key] = stat;
+  }
+
+  /** A specific question's own {attempts, correct} (or undefined if the
+   * player has never answered it), keyed the same way as
+   * recordQuestionAnswer(). */
+  getQuestionStat(skillId, bankIndex) {
+    return this.data.skillProgress[skillId]?.questionStats?.[bankIndex];
   }
 
   /** Banks the stars/coins earned from a Weak Skill Review session (call

@@ -134,7 +134,12 @@ export function renderWeakReview(root, navigate) {
         startBtn.disabled = true;
         startBtn.textContent = "Loading…";
         dataReady.then(() => {
-          questions = weakSkills.length > 0 ? getWeakReviewQuestions(weakSkills, reviewSize) : [];
+          questions =
+            weakSkills.length > 0
+              ? getWeakReviewQuestions(weakSkills, reviewSize, {
+                  getQuestionStat: (skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex),
+                })
+              : [];
           renderQuestion();
         });
       });
@@ -219,6 +224,7 @@ export function renderWeakReview(root, navigate) {
     reactor.classList.add(correct ? "react-happy" : "react-sad");
 
     gameState.recordWeakReviewAnswer(q.skillId, correct);
+    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
 
     if (correct) {
       correctCount++;

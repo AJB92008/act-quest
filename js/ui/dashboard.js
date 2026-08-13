@@ -1,6 +1,35 @@
+import { getSubject } from "../data/skills.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
+
+// A pure-SVG sparkline (no charting library) plotting composite score (1-36,
+// a fixed y-domain so the line's shape is comparable across sessions rather
+// than auto-scaling to whatever range this particular run of attempts hit)
+// against attempt order. preserveAspectRatio="none" lets it stretch to fill
+// whatever width the CSS gives it without recomputing point coordinates.
+function scoreHistoryChart(history) {
+  if (history.length < 2) return "";
+  const w = 300;
+  const h = 70;
+  const pad = 6;
+  const xFor = (i) => pad + (i / (history.length - 1)) * (w - pad * 2);
+  const yFor = (score) => h - pad - ((score - 1) / 35) * (h - pad * 2);
+  const points = history.map((r, i) => `${xFor(i)},${yFor(r.composite)}`).join(" ");
+  const dots = history
+    .map((r, i) => `<circle cx="${xFor(i)}" cy="${yFor(r.composite)}" r="3" fill="var(--purple)"/>`)
+    .join("");
+  return `
+    <svg viewBox="0 0 ${w} ${h}" class="score-history-chart" preserveAspectRatio="none" role="img" aria-label="Composite score trend across your last ${history.length} practice tests">
+      <polyline points="${points}" fill="none" stroke="var(--purple)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+    </svg>
+  `;
+}
+
+function formatHistoryDate(timestamp) {
+  return new Date(timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 export function renderDashboard(root, navigate) {
   const overall = gameState.getOverallStats();
@@ -8,6 +37,7 @@ export function renderDashboard(root, navigate) {
   const evolutionStageName = gameState.getEvolutionStageName();
   const masteryPct = Math.round(gameState.getMasteryPct() * 100);
   const predicted = gameState.getPredictedScore();
+  const history = gameState.getPracticeTestHistory();
 
   const rows = overall.subjectStats
     .map(({ subject, accuracy, masteredCount, totalSkills }) => {
@@ -60,6 +90,38 @@ export function renderDashboard(root, navigate) {
         </div>
         <button class="btn-secondary" data-practice-test>📝 Practice Test</button>
       </div>
+      ${
+        history.length > 0
+          ? `
+            <div class="dash-history-card">
+              <h3 class="dash-history-title">📈 Score History</h3>
+              ${
+                history.length > 1
+                  ? scoreHistoryChart(history)
+                  : `<p class="dash-monster-substat">Take one more practice test to start seeing a trend line here.</p>`
+              }
+              <ul class="dash-history-list">
+                ${history
+                  .slice()
+                  .reverse()
+                  .slice(0, 8)
+                  .map(
+                    (r) => `
+                      <li class="dash-history-row">
+                        <span class="dash-history-date">${formatHistoryDate(r.date)}</span>
+                        <span class="dash-history-composite">${r.composite}</span>
+                        <span class="dash-history-sections">${r.sectionResults
+                          .map((s) => `${getSubject(s.subjectId).icon} ${s.subscore}`)
+                          .join(" &nbsp; ")}</span>
+                      </li>
+                    `
+                  )
+                  .join("")}
+              </ul>
+            </div>
+          `
+          : ""
+      }
       <div class="dash-rows">${rows}</div>
       <button class="btn-danger-quiet" data-reset>Reset All Progress</button>
     </main>

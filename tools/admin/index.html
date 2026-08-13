@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Act Quest — Content Admin</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        background: #14141f;
+        color: #e4e4ee;
+        margin: 0;
+        display: flex;
+        height: 100vh;
+        font-size: 0.86rem;
+      }
+      h1 {
+        font-size: 1rem;
+        margin: 0 0 14px;
+      }
+      #sidebar {
+        width: 300px;
+        flex: 0 0 auto;
+        border-right: 1px solid #35354a;
+        padding: 16px;
+        overflow-y: auto;
+      }
+      #main {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 24px;
+      }
+      select,
+      input[type="text"],
+      textarea {
+        width: 100%;
+        background: #1f1f2e;
+        color: #e4e4ee;
+        border: 1px solid #35354a;
+        border-radius: 6px;
+        padding: 6px 8px;
+        font-family: inherit;
+        font-size: 0.86rem;
+        margin-bottom: 10px;
+      }
+      textarea {
+        resize: vertical;
+      }
+      label {
+        display: block;
+        font-size: 0.78rem;
+        color: #9b98b5;
+        margin-bottom: 3px;
+      }
+      button {
+        font-family: inherit;
+        font-size: 0.82rem;
+        background: #6a5cff;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 7px 14px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #2a2a3d;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      button:hover:not(:disabled) {
+        filter: brightness(1.1);
+      }
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 14px;
+        font-size: 0.8rem;
+        color: #9b98b5;
+      }
+      #summary {
+        font-size: 0.78rem;
+        color: #9b98b5;
+        margin-bottom: 14px;
+        line-height: 1.5;
+      }
+      .qrow {
+        border: 1px solid #35354a;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .qrow:hover {
+        border-color: #6a5cff;
+      }
+      .qrow.is-editing {
+        border-color: #6a5cff;
+        background: #1a1a2a;
+      }
+      .qrow-idx {
+        flex: 0 0 auto;
+        color: #6b6b80;
+        width: 28px;
+      }
+      .qrow-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .qrow-stem {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .qrow-tags {
+        margin-top: 3px;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 0.7rem;
+        padding: 1px 7px;
+        border-radius: 999px;
+        margin-right: 6px;
+      }
+      .tag-dup {
+        background: #4a2a2a;
+        color: #ff9b9b;
+      }
+      .tag-weak {
+        background: #4a3a1a;
+        color: #ffce7a;
+      }
+      .tag-strong {
+        background: #1a3a2a;
+        color: #7aeeb0;
+      }
+      #editor {
+        border: 1px solid #6a5cff;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+        background: #1a1a2a;
+      }
+      .choice-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .choice-row input[type="text"] {
+        margin-bottom: 0;
+      }
+      #toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #1f1f2e;
+        border: 1px solid #35354a;
+        border-radius: 8px;
+        padding: 10px 16px;
+        display: none;
+      }
+      #toast.show {
+        display: block;
+      }
+      #toast.error {
+        border-color: #ff6b6b;
+        color: #ff9b9b;
+      }
+      #toast.ok {
+        border-color: #5fd68a;
+        color: #a8f0c4;
+      }
+      a {
+        color: #9b98ff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sidebar">
+      <h1>🛠️ Content Admin</h1>
+      <label>Subject</label>
+      <select id="subjectSelect"></select>
+      <label>Skill</label>
+      <select id="skillSelect"></select>
+      <label>Search (this skill)</label>
+      <input type="text" id="searchInput" placeholder="text to find…" />
+      <div class="toggle-row">
+        <input type="checkbox" id="dupOnlyToggle" />
+        <label for="dupOnlyToggle" style="margin:0">Flagged duplicates only</label>
+      </div>
+      <div id="summary"></div>
+      <p style="color:#6b6b80;font-size:0.75rem;line-height:1.5">
+        Reads live via the real ES modules (same data the game uses). Saves write straight back into
+        js/data/questions/*.js through this tool's local server — there's no undo beyond your own git
+        working tree, so commit before making a batch of edits.
+      </p>
+    </div>
+    <div id="main">
+      <div id="editor" style="display:none"></div>
+      <div id="list"></div>
+    </div>
+    <div id="toast"></div>
+
+    <script type="module">
+      import { SUBJECTS } from "../../js/data/skills.js";
+      import { english } from "../../js/data/questions/english.js";
+      import { math } from "../../js/data/questions/math.js";
+      import { reading, passages } from "../../js/data/questions/reading.js";
+      import { science, stimuli } from "../../js/data/questions/science.js";
+      import { gameState } from "../../js/state.js";
+
+      const QUESTIONS_BY_SUBJECT = { english, math, reading, science };
+
+      function normalize(s) {
+        return s
+          .toLowerCase()
+          .replace(/[.,;:!?()'"]/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      // Flags exact-normalized-stem duplicates within a skill whose
+      // passageId/stimulusId also match (or that have no reference id at
+      // all) — the same "genuinely redundant, not just a reused template
+      // against different content" signal used in tests/audit-duplicates.html.
+      function findDuplicateIndices(questions) {
+        const norm = questions.map((q) => normalize(q.q));
+        const seen = {};
+        const flagged = new Set();
+        norm.forEach((n, i) => {
+          if (seen[n] === undefined) {
+            seen[n] = i;
+            return;
+          }
+          const j = seen[n];
+          const refKey = questions[i].passageId ? "passageId" : questions[i].stimulusId ? "stimulusId" : null;
+          const sameRef = refKey ? questions[i][refKey] === questions[j][refKey] : true;
+          if (sameRef) {
+            flagged.add(i);
+            flagged.add(j);
+          }
+        });
+        return flagged;
+      }
+
+      const subjectSelect = document.getElementById("subjectSelect");
+      const skillSelect = document.getElementById("skillSelect");
+      const searchInput = document.getElementById("searchInput");
+      const dupOnlyToggle = document.getElementById("dupOnlyToggle");
+      const listEl = document.getElementById("list");
+      const editorEl = document.getElementById("editor");
+      const summaryEl = document.getElementById("summary");
+      const toastEl = document.getElementById("toast");
+
+      let currentSubjectId = SUBJECTS[0].id;
+      let currentSkillId = SUBJECTS[0].skills[0].id;
+      let editingIndex = null;
+
+      function showToast(text, kind) {
+        toastEl.textContent = text;
+        toastEl.className = "show " + kind;
+        setTimeout(() => (toastEl.className = ""), 3200);
+      }
+
+      function populateSubjects() {
+        subjectSelect.innerHTML = SUBJECTS.map((s) => `<option value="${s.id}">${s.icon} ${s.name}</option>`).join("");
+        subjectSelect.value = currentSubjectId;
+      }
+
+      function populateSkills() {
+        const subject = SUBJECTS.find((s) => s.id === currentSubjectId);
+        skillSelect.innerHTML = subject.skills.map((sk) => `<option value="${sk.id}">${sk.name}</option>`).join("");
+        skillSelect.value = currentSkillId;
+      }
+
+      function currentQuestions() {
+        return QUESTIONS_BY_SUBJECT[currentSubjectId][currentSkillId] || [];
+      }
+
+      function closeEditor() {
+        editingIndex = null;
+        editorEl.style.display = "none";
+        editorEl.innerHTML = "";
+        renderList();
+      }
+
+      function renderList() {
+        const questions = currentQuestions();
+        const dupSet = findDuplicateIndices(questions);
+        const search = searchInput.value.trim().toLowerCase();
+        const dupOnly = dupOnlyToggle.checked;
+
+        const rows = questions
+          .map((q, i) => ({ q, i }))
+          .filter(({ q, i }) => {
+            if (dupOnly && !dupSet.has(i)) return false;
+            if (search && !q.q.toLowerCase().includes(search)) return false;
+            return true;
+          });
+
+        summaryEl.textContent = `${questions.length} questions in this skill · ${dupSet.size} flagged as possible duplicates · showing ${rows.length}`;
+
+        listEl.innerHTML = rows
+          .map(({ q, i }) => {
+            const stat = gameState.getQuestionStat(currentSkillId, i);
+            let statTag = "";
+            if (stat && stat.attempts > 0) {
+              const acc = Math.round((stat.correct / stat.attempts) * 100);
+              const cls = acc < 50 ? "tag-weak" : "tag-strong";
+              statTag = `<span class="tag ${cls}">your accuracy: ${acc}% (${stat.attempts}x)</span>`;
+            }
+            const dupTag = dupSet.has(i) ? `<span class="tag tag-dup">possible duplicate</span>` : "";
+            return `
+              <div class="qrow" data-index="${i}">
+                <div class="qrow-idx">#${i}</div>
+                <div class="qrow-body">
+                  <div class="qrow-stem">${q.q}</div>
+                  <div class="qrow-tags">${dupTag}${statTag}</div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+
+        listEl.querySelectorAll(".qrow").forEach((row) => {
+          row.addEventListener("click", () => openEditor(Number(row.dataset.index)));
+        });
+
+        if (editingIndex !== null) {
+          listEl.querySelector(`.qrow[data-index="${editingIndex}"]`)?.classList.add("is-editing");
+        }
+      }
+
+      function openEditor(index) {
+        editingIndex = index;
+        const q = currentQuestions()[index];
+        const refRow = q.passageId
+          ? `<label>Passage ID (read-only)</label><input type="text" value="${q.passageId}" disabled />`
+          : q.stimulusId
+          ? `<label>Stimulus ID (read-only)</label><input type="text" value="${q.stimulusId}" disabled />`
+          : "";
+
+        editorEl.innerHTML = `
+          <h3 style="margin-top:0">Editing #${index} — ${currentSkillId}</h3>
+          ${refRow}
+          <label>Question stem</label>
+          <textarea id="editStem" rows="2">${q.q}</textarea>
+          <label>Choices (select the correct one)</label>
+          ${q.choices
+            .map(
+              (c, i) => `
+                <div class="choice-row">
+                  <input type="radio" name="editAnswer" value="${i}" ${i === q.answer ? "checked" : ""} />
+                  <input type="text" class="editChoice" data-i="${i}" value="${c.replace(/"/g, "&quot;")}" />
+                </div>
+              `
+            )
+            .join("")}
+          <label>Explanation</label>
+          <textarea id="editExplain" rows="2">${q.explain}</textarea>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button id="saveBtn">💾 Save</button>
+            <button class="secondary" id="cancelBtn">Cancel</button>
+            <span id="editStatus" style="align-self:center;font-size:0.78rem;color:#9b98b5"></span>
+          </div>
+        `;
+        editorEl.style.display = "block";
+        editorEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        renderList();
+
+        document.getElementById("cancelBtn").addEventListener("click", () => closeEditor());
+        document.getElementById("saveBtn").addEventListener("click", () => saveEdit(index));
+      }
+
+      async function saveEdit(index) {
+        const status = document.getElementById("editStatus");
+        const original = currentQuestions()[index];
+        const question = {
+          q: document.getElementById("editStem").value.trim(),
+          choices: Array.from(document.querySelectorAll(".editChoice")).map((el) => el.value.trim()),
+          answer: Number(document.querySelector('input[name="editAnswer"]:checked').value),
+          explain: document.getElementById("editExplain").value.trim(),
+        };
+        if (original.passageId) question.passageId = original.passageId;
+        if (original.stimulusId) question.stimulusId = original.stimulusId;
+
+        if (!question.q || question.choices.some((c) => !c) || !question.explain) {
+          status.textContent = "All fields are required.";
+          return;
+        }
+
+        status.textContent = "Saving…";
+        try {
+          const res = await fetch("/api/save-question", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subjectId: currentSubjectId, skillId: currentSkillId, bankIndex: index, question }),
+          });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || "save failed");
+          // Reflect the edit in the in-memory copy immediately so the list
+          // shows it without a full reload (the file on disk is now the
+          // source of truth, but re-importing an ES module mid-session
+          // won't pick up the change without a hard reload anyway).
+          Object.assign(currentQuestions()[index], question);
+          showToast(`Saved #${index}`, "ok");
+          closeEditor();
+        } catch (e) {
+          status.textContent = "Error: " + e.message;
+          showToast("Save failed: " + e.message, "error");
+        }
+      }
+
+      subjectSelect.addEventListener("change", () => {
+        currentSubjectId = subjectSelect.value;
+        currentSkillId = SUBJECTS.find((s) => s.id === currentSubjectId).skills[0].id;
+        populateSkills();
+        closeEditor();
+      });
+      skillSelect.addEventListener("change", () => {
+        currentSkillId = skillSelect.value;
+        closeEditor();
+      });
+      searchInput.addEventListener("input", renderList);
+      dupOnlyToggle.addEventListener("change", renderList);
+
+      populateSubjects();
+      populateSkills();
+      renderList();
+    </script>
+  </body>
+</html>
