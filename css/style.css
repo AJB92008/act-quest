@@ -483,7 +483,8 @@ input[type="text"] {
   justify-content: center;
   flex-wrap: wrap;
   gap: 30px;
-  margin: 22px 0 34px;
+  max-width: 640px;
+  margin: 22px auto 34px;
 }
 
 .map-shortcut {
