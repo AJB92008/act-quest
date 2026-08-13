@@ -5,8 +5,12 @@ import { renderSkillPath } from "./ui/skillPath.js";
 import { renderQuiz } from "./ui/quiz.js";
 import { renderBossQuiz } from "./ui/bossQuiz.js";
 import { renderWeakReview } from "./ui/weakReview.js";
+import { renderReviewQueue } from "./ui/reviewQueue.js";
+import { renderDrillBuilder } from "./ui/drillBuilder.js";
+import { renderStudyPlan } from "./ui/studyPlan.js";
 import { renderShop } from "./ui/shop.js";
 import { renderDashboard } from "./ui/dashboard.js";
+import { renderAchievements } from "./ui/achievements.js";
 import { renderAvatarCreator } from "./ui/avatarCreator.js";
 import { renderBackgroundLesson } from "./ui/background.js";
 import { renderBackgroundQuiz } from "./ui/backgroundQuiz.js";
@@ -26,8 +30,12 @@ const SCREENS = {
   quiz: (r, nav, params) => renderQuiz(r, nav, params),
   bossQuiz: (r, nav, params) => renderBossQuiz(r, nav, params),
   weakReview: (r, nav) => renderWeakReview(r, nav),
+  reviewQueue: (r, nav) => renderReviewQueue(r, nav),
+  drillBuilder: (r, nav) => renderDrillBuilder(r, nav),
+  studyPlan: (r, nav) => renderStudyPlan(r, nav),
   shop: (r, nav) => renderShop(r, nav),
   dashboard: (r, nav) => renderDashboard(r, nav),
+  achievements: (r, nav) => renderAchievements(r, nav),
   avatarCreator: (r, nav, params) => renderAvatarCreator(r, nav, params),
   background: (r, nav, params) => renderBackgroundLesson(r, nav, params),
   backgroundQuiz: (r, nav, params) => renderBackgroundQuiz(r, nav, params),

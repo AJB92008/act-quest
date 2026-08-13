@@ -8,6 +8,7 @@ import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
 import { renderLoadingScreen } from "./loadingScreen.js";
+import { renderPacingTag } from "./pacingFeedback.js";
 
 const QUESTION_TIME = 20; // seconds budgeted per question, for the speed bonus
 
@@ -34,6 +35,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
   let timeLeft = QUESTION_TIME;
   let answered = false;
   let unbindKeys = () => {};
+  let questionStartedAt = 0;
 
   function stopTimer() {
     if (timerInterval) clearInterval(timerInterval);
@@ -67,6 +69,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
 
   function renderQuestion() {
     answered = false;
+    questionStartedAt = Date.now();
     const q = questions[idx];
     const stimulusHTML = renderQuestionStimulus(q);
 
@@ -128,6 +131,8 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     const correct = choiceIdx === q.answer;
     const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
     gameState.recordQuestionAnswer(skillId, q.bankIndex, correct);
+    const elapsedSeconds = (Date.now() - questionStartedAt) / 1000;
+    gameState.recordPaceSample(subject.id, elapsedSeconds);
 
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.disabled = true;
@@ -180,6 +185,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
       coinsEarned,
     });
     const hasNextLesson = outcome.passed && lessonIndex + 1 < totalLessons;
+    const pacing = gameState.getPacingStats(subject.id);
 
     root.innerHTML = `
       ${hudHTML("map")}
@@ -200,6 +206,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
             <span>⭐ +${starsEarned} stars</span>
             <span>🪙 +${coinsEarned} coins</span>
           </div>
+          ${renderPacingTag(pacing)}
           <div class="results-actions">
             ${hasNextLesson ? `<button class="btn-primary" data-next>Next Lesson &rarr;</button>` : ""}
             <button class="${hasNextLesson ? "btn-secondary" : "btn-primary"}" data-retry>Retry Lesson</button>

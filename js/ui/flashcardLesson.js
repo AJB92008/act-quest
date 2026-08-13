@@ -10,7 +10,75 @@ function slugify(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 }
 
-export function renderFlashcardLesson(root, navigate, { data, backScreen, backParams, quizScreen, quizParamsExtra = {} }) {
+function allFlashcards(data) {
+  const cards = [];
+  for (const section of data.sections) {
+    for (const topic of section.topics) {
+      for (const card of topic.flashcards || []) cards.push(card);
+    }
+  }
+  return cards;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// Opens a small, self-contained print-friendly document in a new tab (its
+// own window rather than reusing this screen's DOM) so the main app's
+// layout/CSS never has to account for print media at all — just build a
+// simple word/definition list and hand it straight to the browser's own
+// print dialog.
+function openPrintableFlashcards(data) {
+  const cards = allFlashcards(data);
+  const rows = cards
+    .map((c) => `<div class="card"><div class="front">${escapeHtml(c.front)}</div><div class="back">${escapeHtml(c.back)}</div></div>`)
+    .join("");
+  const win = window.open("", "_blank");
+  if (!win) return;
+  win.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>${escapeHtml(data.title)} — Flashcards</title>
+        <style>
+          body { font-family: Georgia, serif; max-width: 720px; margin: 24px auto; padding: 0 16px; }
+          h1 { font-family: sans-serif; }
+          .card { break-inside: avoid; border-bottom: 1px solid #ccc; padding: 10px 0; }
+          .front { font-weight: bold; font-size: 1.05rem; }
+          .back { color: #444; margin-top: 2px; }
+          @media print { h1, p.hint { display: none; } }
+        </style>
+      </head>
+      <body>
+        <h1>${escapeHtml(data.title)}</h1>
+        <p class="hint">${cards.length} flashcards — use your browser's Print (Cmd/Ctrl+P) to print or save as PDF.</p>
+        ${rows}
+      </body>
+    </html>
+  `);
+  win.document.close();
+  win.focus();
+  win.print();
+}
+
+function downloadVocabCsv(data) {
+  const cards = allFlashcards(data);
+  const csvEscape = (s) => `"${String(s).replace(/"/g, '""')}"`;
+  const csv = ["front,back", ...cards.map((c) => `${csvEscape(c.front)},${csvEscape(c.back)}`)].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${slugify(data.title)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+export function renderFlashcardLesson(root, navigate, { data, backScreen, backParams, quizScreen, quizParamsExtra = {}, enableExport = false }) {
   let openTopicId = null;
   let cardIndex = 0;
   let flipped = false;
@@ -91,6 +159,16 @@ export function renderFlashcardLesson(root, navigate, { data, backScreen, backPa
           <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <h1 class="lesson-title">${data.title}</h1>
           <p class="lesson-blurb">${data.subtitle}</p>
+          ${
+            enableExport
+              ? `
+                <div class="vocab-export-actions">
+                  <button class="btn-secondary" data-print-cards>🖨️ Print Flashcards</button>
+                  <button class="btn-secondary" data-export-csv>⬇️ Export CSV</button>
+                </div>
+              `
+              : ""
+          }
           <nav class="bg-toc">${tocHTML}</nav>
           ${sectionsHTML}
           <button class="btn-primary lesson-start-btn" data-back-bottom>Back &rarr;</button>
@@ -102,6 +180,8 @@ export function renderFlashcardLesson(root, navigate, { data, backScreen, backPa
     const goBack = () => navigate(backScreen, backParams);
     root.querySelector("[data-back]").addEventListener("click", goBack);
     root.querySelector("[data-back-bottom]").addEventListener("click", goBack);
+    root.querySelector("[data-print-cards]")?.addEventListener("click", () => openPrintableFlashcards(data));
+    root.querySelector("[data-export-csv]")?.addEventListener("click", () => downloadVocabCsv(data));
 
     root.querySelectorAll("[data-flashcard-toggle]").forEach((btn) => {
       btn.addEventListener("click", () => {

@@ -1,8 +1,33 @@
 import { SUBJECTS, allSkillIds } from "./data/skills.js";
 import { getLessonCount } from "./data/questions/index.js";
+import { ACHIEVEMENTS } from "./data/achievements.js";
 
 const STORAGE_KEY = "act-quest-save-v1";
 const PASS_THRESHOLD = 0.7; // score needed to pass a mini-lesson / master a skill
+const SRS_DAY_MS = 24 * 60 * 60 * 1000;
+
+// SM-2 spaced-repetition update, in place on `item` ({efactor, interval,
+// repetitions, dueAt}). Quality is collapsed to just two buckets (correct
+// vs. incorrect) rather than the full 0-5 self-rated scale SM-2 was
+// originally designed around, since nothing in this app captures "correct
+// but it was a struggle" — a multiple-choice answer or a flashcard
+// self-check is only ever right or wrong.
+function sm2Update(item, correct) {
+  const quality = correct ? 5 : 2;
+  if (quality < 3) {
+    item.repetitions = 0;
+    item.interval = 1;
+  } else {
+    if (item.repetitions === 0) item.interval = 1;
+    else if (item.repetitions === 1) item.interval = 6;
+    else item.interval = Math.round(item.interval * item.efactor);
+    item.repetitions += 1;
+  }
+  item.efactor = Math.max(1.3, item.efactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+  item.dueAt = Date.now() + item.interval * SRS_DAY_MS;
+  item.lastCorrect = correct;
+  return item;
+}
 
 // Evolution stages tied to overall mastery %: at each threshold monsterSVG
 // renders a more elaborate version of the player's own chosen body shape
@@ -44,6 +69,16 @@ export function scoreFromAccuracy(accuracy) {
 // copy — just a consistently-shaped, honest approximation, built once per
 // section into a real lookup table (raw score -> scaled score) rather than
 // computed on the fly.
+// Real ACT per-question time budget (section minutes / question count),
+// used only to give pacing feedback a concrete benchmark to compare
+// against — not used anywhere in scoring.
+const ACT_PACE_BUDGET_SECONDS = {
+  english: Math.round((45 * 60) / 75), // 36s
+  math: Math.round((60 * 60) / 60), // 60s
+  reading: Math.round((35 * 60) / 40), // 52.5s -> 53s
+  science: Math.round((35 * 60) / 40), // 52.5s -> 53s
+};
+
 const SECTION_CURVE_PARAMS = {
   english: { maxRaw: 75, p0: 0.5, k: 7 },
   math: { maxRaw: 60, p0: 0.44, k: 7 },
@@ -133,6 +168,27 @@ function defaultSave() {
       bestComposite: 0,
       history: [],
     },
+    streak: {
+      lastActiveDate: null,
+      current: 0,
+      best: 0,
+      activeDates: [],
+    },
+    achievements: {
+      unlocked: {},
+    },
+    srs: {
+      questions: {},
+      vocab: {},
+      totalReviews: 0,
+    },
+    pacing: {
+      bySubject: {},
+    },
+    studyPlan: {
+      testDate: null,
+      targetScore: null,
+    },
   };
 }
 
@@ -159,6 +215,20 @@ export class GameState {
       fresh.bossCleared = { ...fresh.bossCleared, ...parsed.bossCleared };
       fresh.monster = { ...fresh.monster, ...parsed.monster };
       fresh.practiceTests = { ...fresh.practiceTests, ...parsed.practiceTests };
+      fresh.streak = { ...fresh.streak, ...parsed.streak };
+      fresh.achievements = {
+        ...fresh.achievements,
+        ...parsed.achievements,
+        unlocked: { ...fresh.achievements.unlocked, ...parsed.achievements?.unlocked },
+      };
+      fresh.srs = {
+        ...fresh.srs,
+        ...parsed.srs,
+        questions: { ...fresh.srs.questions, ...parsed.srs?.questions },
+        vocab: { ...fresh.srs.vocab, ...parsed.srs?.vocab },
+      };
+      fresh.pacing = { ...fresh.pacing, ...parsed.pacing, bySubject: { ...fresh.pacing.bySubject, ...parsed.pacing?.bySubject } };
+      fresh.studyPlan = { ...fresh.studyPlan, ...parsed.studyPlan };
       for (const id of allSkillIds()) {
         if (parsed.skillProgress && parsed.skillProgress[id]) {
           fresh.skillProgress[id] = { ...fresh.skillProgress[id], ...parsed.skillProgress[id] };
@@ -335,8 +405,10 @@ export class GameState {
     const isNewBest = correctCount > this.data.endless.bestRun;
     if (isNewBest) this.data.endless.bestRun = correctCount;
     const levelResult = this._grantXp(starsEarned);
+    this._recordDailyActivity();
+    const newlyUnlocked = this._checkAchievements();
     this.save();
-    return { isNewBest, ...levelResult };
+    return { isNewBest, newlyUnlocked, ...levelResult };
   }
 
   addCoins(n) {
@@ -415,8 +487,10 @@ export class GameState {
     const stageAfter = this.getEvolutionStage();
     const justEvolved = stageAfter > stageBefore;
     const levelResult = this._grantXp(starsEarned);
+    this._recordDailyActivity();
+    const newlyUnlocked = this._checkAchievements();
     this.save();
-    return { score, passed, justAdvanced, justMastered, totalLessons, justEvolved, evolutionStage: stageAfter, ...levelResult };
+    return { score, passed, justAdvanced, justMastered, totalLessons, justEvolved, evolutionStage: stageAfter, newlyUnlocked, ...levelResult };
   }
 
   /**
@@ -465,6 +539,11 @@ export class GameState {
     stat.attempts += 1;
     if (correct) stat.correct += 1;
     progress.questionStats[key] = stat;
+    // Every place a question gets answered (lessons, weak review, boss
+    // quiz, endless, practice test) funnels through here, so this single
+    // hook is enough to keep the SM-2 review queue up to date everywhere
+    // without touching each of those screens individually.
+    this._srsTouch(this.data.srs.questions, `${skillId}:${bankIndex}`, correct);
   }
 
   /** A specific question's own {attempts, correct} (or undefined if the
@@ -481,8 +560,10 @@ export class GameState {
     this.data.totalStars += starsEarned;
     this.data.coins += coinsEarned;
     const levelResult = this._grantXp(starsEarned);
+    this._recordDailyActivity();
+    const newlyUnlocked = this._checkAchievements();
     this.save();
-    return levelResult;
+    return { newlyUnlocked, ...levelResult };
   }
 
   isBossCleared(subjectId) {
@@ -501,8 +582,10 @@ export class GameState {
       justCleared = true;
     }
     const levelResult = this._grantXp(starsEarned);
+    this._recordDailyActivity();
+    const newlyUnlocked = this._checkAchievements();
     this.save();
-    return { score, passed, justCleared, ...levelResult };
+    return { score, passed, justCleared, newlyUnlocked, ...levelResult };
   }
 
   getSubjectStats(subjectId) {
@@ -572,8 +655,186 @@ export class GameState {
     this.data.practiceTests.history.push({ date: Date.now(), composite, sectionResults });
     if (this.data.practiceTests.history.length > 20) this.data.practiceTests.history.shift();
     const levelResult = this._grantXp(starsEarned);
+    this._recordDailyActivity();
+    const newlyUnlocked = this._checkAchievements();
     this.save();
-    return { isNewBest, ...levelResult };
+    return { isNewBest, newlyUnlocked, ...levelResult };
+  }
+
+  // --- daily streak ---
+  _todayLocalDateStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  _addDaysToDateStr(dateStr, days) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + days);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+  }
+
+  /** Marks today as an active study day and rolls the current/best streak
+   * forward. Idempotent within a single day, so every "session complete"
+   * path can call it freely without double-counting. */
+  _recordDailyActivity() {
+    const today = this._todayLocalDateStr();
+    const s = this.data.streak;
+    if (s.lastActiveDate === today) return;
+    const yesterday = this._addDaysToDateStr(today, -1);
+    s.current = s.lastActiveDate === yesterday ? s.current + 1 : 1;
+    s.best = Math.max(s.best, s.current);
+    s.lastActiveDate = today;
+    s.activeDates.push(today);
+    if (s.activeDates.length > 371) s.activeDates.shift();
+  }
+
+  /** The streak as it reads *right now* — computed lazily rather than
+   * eagerly reset on a timer, so a streak that lapsed a few days ago
+   * correctly shows 0 without needing a background job to notice. */
+  getStreak() {
+    const s = this.data.streak;
+    const today = this._todayLocalDateStr();
+    const yesterday = this._addDaysToDateStr(today, -1);
+    const current = s.lastActiveDate === today || s.lastActiveDate === yesterday ? s.current : 0;
+    return { current, best: s.best, activeToday: s.lastActiveDate === today, activeDates: s.activeDates };
+  }
+
+  // --- achievements ---
+  getAchievements() {
+    return ACHIEVEMENTS.map((a) => ({ ...a, unlockedAt: this.data.achievements.unlocked[a.id] ?? null }));
+  }
+
+  /** Re-checks every achievement's condition against the current save and
+   * unlocks any newly-met ones. Safe to call as often as needed — already-
+   * unlocked badges are skipped, and conditions are pure reads of `this`. */
+  _checkAchievements() {
+    const newly = [];
+    for (const ach of ACHIEVEMENTS) {
+      if (this.data.achievements.unlocked[ach.id]) continue;
+      if (ach.condition(this)) {
+        this.data.achievements.unlocked[ach.id] = Date.now();
+        newly.push(ach);
+      }
+    }
+    return newly;
+  }
+
+  // --- spaced repetition (SM-2) ---
+  _srsTouch(store, key, correct) {
+    const item = store[key] || { efactor: 2.5, interval: 0, repetitions: 0, dueAt: Date.now() };
+    sm2Update(item, correct);
+    store[key] = item;
+    this.data.srs.totalReviews += 1;
+  }
+
+  /** Questions due for spaced-repetition review right now (or overdue),
+   * oldest-due first. Only questions that have actually been answered at
+   * least once show up here — SRS tracking starts the first time
+   * recordQuestionAnswer sees a question, not before. */
+  getDueQuestionKeys(limit = 20) {
+    const now = Date.now();
+    return Object.entries(this.data.srs.questions)
+      .filter(([, item]) => item.dueAt <= now)
+      .sort((a, b) => a[1].dueAt - b[1].dueAt)
+      .slice(0, limit)
+      .map(([key]) => key);
+  }
+
+  /** Vocab flashcards are self-graded (there's no multiple-choice to check
+   * against), so this is called directly with the player's own "Got it" /
+   * "Didn't know it" judgment rather than being inferred from a quiz
+   * answer. `word` is the flashcard's front text, unique across the deck. */
+  recordVocabReview(word, gotIt) {
+    this._srsTouch(this.data.srs.vocab, word, gotIt);
+    this._recordDailyActivity();
+    const newlyUnlocked = this._checkAchievements();
+    this.save();
+    return { newlyUnlocked };
+  }
+
+  getDueVocabWords(limit = 20) {
+    const now = Date.now();
+    return Object.entries(this.data.srs.vocab)
+      .filter(([, item]) => item.dueAt <= now)
+      .sort((a, b) => a[1].dueAt - b[1].dueAt)
+      .slice(0, limit)
+      .map(([word]) => word);
+  }
+
+  /** Banks stars/coins from a Review Queue session (question side — vocab
+   * grades itself via recordVocabReview above and doesn't earn currency,
+   * matching how flashcard flipping elsewhere in the app is free/ungated). */
+  finishSrsReview({ starsEarned, coinsEarned }) {
+    this.data.totalStars += starsEarned;
+    this.data.coins += coinsEarned;
+    const levelResult = this._grantXp(starsEarned);
+    this._recordDailyActivity();
+    const newlyUnlocked = this._checkAchievements();
+    this.save();
+    return { newlyUnlocked, ...levelResult };
+  }
+
+  /** Banks stars/coins from a Custom Drill session — same shape as
+   * finishWeakReview, since a drill is also "extra reps" that doesn't gate
+   * or unlock anything on its own (per-question stats/SRS already updated
+   * via recordQuestionAnswer as the drill was played). */
+  finishDrill({ starsEarned, coinsEarned }) {
+    this.data.totalStars += starsEarned;
+    this.data.coins += coinsEarned;
+    const levelResult = this._grantXp(starsEarned);
+    this._recordDailyActivity();
+    const newlyUnlocked = this._checkAchievements();
+    this.save();
+    return { newlyUnlocked, ...levelResult };
+  }
+
+  // --- pacing ---
+  /** Rolling per-subject average seconds-per-question, fed by every timed
+   * lesson question. Capped sample count (not just a running average) so a
+   * few outlier questions (a distraction, a bathroom break) can't
+   * permanently skew the read — old samples age out as new ones arrive. */
+  recordPaceSample(subjectId, seconds) {
+    if (!subjectId || !(seconds > 0)) return;
+    const bySubject = this.data.pacing.bySubject;
+    const entry = bySubject[subjectId] || { samples: [] };
+    entry.samples.push(seconds);
+    if (entry.samples.length > 50) entry.samples.shift();
+    bySubject[subjectId] = entry;
+    this.save();
+  }
+
+  /** This subject's average pace vs. the real ACT's per-question time
+   * budget for that section, or null if there's no data yet. */
+  getPacingStats(subjectId) {
+    const entry = this.data.pacing.bySubject[subjectId];
+    if (!entry || entry.samples.length === 0) return null;
+    const avgSeconds = entry.samples.reduce((a, b) => a + b, 0) / entry.samples.length;
+    const budget = ACT_PACE_BUDGET_SECONDS[subjectId] ?? null;
+    return { avgSeconds, budgetSeconds: budget, sampleCount: entry.samples.length };
+  }
+
+  // --- study plan ---
+  getStudyPlanSettings() {
+    return { testDate: this.data.studyPlan.testDate, targetScore: this.data.studyPlan.targetScore };
+  }
+
+  setStudyPlanSettings({ testDate, targetScore }) {
+    if (testDate !== undefined) this.data.studyPlan.testDate = testDate;
+    if (targetScore !== undefined) this.data.studyPlan.targetScore = targetScore;
+    this.save();
+  }
+
+  /** Days remaining until the configured test date (0 on/after test day,
+   * null if no date is set). */
+  getDaysUntilTest() {
+    const testDate = this.data.studyPlan.testDate;
+    if (!testDate) return null;
+    const today = this._todayLocalDateStr();
+    const [ty, tm, td] = today.split("-").map(Number);
+    const [y, m, d] = testDate.split("-").map(Number);
+    const diffMs = new Date(y, m - 1, d) - new Date(ty, tm - 1, td);
+    return Math.max(0, Math.round(diffMs / (24 * 60 * 60 * 1000)));
   }
 
   // --- developer mode cheats (manual testing only, never called from

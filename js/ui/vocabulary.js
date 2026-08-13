@@ -8,5 +8,6 @@ export function renderVocabulary(root, navigate) {
     backParams: {},
     quizScreen: "vocabQuiz",
     quizParamsExtra: {},
+    enableExport: true,
   });
 }

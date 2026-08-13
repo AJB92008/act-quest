@@ -10,6 +10,16 @@
   --purple: #6a5cff;
 }
 
+/* The `hidden` attribute's UA-default `display: none` has very low
+   specificity, so any class that sets `display` (e.g. `.results-actions`'s
+   `display: flex`) silently wins and the element stays visible despite
+   `hidden` being set. Reasserting it here with !important keeps `hidden`
+   reliable everywhere it's used, regardless of what other classes an
+   element also carries. */
+[hidden] {
+  display: none !important;
+}
+
 /* Dark mode: redefines the same palette variables everything else already
    uses (--ink/--paper/--card/--surface-alt/--muted/--border/--shadow), so
    most of the app adapts automatically. A handful of elements set their
@@ -519,6 +529,18 @@ input[type="text"] {
   font-size: 0.88rem;
 }
 
+.background-lesson-text strong .review-due-badge {
+  display: inline-block;
+  background: #22b8a3;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 1px 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
 .background-lesson-arrow {
   font-size: 1.3rem;
   color: var(--island-color, var(--purple));
@@ -930,6 +952,14 @@ input[type="text"] {
   max-width: 820px;
 }
 
+.vocab-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 6px 0 16px;
+}
+
 .bg-toc {
   display: flex;
   flex-wrap: wrap;
@@ -1273,6 +1303,44 @@ input[type="text"] {
   background: linear-gradient(135deg, #ff9f38, #ffd25f);
 }
 
+.results-flag-achievement {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin: 4px 0;
+  background: linear-gradient(135deg, #22b8a3, #5fe0c9);
+  text-align: left;
+}
+
+.results-flag-achievement-icon {
+  font-size: 1.4rem;
+  flex: 0 0 auto;
+}
+
+.results-flag-achievement-text strong {
+  display: block;
+}
+
+.pacing-tag {
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 10px 0 0;
+}
+
+.pacing-tag.pace-good {
+  color: #1a8f6f;
+}
+
+.pacing-tag.pace-warn {
+  color: #c9691a;
+}
+
 .results-stats {
   display: flex;
   justify-content: center;
@@ -1405,6 +1473,101 @@ input[type="text"] {
   border-color: var(--purple);
   background: var(--surface-alt);
   color: var(--purple);
+}
+
+.drill-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 14px 0;
+}
+
+.btn-secondary.is-active {
+  border-color: var(--island-color, var(--purple));
+  background: var(--surface-alt);
+  color: var(--island-color, var(--purple));
+}
+
+.drill-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 10px 0 18px;
+  text-align: left;
+}
+
+.drill-skill-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-alt);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.drill-skill-row.is-checked {
+  border-color: var(--island-color, var(--purple));
+}
+
+.drill-skill-row input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.drill-skill-name {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.drill-skill-meta {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+button.drill-skill-row {
+  width: 100%;
+  font: inherit;
+  transition: transform 0.15s ease;
+}
+
+button.drill-skill-row:hover {
+  transform: translateY(-1px);
+  border-color: var(--island-color, var(--purple));
+}
+
+.study-plan-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  margin-top: 10px;
+}
+
+.study-plan-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.study-plan-field input {
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--card);
 }
 
 .avatar-tab-icon {
@@ -1731,6 +1894,162 @@ input[type="text"] {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.dash-heatmap-card,
+.dash-streak-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 22px;
+  margin-bottom: 24px;
+}
+
+.heatmap-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.heatmap-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.heatmap-row-label {
+  flex: 0 0 120px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.heatmap-cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.heatmap-cell {
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  background: var(--border);
+  display: inline-block;
+}
+
+.heatmap-cell.is-started {
+  background: color-mix(in srgb, var(--cell-color, var(--purple)) 40%, transparent);
+}
+
+.heatmap-cell.is-mastered {
+  background: var(--cell-color, var(--purple));
+}
+
+.heatmap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  align-items: center;
+}
+
+.heatmap-legend .heatmap-cell {
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.dash-streak-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.streak-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.streak-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: var(--border);
+  display: block;
+}
+
+.streak-cell.is-active {
+  background: linear-gradient(135deg, #ff9f38, #ffd25f);
+}
+
+.pacing-row {
+  margin-bottom: 8px;
+}
+
+.pacing-row:last-child {
+  margin-bottom: 0;
+}
+
+.pacing-row-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.pacing-row .pacing-tag {
+  margin-top: 0;
+}
+
+.achievement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.achievement-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 12px 18px;
+}
+
+.achievement-row.is-locked {
+  opacity: 0.55;
+}
+
+.achievement-icon {
+  font-size: 1.6rem;
+  flex: 0 0 auto;
+  width: 40px;
+  text-align: center;
+}
+
+.achievement-info {
+  flex: 1;
+}
+
+.achievement-info strong {
+  display: block;
+}
+
+.achievement-info p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.achievement-date {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 .dash-row {

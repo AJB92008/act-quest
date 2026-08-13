@@ -42,8 +42,15 @@
 
       // Never let a stale save in this origin's localStorage leak into
       // tests — every GameState instance created in a test must start from
-      // a clean default save.
-      localStorage.removeItem("act-quest-save-v1");
+      // a clean default save. Some tests exercise methods that call
+      // gameState.save() (streak/achievements/SRS/pacing/study-plan), so
+      // stash whatever was really there first and put it back once the
+      // suite finishes — otherwise running tests in the same browser
+      // profile you actually play in would leave your real save
+      // overwritten with the last such test's throwaway state.
+      const SAVE_KEY = "act-quest-save-v1";
+      const realSave = localStorage.getItem(SAVE_KEY);
+      localStorage.removeItem(SAVE_KEY);
 
       const { getResults } = await import("./assert.js");
       await import("./leveling.test.js");
@@ -53,8 +60,17 @@
       await import("./questionData.test.js");
       await import("./practiceTestScoring.test.js");
       await import("./adaptiveEngine.test.js");
+      await import("./srs.test.js");
+      await import("./progressFeatures.test.js");
 
       const results = await getResults();
+
+      // Restore (or leave absent, if there wasn't one) whatever real save
+      // existed before this run, now that every test has finished writing
+      // its own throwaway state to the same localStorage key.
+      if (realSave === null) localStorage.removeItem(SAVE_KEY);
+      else localStorage.setItem(SAVE_KEY, realSave);
+
       const out = document.getElementById("out");
       out.innerHTML = results
         .map((r) =>

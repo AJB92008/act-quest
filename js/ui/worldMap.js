@@ -11,6 +11,7 @@ export function renderWorldMap(root, navigate) {
   const totalHeight = pathHeight(SUBJECTS.length, ROW_HEIGHT);
 
   const stats = SUBJECTS.map((subject) => gameState.getSubjectStats(subject.id));
+  const reviewQueueDueCount = gameState.getDueQuestionKeys(99).length + gameState.getDueVocabWords(99).length;
   // Point the mascot at the first subject that isn't fully cleared yet, so
   // the map always shows "here's where to pick back up."
   let currentIndex = stats.findIndex((s) => s.masteredCount < s.totalSkills);
@@ -50,6 +51,22 @@ export function renderWorldMap(root, navigate) {
         </span>
         <span class="background-lesson-arrow">&rarr;</span>
       </button>
+      <button class="background-lesson-card weak-review-card" data-review-queue>
+        <span class="background-lesson-icon">🧠</span>
+        <span class="background-lesson-text">
+          <strong>Review Queue${reviewQueueDueCount > 0 ? ` <span class="review-due-badge">${reviewQueueDueCount}</span>` : ""}</strong>
+          <span>Spaced repetition: questions and vocab due for review right now, on a schedule.</span>
+        </span>
+        <span class="background-lesson-arrow">&rarr;</span>
+      </button>
+      <button class="background-lesson-card weak-review-card" data-drill-builder>
+        <span class="background-lesson-icon">🎛️</span>
+        <span class="background-lesson-text">
+          <strong>Custom Drill</strong>
+          <span>Pick exactly which skills to practice, instead of following the fixed lesson path.</span>
+        </span>
+        <span class="background-lesson-arrow">&rarr;</span>
+      </button>
       <div class="map-path-container" style="height:${totalHeight}px">
         ${renderPathSvg(positions, totalHeight, { color: "#b6aeff" })}
         <div class="path-decorations">${renderDecorations(totalHeight, 1)}</div>
@@ -63,4 +80,6 @@ export function renderWorldMap(root, navigate) {
     node.addEventListener("click", () => navigate("island", { subjectId: node.dataset.subject }));
   });
   root.querySelector("[data-weak-review]").addEventListener("click", () => navigate("weakReview"));
+  root.querySelector("[data-review-queue]").addEventListener("click", () => navigate("reviewQueue"));
+  root.querySelector("[data-drill-builder]").addEventListener("click", () => navigate("drillBuilder"));
 }

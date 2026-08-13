@@ -1,7 +1,8 @@
-import { getSubject } from "../data/skills.js";
+import { getSubject, SUBJECTS } from "../data/skills.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
+import { renderPacingTag } from "./pacingFeedback.js";
 
 // A pure-SVG sparkline (no charting library) plotting composite score (1-36,
 // a fixed y-domain so the line's shape is comparable across sessions rather
@@ -29,6 +30,106 @@ function scoreHistoryChart(history) {
 
 function formatHistoryDate(timestamp) {
   return new Date(timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function masteryHeatmapHTML() {
+  const rows = SUBJECTS.map((subject) => {
+    const cells = subject.skills
+      .map((skill) => {
+        const p = gameState.getSkillProgress(skill.id);
+        const started = p.attempts > 0;
+        const cls = p.mastered ? "is-mastered" : started ? "is-started" : "is-untouched";
+        const detail = p.mastered ? "mastered" : started ? `${Math.round((p.correct / p.attempts) * 100)}% accuracy` : "not started";
+        return `<span class="heatmap-cell ${cls}" style="--cell-color:${subject.color}" title="${skill.name} — ${detail}"></span>`;
+      })
+      .join("");
+    return `
+      <div class="heatmap-row">
+        <span class="heatmap-row-label">${subject.icon} ${subject.name}</span>
+        <div class="heatmap-cells">${cells}</div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <div class="dash-heatmap-card">
+      <h3 class="dash-history-title">🗺️ Skill Mastery Map</h3>
+      <div class="heatmap-grid">${rows}</div>
+      <div class="heatmap-legend">
+        <span><span class="heatmap-cell is-untouched"></span> Not started</span>
+        <span><span class="heatmap-cell is-started" style="--cell-color:var(--purple)"></span> In progress</span>
+        <span><span class="heatmap-cell is-mastered" style="--cell-color:var(--purple)"></span> Mastered</span>
+      </div>
+    </div>
+  `;
+}
+
+function streakCalendarHTML() {
+  const streak = gameState.getStreak();
+  const activeSet = new Set(streak.activeDates);
+  const today = new Date();
+  const cells = [];
+  for (let i = 34; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    cells.push(`<span class="streak-cell ${activeSet.has(key) ? "is-active" : ""}" title="${key}"></span>`);
+  }
+  return `
+    <div class="dash-streak-card">
+      <div class="dash-streak-header">
+        <div><span class="tile-num">${streak.current}</span> day streak</div>
+        <div class="dash-monster-substat">Best: ${streak.best} day${streak.best === 1 ? "" : "s"}</div>
+      </div>
+      <div class="streak-grid">${cells.join("")}</div>
+    </div>
+  `;
+}
+
+function achievementsPreviewHTML() {
+  const achievements = gameState.getAchievements();
+  const unlockedCount = achievements.filter((a) => a.unlockedAt !== null).length;
+  return `
+    <div class="dash-predictor-card">
+      <div class="dash-predictor-score">${unlockedCount}</div>
+      <div class="dash-predictor-info">
+        <strong>Achievements</strong>
+        <p class="dash-monster-substat">${unlockedCount} of ${achievements.length} badges unlocked.</p>
+      </div>
+      <button class="btn-secondary" data-achievements>🏅 View All</button>
+    </div>
+  `;
+}
+
+function studyPlanCardHTML() {
+  const days = gameState.getDaysUntilTest();
+  const { testDate } = gameState.getStudyPlanSettings();
+  return `
+    <div class="dash-predictor-card">
+      <div class="dash-predictor-score">${days === null ? "—" : days}</div>
+      <div class="dash-predictor-info">
+        <strong>${days === null ? "Study Plan" : days === 0 ? "Test day is today!" : "Days Until Test"}</strong>
+        <p class="dash-monster-substat">${testDate ? `Test date: ${testDate}` : "Set a test date for a personalized daily study plan."}</p>
+      </div>
+      <button class="btn-secondary" data-study-plan>📅 ${testDate ? "View Plan" : "Set Up"}</button>
+    </div>
+  `;
+}
+
+function pacingCardHTML() {
+  const tags = SUBJECTS.map((subject) => {
+    const pacing = gameState.getPacingStats(subject.id);
+    if (!pacing) return "";
+    return `<div class="pacing-row"><span class="pacing-row-label">${subject.icon} ${subject.name}</span>${renderPacingTag(pacing)}</div>`;
+  })
+    .filter(Boolean)
+    .join("");
+  if (!tags) return "";
+  return `
+    <div class="dash-history-card">
+      <h3 class="dash-history-title">⏱️ Pacing</h3>
+      ${tags}
+    </div>
+  `;
 }
 
 export function renderDashboard(root, navigate) {
@@ -90,6 +191,10 @@ export function renderDashboard(root, navigate) {
         </div>
         <button class="btn-secondary" data-practice-test>📝 Practice Test</button>
       </div>
+      ${streakCalendarHTML()}
+      ${achievementsPreviewHTML()}
+      ${studyPlanCardHTML()}
+      ${pacingCardHTML()}
       ${
         history.length > 0
           ? `
@@ -123,12 +228,15 @@ export function renderDashboard(root, navigate) {
           : ""
       }
       <div class="dash-rows">${rows}</div>
+      ${masteryHeatmapHTML()}
       <button class="btn-danger-quiet" data-reset>Reset All Progress</button>
     </main>
   `;
 
   wireHud(root, navigate);
   root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
+  root.querySelector("[data-achievements]").addEventListener("click", () => navigate("achievements"));
+  root.querySelector("[data-study-plan]").addEventListener("click", () => navigate("studyPlan"));
   root.querySelector("[data-reset]").addEventListener("click", () => {
     if (confirm("Reset all progress, coins, and your monster's look? This can't be undone.")) {
       gameState.reset();
