@@ -78,8 +78,10 @@ place; it never adds or removes one.
 
 Most skills have exactly 100 questions (20 lessons), but a skill's bank
 *can* be extended beyond that in multiples of `LESSON_SIZE` (5) — the
-ten Reading and six Science skills each got one extra 10-question/2-lesson
-batch, referencing new passages/stimuli, for exactly this reason. Extending
+ten Reading and six Science skills have each gotten three extra
+10-question/2-lesson batches so far, referencing new passages/stimuli,
+for exactly this reason (currently 130 questions / 26 lessons each).
+Extending
 a skill takes two steps: append the new questions to its array in
 `js/data/questions/<subject>.js` (a multiple of 5), then add or update
 that skill's entry in `BANK_SIZE_OVERRIDES` in
