@@ -66,5 +66,31 @@ export function runDevBootstrap(gameState) {
   }
   if (params.has("lessonIndex")) screenParams.lessonIndex = Number(params.get("lessonIndex"));
 
+  // A handful of screens crash outright if a param they destructure
+  // without a fallback (subjectId, skillId, ...) is missing — e.g. quiz.js
+  // calls getSkill(skillId) and immediately destructures the result, so an
+  // undefined skillId throws before the screen can render anything at all.
+  // That can only happen from a mistyped ?dev=1 URL (real in-game
+  // navigate() calls always supply real params), but a confusing blank
+  // page is still a bad way to find that out — check up front and fall
+  // back to the normal map/onboarding route with a clear explanation
+  // instead of letting the screen itself throw.
+  const REQUIRED_PARAMS = {
+    island: ["subjectId"],
+    skillPath: ["subjectId", "skillId"],
+    quiz: ["subjectId", "skillId", "lessonIndex"],
+    bossQuiz: ["subjectId"],
+    background: ["subjectId"],
+    backgroundQuiz: ["subjectId"],
+    vocabQuiz: [],
+  };
+  const missing = (REQUIRED_PARAMS[screen] || []).filter((key) => screenParams[key] === undefined);
+  if (missing.length > 0) {
+    console.warn(
+      `devBootstrap: ?dev=1&screen=${screen} is missing required param(s) [${missing.join(", ")}] — ignoring screen= and falling back to the normal map/onboarding route.`
+    );
+    return null;
+  }
+
   return { screen, params: screenParams };
 }

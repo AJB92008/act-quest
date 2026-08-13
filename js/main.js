@@ -40,6 +40,15 @@ const SCREENS = {
 function navigate(screen, params = {}) {
   window.scrollTo(0, 0);
   const renderFn = SCREENS[screen];
+  if (!renderFn) {
+    // An unrecognized screen name (a typo in a navigate() call, or a bad
+    // `?dev=1&screen=...` value) used to hard-crash into a blank page —
+    // fall back to the map instead, with a clear pointer in the console
+    // for whoever's debugging it.
+    console.warn(`navigate(): unknown screen "${screen}", falling back to "map"`);
+    SCREENS.map(root, navigate, {});
+    return;
+  }
   renderFn(root, navigate, params);
 }
 
