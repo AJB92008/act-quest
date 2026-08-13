@@ -9014,8 +9014,8 @@ export const english = {
         "Everybody at the reunion signed its name in the guest book.",
         "Everybody at the reunion signed our name in the guest book.",
       ],
-      answer: 1,
-      explain: "\"Everybody\" is grammatically singular, so formal usage pairs it with \"his or her.\"",
+      answer: 0,
+      explain: "\"Their\" used as a singular, gender-neutral pronoun correctly refers back to \"everybody.\" This version is already correct.",
     },
     {
       q: "Acme Corp announced they would open a new office downtown.",
@@ -9289,8 +9289,8 @@ export const english = {
         "Everybody on the panel gave its opinion.",
         "Everybody on the panel gave our opinion.",
       ],
-      answer: 1,
-      explain: "\"Everybody\" is grammatically singular, so formal usage pairs it with \"his or her.\"",
+      answer: 0,
+      explain: "\"Their\" used as a singular, gender-neutral pronoun correctly refers back to \"everybody.\" This version is already correct.",
     },
     {
       q: "Delta announced they would add new routes next year.",
@@ -9729,8 +9729,8 @@ export const english = {
         "Everybody in the choir practiced its part.",
         "Everybody in the choir practiced our part.",
       ],
-      answer: 1,
-      explain: "\"Everybody\" is grammatically singular, so formal usage pairs it with \"his or her.\"",
+      answer: 0,
+      explain: "\"Their\" used as a singular, gender-neutral pronoun correctly refers back to \"everybody.\" This version is already correct.",
     },
     {
       q: "Everybody at the conference wore their badge.",
@@ -9740,8 +9740,8 @@ export const english = {
         "Everybody at the conference wore its badge.",
         "Everybody at the conference wore our badge.",
       ],
-      answer: 1,
-      explain: "\"Everybody\" is grammatically singular, so formal usage pairs it with \"his or her.\"",
+      answer: 0,
+      explain: "\"Their\" used as a singular, gender-neutral pronoun correctly refers back to \"everybody.\" This version is already correct.",
     },
     {
       q: "Zenith Corp announced they would expand overseas.",
@@ -26455,9 +26455,9 @@ export const english = {
     },
     {
       q: "In a formal wedding invitation, which choice best matches the tone? \"The families ___ you to join them in celebrating the marriage of their children.\"",
-      choices: ["would love for", "request the pleasure of your company as they", "totally want", "are stoked to have"],
+      choices: ["would love for", "cordially invite", "totally want", "are stoked to have"],
       answer: 1,
-      explain: "\"Request the pleasure of your company\" is a traditional, formal phrase appropriate for a formal wedding invitation.",
+      explain: "\"Cordially invite\" is a traditional, formal phrase appropriate for a formal wedding invitation.",
     },
     {
       q: "This sentence appears in a formal academic peer review: \"This paper's methodology is honestly kind of shaky.\" Which revision best matches the review's formal tone?",
