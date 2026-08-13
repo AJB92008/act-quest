@@ -25,20 +25,20 @@ test("getLessonCount falls back to 1 for an unknown skill id", () => {
 });
 
 test("getLessonCount reflects the real bank size for skills extended beyond 100 questions, still without loading data", () => {
-  assertEqual(getLessonCount("re-mainidea"), 22);
-  assertEqual(getLessonCount("sc-datarep"), 22);
+  assertEqual(getLessonCount("re-mainidea"), 24);
+  assertEqual(getLessonCount("sc-datarep"), 24);
 });
 
 test("a skill extended beyond 100 questions actually has that many in its real bank once loaded", async () => {
   await preloadSubjectForSkill("re-mainidea");
-  assertEqual(getFullBank("re-mainidea").length, 110);
+  assertEqual(getFullBank("re-mainidea").length, 120);
   await preloadSubjectForSkill("sc-datarep");
-  assertEqual(getFullBank("sc-datarep").length, 110);
+  assertEqual(getFullBank("sc-datarep").length, 120);
 });
 
 test("lesson 21 (the first bonus lesson) of an extended skill returns 5 real, valid questions", async () => {
   await preloadSubjectForSkill("re-mainidea");
-  const qs = getLessonQuestions("re-mainidea", 20); // 0-indexed: lesson 21, only reachable because getLessonCount now reports 22
+  const qs = getLessonQuestions("re-mainidea", 20); // 0-indexed: lesson 21, only reachable because getLessonCount now reports 24
   assertEqual(qs.length, 5);
   const bank = getFullBank("re-mainidea");
   for (const q of qs) {

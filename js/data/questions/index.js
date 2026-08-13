@@ -20,22 +20,22 @@ export const LESSON_SIZE = 5;
 // getLessonCount can still answer correctly without loading anything.
 // Anything not listed here is assumed to be the standard 100.
 const BANK_SIZE_OVERRIDES = {
-  "re-mainidea": 110,
-  "re-detail": 110,
-  "re-sequence": 110,
-  "re-compare": 110,
-  "re-causeeffect": 110,
-  "re-vocab": 110,
-  "re-generalize": 110,
-  "re-voice": 110,
-  "re-claims": 110,
-  "re-integrate": 110,
-  "sc-datarep": 110,
-  "sc-interpret": 110,
-  "sc-research": 110,
-  "sc-investigation": 110,
-  "sc-conflicting": 110,
-  "sc-evaluate": 110,
+  "re-mainidea": 120,
+  "re-detail": 120,
+  "re-sequence": 120,
+  "re-compare": 120,
+  "re-causeeffect": 120,
+  "re-vocab": 120,
+  "re-generalize": 120,
+  "re-voice": 120,
+  "re-claims": 120,
+  "re-integrate": 120,
+  "sc-datarep": 120,
+  "sc-interpret": 120,
+  "sc-research": 120,
+  "sc-investigation": 120,
+  "sc-conflicting": 120,
+  "sc-evaluate": 120,
 };
 const KNOWN_SKILL_IDS = new Set(allSkillIds());
 
