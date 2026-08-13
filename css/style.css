@@ -2058,7 +2058,6 @@ button.drill-skill-row:hover {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 10px;
 }
 
 .dash-streak-count {
@@ -2081,47 +2080,6 @@ button.drill-skill-row:hover {
   font-weight: 700;
   color: var(--muted);
   font-size: 0.95rem;
-}
-
-.streak-day-labels {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  margin-bottom: 4px;
-}
-
-.streak-day-label {
-  text-align: center;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.streak-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.streak-cell {
-  aspect-ratio: 1;
-  border-radius: 4px;
-  background: var(--border);
-  display: block;
-  box-shadow: none;
-  transition: transform 0.1s ease;
-}
-
-.streak-cell.is-active {
-  background: linear-gradient(135deg, #ff9f38, #ffd25f);
-}
-
-.streak-cell.is-today {
-  box-shadow: 0 0 0 2px var(--purple);
-}
-
-.streak-cell:hover {
-  transform: scale(1.15);
 }
 
 .streak-milestone {

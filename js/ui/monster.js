@@ -1160,15 +1160,17 @@ const FACE_RENDERERS = {
 // clearly extend past every body silhouette's edges (max half-width ~47)
 // rather than being fully hidden behind it.
 // Wing-type back items (as opposed to cape/backpack/shell/finBack, which
-// are meant to read as mounted flush against the body) get an extra 1.3x
-// self-scale, pinned at their own attachment seam (a.x, a.y): they render
+// are meant to read as mounted flush against the body) get an extra
+// self-scale (WING_SCALE), pinned at their own attachment seam (a.x, a.y):
+// they render
 // behind the body like every other back item, and on wide silhouettes
 // (round, humanoid, amorphous) the un-scaled span barely cleared the
 // body's own edge, leaving only a sliver visible. The wrapper keeps every
 // wing's existing geometry/proportions intact — it just makes the whole
 // thing bigger from the same seam, so more of it pokes out on every shape.
+const WING_SCALE = 1.08;
 function wingScale(markup, a) {
-  return `<g transform="translate(${a.x} ${a.y}) scale(1.3) translate(${-a.x} ${-a.y})">${markup}</g>`;
+  return `<g transform="translate(${a.x} ${a.y}) scale(${WING_SCALE}) translate(${-a.x} ${-a.y})">${markup}</g>`;
 }
 
 const BACK_RENDERERS = {

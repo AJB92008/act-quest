@@ -65,30 +65,9 @@ function masteryHeatmapHTML() {
 }
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
-const WEEKDAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
 
 function streakCalendarHTML() {
   const streak = gameState.getStreak();
-  const activeSet = new Set(streak.activeDates);
-  const today = new Date();
-
-  // The 35-day window divides evenly into 5 full weeks, so column N always
-  // lands on the same weekday in every row — safe to label the columns
-  // once above the grid instead of per-cell.
-  const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 34);
-  const startDow = startDate.getDay();
-  const dayLabels = Array.from({ length: 7 }, (_, i) => `<span class="streak-day-label">${WEEKDAY_LETTERS[(startDow + i) % 7]}</span>`).join("");
-
-  const cells = [];
-  for (let i = 34; i >= 0; i--) {
-    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const isActive = activeSet.has(key);
-    const isToday = i === 0;
-    const cls = ["streak-cell", isActive ? "is-active" : "", isToday ? "is-today" : ""].filter(Boolean).join(" ");
-    const label = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    cells.push(`<span class="${cls}" title="${label}${isActive ? " — studied" : ""}${isToday ? " (today)" : ""}"></span>`);
-  }
 
   const nextMilestone = STREAK_MILESTONES.find((m) => m > streak.best);
   const milestoneText =
@@ -110,8 +89,6 @@ function streakCalendarHTML() {
         </div>
         <div class="dash-monster-substat">Best: ${streak.best} day${streak.best === 1 ? "" : "s"}</div>
       </div>
-      <div class="streak-day-labels">${dayLabels}</div>
-      <div class="streak-grid">${cells.join("")}</div>
       <p class="streak-milestone">${milestoneText}</p>
     </div>
   `;
