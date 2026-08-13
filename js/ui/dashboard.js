@@ -265,6 +265,16 @@ export function renderDashboard(root, navigate) {
       }
       <div class="dash-rows">${rows}</div>
       ${masteryHeatmapHTML()}
+      <div class="dash-history-card">
+        <h3 class="dash-history-title">💾 Backup &amp; Transfer</h3>
+        <p class="lesson-paragraph">Your progress lives only in this browser. Download a backup now and then, or restore one to carry progress to a new device.</p>
+        <div class="results-actions">
+          <button class="btn-secondary" data-export-save>⬇️ Export Save</button>
+          <button class="btn-secondary" data-import-save>⬆️ Import Save</button>
+          <input type="file" id="importSaveInput" accept="application/json" hidden />
+        </div>
+        <p class="backup-status" id="backupStatus" hidden></p>
+      </div>
       <button class="btn-danger-quiet" data-reset>Reset All Progress</button>
     </main>
   `;
@@ -274,6 +284,46 @@ export function renderDashboard(root, navigate) {
   root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
   root.querySelector("[data-achievements]").addEventListener("click", () => navigate("achievements"));
   root.querySelector("[data-study-plan]").addEventListener("click", () => navigate("studyPlan"));
+  root.querySelector("[data-export-save]").addEventListener("click", () => {
+    const json = gameState.exportSave();
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `acto-act-quest-save-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+  const importInput = root.querySelector("#importSaveInput");
+  // Confirm only after a file is actually picked, not before — asking
+  // "continue?" before the browser's own file picker even opens means two
+  // blocking native dialogs back to back for no reason, and confirming a
+  // destructive action before the player has chosen anything to import is
+  // premature anyway.
+  root.querySelector("[data-import-save]").addEventListener("click", () => importInput.click());
+  importInput.addEventListener("change", () => {
+    const file = importInput.files[0];
+    importInput.value = ""; // allow re-selecting the same file later
+    if (!file) return;
+    if (!confirm(`Import "${file.name}"? This replaces ALL current progress in this browser.`)) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = gameState.importSave(String(reader.result));
+      const status = root.querySelector("#backupStatus");
+      status.hidden = false;
+      if (result.ok) {
+        status.className = "backup-status is-success";
+        status.textContent = "Save imported! Reloading your progress…";
+        setTimeout(() => navigate("dashboard"), 900);
+      } else {
+        status.className = "backup-status is-error";
+        status.textContent = result.error;
+      }
+    };
+    reader.readAsText(file);
+  });
   root.querySelector("[data-reset]").addEventListener("click", () => {
     if (confirm("Reset all progress, coins, and your monster's look? This can't be undone.")) {
       gameState.reset();

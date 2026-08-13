@@ -1338,6 +1338,21 @@ input[type="text"] {
   color: #d9741c;
 }
 
+.backup-status {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.backup-status.is-success {
+  color: #1a8f6f;
+}
+
+.backup-status.is-error {
+  color: #c9401c;
+}
+
 .results-flag-muted {
   color: var(--muted);
 }

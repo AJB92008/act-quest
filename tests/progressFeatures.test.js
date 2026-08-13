@@ -142,3 +142,45 @@ test("getDaysUntilTest floors at 0 for a past date rather than going negative", 
   gs.setStudyPlanSettings({ testDate: past });
   assertEqual(gs.getDaysUntilTest(), 0);
 });
+
+// --- export / import save ---
+
+test("exportSave produces JSON that round-trips through importSave into an equivalent state", () => {
+  const gs1 = freshGameState();
+  gs1.setName("Exportia");
+  gs1.cheatAddCoins(123);
+  gs1.cheatSetSkillMastered("en-commas", true);
+  const json = gs1.exportSave();
+
+  const gs2 = freshGameState();
+  const result = gs2.importSave(json);
+  assertTrue(result.ok, result.error);
+  assertEqual(gs2.data.createdName, "Exportia");
+  assertEqual(gs2.data.coins, 123);
+  assertTrue(gs2.isMastered("en-commas"));
+});
+
+test("importSave rejects invalid JSON without touching existing progress", () => {
+  const gs = freshGameState();
+  gs.cheatAddCoins(50);
+  const result = gs.importSave("not valid json {{{");
+  assertTrue(!result.ok);
+  assertEqual(gs.data.coins, 50);
+});
+
+test("importSave rejects well-formed JSON that isn't a save file", () => {
+  const gs = freshGameState();
+  const result = gs.importSave(JSON.stringify({ hello: "world" }));
+  assertTrue(!result.ok);
+});
+
+test("importSave backfills fields missing from an older exported save", () => {
+  const gs1 = freshGameState();
+  const stripped = { ...gs1.data };
+  delete stripped.srs; // simulate a save exported before SRS existed
+  const gs2 = freshGameState();
+  const result = gs2.importSave(JSON.stringify(stripped));
+  assertTrue(result.ok, result.error);
+  assertTrue(gs2.data.srs !== undefined, "missing fields should be backfilled with defaults, not left absent");
+  assertEqual(gs2.data.srs.totalReviews, 0);
+});

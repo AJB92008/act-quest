@@ -256,6 +256,36 @@ export class GameState {
     this.save();
   }
 
+  /** The full save as a JSON string, for the player to download as a
+   * backup or carry over to another browser/device — the only way
+   * progress survives right now, since there's no account/cloud sync. */
+  exportSave() {
+    return JSON.stringify(this.data, null, 2);
+  }
+
+  /** Restores a save from a previously-exported JSON string. Writes it to
+   * localStorage and re-runs the normal startup load path (_load()) rather
+   * than assigning `parsed` directly, so an import from an older app
+   * version — missing fields this version added later — still comes out
+   * fully populated via the same defaults-merge every real load already
+   * goes through, instead of leaving gaps that crash something down the
+   * line. Returns { ok: true } or { ok: false, error } — never throws. */
+  importSave(jsonString) {
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonString);
+    } catch {
+      return { ok: false, error: "That doesn't look like a valid save file (not valid JSON)." };
+    }
+    if (!parsed || typeof parsed !== "object" || !parsed.avatar || !parsed.skillProgress) {
+      return { ok: false, error: "That file doesn't look like an Acto's ACT Quest save." };
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    this.data = this._load();
+    this.save();
+    return { ok: true };
+  }
+
   // --- avatar ---
   getAvatar() {
     return this.data.avatar;
