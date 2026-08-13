@@ -17,8 +17,11 @@ import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
 
-const REVIEW_COLOR = "#22b8a3";
-const REVIEW_BG = "#e8fbf7";
+// Distinct from Weak Skill Review's teal — these are two different
+// features (schedule-driven vs. skill-weighted practice) and sharing a
+// color made them hard to tell apart on the World Map at a glance.
+const REVIEW_COLOR = "#7c5cff";
+const REVIEW_BG = "#f1eeff";
 
 function flattenVocab() {
   const cards = [];

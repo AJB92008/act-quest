@@ -40,7 +40,7 @@ function masteryHeatmapHTML() {
         const started = p.attempts > 0;
         const cls = p.mastered ? "is-mastered" : started ? "is-started" : "is-untouched";
         const detail = p.mastered ? "mastered" : started ? `${Math.round((p.correct / p.attempts) * 100)}% accuracy` : "not started";
-        return `<span class="heatmap-cell ${cls}" style="--cell-color:${subject.color}" title="${skill.name} — ${detail}"></span>`;
+        return `<span class="heatmap-cell ${cls}" style="--cell-color:${subject.color}" data-tip="${skill.name} — ${detail}" aria-label="${skill.name}: ${detail}"></span>`;
       })
       .join("");
     return `
@@ -64,23 +64,55 @@ function masteryHeatmapHTML() {
   `;
 }
 
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
+const WEEKDAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
+
 function streakCalendarHTML() {
   const streak = gameState.getStreak();
   const activeSet = new Set(streak.activeDates);
   const today = new Date();
+
+  // The 35-day window divides evenly into 5 full weeks, so column N always
+  // lands on the same weekday in every row — safe to label the columns
+  // once above the grid instead of per-cell.
+  const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 34);
+  const startDow = startDate.getDay();
+  const dayLabels = Array.from({ length: 7 }, (_, i) => `<span class="streak-day-label">${WEEKDAY_LETTERS[(startDow + i) % 7]}</span>`).join("");
+
   const cells = [];
   for (let i = 34; i >= 0; i--) {
     const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    cells.push(`<span class="streak-cell ${activeSet.has(key) ? "is-active" : ""}" title="${key}"></span>`);
+    const isActive = activeSet.has(key);
+    const isToday = i === 0;
+    const cls = ["streak-cell", isActive ? "is-active" : "", isToday ? "is-today" : ""].filter(Boolean).join(" ");
+    const label = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    cells.push(`<span class="${cls}" title="${label}${isActive ? " — studied" : ""}${isToday ? " (today)" : ""}"></span>`);
   }
+
+  const nextMilestone = STREAK_MILESTONES.find((m) => m > streak.best);
+  const milestoneText =
+    streak.current > 0
+      ? nextMilestone
+        ? `${nextMilestone - streak.current} more day${nextMilestone - streak.current === 1 ? "" : "s"} to a ${nextMilestone}-day streak`
+        : "Longest streak yet — keep it going!"
+      : streak.best > 0
+      ? `Your best is ${streak.best} day${streak.best === 1 ? "" : "s"} — study today to start a new one`
+      : "Complete a lesson today to start your streak";
+
   return `
     <div class="dash-streak-card">
       <div class="dash-streak-header">
-        <div><span class="tile-num">${streak.current}</span> day streak</div>
+        <div class="dash-streak-count">
+          <span class="streak-flame ${streak.current > 0 ? "is-lit" : ""}">🔥</span>
+          <span class="tile-num">${streak.current}</span>
+          <span class="dash-streak-label">day streak</span>
+        </div>
         <div class="dash-monster-substat">Best: ${streak.best} day${streak.best === 1 ? "" : "s"}</div>
       </div>
+      <div class="streak-day-labels">${dayLabels}</div>
       <div class="streak-grid">${cells.join("")}</div>
+      <p class="streak-milestone">${milestoneText}</p>
     </div>
   `;
 }
@@ -113,6 +145,33 @@ function studyPlanCardHTML() {
       <button class="btn-secondary" data-study-plan>📅 ${testDate ? "View Plan" : "Set Up"}</button>
     </div>
   `;
+}
+
+// A single styled tooltip element, positioned near the cursor on hover —
+// the native `title` attribute works but is slow to appear and unstyled,
+// so heatmap cells use `data-tip` instead and this wires the hover/move/
+// leave behavior. Appended inside `root` (not document.body) so it's torn
+// down for free on the next navigate()'s innerHTML rebuild rather than
+// needing its own cleanup path.
+function wireHeatmapTooltip(root) {
+  const cells = root.querySelectorAll(".heatmap-cell[data-tip]");
+  if (cells.length === 0) return;
+  const tooltip = document.createElement("div");
+  tooltip.className = "heatmap-tooltip";
+  root.appendChild(tooltip);
+  cells.forEach((cell) => {
+    cell.addEventListener("mouseenter", () => {
+      tooltip.textContent = cell.dataset.tip;
+      tooltip.classList.add("is-visible");
+    });
+    cell.addEventListener("mousemove", (e) => {
+      tooltip.style.left = `${e.clientX}px`;
+      tooltip.style.top = `${e.clientY}px`;
+    });
+    cell.addEventListener("mouseleave", () => {
+      tooltip.classList.remove("is-visible");
+    });
+  });
 }
 
 function pacingCardHTML() {
@@ -234,6 +293,7 @@ export function renderDashboard(root, navigate) {
   `;
 
   wireHud(root, navigate);
+  wireHeatmapTooltip(root);
   root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
   root.querySelector("[data-achievements]").addEventListener("click", () => navigate("achievements"));
   root.querySelector("[data-study-plan]").addEventListener("click", () => navigate("studyPlan"));

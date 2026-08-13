@@ -14,8 +14,11 @@ import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
 
-const DRILL_COLOR = "#6a5cff";
-const DRILL_BG = "#f1efff";
+// Matches this feature's World Map shortcut node — an amber, distinct from
+// the app's default purple (already used everywhere as the primary accent,
+// which made Custom Drill blend in as just "another purple screen").
+const DRILL_COLOR = "#ff9f38";
+const DRILL_BG = "#fff4e6";
 const DRILL_SIZE = 12;
 
 function shuffled(arr) {

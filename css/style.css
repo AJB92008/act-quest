@@ -473,6 +473,73 @@ input[type="text"] {
   font-weight: 700;
 }
 
+/* ---------- map shortcuts (Weak Review / Review Queue / Custom Drill) ---------- */
+/* Same visual language as the island nodes above (circular icon + colored
+   ring + label below) so these read as part of the map instead of a
+   bolted-on settings menu, just laid out in a static row instead of
+   scattered along the path. */
+.map-shortcuts-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin: 22px 0 34px;
+}
+
+.map-shortcut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 140px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.map-shortcut-node {
+  width: 72px;
+  height: 72px;
+}
+
+.map-shortcut-node .map-island-icon {
+  font-size: 1.7rem;
+}
+
+.map-shortcut-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--island-color, var(--purple));
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: 999px;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 2px solid var(--paper);
+}
+
+.map-shortcut .map-island-label {
+  margin-top: 6px;
+}
+
+.map-shortcut .map-island-label h3 {
+  font-size: 0.92rem;
+}
+
+.map-shortcut .map-island-place {
+  font-size: 0.72rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+}
+
 /* ---------- island / path ---------- */
 .island-screen {
   background: linear-gradient(180deg, var(--island-bg, #fff) 0%, transparent 220px);
@@ -527,18 +594,6 @@ input[type="text"] {
 .background-lesson-text span {
   color: var(--muted);
   font-size: 0.88rem;
-}
-
-.background-lesson-text strong .review-due-badge {
-  display: inline-block;
-  background: #22b8a3;
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 800;
-  border-radius: 999px;
-  padding: 1px 8px;
-  margin-left: 6px;
-  vertical-align: middle;
 }
 
 .background-lesson-arrow {
@@ -1961,11 +2016,85 @@ button.drill-skill-row:hover {
   vertical-align: middle;
 }
 
+.heatmap-cell[data-tip] {
+  cursor: default;
+  transition: transform 0.1s ease;
+}
+
+.heatmap-cell[data-tip]:hover {
+  transform: scale(1.3);
+}
+
+.heatmap-tooltip {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 12px));
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.1s ease;
+}
+
+.heatmap-tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+:root[data-theme="dark"] .heatmap-tooltip {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
 .dash-streak-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 10px;
+}
+
+.dash-streak-count {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.streak-flame {
+  font-size: 1.3rem;
+  filter: grayscale(1) opacity(0.4);
+  transform: translateY(1px);
+}
+
+.streak-flame.is-lit {
+  filter: none;
+}
+
+.dash-streak-label {
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.streak-day-labels {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.streak-day-label {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 .streak-grid {
@@ -1979,10 +2108,27 @@ button.drill-skill-row:hover {
   border-radius: 4px;
   background: var(--border);
   display: block;
+  box-shadow: none;
+  transition: transform 0.1s ease;
 }
 
 .streak-cell.is-active {
   background: linear-gradient(135deg, #ff9f38, #ffd25f);
+}
+
+.streak-cell.is-today {
+  box-shadow: 0 0 0 2px var(--purple);
+}
+
+.streak-cell:hover {
+  transform: scale(1.15);
+}
+
+.streak-milestone {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: center;
 }
 
 .pacing-row {

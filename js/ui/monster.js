@@ -1159,27 +1159,39 @@ const FACE_RENDERERS = {
 // Back accessories render behind the body, so their shapes are sized to
 // clearly extend past every body silhouette's edges (max half-width ~47)
 // rather than being fully hidden behind it.
+// Wing-type back items (as opposed to cape/backpack/shell/finBack, which
+// are meant to read as mounted flush against the body) get an extra 1.3x
+// self-scale, pinned at their own attachment seam (a.x, a.y): they render
+// behind the body like every other back item, and on wide silhouettes
+// (round, humanoid, amorphous) the un-scaled span barely cleared the
+// body's own edge, leaving only a sliver visible. The wrapper keeps every
+// wing's existing geometry/proportions intact — it just makes the whole
+// thing bigger from the same seam, so more of it pokes out on every shape.
+function wingScale(markup, a) {
+  return `<g transform="translate(${a.x} ${a.y}) scale(1.3) translate(${-a.x} ${-a.y})">${markup}</g>`;
+}
+
 const BACK_RENDERERS = {
-  batWings: (a) => `
+  batWings: (a) => wingScale(`
     <path d="M${a.x - 6} ${a.y} Q${a.x - 60} ${a.y - 26} ${a.x - 56} ${a.y + 8} Q${a.x - 42} ${a.y - 4} ${a.x - 28} ${a.y + 14} Q${a.x - 18} ${a.y + 2} ${a.x - 6} ${a.y + 10} Z" fill="#4a3f6b" stroke="#2e2748" stroke-width="2"/>
     <path d="M${a.x + 6} ${a.y} Q${a.x + 60} ${a.y - 26} ${a.x + 56} ${a.y + 8} Q${a.x + 42} ${a.y - 4} ${a.x + 28} ${a.y + 14} Q${a.x + 18} ${a.y + 2} ${a.x + 6} ${a.y + 10} Z" fill="#4a3f6b" stroke="#2e2748" stroke-width="2"/>
-  `,
-  angelWings: (a) => `
+  `, a),
+  angelWings: (a) => wingScale(`
     <path d="M${a.x - 6} ${a.y} Q${a.x - 64} ${a.y - 22} ${a.x - 50} ${a.y + 26} Q${a.x - 36} ${a.y + 4} ${a.x - 6} ${a.y + 10} Z" fill="#fdfaf0" stroke="#e2ddc9" stroke-width="2"/>
     <path d="M${a.x + 6} ${a.y} Q${a.x + 64} ${a.y - 22} ${a.x + 50} ${a.y + 26} Q${a.x + 36} ${a.y + 4} ${a.x + 6} ${a.y + 10} Z" fill="#fdfaf0" stroke="#e2ddc9" stroke-width="2"/>
-  `,
-  dragonflyWings: (a) => `
+  `, a),
+  dragonflyWings: (a) => wingScale(`
     <ellipse cx="${a.x - 42}" cy="${a.y - 12}" rx="24" ry="10" fill="#bfe8ff" opacity="0.8" stroke="#6bb8de" stroke-width="1.5" transform="rotate(-16 ${a.x - 42} ${a.y - 12})"/>
     <ellipse cx="${a.x + 42}" cy="${a.y - 12}" rx="24" ry="10" fill="#bfe8ff" opacity="0.8" stroke="#6bb8de" stroke-width="1.5" transform="rotate(16 ${a.x + 42} ${a.y - 12})"/>
     <ellipse cx="${a.x - 38}" cy="${a.y + 14}" rx="19" ry="8" fill="#bfe8ff" opacity="0.65" stroke="#6bb8de" stroke-width="1.5" transform="rotate(-8 ${a.x - 38} ${a.y + 14})"/>
     <ellipse cx="${a.x + 38}" cy="${a.y + 14}" rx="19" ry="8" fill="#bfe8ff" opacity="0.65" stroke="#6bb8de" stroke-width="1.5" transform="rotate(8 ${a.x + 38} ${a.y + 14})"/>
-  `,
-  butterflyWings: (a) => `
+  `, a),
+  butterflyWings: (a) => wingScale(`
     <path d="M${a.x - 6} ${a.y - 4} Q${a.x - 58} ${a.y - 38} ${a.x - 54} ${a.y - 2} Q${a.x - 56} ${a.y + 28} ${a.x - 12} ${a.y + 12} Z" fill="#ff9fc7" stroke="#d4679a" stroke-width="2"/>
     <path d="M${a.x + 6} ${a.y - 4} Q${a.x + 58} ${a.y - 38} ${a.x + 54} ${a.y - 2} Q${a.x + 56} ${a.y + 28} ${a.x + 12} ${a.y + 12} Z" fill="#ff9fc7" stroke="#d4679a" stroke-width="2"/>
     <circle cx="${a.x - 36}" cy="${a.y - 12}" r="4" fill="#fff" opacity="0.6"/>
     <circle cx="${a.x + 36}" cy="${a.y - 12}" r="4" fill="#fff" opacity="0.6"/>
-  `,
+  `, a),
   cape: (a) => `<path d="M${a.x - 32} ${a.y - 14} Q${a.x} ${a.y - 4} ${a.x + 32} ${a.y - 14} L${a.x + 40} ${a.y + 56} Q${a.x} ${a.y + 42} ${a.x - 40} ${a.y + 56} Z" fill="#c94747" stroke="#8f2f2f" stroke-width="2"/>`,
   backpack: (a) => `<rect x="${a.x - 55}" y="${a.y - 10}" width="110" height="34" rx="8" fill="#7a5a3a" stroke="#513a24" stroke-width="2"/>`,
   shell: (a) => `<path d="M${a.x - 54} ${a.y + 20} Q${a.x - 58} ${a.y - 22} ${a.x} ${a.y - 30} Q${a.x + 58} ${a.y - 22} ${a.x + 54} ${a.y + 20} Z" fill="#7a9c5c" stroke="#4e6b38" stroke-width="2"/>`,
