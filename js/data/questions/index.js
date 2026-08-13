@@ -5,20 +5,43 @@ import { SUBJECTS, allSkillIds } from "../skills.js";
 // "Teach Your Monster" paces its games.
 export const LESSON_SIZE = 5;
 
-// Every skill's question bank is exactly 100 questions (enforced by
-// tests/run.html's data, not hand-verified per file), so lesson count is a
-// fixed constant rather than something derived from the loaded bank's
-// length. That matters beyond just avoiding a redundant computation: it
-// means `getLessonCount` — called constantly from state.js's mastery
+// Most skills' question banks are exactly 100 questions, so lesson count is
+// normally a fixed constant rather than something derived from the loaded
+// bank's length. That matters beyond just avoiding a redundant computation:
+// it means `getLessonCount` — called constantly from state.js's mastery
 // tracking and from every skill-path/island screen — never needs a
 // subject's question data loaded at all, which is what makes lazy-loading
 // each subject's ~300-600KB file (only when the player actually heads
 // toward it) possible without a much bigger rewrite of the UI layer.
-const LESSON_COUNT_PER_SKILL = Math.ceil(100 / LESSON_SIZE);
+//
+// A handful of skills have since been extended with bonus lessons beyond
+// the original 100 — this map records each one's real bank size by hand
+// (kept in sync with the actual data file whenever a skill is extended) so
+// getLessonCount can still answer correctly without loading anything.
+// Anything not listed here is assumed to be the standard 100.
+const BANK_SIZE_OVERRIDES = {
+  "re-mainidea": 110,
+  "re-detail": 110,
+  "re-sequence": 110,
+  "re-compare": 110,
+  "re-causeeffect": 110,
+  "re-vocab": 110,
+  "re-generalize": 110,
+  "re-voice": 110,
+  "re-claims": 110,
+  "re-integrate": 110,
+  "sc-datarep": 110,
+  "sc-interpret": 110,
+  "sc-research": 110,
+  "sc-investigation": 110,
+  "sc-conflicting": 110,
+  "sc-evaluate": 110,
+};
 const KNOWN_SKILL_IDS = new Set(allSkillIds());
 
 export function getLessonCount(skillId) {
-  return KNOWN_SKILL_IDS.has(skillId) ? LESSON_COUNT_PER_SKILL : 1;
+  if (!KNOWN_SKILL_IDS.has(skillId)) return 1;
+  return Math.ceil((BANK_SIZE_OVERRIDES[skillId] ?? 100) / LESSON_SIZE);
 }
 
 // skillId -> { skillName, subjectId }, built once from the skill tree —

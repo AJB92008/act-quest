@@ -74,8 +74,22 @@ explanation in place — saves write straight back into the real
 `js/data/questions/*.js` source files (a precise in-place replacement of
 just that one question, not a full-file rewrite), so review the git diff
 afterward like any other change. It only edits existing questions in
-place; it never adds or removes one, since several things (lesson counts,
-`tests/`) assume every skill stays at exactly 100 questions.
+place; it never adds or removes one.
+
+Most skills have exactly 100 questions (20 lessons), but a skill's bank
+*can* be extended beyond that in multiples of `LESSON_SIZE` (5) — the
+ten Reading and six Science skills each got one extra 10-question/2-lesson
+batch, referencing new passages/stimuli, for exactly this reason. Extending
+a skill takes two steps: append the new questions to its array in
+`js/data/questions/<subject>.js` (a multiple of 5), then add or update
+that skill's entry in `BANK_SIZE_OVERRIDES` in
+`js/data/questions/index.js` so `getLessonCount` reports the real total —
+it's a hand-maintained map specifically so lesson counts stay knowable
+without loading a subject's question data first (see the comment there).
+Forgetting that second step leaves the extra questions unreachable via
+the normal lesson path (they'd still show up in Weak Review, Boss Quiz,
+Endless Mode, the Drill Builder, and the SRS Review Queue, which all read
+the full bank directly).
 
 ## Dev bootstrap
 
