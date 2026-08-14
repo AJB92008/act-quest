@@ -1,5 +1,7 @@
 # Acto's ACT Quest
 
+[![Tests](https://github.com/AJB92008/act-quest/actions/workflows/tests.yml/badge.svg)](https://github.com/AJB92008/act-quest/actions/workflows/tests.yml)
+
 A "Teach Your Monster to Read"-style game for studying the ACT: customize a
 monster companion, explore a world map with one island per ACT section
 (English, Math, Reading, Science), and clear skill-path levels by answering
@@ -49,6 +51,20 @@ content edits, since it's easy for near-duplicate questions to sneak in.
 It auto-clears pairs whose `passageId`/`stimulusId` differ (legitimate
 reuse of a question template against different content) and flags the
 rest for a human read.
+
+### CI
+
+The app itself still has no Node/npm dependency, but `package.json` and
+`scripts/run-tests.mjs` exist so GitHub Actions (`.github/workflows/tests.yml`)
+can run the exact same `tests/run.html` suite headlessly via Playwright on
+every push/PR to `main`, instead of only running when someone happens to
+open the page manually. To run that same headless pass locally:
+
+```
+npm install
+npx playwright install --with-deps chromium
+npm test
+```
 
 ## Adding content
 
