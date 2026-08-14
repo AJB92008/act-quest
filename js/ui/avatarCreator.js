@@ -377,7 +377,7 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
         const nameInput = root.querySelector("#nameInput");
         const name = nameInput.value.trim() || "Explorer";
         gameState.setName(name);
-        navigate("map");
+        navigate("diagnostic", { onboarding: true });
       });
     }
   }

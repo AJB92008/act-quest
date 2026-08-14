@@ -12,6 +12,7 @@ const ROW_HEIGHT = 200;
 // its own accent color, distinct from every subject island's and from each
 // other, so they stay visually distinguishable at a glance.
 const SHORTCUTS = [
+  { screen: "diagnostic", icon: "🧪", name: "Placement Diagnostic", blurb: "A quick cross-subject sample", color: "#2a6df5", bg: "#eaf1ff" },
   { screen: "weakReview", icon: "🎯", name: "Weak Skill Review", blurb: "Your lowest-accuracy skills", color: "#22b8a3", bg: "#e8fbf7" },
   { screen: "adaptivePractice", icon: "🧭", name: "Adaptive Practice", blurb: "Your weakest question patterns", color: "#c2410c", bg: "#fff1e8" },
   { screen: "reviewQueue", icon: "🧠", name: "Review Queue", blurb: "Spaced repetition, due now", color: "#7c5cff", bg: "#f1eeff" },

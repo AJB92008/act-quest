@@ -501,6 +501,49 @@ export function getAdaptivePracticeQuestions(weakPatterns, count = 10, { getQues
   return weightedSampleWithoutReplacement(pool, count);
 }
 
+// A short, cross-subject placement sample offered at the end of onboarding
+// (or retaken any time from the World Map) so the adaptive systems above
+// have *some* real per-question data to work from on day one, instead of a
+// brand-new player needing to cold-start through real lessons before
+// Weak Skill Review or Adaptive Practice have anything to go on. Prioritizes
+// breadth over depth — as many *distinct* skills as the question count
+// allows, evenly spread across each subject's own easy-to-hard skill order
+// (not clustered at either end) — since one question in each of many
+// skills feeds getWeakPatterns() (which aggregates across skills) far
+// faster than a few questions concentrated in a handful of skills would,
+// even though it only partially seeds getWeakSkills() (which needs 5
+// attempts on the *same* skill): a diagnostic hit still counts toward that
+// count, just not enough on its own, matching how a personal-best test
+// score is a real signal even before enough games have been played to
+// trust it fully. Picks from the middle of each skill's own difficulty
+// curve (heuristic-sorted, since there's no personal history yet) rather
+// than its easiest or hardest end, so a miss reads as a genuine signal
+// instead of "the diagnostic just happened to ask this player's hardest
+// item in that skill."
+export function getDiagnosticQuestions(count = 24) {
+  const perSubject = Math.floor(count / SUBJECTS.length);
+  let remainder = count - perSubject * SUBJECTS.length;
+  const picks = [];
+  for (const subject of SUBJECTS) {
+    const quota = perSubject + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder--;
+    const skills = subject.skills;
+    if (skills.length === 0 || quota === 0) continue;
+    const take = Math.min(quota, skills.length);
+    const step = skills.length / take;
+    for (let i = 0; i < take; i++) {
+      const skill = skills[Math.floor(i * step)];
+      const sorted = getDifficultySortedBank(skill.id, null);
+      if (sorted.length === 0) continue;
+      const midStart = Math.floor(sorted.length * 0.3);
+      const midEnd = Math.max(midStart + 1, Math.floor(sorted.length * 0.7));
+      const q = sorted[midStart + Math.floor(Math.random() * (midEnd - midStart))];
+      picks.push({ ...q, skillId: skill.id, skillName: skill.name, subjectId: subject.id });
+    }
+  }
+  return shuffled(picks);
+}
+
 // Picks a question from the full mixed pool, weighted toward a target
 // difficulty (0 = easiest skills, 1 = hardest), avoiding an immediate
 // back-to-back repeat of the previous question when possible. Weighting
