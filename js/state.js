@@ -195,6 +195,7 @@ function defaultSave() {
 export class GameState {
   constructor() {
     this.data = this._load();
+    this._saveListeners = [];
   }
 
   _load() {
@@ -249,6 +250,17 @@ export class GameState {
 
   save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    this._saveListeners.forEach((cb) => cb(this.data));
+  }
+
+  /** Subscribes to every future save (e.g. so cloudSync.js can debounce a
+   * push without state.js needing to import or know anything about
+   * Firebase). Returns an unsubscribe function. */
+  onSave(cb) {
+    this._saveListeners.push(cb);
+    return () => {
+      this._saveListeners = this._saveListeners.filter((l) => l !== cb);
+    };
   }
 
   reset() {

@@ -3,6 +3,7 @@ import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { renderPacingTag } from "./pacingFeedback.js";
+import { getCloudStatus, onCloudSyncChange, signUp, signIn, signOutCloud, resolveConflict } from "../cloudSync.js";
 
 // A pure-SVG sparkline (no charting library) plotting composite score (1-36,
 // a fixed y-domain so the line's shape is comparable across sessions rather
@@ -168,6 +169,126 @@ function pacingCardHTML() {
   `;
 }
 
+function cloudErrorMessage(err) {
+  const code = err?.code || "";
+  if (code.includes("email-already-in-use")) return `That email already has an account — try "I Already Have One" instead.`;
+  if (code.includes("wrong-password") || code.includes("invalid-credential")) return "Incorrect email or password.";
+  if (code.includes("user-not-found")) return "No account found with that email.";
+  if (code.includes("weak-password")) return "Password is too weak — use at least 6 characters.";
+  if (code.includes("invalid-email")) return "That doesn't look like a valid email address.";
+  return "Something went wrong — please try again.";
+}
+
+function cloudCardInnerHTML() {
+  const status = getCloudStatus();
+  if (!status.ready) {
+    return `<h3 class="dash-history-title">☁️ Cloud Account</h3><p class="lesson-paragraph">Connecting…</p>`;
+  }
+  if (status.conflict) {
+    const date = new Date(status.conflict.remoteUpdatedAt).toLocaleString();
+    return `
+      <h3 class="dash-history-title">☁️ Cloud Account</h3>
+      <p class="lesson-paragraph">Found saved progress in the cloud from <strong>${date}</strong> that's different from what's on this device.</p>
+      <div class="results-actions">
+        <button class="btn-secondary" data-cloud-use-remote>⬇️ Load Cloud Progress</button>
+        <button class="btn-secondary" data-cloud-keep-local>💾 Keep This Device's Progress</button>
+      </div>
+      <p class="backup-status is-error">Choosing one replaces the other — there's no automatic merge.</p>
+    `;
+  }
+  if (status.signedIn) {
+    return `
+      <h3 class="dash-history-title">☁️ Cloud Account</h3>
+      <p class="lesson-paragraph">Signed in as <strong>${status.email}</strong>. Progress syncs automatically — sign in with the same account on another device to pick up where you left off.</p>
+      <button class="btn-secondary" data-cloud-sign-out>Sign Out</button>
+    `;
+  }
+  return `
+    <h3 class="dash-history-title">☁️ Cloud Account</h3>
+    <p class="lesson-paragraph">Progress is already backing up to the cloud automatically for this browser. Create a free account so you can pick up on another device too.</p>
+    <form class="cloud-auth-form" data-cloud-form>
+      <input type="email" name="email" placeholder="Email" required autocomplete="email" />
+      <input type="password" name="password" placeholder="Password (6+ characters)" required minlength="6" autocomplete="new-password" />
+      <div class="results-actions">
+        <button type="submit" class="btn-secondary" data-cloud-action="signUp">Create Account</button>
+        <button type="button" class="btn-secondary" data-cloud-action="signIn">I Already Have One</button>
+      </div>
+    </form>
+    <p class="backup-status" id="cloudAuthStatus" hidden></p>
+  `;
+}
+
+function wireCloudCardEvents(container) {
+  const useRemoteBtn = container.querySelector("[data-cloud-use-remote]");
+  if (useRemoteBtn) {
+    useRemoteBtn.addEventListener("click", () => resolveConflict("useCloud"));
+    container.querySelector("[data-cloud-keep-local]").addEventListener("click", () => resolveConflict("keepLocal"));
+    return;
+  }
+  const signOutBtn = container.querySelector("[data-cloud-sign-out]");
+  if (signOutBtn) {
+    signOutBtn.addEventListener("click", () => {
+      if (confirm("Sign out? This device keeps backing up anonymously, but you'll need to sign in again to reach this account from elsewhere.")) {
+        signOutCloud();
+      }
+    });
+    return;
+  }
+  const form = container.querySelector("[data-cloud-form]");
+  if (!form) return;
+  const status = container.querySelector("#cloudAuthStatus");
+  const runAuth = async (action) => {
+    const email = form.email.value.trim();
+    const password = form.password.value;
+    if (!email || password.length < 6) {
+      status.hidden = false;
+      status.className = "backup-status is-error";
+      status.textContent = "Enter a valid email and a password of at least 6 characters.";
+      return;
+    }
+    status.hidden = false;
+    status.className = "backup-status";
+    status.textContent = "Working…";
+    try {
+      if (action === "signUp") await signUp(email, password);
+      else await signIn(email, password);
+      // onCloudSyncChange fires once auth settles and re-renders this card.
+    } catch (err) {
+      status.className = "backup-status is-error";
+      status.textContent = cloudErrorMessage(err);
+    }
+  };
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    runAuth("signUp");
+  });
+  container.querySelector('[data-cloud-action="signIn"]').addEventListener("click", () => runAuth("signIn"));
+}
+
+// The cloud card's content depends on async auth state that isn't known
+// yet at initial render, so it re-renders itself in place whenever that
+// state changes rather than being folded into renderDashboard's one-shot
+// innerHTML build. Each call to renderDashboard registers a fresh listener
+// bound to that render's own container element; once that element is torn
+// out by a later navigate() (a plain `root.innerHTML = ...` elsewhere,
+// same as every other screen transition in this app), the closure notices
+// via isConnected and unsubscribes itself on its next fire instead of
+// leaking indefinitely.
+function wireCloudCard(root) {
+  const container = root.querySelector("[data-cloud-card]");
+  if (!container) return;
+  const renderCloudCard = () => {
+    if (!container.isConnected) {
+      unsubscribe();
+      return;
+    }
+    container.innerHTML = cloudCardInnerHTML();
+    wireCloudCardEvents(container);
+  };
+  const unsubscribe = onCloudSyncChange(renderCloudCard);
+  renderCloudCard();
+}
+
 export function renderDashboard(root, navigate) {
   const overall = gameState.getOverallStats();
   const levelProgress = gameState.getLevelProgress();
@@ -265,6 +386,7 @@ export function renderDashboard(root, navigate) {
       }
       <div class="dash-rows">${rows}</div>
       ${masteryHeatmapHTML()}
+      <div class="dash-history-card" data-cloud-card></div>
       <div class="dash-history-card">
         <h3 class="dash-history-title">💾 Backup &amp; Transfer</h3>
         <p class="lesson-paragraph">Your progress lives only in this browser. Download a backup now and then, or restore one to carry progress to a new device.</p>
@@ -281,6 +403,7 @@ export function renderDashboard(root, navigate) {
 
   wireHud(root, navigate);
   wireHeatmapTooltip(root);
+  wireCloudCard(root);
   root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
   root.querySelector("[data-achievements]").addEventListener("click", () => navigate("achievements"));
   root.querySelector("[data-study-plan]").addEventListener("click", () => navigate("studyPlan"));

@@ -1,4 +1,5 @@
 import { gameState } from "./state.js";
+import { initCloudSync } from "./cloudSync.js";
 import { renderWorldMap } from "./ui/worldMap.js";
 import { renderIsland } from "./ui/island.js";
 import { renderSkillPath } from "./ui/skillPath.js";
@@ -61,6 +62,8 @@ function navigate(screen, params = {}) {
 }
 
 document.documentElement.dataset.theme = gameState.darkMode ? "dark" : "light";
+
+initCloudSync();
 
 const devTarget = runDevBootstrap(gameState);
 if (devTarget) {
