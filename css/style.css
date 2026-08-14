@@ -1758,6 +1758,7 @@ button.drill-skill-row:hover {
 .swatch {
   width: 34px;
   height: 34px;
+  padding: 0;
   border-radius: 50%;
   border: 3px solid transparent;
   transition: transform 0.15s ease;
@@ -1782,11 +1783,17 @@ button.drill-skill-row:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  padding: 0;
 }
 
 .swatch-rainbow.is-locked:hover {
   transform: none;
+}
+
+.swatch-lock-icon {
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
 }
 
 .toggle-label {

@@ -128,15 +128,20 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
     // Owning colorWheel (a Shop item, see monster.js's SHOP_ITEMS) unlocks
     // a free-pick color input instead of equipping a fixed trait value —
     // shown here as one more swatch, rainbow instead of a solid fill, and
-    // locked (🔒, disabled) the same way itemRow() shows unowned
-    // accessories until it's bought.
+    // locked (disabled) the same way itemRow() shows unowned accessories
+    // until it's bought. Uses an inline SVG rather than a 🔒 emoji glyph —
+    // on systems without a color-emoji font, the emoji falls back to an
+    // unrecognizable monochrome glyph that looked like a stray shape
+    // sitting in the circle instead of a lock, so an SVG guarantees the
+    // same rendering everywhere.
     const colorWheelOwned = gameState.ownsItem("colorWheel");
     const usingCustomColor = colorWheelOwned && !BODY_COLORS.includes(avatar.bodyColor);
+    const lockIcon = `<svg class="swatch-lock-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm0 2a3 3 0 0 1 3 3v3H9V7a3 3 0 0 1 3-3z"/></svg>`;
     const colorWheelSwatch = `<button type="button" class="swatch swatch-rainbow ${usingCustomColor ? "is-selected" : ""} ${
       colorWheelOwned ? "" : "is-locked"
     }" data-color-wheel ${colorWheelOwned ? "" : "disabled"}
       aria-label="${colorWheelOwned ? "Pick a custom color" : "Color Wheel, locked — unlock in the Shop for 500 coins"}"
-      title="${colorWheelOwned ? "Pick any color" : "Unlock in the Shop for 500 coins"}">${colorWheelOwned ? "" : "🔒"}</button>`;
+      title="${colorWheelOwned ? "Pick any color" : "Unlock in the Shop for 500 coins"}">${colorWheelOwned ? "" : lockIcon}</button>`;
 
     const shapeButtons = BODY_SHAPES.map((s) => traitButton(avatar.bodyShape === s.id, s.name, "shape", s.id)).join("");
     const limbButtons = LIMB_OPTIONS.map((l) => traitButton(avatar.limbs === l.id, l.name, "limbs", l.id)).join("");
