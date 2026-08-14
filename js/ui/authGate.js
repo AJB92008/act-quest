@@ -10,12 +10,12 @@ import { getCloudStatus, onCloudSyncChange, signUp, signIn, resolveConflict } fr
 // Cloud Account card either way.
 function cloudErrorMessage(err) {
   const code = err?.code || "";
-  if (code.includes("email-already-in-use")) return `That email already has an account — try "I Already Have One" instead.`;
+  if (code.includes("email-already-in-use")) return `That email already has an account. Try "I Already Have One" instead.`;
   if (code.includes("wrong-password") || code.includes("invalid-credential")) return "Incorrect email or password.";
   if (code.includes("user-not-found")) return "No account found with that email.";
-  if (code.includes("weak-password")) return "Password is too weak — use at least 6 characters.";
+  if (code.includes("weak-password")) return "Password is too weak. Use at least 6 characters.";
   if (code.includes("invalid-email")) return "That doesn't look like a valid email address.";
-  return "Something went wrong — please try again.";
+  return "Something went wrong. Please try again.";
 }
 
 function nextScreenAfterGate(navigate) {
@@ -37,11 +37,11 @@ export function renderAuthGate(root, navigate) {
           <button class="btn-secondary" data-cloud-use-remote>⬇️ Load That Progress</button>
           <button class="btn-secondary" data-cloud-keep-local>💾 Keep This Device's Progress</button>
         </div>
-        <p class="backup-status is-error">Choosing one replaces the other — there's no automatic merge.</p>
+        <p class="backup-status is-error">Choosing one replaces the other. There's no automatic merge.</p>
       `;
     }
     if (status.signedIn) {
-      return `<p class="lesson-paragraph">Signed in as <strong>${status.email}</strong> — ${status.syncing ? "syncing your progress…" : "continuing…"}</p>`;
+      return `<p class="lesson-paragraph">Signed in as <strong>${status.email}</strong>. ${status.syncing ? "Syncing your progress…" : "Continuing…"}</p>`;
     }
     return `
       <form class="cloud-auth-form" data-gate-form>
@@ -116,7 +116,7 @@ export function renderAuthGate(root, navigate) {
   root.innerHTML = `
     <main class="screen avatar-screen auth-gate-screen">
       <h1>Welcome to Acto's ACT Quest!</h1>
-      <p class="avatar-subtitle">Create a free account so your monster and progress can follow you to any device — or skip for now and play as a guest.</p>
+      <p class="avatar-subtitle">Create a free account so your monster and progress can follow you to any device, or skip for now and play as a guest.</p>
       <div class="dash-history-card auth-gate-card" data-gate-card></div>
     </main>
   `;

@@ -85,7 +85,7 @@ export function renderReviewQueue(root, navigate) {
           </div>
           ${
             dueKeys.length === 0 && dueWords.length === 0
-              ? `<p class="lesson-paragraph">Nothing's due right now — answer questions in lessons or review vocab flashcards, and anything you miss will show up here on a schedule.</p>
+              ? `<p class="lesson-paragraph">Nothing's due right now. Answer questions in lessons or review vocab flashcards, and anything you miss will show up here on a schedule.</p>
                  <button class="btn-secondary lesson-start-btn" data-back-2>Back to Map</button>`
               : `
                 <div class="results-actions">
@@ -285,7 +285,7 @@ export function renderReviewQueue(root, navigate) {
           <h1>Review Complete!</h1>
           ${questionsDone && questionQueue.length > 0 ? `<p class="results-score">${correctCount} / ${questionQueue.length} questions correct</p>` : ""}
           ${vocabDone && vocabQueue.length > 0 ? `<p class="results-score">${vocabGotItCount} / ${vocabQueue.length} vocab words remembered</p>` : ""}
-          <p class="results-flag">🧠 Spaced repetition keeps this fresh — you'll see the tricky ones again soon.</p>
+          <p class="results-flag">🧠 Spaced repetition keeps this fresh. You'll see the tricky ones again soon.</p>
           ${renderProgressBanners(levelResult)}
           <div class="results-stats">
             <span>⭐ +${starsEarned} stars</span>

@@ -110,7 +110,7 @@ export function renderWeakReview(root, navigate) {
           }</p>
           ${
             weakSkills.length === 0
-              ? `<p class="lesson-paragraph">You haven't attempted any questions yet — complete a mini-lesson first, then come back here for a warm-up or a full weak-spot review.</p>`
+              ? `<p class="lesson-paragraph">You haven't attempted any questions yet. Complete a mini-lesson first, then come back here for a warm-up or a full weak-spot review.</p>`
               : `
                 <p class="lesson-paragraph">${isPreview ? "Skills you've touched so far:" : "Right now that's mostly:"}</p>
                 <ul class="weak-skill-list">${skillRows}</ul>

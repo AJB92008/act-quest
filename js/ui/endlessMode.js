@@ -107,7 +107,7 @@ export function renderEndlessMode(root, navigate) {
           <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <h1 class="lesson-title">🔁 Endless Mode</h1>
           <p class="lesson-blurb">Mixed questions from every subject, one after another, getting harder the longer you last.</p>
-          <p class="lesson-paragraph">Every question can come from any skill on any island, starting easy and ramping up in difficulty as you go. You get ${MAX_LIVES} lives (❤️❤️❤️) — a wrong or timed-out answer costs one, and the run ends when you're out. Answer in a row for a combo bonus on stars and coins.</p>
+          <p class="lesson-paragraph">Every question can come from any skill on any island, starting easy and ramping up in difficulty as you go. You get ${MAX_LIVES} lives (❤️❤️❤️): a wrong or timed-out answer costs one, and the run ends when you're out. Answer in a row for a combo bonus on stars and coins.</p>
           <p class="lesson-paragraph">Your score is how many questions you get right in a single run. Your best run ever is saved below.</p>
           <div class="endless-best-tile">
             <span class="endless-best-num">${gameState.endlessBest}</span>

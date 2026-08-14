@@ -222,8 +222,8 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
             ${
               onboarding
                 ? ""
-                : `<p class="avatar-evolution-note">🌟 Shown at its current <strong>${gameState.getEvolutionStageName()} form</strong> — the same shape you pick below keeps growing more elaborate as you master more skills.</p>
-                   <p class="avatar-evolution-note">📏 Size grows automatically with level — currently <strong>Level ${gameState.level}</strong>. There's no manual size pick anymore; keep earning stars to grow bigger.</p>`
+                : `<p class="avatar-evolution-note">🌟 Shown at its current <strong>${gameState.getEvolutionStageName()} form</strong>. The same shape you pick below keeps growing more elaborate as you master more skills.</p>
+                   <p class="avatar-evolution-note">📏 Size grows automatically with level, currently <strong>Level ${gameState.level}</strong>. There's no manual size pick anymore; keep earning stars to grow bigger.</p>`
             }
             <div class="avatar-fun-actions">
               <button class="btn-secondary" data-randomize>🎲 Surprise Me!</button>

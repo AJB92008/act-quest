@@ -99,7 +99,7 @@ function buildBodyHTML() {
   const jumpButtons = JUMPS.map((j, i) => `<button class="dev-btn" data-jump="${i}">${j.label}</button>`).join("");
 
   return `
-    <p class="dev-mode-subtitle">Drag the header to move this panel around. Everything below edits your save directly — for testing, not gameplay.</p>
+    <p class="dev-mode-subtitle">Drag the header to move this panel around. Everything below edits your save directly, for testing, not gameplay.</p>
     ${summaryHTML}
 
     <h3>Currency &amp; XP</h3>

@@ -41,7 +41,7 @@ function openPrintableFlashcards(data) {
     <html>
       <head>
         <meta charset="utf-8" />
-        <title>${escapeHtml(data.title)} — Flashcards</title>
+        <title>${escapeHtml(data.title)}: Flashcards</title>
         <style>
           body { font-family: Georgia, serif; max-width: 720px; margin: 24px auto; padding: 0 16px; }
           h1 { font-family: sans-serif; }
@@ -53,7 +53,7 @@ function openPrintableFlashcards(data) {
       </head>
       <body>
         <h1>${escapeHtml(data.title)}</h1>
-        <p class="hint">${cards.length} flashcards — use your browser's Print (Cmd/Ctrl+P) to print or save as PDF.</p>
+        <p class="hint">${cards.length} flashcards. Use your browser's Print (Cmd/Ctrl+P) to print or save as PDF.</p>
         ${rows}
       </body>
     </html>

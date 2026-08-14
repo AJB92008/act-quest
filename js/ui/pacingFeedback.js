@@ -16,10 +16,10 @@ export function renderPacingTag(pacing) {
     verdict = "faster than the real ACT's pace, with room to slow down and double-check";
     cls = "pace-good";
   } else {
-    verdict = "slower than the real ACT's pace — worth practicing faster recognition";
+    verdict = "slower than the real ACT's pace, so it's worth practicing faster recognition";
     cls = "pace-warn";
   }
   return `
-    <p class="pacing-tag ${cls}">⏱️ Averaging ${pacing.avgSeconds.toFixed(1)}s/question vs. the real ACT's ~${pacing.budgetSeconds}s/question budget — ${verdict}.</p>
+    <p class="pacing-tag ${cls}">⏱️ Averaging ${pacing.avgSeconds.toFixed(1)}s/question vs. the real ACT's ~${pacing.budgetSeconds}s/question budget. You're ${verdict}.</p>
   `;
 }

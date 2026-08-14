@@ -38,9 +38,9 @@ export function renderStudyPlan(root, navigate) {
         <h1>📅 Study Plan</h1>
 
         <div class="dash-predictor-card">
-          <div class="dash-predictor-score">${testDate ? (daysUntilTest === 0 ? "🎉" : daysUntilTest) : "—"}</div>
+          <div class="dash-predictor-score">${testDate ? (daysUntilTest === 0 ? "🎉" : daysUntilTest) : "?"}</div>
           <div class="dash-predictor-info">
-            <strong>${testDate ? (daysUntilTest === 0 ? "Test day is today — good luck!" : `${daysUntilTest} day${daysUntilTest === 1 ? "" : "s"} until your test`) : "No test date set"}</strong>
+            <strong>${testDate ? (daysUntilTest === 0 ? "Test day is today. Good luck!" : `${daysUntilTest} day${daysUntilTest === 1 ? "" : "s"} until your test`) : "No test date set"}</strong>
             <p class="dash-monster-substat">${testDate ? formatDate(testDate) : "Set a test date below to see a personalized daily plan."}</p>
           </div>
         </div>
@@ -53,7 +53,7 @@ export function renderStudyPlan(root, navigate) {
               <input type="date" id="testDateInput" value="${testDate || ""}" />
             </label>
             <label class="study-plan-field">
-              <span>Target composite score (1–36)</span>
+              <span>Target composite score (1-36)</span>
               <input type="number" id="targetScoreInput" min="1" max="36" value="${targetScore ?? ""}" />
             </label>
             <button type="submit" class="btn-primary">Save</button>
@@ -65,13 +65,13 @@ export function renderStudyPlan(root, navigate) {
             ? `
               <div class="dash-history-card">
                 <h3 class="dash-history-title">📊 The Plan</h3>
-                <p class="lesson-paragraph">${unmastered.length} of ${allSkillIds().length} skills still unmastered. At ${daysUntilTest > 0 ? `${daysUntilTest} day${daysUntilTest === 1 ? "" : "s"} left` : "your test today"}, that's about <strong>${skillsPerDay ?? "—"} skill${skillsPerDay === 1 ? "" : "s"} a day</strong> to master everything before test day.</p>
+                <p class="lesson-paragraph">${unmastered.length} of ${allSkillIds().length} skills still unmastered. At ${daysUntilTest > 0 ? `${daysUntilTest} day${daysUntilTest === 1 ? "" : "s"} left` : "your test today"}, that's about <strong>${skillsPerDay ?? "?"} skill${skillsPerDay === 1 ? "" : "s"} a day</strong> to master everything before test day.</p>
                 ${
                   targetScore && predicted.score !== null
                     ? `<p class="lesson-paragraph">Your predicted score is <strong>${predicted.score}</strong>, and you're aiming for <strong>${targetScore}</strong>${
                         predicted.score >= targetScore
-                          ? " — you're already there! Keep practicing to hold steady."
-                          : ` — a ${targetScore - predicted.score}-point gap. Finishing more skills helps, but consistent full-length practice tests are the best way to actually move this number.`
+                          ? ". You're already there! Keep practicing to hold steady."
+                          : `. That's a ${targetScore - predicted.score}-point gap. Finishing more skills helps, but consistent full-length practice tests are the best way to actually move this number.`
                       }</p>`
                     : ""
                 }
@@ -80,7 +80,7 @@ export function renderStudyPlan(root, navigate) {
                 <h3 class="dash-history-title">🎯 Today's Focus</h3>
                 ${
                   todaysFocus.length === 0
-                    ? `<p class="lesson-paragraph">Every skill is mastered — nice work! Keep sharp with the Review Queue or a Practice Test.</p>`
+                    ? `<p class="lesson-paragraph">Every skill is mastered. Nice work! Keep sharp with the Review Queue or a Practice Test.</p>`
                     : `<div class="drill-skill-list">${todaysFocus
                         .map((s) => {
                           const { subject, skill } = getSkill(s.id);

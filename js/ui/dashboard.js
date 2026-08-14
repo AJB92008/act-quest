@@ -41,7 +41,7 @@ function masteryHeatmapHTML() {
         const started = p.attempts > 0;
         const cls = p.mastered ? "is-mastered" : started ? "is-started" : "is-untouched";
         const detail = p.mastered ? "mastered" : started ? `${Math.round((p.correct / p.attempts) * 100)}% accuracy` : "not started";
-        return `<span class="heatmap-cell ${cls}" style="--cell-color:${subject.color}" data-tip="${skill.name} — ${detail}" aria-label="${skill.name}: ${detail}"></span>`;
+        return `<span class="heatmap-cell ${cls}" style="--cell-color:${subject.color}" data-tip="${skill.name}: ${detail}" aria-label="${skill.name}: ${detail}"></span>`;
       })
       .join("");
     return `
@@ -75,9 +75,9 @@ function streakCalendarHTML() {
     streak.current > 0
       ? nextMilestone
         ? `${nextMilestone - streak.current} more day${nextMilestone - streak.current === 1 ? "" : "s"} to a ${nextMilestone}-day streak`
-        : "Longest streak yet — keep it going!"
+        : "Longest streak yet. Keep it going!"
       : streak.best > 0
-      ? `Your best is ${streak.best} day${streak.best === 1 ? "" : "s"} — study today to start a new one`
+      ? `Your best is ${streak.best} day${streak.best === 1 ? "" : "s"}. Study today to start a new one`
       : "Complete a lesson today to start your streak";
 
   return `
@@ -115,7 +115,7 @@ function studyPlanCardHTML() {
   const { testDate } = gameState.getStudyPlanSettings();
   return `
     <div class="dash-predictor-card">
-      <div class="dash-predictor-score">${days === null ? "—" : days}</div>
+      <div class="dash-predictor-score">${days === null ? "?" : days}</div>
       <div class="dash-predictor-info">
         <strong>${days === null ? "Study Plan" : days === 0 ? "Test day is today!" : "Days Until Test"}</strong>
         <p class="dash-monster-substat">${testDate ? `Test date: ${testDate}` : "Set a test date for a personalized daily study plan."}</p>
@@ -171,12 +171,12 @@ function pacingCardHTML() {
 
 function cloudErrorMessage(err) {
   const code = err?.code || "";
-  if (code.includes("email-already-in-use")) return `That email already has an account — try "I Already Have One" instead.`;
+  if (code.includes("email-already-in-use")) return `That email already has an account. Try "I Already Have One" instead.`;
   if (code.includes("wrong-password") || code.includes("invalid-credential")) return "Incorrect email or password.";
   if (code.includes("user-not-found")) return "No account found with that email.";
-  if (code.includes("weak-password")) return "Password is too weak — use at least 6 characters.";
+  if (code.includes("weak-password")) return "Password is too weak. Use at least 6 characters.";
   if (code.includes("invalid-email")) return "That doesn't look like a valid email address.";
-  return "Something went wrong — please try again.";
+  return "Something went wrong. Please try again.";
 }
 
 function cloudCardInnerHTML() {
@@ -193,13 +193,13 @@ function cloudCardInnerHTML() {
         <button class="btn-secondary" data-cloud-use-remote>⬇️ Load Cloud Progress</button>
         <button class="btn-secondary" data-cloud-keep-local>💾 Keep This Device's Progress</button>
       </div>
-      <p class="backup-status is-error">Choosing one replaces the other — there's no automatic merge.</p>
+      <p class="backup-status is-error">Choosing one replaces the other. There's no automatic merge.</p>
     `;
   }
   if (status.signedIn) {
     return `
       <h3 class="dash-history-title">☁️ Cloud Account</h3>
-      <p class="lesson-paragraph">Signed in as <strong>${status.email}</strong>. Progress syncs automatically — sign in with the same account on another device to pick up where you left off.</p>
+      <p class="lesson-paragraph">Signed in as <strong>${status.email}</strong>. Progress syncs automatically. Sign in with the same account on another device to pick up where you left off.</p>
       <button class="btn-secondary" data-cloud-sign-out>Sign Out</button>
     `;
   }
@@ -327,7 +327,7 @@ export function renderDashboard(root, navigate) {
         <div class="dash-monster-preview">${monsterSVG(gameState.getDisplayAvatar(), { size: 86 })}</div>
         <div class="dash-monster-info">
           <div class="dash-monster-headline">Level ${levelProgress.level} · ${evolutionStageName} · ${masteryPct}% mastery</div>
-          <p class="dash-monster-substat dash-monster-caption">Size grows with level, look evolves with mastery — two separate tracks.</p>
+          <p class="dash-monster-substat dash-monster-caption">Size grows with level, look evolves with mastery: two separate tracks.</p>
           <div class="dash-monster-row">
             <span class="dash-monster-substat">${Math.round(levelProgress.pct * 100)}% to Level ${levelProgress.level + 1}</span>
           </div>
@@ -343,7 +343,7 @@ export function renderDashboard(root, navigate) {
               ? "Answer more questions in your lessons to see a rough estimate here."
               : predicted.source === "practiceTest"
               ? "Based on your most recent full-length practice test."
-              : "A rough estimate from your lesson accuracy — take a full-length practice test for a stronger read."
+              : "A rough estimate from your lesson accuracy. Take a full-length practice test for a stronger read."
           }</p>
         </div>
         <button class="btn-secondary" data-practice-test>📝 Practice Test</button>
