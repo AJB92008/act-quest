@@ -311,6 +311,9 @@ function bodyShapeMarkup(shape, color, colorDark, stage = 0, sizeScale = 1) {
         tailScale: 0.85,
       };
     }
+    // "serpent" was removed from BODY_SHAPES (no longer pickable in the
+    // avatar creator), but this case stays so any existing save with
+    // bodyShape: "serpent" already set keeps rendering correctly.
     case "serpent": {
       let decor = "";
       if (stage >= 1) decor += spike(46, 13, 4, 12, accent, outline) + spike(20, 65, 3.5, 10, accent, outline);
@@ -611,7 +614,6 @@ export const BODY_SHAPES = [
   { id: "insect", name: "Insect" },
   { id: "reptile", name: "Reptile" },
   { id: "amorphous", name: "Amorphous" },
-  { id: "serpent", name: "Serpent" },
   { id: "arachnid", name: "Arachnid" },
   { id: "avian", name: "Avian" },
   { id: "aquatic", name: "Aquatic" },
@@ -1333,6 +1335,11 @@ export const SHOP_ITEMS = [
   { id: "burnMarks", name: "Burn Marks", category: "scar", cost: 25 },
   { id: "clawMarks", name: "Claw Marks", category: "scar", cost: 20 },
   { id: "bandageWrap", name: "Bandage Wrap", category: "scar", cost: 20 },
+  // Color (1) — unlike every other category, this doesn't equip a fixed
+  // trait value; owning it unlocks a free-pick color input in the avatar
+  // creator's color row instead. shop.js special-cases this category so
+  // purchasing it doesn't try to set a nonexistent avatar.color field.
+  { id: "colorWheel", name: "Color Wheel", category: "color", cost: 500, description: "Unlocks a full color wheel, so you can pick any color instead of just the swatches." },
 ];
 
 export const CATEGORIES = [
@@ -1343,6 +1350,7 @@ export const CATEGORIES = [
   { id: "skin", name: "Skin" },
   { id: "outfit", name: "Outfit" },
   { id: "scar", name: "Scars" },
+  { id: "color", name: "Color" },
 ];
 
 export function itemsByCategory(category) {

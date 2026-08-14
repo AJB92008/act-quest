@@ -26,7 +26,6 @@ const SHAPE_FLAVOR = {
   insect: "Skittery, many-legged, and a little bit spooky.",
   reptile: "Scaly and sly, with a snout built for mischief.",
   amorphous: "A wobbly blob with a mind of its own.",
-  serpent: "Long, sinuous, and impossible to pin down.",
   arachnid: "Eight-legged, quick, and just a little unsettling.",
   avian: "Feathered, alert, and always ready to take flight.",
   aquatic: "Sleek, finned, and built for the deep end.",
@@ -125,6 +124,18 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
       (c) =>
         `<button class="swatch ${avatar.bodyColor === c ? "is-selected" : ""}" data-color="${c}" style="background:${c}" aria-label="${BODY_COLOR_NAMES[c] || c}" aria-pressed="${avatar.bodyColor === c}"></button>`
     ).join("");
+    // Owning colorWheel (a Shop item, see monster.js's SHOP_ITEMS) unlocks
+    // a free-pick color input instead of equipping a fixed trait value —
+    // shown here as one more swatch, rainbow instead of a solid fill, and
+    // locked (🔒, disabled) the same way itemRow() shows unowned
+    // accessories until it's bought.
+    const colorWheelOwned = gameState.ownsItem("colorWheel");
+    const usingCustomColor = colorWheelOwned && !BODY_COLORS.includes(avatar.bodyColor);
+    const colorWheelSwatch = `<button type="button" class="swatch swatch-rainbow ${usingCustomColor ? "is-selected" : ""} ${
+      colorWheelOwned ? "" : "is-locked"
+    }" data-color-wheel ${colorWheelOwned ? "" : "disabled"}
+      aria-label="${colorWheelOwned ? "Pick a custom color" : "Color Wheel, locked — unlock in the Shop for 500 coins"}"
+      title="${colorWheelOwned ? "Pick any color" : "Unlock in the Shop for 500 coins"}">${colorWheelOwned ? "" : "🔒"}</button>`;
 
     const shapeButtons = BODY_SHAPES.map((s) => traitButton(avatar.bodyShape === s.id, s.name, "shape", s.id)).join("");
     const limbButtons = LIMB_OPTIONS.map((l) => traitButton(avatar.limbs === l.id, l.name, "limbs", l.id)).join("");
@@ -139,7 +150,8 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
     const bodyPane = `
       <div class="control-group">
         <h4>Color</h4>
-        <div class="swatch-row">${colorSwatches}</div>
+        <div class="swatch-row">${colorSwatches}${colorWheelSwatch}</div>
+        <input type="color" id="bodyColorWheelInput" value="${avatar.bodyColor}" hidden />
       </div>
       <div class="control-group">
         <h4>Body Shape</h4>
@@ -273,6 +285,17 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
         render();
       });
     });
+
+    const colorWheelBtn = root.querySelector("[data-color-wheel]");
+    const colorWheelInput = root.querySelector("#bodyColorWheelInput");
+    if (colorWheelBtn && !colorWheelBtn.disabled && colorWheelInput) {
+      colorWheelBtn.addEventListener("click", () => colorWheelInput.click());
+      colorWheelInput.addEventListener("input", () => {
+        gameState.setAvatar({ bodyColor: colorWheelInput.value });
+        quip = "";
+        render();
+      });
+    }
 
     root.querySelectorAll("[data-shape]").forEach((btn) => {
       btn.addEventListener("click", () => {

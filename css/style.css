@@ -1751,6 +1751,23 @@ button.drill-skill-row:hover {
   transform: scale(1.1);
 }
 
+.swatch-rainbow {
+  background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+}
+
+.swatch-rainbow.is-locked {
+  filter: grayscale(75%) brightness(0.9);
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.swatch-rainbow.is-locked:hover {
+  transform: none;
+}
+
 .toggle-label {
   display: flex;
   align-items: center;
@@ -1827,6 +1844,12 @@ button.drill-skill-row:hover {
   font-weight: 800;
   color: #d9741c;
   margin: 2px 0 12px;
+}
+
+.shop-item-description {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 2px 0 8px;
 }
 
 /* ---------- dashboard ---------- */
