@@ -85,3 +85,82 @@ test("a question needs at least 2 personal attempts before overriding the skill-
   // is intentionally under the confidence threshold.)
   assertTrue(stat.attempts < 2);
 });
+
+// --- calibrated (self-recalibrating) lesson difficulty ordering ---
+
+test("getLessonQuestions without a getQuestionStat callback behaves exactly as before (pure text heuristic)", async () => {
+  await preloadSubjectForSkill("ma-linear");
+  const qs = getLessonQuestions("ma-linear", 0);
+  assertEqual(qs.length, 5);
+});
+
+test("a question the player has consistently missed moves out of lesson 1 once it has enough personal attempts", async () => {
+  await preloadSubjectForSkill("ma-linear");
+  const gs = new GameState();
+  const getQuestionStat = (skillId, bankIndex) => gs.getQuestionStat(skillId, bankIndex);
+
+  // Pick a question the pure heuristic currently ranks among the easiest
+  // (i.e. it's actually in lesson 1) rather than hardcoding a bankIndex,
+  // so this test doesn't silently stop meaning anything if the bank changes.
+  const lesson1Before = getLessonQuestions("ma-linear", 0, { getQuestionStat });
+  const target = lesson1Before[0].bankIndex;
+
+  // Enough wrong attempts to cross MIN_ATTEMPTS_FOR_CALIBRATION.
+  for (let i = 0; i < 4; i++) gs.recordQuestionAnswer("ma-linear", target, false);
+
+  const lesson1After = getLessonQuestions("ma-linear", 0, { getQuestionStat });
+  assertTrue(
+    !lesson1After.some((q) => q.bankIndex === target),
+    `expected bankIndex ${target} to have moved out of lesson 1 after repeated misses, but it's still there`
+  );
+});
+
+test("a question the player has consistently aced can move INTO lesson 1 even if the heuristic thought it was hard", async () => {
+  await preloadSubjectForSkill("ma-linear");
+  const gs = new GameState();
+  const getQuestionStat = (skillId, bankIndex) => gs.getQuestionStat(skillId, bankIndex);
+
+  // The last lesson holds the heuristic's "hardest" questions; pick one and
+  // give it a flawless personal record.
+  const lastLessonIndex = Math.ceil(100 / 5) - 1; // ma-linear has no bonus lessons -> 20 lessons
+  const target = getLessonQuestions("ma-linear", lastLessonIndex, { getQuestionStat })[0].bankIndex;
+  for (let i = 0; i < 4; i++) gs.recordQuestionAnswer("ma-linear", target, true);
+
+  const lesson1After = getLessonQuestions("ma-linear", 0, { getQuestionStat });
+  assertTrue(
+    lesson1After.some((q) => q.bankIndex === target),
+    `expected consistently-aced bankIndex ${target} to have moved into lesson 1`
+  );
+});
+
+test("fewer than 3 personal attempts doesn't move a question out of lesson 1 yet", async () => {
+  await preloadSubjectForSkill("ma-linear");
+  const gs = new GameState();
+  const getQuestionStat = (skillId, bankIndex) => gs.getQuestionStat(skillId, bankIndex);
+
+  const lesson1Before = getLessonQuestions("ma-linear", 0, { getQuestionStat });
+  const target = lesson1Before[0].bankIndex;
+  gs.recordQuestionAnswer("ma-linear", target, false);
+  gs.recordQuestionAnswer("ma-linear", target, false);
+
+  const lesson1After = getLessonQuestions("ma-linear", 0, { getQuestionStat });
+  assertTrue(
+    lesson1After.some((q) => q.bankIndex === target),
+    "expected the question to still be in lesson 1 with only 2 personal attempts recorded"
+  );
+});
+
+test("recalibration is stable between answers (same signature -> same order) but updates once new attempts land", async () => {
+  await preloadSubjectForSkill("ma-linear");
+  const gs = new GameState();
+  const getQuestionStat = (skillId, bankIndex) => gs.getQuestionStat(skillId, bankIndex);
+
+  const a = getLessonQuestions("ma-linear", 0, { getQuestionStat }).map((q) => q.bankIndex);
+  const b = getLessonQuestions("ma-linear", 0, { getQuestionStat }).map((q) => q.bankIndex);
+  assertEqual(JSON.stringify(a.slice().sort()), JSON.stringify(b.slice().sort()));
+
+  const target = a[0];
+  for (let i = 0; i < 4; i++) gs.recordQuestionAnswer("ma-linear", target, false);
+  const c = getLessonQuestions("ma-linear", 0, { getQuestionStat }).map((q) => q.bankIndex);
+  assertTrue(JSON.stringify(a.slice().sort()) !== JSON.stringify(c.slice().sort()), "expected lesson 1's contents to change after new calibrating data");
+});

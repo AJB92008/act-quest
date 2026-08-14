@@ -23,7 +23,9 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
   preloadSubjectForSkill(skillId).then(() => startQuiz());
 
   function startQuiz() {
-  const questions = getLessonQuestions(skillId, lessonIndex);
+  const questions = getLessonQuestions(skillId, lessonIndex, {
+    getQuestionStat: (sId, bankIndex) => gameState.getQuestionStat(sId, bankIndex),
+  });
   const totalLessons = getLessonCount(skillId);
 
   let idx = 0;

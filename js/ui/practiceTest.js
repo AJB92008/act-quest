@@ -1,18 +1,23 @@
 // Full-length practice test: all four ACT sections back-to-back (English,
-// Math, Reading, Science — the real ACT's order), each with its own
+// Math, Reading, Science, the real ACT's order), each with its own
 // countdown timer and no per-question feedback, matching real test-day
 // pacing rather than the immediate-feedback style of every other quiz
 // screen here. A short break screen separates sections. The final score is
 // a 1-36 composite averaged from each section's own estimate, which then
 // becomes the dashboard's score predictor going forward.
-import { getSubject } from "../data/skills.js";
-import { getBossQuizQuestions, preloadAllSubjects } from "../data/questions/index.js";
+import { getSubject, REPORTING_CATEGORIES } from "../data/skills.js";
+import { getPracticeTestSectionQuestions, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState, scaledScoreFromRaw } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderProgressBanners } from "./progressBanner.js";
+
+// Real proctors call out these thresholds; the timer picks up a warning
+// style at the same points instead of ticking down identically the whole way.
+const TIME_WARNING_SECONDS = 5 * 60;
+const TIME_CRITICAL_SECONDS = 60;
 
 // Real ACT section order, question counts, and official time limits — this
 // is genuinely full-length (215 questions, 2h55m total across the four
@@ -65,7 +70,7 @@ export function renderPracticeTest(root, navigate) {
     const best = gameState.practiceTestBest;
     const rows = SECTIONS.map((s) => {
       const subject = getSubject(s.subjectId);
-      return `<li>${subject.icon} <strong>${subject.name}</strong> &mdash; ${s.questionCount} questions, ${s.timeMinutes} min</li>`;
+      return `<li>${subject.icon} <strong>${subject.name}</strong>: ${s.questionCount} questions, ${s.timeMinutes} min</li>`;
     }).join("");
 
     root.innerHTML = `
@@ -75,10 +80,10 @@ export function renderPracticeTest(root, navigate) {
         <div class="lesson-card">
           <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <h1 class="lesson-title">📝 Full-Length Practice Test</h1>
-          <p class="lesson-blurb">All four ACT sections back-to-back, each on its own countdown &mdash; no answer feedback until the very end, just like test day.</p>
+          <p class="lesson-blurb">All four ACT sections back-to-back, each on its own countdown. No answer feedback until the very end, just like test day.</p>
           <ul class="practice-test-sections">${rows}</ul>
-          <p class="lesson-paragraph">⏱️ ${TOTAL_MINUTES} minutes of testing time total (${Math.floor(TOTAL_MINUTES / 60)}h ${TOTAL_MINUTES % 60}m) &mdash; this is the real, full-length test, not a shortened sample. You'll get an untimed break between sections and can start the next one whenever you're ready.</p>
-          <p class="lesson-paragraph">Your score is a composite (1-36) averaged across all four sections' own scaled scores, the same way the real ACT computes it, and it becomes your new predicted score on the Progress page.</p>
+          <p class="lesson-paragraph">⏱️ ${TOTAL_MINUTES} minutes of testing time total (${Math.floor(TOTAL_MINUTES / 60)}h ${TOTAL_MINUTES % 60}m). This is the real, full-length test, not a shortened sample. You'll get an untimed break between sections and can start the next one whenever you're ready.</p>
+          <p class="lesson-paragraph">Each section is sampled to match the real ACT's own reporting-category proportions, not just drawn evenly across skills. Your score is a composite (1-36) averaged across all four sections' own scaled scores, the same way the real ACT computes it, and it becomes your new predicted score on the Progress page.</p>
           ${
             best > 0
               ? `<div class="endless-best-tile"><span class="endless-best-num">${best}</span><span>Best Composite</span></div>`
@@ -103,7 +108,7 @@ export function renderPracticeTest(root, navigate) {
 
   function startSection() {
     const section = SECTIONS[sectionIndex];
-    questions = getBossQuizQuestions(section.subjectId, section.questionCount);
+    questions = getPracticeTestSectionQuestions(section.subjectId, section.questionCount);
     idx = 0;
     sectionAnswers = new Array(questions.length).fill(null);
     timeLeft = section.timeMinutes * 60;
@@ -115,7 +120,14 @@ export function renderPracticeTest(root, navigate) {
     timerInterval = setInterval(() => {
       timeLeft = Math.max(0, timeLeft - 1);
       const el = root.querySelector("#sectionTimer");
-      if (el) el.textContent = formatTime(timeLeft);
+      if (el) {
+        el.textContent = formatTime(timeLeft);
+        // Real proctors call out a 5-minute and a 1-minute warning; the
+        // timer picks up the same two-stage urgency instead of looking
+        // identical from 45:00 down to 0:00.
+        el.classList.toggle("is-time-warning", timeLeft <= TIME_WARNING_SECONDS && timeLeft > TIME_CRITICAL_SECONDS);
+        el.classList.toggle("is-time-critical", timeLeft <= TIME_CRITICAL_SECONDS);
+      }
       if (timeLeft <= 0) {
         stopTimer();
         endSection();
@@ -208,6 +220,11 @@ export function renderPracticeTest(root, navigate) {
     const section = SECTIONS[sectionIndex];
     const subject = getSubject(section.subjectId);
     let correctCount = 0;
+    // categoryId -> { name, correct, total }, mirroring how a real ACT
+    // score report breaks a section down by reporting category rather
+    // than just giving one raw section score.
+    const categoryTotals = {};
+    const categories = REPORTING_CATEGORIES[section.subjectId] || [];
     questions.forEach((q, i) => {
       const correct = sectionAnswers[i] === q.answer;
       if (correct) correctCount++;
@@ -215,10 +232,23 @@ export function renderPracticeTest(root, navigate) {
       // attempted, so they shouldn't count as a personal "miss" for the
       // adaptive review weighting.
       if (sectionAnswers[i] !== null) gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
+      const catDef = categories.find((c) => c.id === q.reportingCategory);
+      if (!catDef) return;
+      const entry = categoryTotals[catDef.id] || { name: catDef.name, correct: 0, total: 0 };
+      entry.total += 1;
+      if (correct) entry.correct += 1;
+      categoryTotals[catDef.id] = entry;
     });
     const totalCount = questions.length;
     const subscore = scaledScoreFromRaw(section.subjectId, correctCount);
-    sectionResults.push({ subjectId: section.subjectId, label: subject.name, correctCount, totalCount, subscore });
+    sectionResults.push({
+      subjectId: section.subjectId,
+      label: subject.name,
+      correctCount,
+      totalCount,
+      subscore,
+      categoryBreakdown: Object.values(categoryTotals),
+    });
 
     if (sectionIndex + 1 < SECTIONS.length) renderSectionBreak();
     else showResults();
@@ -237,7 +267,7 @@ export function renderPracticeTest(root, navigate) {
           <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <h1 class="lesson-title">✅ ${finishedSubject.name} Section Complete</h1>
           <p class="lesson-blurb">${justFinished.correctCount} / ${justFinished.totalCount} correct.</p>
-          <p class="lesson-paragraph">Next up: ${nextSubject.icon} <strong>${nextSubject.name}</strong> &mdash; ${nextSection.questionCount} questions, ${nextSection.timeMinutes} minutes. Take a breath, then start whenever you're ready.</p>
+          <p class="lesson-paragraph">Next up: ${nextSubject.icon} <strong>${nextSubject.name}</strong>: ${nextSection.questionCount} questions, ${nextSection.timeMinutes} minutes. Take a breath, then start whenever you're ready.</p>
           <button class="btn-primary lesson-start-btn" data-continue>Start ${nextSubject.name} &rarr;</button>
         </div>
       </main>
@@ -261,6 +291,12 @@ export function renderPracticeTest(root, navigate) {
     const sectionRows = sectionResults
       .map((s) => {
         const subject = getSubject(s.subjectId);
+        const categoryRows = (s.categoryBreakdown || [])
+          .map((c) => {
+            const pct = c.total > 0 ? Math.round((c.correct / c.total) * 100) : 0;
+            return `<li>${c.name}: ${c.correct}/${c.total} (${pct}%)</li>`;
+          })
+          .join("");
         return `
           <div class="dash-row">
             <div class="dash-row-label">
@@ -268,6 +304,7 @@ export function renderPracticeTest(root, navigate) {
               <span>${s.correctCount}/${s.totalCount} correct</span>
             </div>
             <div class="dash-row-accuracy">Section score: ${s.subscore}</div>
+            ${categoryRows ? `<ul class="practice-test-category-breakdown">${categoryRows}</ul>` : ""}
           </div>
         `;
       })

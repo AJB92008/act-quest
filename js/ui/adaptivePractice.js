@@ -1,10 +1,13 @@
-// Weak Skill Review: an on-demand practice session auto-built from your
-// lowest-accuracy skills across every subject, weighted so the shakiest
-// skills show up more often. Doesn't gate or unlock anything — it's just
-// extra reps where you need them, and it feeds back into each skill's
-// ongoing accuracy stats as you go.
-import { getSkill, getSubject } from "../data/skills.js";
-import { getWeakReviewQuestions, preloadSubjectForSkill } from "../data/questions/index.js";
+// Adaptive Practice: unlike Weak Skill Review (which targets your lowest-
+// accuracy *skills*), this targets your lowest-accuracy *patterns* — traits
+// a question can have regardless of which skill or subject it's filed
+// under, like negation traps or cross-passage synthesis (see
+// data/questions/patterns.js). Two players who are both "weak at re-claims"
+// might need entirely different practice depending on which pattern is
+// actually tripping them up; this is the session built from that finer
+// signal instead of the skill-level one.
+import { getSubject } from "../data/skills.js";
+import { getWeakPatterns, getAdaptivePracticeQuestions, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -14,29 +17,17 @@ import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
 
 const QUESTION_TIME = 20;
-const REVIEW_SIZE = 10;
-const PREVIEW_SIZE = 5;
-const REVIEW_COLOR = "#22b8a3";
-const REVIEW_BG = "#e8fbf7";
+const SESSION_SIZE = 10;
+const ADAPTIVE_COLOR = "#c2410c";
+const ADAPTIVE_BG = "#fff1e8";
 
-export function renderWeakReview(root, navigate) {
-  let weakSkills = gameState.getWeakSkills(5);
-  // A brand-new (or lightly-played) account won't have 5+ attempts on
-  // anything yet, so the real "weakest skills" read above comes back
-  // empty. Rather than hard-blocking until that history exists, fall back
-  // to whatever's been attempted at all (even just once) and offer a
-  // shorter warm-up session instead — some reps beat a dead end.
-  let isPreview = false;
-  if (weakSkills.length === 0) {
-    weakSkills = gameState.getWeakSkills(5, 1, 1.01);
-    isPreview = weakSkills.length > 0;
-  }
-  const reviewSize = isPreview ? PREVIEW_SIZE : REVIEW_SIZE;
-  // Kicked off immediately (fire-and-forget) so the handful of subjects
-  // these weak skills actually span have a head start loading while the
-  // player reads the intro screen below — awaited for real just before
-  // "Start Review" builds the question set, in case they click fast.
-  const dataReady = Promise.all(weakSkills.map((s) => preloadSubjectForSkill(s.id)));
+export function renderAdaptivePractice(root, navigate) {
+  // Needs every subject's real question text loaded to tag patterns at
+  // all (a pattern like "paired-passage comparison" only exists in
+  // Reading/Science), unlike Weak Skill Review which only ever needs the
+  // handful of subjects its weak skills happen to span.
+  const dataReady = preloadAllSubjects();
+  let weakPatterns = [];
   let questions = [];
 
   let idx = 0;
@@ -56,15 +47,12 @@ export function renderWeakReview(root, navigate) {
     timerInterval = null;
   }
 
-  // Banks whatever stars/coins this session earned so far. Idempotent, and
-  // called on every exit path (finishing normally, quitting early, or
-  // navigating away via the HUD) so nothing is lost either way.
   function finishSession() {
     stopTimer();
     if (finished) return;
     finished = true;
     if (starsEarned > 0 || coinsEarned > 0) {
-      levelResult = gameState.finishWeakReview({ starsEarned, coinsEarned }) || {};
+      levelResult = gameState.finishDrill({ starsEarned, coinsEarned }) || {};
     }
   }
 
@@ -88,37 +76,45 @@ export function renderWeakReview(root, navigate) {
     }, 100);
   }
 
+  function renderLoading() {
+    root.innerHTML = `
+      ${hudHTML("map")}
+      <main class="screen weak-review-screen" style="--island-color:${ADAPTIVE_COLOR};--island-bg:${ADAPTIVE_BG}">
+        <div class="lesson-card">
+          <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
+          <h1 class="lesson-title">🧭 Adaptive Practice</h1>
+          <p class="lesson-blurb">Reading your attempt history for cross-subject weak patterns…</p>
+        </div>
+      </main>
+    `;
+    wireHud(root, goTo);
+  }
+
   function renderIntro() {
-    const skillRows = weakSkills
-      .map(({ id, accuracy }) => {
-        const { skill } = getSkill(id);
-        return `<li>${skill.name} <span class="weak-skill-pct">${Math.round(accuracy * 100)}%</span></li>`;
-      })
+    const patternRows = weakPatterns
+      .map((p) => `<li>${p.label} <span class="weak-skill-pct">${Math.round(p.accuracy * 100)}%</span><p class="trait-flavor">${p.hint}</p></li>`)
       .join("");
 
     root.innerHTML = `
       ${hudHTML("map")}
-      <main class="screen weak-review-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
+      <main class="screen weak-review-screen" style="--island-color:${ADAPTIVE_COLOR};--island-bg:${ADAPTIVE_BG}">
         <button class="back-btn" data-back>&larr; Back to Map</button>
         <div class="lesson-card">
           <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
-          <h1 class="lesson-title">${isPreview ? "🔍 Warm-up Preview" : "🎯 Weak Skill Review"}</h1>
+          <h1 class="lesson-title">🧭 Adaptive Practice</h1>
           <p class="lesson-blurb">${
-            isPreview
-              ? `Not enough history yet for a full weak-skill read, so here's a quick ${PREVIEW_SIZE}-question warm-up from what you've tried so far.`
-              : `A quick ${REVIEW_SIZE}-question session pulled from the skills you're struggling with most, across every subject.`
+            weakPatterns.length === 0
+              ? "Not enough attempt history yet to detect a weak pattern — answer more questions across a few different skills, then check back here."
+              : `A ${SESSION_SIZE}-question session pulled from every subject, targeting the specific question patterns you've struggled with most — not just weak skills.`
           }</p>
           ${
-            weakSkills.length === 0
-              ? `<p class="lesson-paragraph">You haven't attempted any questions yet. Complete a mini-lesson first, then come back here for a warm-up or a full weak-spot review.</p>`
-              : `
-                <p class="lesson-paragraph">${isPreview ? "Skills you've touched so far:" : "Right now that's mostly:"}</p>
-                <ul class="weak-skill-list">${skillRows}</ul>
-              `
+            weakPatterns.length > 0
+              ? `<p class="lesson-paragraph">Your lowest-accuracy patterns right now:</p><ul class="weak-skill-list">${patternRows}</ul>`
+              : ""
           }
           ${
-            weakSkills.length > 0
-              ? `<button class="btn-primary lesson-start-btn" data-start-review>Start Review &rarr;</button>`
+            weakPatterns.length > 0
+              ? `<button class="btn-primary lesson-start-btn" data-start-review>Start Practice &rarr;</button>`
               : `<button class="btn-secondary lesson-start-btn" data-back-2>Back to Map</button>`
           }
         </div>
@@ -134,12 +130,10 @@ export function renderWeakReview(root, navigate) {
         startBtn.disabled = true;
         startBtn.textContent = "Loading…";
         dataReady.then(() => {
-          questions =
-            weakSkills.length > 0
-              ? getWeakReviewQuestions(weakSkills, reviewSize, {
-                  getQuestionStat: (skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex),
-                })
-              : [];
+          questions = getAdaptivePracticeQuestions(weakPatterns, SESSION_SIZE, {
+            getQuestionStat: (skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex),
+          });
+          idx = 0;
           renderQuestion();
         });
       });
@@ -151,20 +145,20 @@ export function renderWeakReview(root, navigate) {
     const q = questions[idx];
     const subject = getSubject(q.subjectId);
     const stimulusHTML = renderQuestionStimulus(q);
+    const matchedLabels = q.matchedPatterns.map((id) => weakPatterns.find((p) => p.id === id)?.label).filter(Boolean);
 
     root.innerHTML = `
       ${hudHTML("map")}
-      <main class="screen weak-review-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
+      <main class="screen weak-review-screen" style="--island-color:${ADAPTIVE_COLOR};--island-bg:${ADAPTIVE_BG}">
         <div class="quiz-top">
-          <button class="back-btn" data-quit>&larr; End Review</button>
+          <button class="back-btn" data-quit>&larr; End Practice</button>
           <div class="quiz-progress-dots">
-            ${questions
-              .map((_, i) => `<span class="dot ${i < idx ? "done" : ""} ${i === idx ? "current" : ""}"></span>`)
-              .join("")}
+            ${questions.map((_, i) => `<span class="dot ${i < idx ? "done" : ""} ${i === idx ? "current" : ""}"></span>`).join("")}
           </div>
           <div class="quiz-streak">🔥 Streak: ${streak}</div>
         </div>
         <div class="endless-tag" style="--tag-color:${subject.color};--tag-bg:${subject.bg}">${subject.icon} ${subject.name} &middot; ${q.skillName}</div>
+        ${matchedLabels.length > 0 ? `<p class="trait-flavor">🎯 Targets: ${matchedLabels.join(", ")}</p>` : ""}
         ${gameState.timerEnabled ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
@@ -175,9 +169,7 @@ export function renderWeakReview(root, navigate) {
           </div>
           ${renderHintButton()}
           <div class="explain-panel" id="explainPanel" hidden></div>
-          <button class="next-btn" id="nextBtn" hidden>${
-            idx === questions.length - 1 ? "See Results" : "Next Question"
-          } &rarr;</button>
+          <button class="next-btn" id="nextBtn" hidden>${idx === questions.length - 1 ? "See Results" : "Next Question"} &rarr;</button>
         </div>
       </main>
     `;
@@ -223,7 +215,6 @@ export function renderWeakReview(root, navigate) {
     const reactor = root.querySelector("#monsterReactor");
     reactor.classList.add(correct ? "react-happy" : "react-sad");
 
-    gameState.recordWeakReviewAnswer(q.skillId, correct);
     gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
 
     if (correct) {
@@ -267,19 +258,19 @@ export function renderWeakReview(root, navigate) {
 
     root.innerHTML = `
       ${hudHTML("map")}
-      <main class="screen results-screen" style="--island-color:${REVIEW_COLOR};--island-bg:${REVIEW_BG}">
+      <main class="screen results-screen" style="--island-color:${ADAPTIVE_COLOR};--island-bg:${ADAPTIVE_BG}">
         <div class="results-card">
           <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 160 })}</div>
-          <h1>Review Complete!</h1>
+          <h1>Practice Complete!</h1>
           <p class="results-score">${correctCount} / ${total} correct (${scorePct}%)</p>
-          <p class="results-flag">🎯 Great job shoring up your weak spots.</p>
+          <p class="results-flag">🧭 Targeted reps on your weakest patterns, not just weak skills.</p>
           ${renderProgressBanners(levelResult)}
           <div class="results-stats">
             <span>⭐ +${starsEarned} stars</span>
             <span>🪙 +${coinsEarned} coins</span>
           </div>
           <div class="results-actions">
-            <button class="btn-primary" data-retry>Review Again</button>
+            <button class="btn-primary" data-retry>Practice Again</button>
             <button class="btn-secondary" data-map>World Map</button>
           </div>
         </div>
@@ -287,9 +278,13 @@ export function renderWeakReview(root, navigate) {
     `;
 
     wireHud(root, goTo);
-    root.querySelector("[data-retry]").addEventListener("click", () => goTo("weakReview"));
+    root.querySelector("[data-retry]").addEventListener("click", () => goTo("adaptivePractice"));
     root.querySelector("[data-map]").addEventListener("click", () => goTo("map"));
   }
 
-  renderIntro();
+  renderLoading();
+  dataReady.then(() => {
+    weakPatterns = getWeakPatterns((skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex));
+    renderIntro();
+  });
 }

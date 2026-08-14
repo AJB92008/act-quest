@@ -853,6 +853,25 @@ input[type="password"] {
   color: var(--island-color, var(--purple));
 }
 
+.practice-test-timer.is-time-warning {
+  color: #d9741c;
+}
+
+.practice-test-timer.is-time-critical {
+  color: #c9401c;
+  animation: pulse-critical 1s ease-in-out infinite;
+}
+
+@keyframes pulse-critical {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
 .practice-test-nav {
   display: flex;
   justify-content: space-between;
@@ -2269,6 +2288,14 @@ button.drill-skill-row:hover {
   color: var(--muted);
   font-size: 0.85rem;
   font-weight: 700;
+}
+
+.practice-test-category-breakdown {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
 }
 
 /* ---------- endless mode ---------- */

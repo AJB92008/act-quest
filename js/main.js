@@ -6,6 +6,7 @@ import { renderSkillPath } from "./ui/skillPath.js";
 import { renderQuiz } from "./ui/quiz.js";
 import { renderBossQuiz } from "./ui/bossQuiz.js";
 import { renderWeakReview } from "./ui/weakReview.js";
+import { renderAdaptivePractice } from "./ui/adaptivePractice.js";
 import { renderReviewQueue } from "./ui/reviewQueue.js";
 import { renderDrillBuilder } from "./ui/drillBuilder.js";
 import { renderStudyPlan } from "./ui/studyPlan.js";
@@ -32,6 +33,7 @@ const SCREENS = {
   quiz: (r, nav, params) => renderQuiz(r, nav, params),
   bossQuiz: (r, nav, params) => renderBossQuiz(r, nav, params),
   weakReview: (r, nav) => renderWeakReview(r, nav),
+  adaptivePractice: (r, nav) => renderAdaptivePractice(r, nav),
   reviewQueue: (r, nav) => renderReviewQueue(r, nav),
   drillBuilder: (r, nav) => renderDrillBuilder(r, nav),
   studyPlan: (r, nav) => renderStudyPlan(r, nav),

@@ -13,6 +13,7 @@ const ROW_HEIGHT = 200;
 // other, so they stay visually distinguishable at a glance.
 const SHORTCUTS = [
   { screen: "weakReview", icon: "🎯", name: "Weak Skill Review", blurb: "Your lowest-accuracy skills", color: "#22b8a3", bg: "#e8fbf7" },
+  { screen: "adaptivePractice", icon: "🧭", name: "Adaptive Practice", blurb: "Your weakest question patterns", color: "#c2410c", bg: "#fff1e8" },
   { screen: "reviewQueue", icon: "🧠", name: "Review Queue", blurb: "Spaced repetition, due now", color: "#7c5cff", bg: "#f1eeff" },
   { screen: "drillBuilder", icon: "🎛️", name: "Custom Drill", blurb: "Pick your own skills", color: "#ff9f38", bg: "#fff4e6" },
 ];

@@ -1,4 +1,5 @@
-import { SUBJECTS, allSkillIds } from "../skills.js";
+import { SUBJECTS, allSkillIds, REPORTING_CATEGORIES } from "../skills.js";
+import { getQuestionPatterns, PATTERN_DEFS } from "./patterns.js";
 
 // Each skill's bank is chunked into fixed-size mini-lessons — bite-sized
 // stops on that skill's path rather than one long quiz — matching how
@@ -48,9 +49,14 @@ export function getLessonCount(skillId) {
 // this never needs question data, just the (tiny, always-loaded) skill
 // tree in data/skills.js.
 const SKILL_META = {};
+// skillId -> reportingCategory id, same construction — feeds the
+// Practice Test's category-proportional sampling and score breakdown
+// below without needing question data loaded either.
+const SKILL_CATEGORY = {};
 for (const subject of SUBJECTS) {
   subject.skills.forEach((skill) => {
     SKILL_META[skill.id] = { skillName: skill.name, subjectId: subject.id };
+    SKILL_CATEGORY[skill.id] = skill.reportingCategory;
   });
 }
 
@@ -124,7 +130,9 @@ export function getFullBank(skillId) {
 // double-checking every choice against an inverted condition) read as
 // harder. Good enough to gently order a skill's own 100 questions from
 // simplest to toughest without needing to hand-author a difficulty score
-// for every question.
+// for every question — and it's only ever the *starting point* now; see
+// calibratedDifficulty() below for how real attempt data overrides it once
+// there's enough of it.
 function questionDifficulty(q) {
   const stemLen = q.q.length;
   const choicesLen = q.choices.reduce((sum, c) => sum + c.length, 0);
@@ -134,14 +142,63 @@ function questionDifficulty(q) {
   return score;
 }
 
-// Sorted once per skill and cached (sorting 100 questions on every lesson
-// render would be wasted work — the bank itself never changes at runtime).
+// A question needs this many of *this player's own* attempts before their
+// personal accuracy is trusted to override the text-heuristic guess —
+// otherwise one lucky or unlucky early answer could yank a question to the
+// wrong end of the order. Below this, the bank is exactly the static
+// heuristic sort it always was; at or above it, the heuristic is
+// discarded in favor of what actually happened.
+const MIN_ATTEMPTS_FOR_CALIBRATION = 3;
+
+// This is the actual "attempt-calibrated item bank" the heuristic alone
+// could never be: once a question has enough of this player's own answers
+// on record, its measured accuracy replaces the text-length/negation guess
+// entirely, so a question that *reads* simple but that this player
+// consistently misses sorts into later lessons, and vice versa. Scaled to
+// the same rough numeric range questionDifficulty() produces (fixed
+// endpoints, not fit to any one skill's actual spread) so it can
+// meaningfully outweigh the heuristic rather than being a rounding error
+// next to it. `stat` is this player's own {attempts, correct} for the
+// question, or undefined if they've never seen it.
+function calibratedDifficulty(q, stat) {
+  if (!stat || stat.attempts < MIN_ATTEMPTS_FOR_CALIBRATION) return questionDifficulty(q);
+  const personalAccuracy = stat.correct / stat.attempts;
+  return 500 * (1 - personalAccuracy);
+}
+
+// Sorted per skill and cached — sorting a skill's whole bank on every
+// lesson render would be wasted work when nothing about it has changed.
+// "Nothing has changed" is the load-bearing detail: the cache key folds in
+// a signature (this player's total recorded attempts across the skill's
+// questions), so the very first calibrated answer past
+// MIN_ATTEMPTS_FOR_CALIBRATION on any question invalidates it and the next
+// call re-sorts with the new data — the bank actually recalibrates itself
+// as it's played, rather than freezing at whatever the heuristic guessed
+// on day one. Within an unchanged signature (the overwhelmingly common
+// case: most calls happen between answers, not between them) it's a pure
+// cache hit, and lesson boundaries stay put for the length of a session.
 const sortedBankCache = {};
-function getDifficultySortedBank(skillId) {
-  if (sortedBankCache[skillId]) return sortedBankCache[skillId];
-  const sorted = getFullBank(skillId)
-    .map((q, originalIndex) => ({ q, originalIndex }))
-    .sort((a, b) => questionDifficulty(a.q) - questionDifficulty(b.q) || a.originalIndex - b.originalIndex)
+function getDifficultySortedBank(skillId, getQuestionStat) {
+  const bank = getFullBank(skillId);
+  // Has to fingerprint *which* questions have *which* exact stats, not just
+  // a total attempt count — two different players (or two different points
+  // in the same player's history) can easily land on the same total while
+  // having entirely different questions calibrated, and a sum alone would
+  // silently hand back one of theirs to the other.
+  let signature = "";
+  if (getQuestionStat) {
+    const parts = [];
+    for (let i = 0; i < bank.length; i++) {
+      const stat = getQuestionStat(skillId, i);
+      if (stat && stat.attempts > 0) parts.push(`${i}:${stat.attempts}:${stat.correct}`);
+    }
+    signature = parts.join(",");
+  }
+  const cacheKey = `${skillId}:${signature}`;
+  if (sortedBankCache[cacheKey]) return sortedBankCache[cacheKey];
+  const sorted = bank
+    .map((q, originalIndex) => ({ q, originalIndex, stat: getQuestionStat?.(skillId, originalIndex) }))
+    .sort((a, b) => calibratedDifficulty(a.q, a.stat) - calibratedDifficulty(b.q, b.stat) || a.originalIndex - b.originalIndex)
     // bankIndex is the question's *original* (pre-sort) position in this
     // skill's bank — stable across app restarts since the source file's
     // array order never changes at runtime, which is what lets
@@ -149,7 +206,7 @@ function getDifficultySortedBank(skillId) {
     // per-question stats off it regardless of which lesson surfaces the
     // question or how the difficulty sort reorders things.
     .map((entry) => ({ ...entry.q, bankIndex: entry.originalIndex }));
-  sortedBankCache[skillId] = sorted;
+  sortedBankCache[cacheKey] = sorted;
   return sorted;
 }
 
@@ -170,8 +227,12 @@ function gentleReorder(arr) {
 // the last lesson from its toughest, and presentation order within that
 // slice is only gently reshuffled rather than fully randomized, so early
 // questions in a lesson still tend to be a bit easier than the later ones.
-export function getLessonQuestions(skillId, lessonIndex) {
-  const bank = getDifficultySortedBank(skillId);
+// `getQuestionStat` is the same optional injected callback every other
+// personalized getter in this file takes; omitting it (as every call site
+// did before this player-calibration feature existed) falls back to the
+// pure text heuristic, unchanged.
+export function getLessonQuestions(skillId, lessonIndex, { getQuestionStat } = {}) {
+  const bank = getDifficultySortedBank(skillId, getQuestionStat);
   const start = lessonIndex * LESSON_SIZE;
   return gentleReorder(bank.slice(start, start + LESSON_SIZE));
 }
@@ -230,6 +291,56 @@ export function getBossQuizQuestions(subjectId, count = 20) {
   return shuffled(pool).slice(0, count);
 }
 
+// Builds one Practice Test section, sampled proportionally across that
+// subject's real ACT reporting categories (see REPORTING_CATEGORIES in
+// data/skills.js) rather than uniformly across every skill regardless of
+// category — the same section-length uniform-random draw getBossQuizQuestions
+// uses would, by chance, sometimes load a Reading section with mostly
+// Key Ideas & Details questions and barely any Integration of Knowledge &
+// Ideas, which a real ACT section never does. Each returned question is
+// tagged with `reportingCategory` (the category id) so the results screen
+// can break the section score down the same way a real ACT score report does.
+export function getPracticeTestSectionQuestions(subjectId, count) {
+  const categories = REPORTING_CATEGORIES[subjectId];
+  const pool = getAllQuestionsFlat().filter((q) => q.subjectId === subjectId);
+  if (!categories || pool.length === 0) return shuffled(pool).slice(0, count);
+
+  const byCategory = {};
+  categories.forEach((c) => (byCategory[c.id] = []));
+  pool.forEach((q) => {
+    const catId = SKILL_CATEGORY[q.skillId];
+    if (byCategory[catId]) byCategory[catId].push({ ...q, reportingCategory: catId });
+  });
+
+  // A category with an explicit real-ACT `weight` uses it; one without
+  // (currently just Math, whose official categories overlap in a way that
+  // doesn't translate into a clean sampling split) falls back to how much
+  // of the subject's skill tree that category actually covers.
+  const totalSkills = SUBJECTS.find((s) => s.id === subjectId).skills.length;
+  const weights = categories.map((c) => {
+    if (c.weight != null) return c.weight;
+    return byCategory[c.id].length / totalSkills || 0.01;
+  });
+  const weightSum = weights.reduce((a, b) => a + b, 0);
+
+  const picks = [];
+  const used = new Set();
+  categories.forEach((cat, i) => {
+    const catCount = Math.round((weights[i] / weightSum) * count);
+    const catPicks = shuffled(byCategory[cat.id]).slice(0, catCount);
+    catPicks.forEach((q) => used.add(`${q.skillId}:${q.bankIndex}`));
+    picks.push(...catPicks);
+  });
+  // Independently rounding each category's share can land the total a
+  // question or two short of `count` — top up from the rest of the
+  // subject's pool rather than shipping a section that's short.
+  if (picks.length < count) {
+    const rest = pool.filter((q) => !used.has(`${q.skillId}:${q.bankIndex}`)).map((q) => ({ ...q, reportingCategory: SKILL_CATEGORY[q.skillId] }));
+    picks.push(...shuffled(rest).slice(0, count - picks.length));
+  }
+  return shuffled(picks.slice(0, count));
+}
+
 // A question needs at least this many personal attempts before its own
 // accuracy overrides the skill-level weight below — enough to not overreact
 // to a single lucky guess or careless slip, not so many that a genuinely
@@ -247,24 +358,12 @@ const MIN_ATTEMPTS_FOR_PERSONAL_WEIGHT = 2;
 // player's own {attempts, correct} for one specific question, or undefined
 // if they've never seen it; omitting it just falls back to the flat
 // skill-level weighting every question in a weak skill used to get.
-export function getWeakReviewQuestions(weakSkills, count = 10, { getQuestionStat } = {}) {
-  const pool = [];
-  for (const { id, accuracy } of weakSkills) {
-    const meta = SKILL_META[id];
-    if (!meta) continue;
-    const skillWeight = Math.max(0.15, 1 - accuracy);
-    getFullBank(id).forEach((q, bankIndex) => {
-      let weight = skillWeight;
-      const stat = getQuestionStat?.(id, bankIndex);
-      if (stat && stat.attempts >= MIN_ATTEMPTS_FOR_PERSONAL_WEIGHT) {
-        const personalAccuracy = stat.correct / stat.attempts;
-        weight = Math.max(0.15, 1 - personalAccuracy);
-      }
-      pool.push({ ...q, skillId: id, skillName: meta.skillName, subjectId: meta.subjectId, weight, bankIndex });
-    });
-  }
-  if (pool.length === 0) return [];
-
+// Shared by getWeakReviewQuestions and getAdaptivePracticeQuestions below:
+// draws `count` items from `pool` (each needing a `.weight`) without
+// replacement, re-normalizing the remaining weights after every pick so
+// already-picked items can't be drawn again and heavier items stay more
+// likely throughout, not just on the first draw.
+function weightedSampleWithoutReplacement(pool, count) {
   const used = new Set();
   const picks = [];
   for (let i = 0; i < count && used.size < pool.length; i++) {
@@ -284,6 +383,89 @@ export function getWeakReviewQuestions(weakSkills, count = 10, { getQuestionStat
     }
   }
   return picks;
+}
+
+export function getWeakReviewQuestions(weakSkills, count = 10, { getQuestionStat } = {}) {
+  const pool = [];
+  for (const { id, accuracy } of weakSkills) {
+    const meta = SKILL_META[id];
+    if (!meta) continue;
+    const skillWeight = Math.max(0.15, 1 - accuracy);
+    getFullBank(id).forEach((q, bankIndex) => {
+      let weight = skillWeight;
+      const stat = getQuestionStat?.(id, bankIndex);
+      if (stat && stat.attempts >= MIN_ATTEMPTS_FOR_PERSONAL_WEIGHT) {
+        const personalAccuracy = stat.correct / stat.attempts;
+        weight = Math.max(0.15, 1 - personalAccuracy);
+      }
+      pool.push({ ...q, skillId: id, skillName: meta.skillName, subjectId: meta.subjectId, weight, bankIndex });
+    });
+  }
+  if (pool.length === 0) return [];
+  return weightedSampleWithoutReplacement(pool, count);
+}
+
+// A question needs at least this many combined (across every question that
+// shares the pattern) attempts before a pattern is considered "read" at
+// all — otherwise a brand-new player's first few answers would spuriously
+// flag a "weak pattern" off a tiny sample.
+const MIN_PATTERN_ATTEMPTS = 6;
+
+// Aggregates this player's own recorded per-question stats (already being
+// tracked for every question they've ever answered, via
+// gameState.recordQuestionAnswer -> questionStats) by *pattern* rather than
+// by skill — the actual "psychometric-style signal derived from real
+// attempt data" this player generates just by playing normally, with zero
+// new save-data schema: every input here already exists, this just reads
+// it through a different lens. `getQuestionStat(skillId, bankIndex)` is the
+// same injected callback getWeakReviewQuestions takes, for the same
+// circular-import reason. Returns the `count` lowest-accuracy patterns
+// with enough data to be meaningful, worst first.
+export function getWeakPatterns(getQuestionStat, { minAttempts = MIN_PATTERN_ATTEMPTS, count = 5 } = {}) {
+  const flat = getAllQuestionsFlat();
+  const agg = {};
+  for (const q of flat) {
+    const stat = getQuestionStat(q.skillId, q.bankIndex);
+    if (!stat || stat.attempts === 0) continue;
+    for (const patternId of getQuestionPatterns(q)) {
+      const entry = agg[patternId] || { attempts: 0, correct: 0 };
+      entry.attempts += stat.attempts;
+      entry.correct += stat.correct;
+      agg[patternId] = entry;
+    }
+  }
+  return Object.entries(agg)
+    .filter(([, s]) => s.attempts >= minAttempts)
+    .map(([id, s]) => ({ id, label: PATTERN_DEFS[id].label, hint: PATTERN_DEFS[id].hint, accuracy: s.correct / s.attempts, attempts: s.attempts }))
+    .sort((a, b) => a.accuracy - b.accuracy)
+    .slice(0, count);
+}
+
+// Builds a practice session from across *every* subject and skill, pulling
+// only questions that actually match one of the player's weak patterns —
+// the adaptive engine's actual payoff: two players who are both "weak at
+// re-claims" might need completely different practice if one's problem is
+// negation traps and the other's is cross-passage synthesis, and this
+// targets the specific pattern instead of the whole skill. Weight is driven
+// by the weakest pattern a question matches, then nudged further by this
+// player's own history with that exact question, same as getWeakReviewQuestions.
+export function getAdaptivePracticeQuestions(weakPatterns, count = 10, { getQuestionStat } = {}) {
+  if (weakPatterns.length === 0) return [];
+  const weakPatternIds = new Set(weakPatterns.map((p) => p.id));
+  const pool = [];
+  for (const q of getAllQuestionsFlat()) {
+    const matched = getQuestionPatterns(q).filter((id) => weakPatternIds.has(id));
+    if (matched.length === 0) continue;
+    const weakestMatch = weakPatterns.filter((p) => matched.includes(p.id)).sort((a, b) => a.accuracy - b.accuracy)[0];
+    let weight = Math.max(0.15, 1 - weakestMatch.accuracy);
+    const stat = getQuestionStat?.(q.skillId, q.bankIndex);
+    if (stat && stat.attempts >= MIN_ATTEMPTS_FOR_PERSONAL_WEIGHT) {
+      weight = Math.max(0.15, weight * (2 - stat.correct / stat.attempts));
+    }
+    pool.push({ ...q, weight, matchedPatterns: matched });
+  }
+  if (pool.length === 0) return [];
+  return weightedSampleWithoutReplacement(pool, count);
 }
 
 // Picks a question from the full mixed pool, weighted toward a target
