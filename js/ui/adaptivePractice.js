@@ -104,8 +104,8 @@ export function renderAdaptivePractice(root, navigate) {
           <h1 class="lesson-title">🧭 Adaptive Practice</h1>
           <p class="lesson-blurb">${
             weakPatterns.length === 0
-              ? "Not enough attempt history yet to detect a weak pattern — answer more questions across a few different skills, then check back here."
-              : `A ${SESSION_SIZE}-question session pulled from every subject, targeting the specific question patterns you've struggled with most — not just weak skills.`
+              ? "Not enough attempt history yet to detect a weak pattern. Answer more questions across a few different skills, then check back here."
+              : `A ${SESSION_SIZE}-question session pulled from every subject, targeting the specific question patterns you've struggled with most, not just weak skills.`
           }</p>
           ${
             weakPatterns.length > 0

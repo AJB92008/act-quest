@@ -15,11 +15,11 @@
 export const PATTERN_DEFS = {
   negationTrap: {
     label: "Negation traps (NOT/EXCEPT/LEAST)",
-    hint: "Questions that invert the usual logic — the right answer is the one that DOESN'T fit.",
+    hint: "Questions that invert the usual logic: the right answer is the one that DOESN'T fit.",
   },
   vocabInContext: {
     label: "Vocabulary in context",
-    hint: "\"Most nearly means\" questions — context clues, not dictionary definitions.",
+    hint: "\"Most nearly means\" questions: context clues, not dictionary definitions.",
   },
   inference: {
     label: "Inference & generalization",
@@ -31,7 +31,7 @@ export const PATTERN_DEFS = {
   },
   pairedSource: {
     label: "Comparing two sources",
-    hint: "Paired passages or competing viewpoints — synthesizing across two texts, not just one.",
+    hint: "Paired passages or competing viewpoints: synthesizing across two texts, not just one.",
   },
   dataTableReading: {
     label: "Reading tables & figures",
@@ -60,7 +60,16 @@ const DETECTORS = [
   { id: "rhetoricalEffect", test: (q) => /\b(rhetorical|tone|effect of)\b/i.test(q.q) },
   {
     id: "computation",
-    test: (q) => Array.isArray(q.choices) && q.choices.length > 0 && q.choices.every((c) => /\d/.test(c)),
+    // Numeric choices alone matched ~90% of every Math question (real
+    // count, checked against the loaded banks) — useless as a *pattern*
+    // signal since it was really just re-detecting "this is Math" with
+    // extra steps, and Weak Skill Review already gives that read at the
+    // skill level. Requiring a longer stem too (calibrated against the
+    // banks' actual length distribution, not guessed) narrows it to
+    // roughly the longest third of Math/Science questions — the ones
+    // with enough setup to plausibly need more than one step — while
+    // leaving English/Reading's rare qualifying items alone.
+    test: (q) => Array.isArray(q.choices) && q.choices.length > 0 && q.choices.every((c) => /\d/.test(c)) && q.q.length >= 75,
   },
 ];
 

@@ -27,9 +27,28 @@ test("getQuestionPatterns detects data-table reading questions", () => {
   assertTrue(getQuestionPatterns(q).includes("dataTableReading"));
 });
 
-test("getQuestionPatterns detects computation questions from all-numeric choices", () => {
-  const q = { q: "What is x?", choices: ["1", "2", "3", "4"] };
+test("getQuestionPatterns detects computation from a long stem with all-numeric choices", () => {
+  const q = {
+    q: "A rectangular garden has a length that is 3 feet more than twice its width. If the perimeter of the garden is 66 feet, what is the width, in feet?",
+    choices: ["1", "2", "3", "4"],
+  };
   assertTrue(getQuestionPatterns(q).includes("computation"));
+});
+
+test("getQuestionPatterns does NOT flag computation for a short numeric-choice question", () => {
+  // Numeric choices alone used to match ~90% of every Math question in the
+  // real banks — not a useful *pattern* signal, just "this is Math" again.
+  // A short stem shouldn't qualify even with numeric choices.
+  const q = { q: "What is x?", choices: ["1", "2", "3", "4"] };
+  assertTrue(!getQuestionPatterns(q).includes("computation"));
+});
+
+test("computation pattern discriminates within Math instead of matching nearly everything", async () => {
+  await preloadAllSubjects();
+  const mathQs = getAllQuestionsFlat().filter((q) => q.subjectId === "math");
+  const matchCount = mathQs.filter((q) => getQuestionPatterns(q).includes("computation")).length;
+  const matchRate = matchCount / mathQs.length;
+  assertTrue(matchRate > 0.15 && matchRate < 0.6, `expected a discriminating ~15-60% match rate within Math, got ${Math.round(matchRate * 100)}%`);
 });
 
 test("getQuestionPatterns returns no patterns for a plain question matching nothing", () => {
@@ -65,6 +84,37 @@ test("getWeakPatterns surfaces a real pattern once enough personally-missed atte
   const negation = patterns.find((p) => p.id === "negationTrap");
   assertTrue(!!negation, "expected negationTrap to surface as a weak pattern");
   assertEqual(negation.accuracy, 0);
+});
+
+test("getWeakPatterns does NOT surface a pattern from repeated attempts on a single question", async () => {
+  await preloadAllSubjects();
+  const gs = new GameState();
+  const flat = getAllQuestionsFlat();
+  const oneNegationQ = flat.find((q) => getQuestionPatterns(q).includes("negationTrap"));
+  assertTrue(!!oneNegationQ, "expected at least one real negationTrap question");
+
+  // Enough combined attempts to clear MIN_PATTERN_ATTEMPTS, but all on the
+  // exact same question — this should describe that one question, not a
+  // real cross-skill pattern in this player's understanding.
+  for (let i = 0; i < 8; i++) gs.recordQuestionAnswer(oneNegationQ.skillId, oneNegationQ.bankIndex, false);
+
+  const patterns = getWeakPatterns((skillId, bankIndex) => gs.getQuestionStat(skillId, bankIndex), { minAttempts: 3 });
+  assertTrue(!patterns.some((p) => p.id === "negationTrap"), "a single drilled question shouldn't be enough to flag a weak pattern");
+});
+
+test("getWeakPatterns DOES surface a pattern once enough distinct questions confirm it", async () => {
+  await preloadAllSubjects();
+  const gs = new GameState();
+  const flat = getAllQuestionsFlat();
+  const negationQs = flat.filter((q) => getQuestionPatterns(q).includes("negationTrap")).slice(0, 3);
+  assertTrue(negationQs.length >= 3, "expected at least 3 real negationTrap questions in the loaded banks");
+  for (const q of negationQs) {
+    gs.recordQuestionAnswer(q.skillId, q.bankIndex, false);
+    gs.recordQuestionAnswer(q.skillId, q.bankIndex, false);
+  }
+
+  const patterns = getWeakPatterns((skillId, bankIndex) => gs.getQuestionStat(skillId, bankIndex), { minAttempts: 3, minQuestions: 3 });
+  assertTrue(patterns.some((p) => p.id === "negationTrap"), "3 distinct missed questions should be enough to flag the pattern");
 });
 
 test("getWeakPatterns sorts worst-accuracy first", async () => {

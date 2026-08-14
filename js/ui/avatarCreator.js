@@ -140,7 +140,7 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
     const colorWheelSwatch = `<button type="button" class="swatch swatch-rainbow ${usingCustomColor ? "is-selected" : ""} ${
       colorWheelOwned ? "" : "is-locked"
     }" data-color-wheel ${colorWheelOwned ? "" : "disabled"}
-      aria-label="${colorWheelOwned ? "Pick a custom color" : "Color Wheel, locked — unlock in the Shop for 500 coins"}"
+      aria-label="${colorWheelOwned ? "Pick a custom color" : "Color Wheel, locked. Unlock in the Shop for 500 coins."}"
       title="${colorWheelOwned ? "Pick any color" : "Unlock in the Shop for 500 coins"}">${colorWheelOwned ? "" : lockIcon}</button>`;
 
     const shapeButtons = BODY_SHAPES.map((s) => traitButton(avatar.bodyShape === s.id, s.name, "shape", s.id)).join("");

@@ -2,7 +2,14 @@
 // tracking (state.js) and the personalized weighting it feeds into
 // getWeakReviewQuestions (data/questions/index.js).
 import { GameState } from "../js/state.js";
-import { getLessonQuestions, getWeakReviewQuestions, getAllQuestionsFlat, preloadSubjectForSkill, preloadAllSubjects } from "../js/data/questions/index.js";
+import {
+  getLessonQuestions,
+  getWeakReviewQuestions,
+  getAllQuestionsFlat,
+  getEndlessQuestion,
+  preloadSubjectForSkill,
+  preloadAllSubjects,
+} from "../js/data/questions/index.js";
 import { test, assertEqual, assertTrue } from "./assert.js";
 
 test("recordQuestionAnswer/getQuestionStat round-trip correctly", () => {
@@ -163,4 +170,46 @@ test("recalibration is stable between answers (same signature -> same order) but
   for (let i = 0; i < 4; i++) gs.recordQuestionAnswer("ma-linear", target, false);
   const c = getLessonQuestions("ma-linear", 0, { getQuestionStat }).map((q) => q.bankIndex);
   assertTrue(JSON.stringify(a.slice().sort()) !== JSON.stringify(c.slice().sort()), "expected lesson 1's contents to change after new calibrating data");
+});
+
+// --- calibration reaching Endless Mode too ---
+
+test("getEndlessQuestion without a getQuestionStat callback behaves exactly as before", async () => {
+  await preloadAllSubjects();
+  const q = getEndlessQuestion(null, 0.5);
+  assertTrue(q && typeof q.q === "string");
+});
+
+test("questions this player has personally aced are drawn far more often than ones they've missed, at a low difficulty target", async () => {
+  await preloadAllSubjects();
+  const gs = new GameState();
+  const flat = getAllQuestionsFlat();
+  // 10-question groups from the same easy end of the same skill (so their
+  // base difficultyPct starts out identical — only personal history
+  // differs), not single questions: against the full multi-thousand-
+  // question flat pool, any one specific question is too rare a draw on
+  // its own for a modest round count to reliably land on non-flaky
+  // numbers, but a same-direction group of 10 gives a stable signal.
+  const easySkillQs = flat.filter((q) => q.skillId === "en-commas").slice(0, 20);
+  const acedQs = easySkillQs.slice(0, 10);
+  const missedQs = easySkillQs.slice(10, 20);
+  for (const q of acedQs) for (let i = 0; i < 4; i++) gs.recordQuestionAnswer(q.skillId, q.bankIndex, true);
+  for (const q of missedQs) for (let i = 0; i < 4; i++) gs.recordQuestionAnswer(q.skillId, q.bankIndex, false);
+
+  const getQuestionStat = (skillId, bankIndex) => gs.getQuestionStat(skillId, bankIndex);
+  let acedDraws = 0;
+  let missedDraws = 0;
+  const rounds = 8000;
+  for (let i = 0; i < rounds; i++) {
+    // Target the easy end (difficultyLevel near 0) — the aced group should
+    // fit right in, the consistently-missed group should now read as
+    // effectively harder and get drawn less at this target.
+    const pick = getEndlessQuestion(null, 0.05, { getQuestionStat });
+    if (acedQs.some((q) => q.skillId === pick.skillId && q.bankIndex === pick.bankIndex)) acedDraws++;
+    if (missedQs.some((q) => q.skillId === pick.skillId && q.bankIndex === pick.bankIndex)) missedDraws++;
+  }
+  assertTrue(
+    acedDraws > missedDraws * 3,
+    `expected the aced group (drawn ${acedDraws}x) to be favored well over the missed group (drawn ${missedDraws}x) at an easy difficulty target`
+  );
 });

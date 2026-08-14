@@ -9,9 +9,14 @@ const DEV_MODE_WINDOW_MS = 5000;
 // counting across the innerHTML rebuilds that every navigate() triggers.
 let toggleClickTimestamps = [];
 
-function showToast(text) {
+// A brief bottom-center pill notification. Started as dev-mode-unlock-only
+// but the visual (and the "briefly interrupt, then get out of the way"
+// behavior) is generic enough to reuse anywhere a screen needs a one-off
+// heads-up without a full modal — the Practice Test's 5-minute/1-minute
+// time warnings, for one.
+export function showToast(text) {
   const toast = document.createElement("div");
-  toast.className = "dev-mode-toast";
+  toast.className = "toast";
   toast.textContent = text;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3200);
@@ -76,7 +81,7 @@ export function hudHTML(activeScreen) {
 function hudAccountHTML() {
   const status = getCloudStatus();
   if (!status.signedIn) return "";
-  return `<button class="hud-logout-btn" id="hudLogoutBtn" title="Signed in as ${status.email} — log out" aria-label="Log out of ${status.email}">🚪</button>`;
+  return `<button class="hud-logout-btn" id="hudLogoutBtn" title="Signed in as ${status.email}. Click to log out." aria-label="Log out of ${status.email}">🚪</button>`;
 }
 
 function wireHudAccount(root) {

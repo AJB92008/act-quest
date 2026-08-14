@@ -153,7 +153,9 @@ export function renderEndlessMode(root, navigate) {
     answered = false;
     const difficultyLevel = Math.min(1, questionsSeen / DIFFICULTY_RAMP_QUESTIONS);
     previousQuestion = currentQuestion;
-    currentQuestion = getEndlessQuestion(previousQuestion, difficultyLevel);
+    currentQuestion = getEndlessQuestion(previousQuestion, difficultyLevel, {
+      getQuestionStat: (skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex),
+    });
     questionsSeen++;
     const q = currentQuestion;
     const subject = getSubject(q.subjectId);

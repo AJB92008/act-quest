@@ -405,11 +405,14 @@ export function getWeakReviewQuestions(weakSkills, count = 10, { getQuestionStat
   return weightedSampleWithoutReplacement(pool, count);
 }
 
-// A question needs at least this many combined (across every question that
-// shares the pattern) attempts before a pattern is considered "read" at
-// all — otherwise a brand-new player's first few answers would spuriously
-// flag a "weak pattern" off a tiny sample.
+// A pattern needs at least this many combined attempts, *and* at least
+// this many distinct questions contributing them, before it's considered
+// "read" at all. Attempts alone isn't enough of a guard: drilling one
+// stubborn question five times in Custom Drill would hit an attempts
+// threshold instantly while only ever describing that single question,
+// not a real cross-skill pattern in this player's understanding.
 const MIN_PATTERN_ATTEMPTS = 6;
+const MIN_PATTERN_QUESTIONS = 3;
 
 // Aggregates this player's own recorded per-question stats (already being
 // tracked for every question they've ever answered, via
@@ -421,22 +424,30 @@ const MIN_PATTERN_ATTEMPTS = 6;
 // same injected callback getWeakReviewQuestions takes, for the same
 // circular-import reason. Returns the `count` lowest-accuracy patterns
 // with enough data to be meaningful, worst first.
-export function getWeakPatterns(getQuestionStat, { minAttempts = MIN_PATTERN_ATTEMPTS, count = 5 } = {}) {
+export function getWeakPatterns(getQuestionStat, { minAttempts = MIN_PATTERN_ATTEMPTS, minQuestions = MIN_PATTERN_QUESTIONS, count = 5 } = {}) {
   const flat = getAllQuestionsFlat();
   const agg = {};
   for (const q of flat) {
     const stat = getQuestionStat(q.skillId, q.bankIndex);
     if (!stat || stat.attempts === 0) continue;
     for (const patternId of getQuestionPatterns(q)) {
-      const entry = agg[patternId] || { attempts: 0, correct: 0 };
+      const entry = agg[patternId] || { attempts: 0, correct: 0, questionCount: 0 };
       entry.attempts += stat.attempts;
       entry.correct += stat.correct;
+      entry.questionCount += 1;
       agg[patternId] = entry;
     }
   }
   return Object.entries(agg)
-    .filter(([, s]) => s.attempts >= minAttempts)
-    .map(([id, s]) => ({ id, label: PATTERN_DEFS[id].label, hint: PATTERN_DEFS[id].hint, accuracy: s.correct / s.attempts, attempts: s.attempts }))
+    .filter(([, s]) => s.attempts >= minAttempts && s.questionCount >= minQuestions)
+    .map(([id, s]) => ({
+      id,
+      label: PATTERN_DEFS[id].label,
+      hint: PATTERN_DEFS[id].hint,
+      accuracy: s.correct / s.attempts,
+      attempts: s.attempts,
+      questionCount: s.questionCount,
+    }))
     .sort((a, b) => a.accuracy - b.accuracy)
     .slice(0, count);
 }
@@ -473,13 +484,31 @@ export function getAdaptivePracticeQuestions(weakPatterns, count = 10, { getQues
 // back-to-back repeat of the previous question when possible. Weighting
 // (not a hard cutoff) means nothing is ever fully off-limits, just less
 // likely, so the pool never runs dry for subjects with few skills.
-export function getEndlessQuestion(previousQuestion, difficultyLevel = 0) {
+// `getQuestionStat`, when supplied, extends the same self-calibrating
+// signal getLessonQuestions uses to Endless Mode: a question this player
+// has enough personal history with blends its base skill-position
+// difficulty with how it's actually gone for them, so a run doesn't keep
+// escalating toward "Final Five"-tier questions this specific player has
+// already shown they've got solid, or stay stuck serving up "Comma Sense"
+// questions they've personally always missed.
+export function getEndlessQuestion(previousQuestion, difficultyLevel = 0, { getQuestionStat } = {}) {
   const flat = getAllQuestionsFlat();
   if (flat.length === 0) return null;
   const target = 0.1 + Math.max(0, Math.min(1, difficultyLevel)) * 0.8;
   const spread = 0.35;
 
-  const weights = flat.map((q) => Math.max(0.03, 1 - Math.abs(q.difficultyPct - target) / spread));
+  const effectiveDifficulty = (q) => {
+    const stat = getQuestionStat?.(q.skillId, q.bankIndex);
+    if (!stat || stat.attempts < MIN_ATTEMPTS_FOR_PERSONAL_WEIGHT) return q.difficultyPct;
+    const personalDifficulty = 1 - stat.correct / stat.attempts;
+    // Blended, not replaced: a question's skill still carries real
+    // information (a Final Five question is probably still harder than a
+    // Comma Sense one even if this player has aced the one they've seen),
+    // personal history just nudges the estimate rather than overriding it.
+    return q.difficultyPct * 0.5 + personalDifficulty * 0.5;
+  };
+
+  const weights = flat.map((q) => Math.max(0.03, 1 - Math.abs(effectiveDifficulty(q) - target) / spread));
   const totalWeight = weights.reduce((sum, w) => sum + w, 0);
 
   const pickOne = () => {

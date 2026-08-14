@@ -193,7 +193,7 @@ input[type="password"] {
   border: 2px solid var(--card);
 }
 
-.dev-mode-toast {
+.toast {
   position: fixed;
   bottom: 24px;
   left: 50%;

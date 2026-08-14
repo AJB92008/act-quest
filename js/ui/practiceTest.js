@@ -8,7 +8,7 @@
 import { getSubject, REPORTING_CATEGORIES } from "../data/skills.js";
 import { getPracticeTestSectionQuestions, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState, scaledScoreFromRaw } from "../state.js";
-import { hudHTML, wireHud } from "./hud.js";
+import { hudHTML, wireHud, showToast } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
@@ -52,6 +52,17 @@ export function renderPracticeTest(root, navigate) {
   let timerInterval = null;
   let timeLeft = 0;
   let unbindKeys = () => {};
+  // True from the moment the first section starts until final results are
+  // recorded — a nearly-3-hour test has a lot more to lose than any other
+  // screen here, so every way out while this is true (a HUD nav click, the
+  // in-quiz Quit Test button) has to actually ask first instead of
+  // silently discarding the attempt.
+  let testInProgress = false;
+  // Reset per section (see startSection()) so each section's own countdown
+  // gets its own one-time 5-minute/1-minute call-out, instead of firing
+  // once total across the whole test or re-firing on every question render.
+  let warnedAtFiveMin = false;
+  let warnedAtOneMin = false;
 
   function stopTimer() {
     if (timerInterval) clearInterval(timerInterval);
@@ -59,10 +70,15 @@ export function renderPracticeTest(root, navigate) {
   }
 
   // Same timer/keyboard-cleanup discipline as every other quiz screen: any
-  // way of leaving mid-test (HUD nav, quit) has to tear both down first.
+  // way of leaving mid-test (HUD nav, quit) has to tear both down first —
+  // and, uniquely to this screen, confirm first if real progress is on the line.
   function goTo(screen, params) {
+    if (testInProgress && !confirm("Leave the practice test? Your progress on this attempt will be lost. It isn't saved until you finish all four sections.")) {
+      return;
+    }
     unbindKeys();
     stopTimer();
+    testInProgress = false;
     navigate(screen, params);
   }
 
@@ -102,6 +118,7 @@ export function renderPracticeTest(root, navigate) {
       startBtn.textContent = "Loading…";
       sectionIndex = 0;
       sectionResults = [];
+      testInProgress = true;
       dataReady.then(() => startSection());
     });
   }
@@ -112,6 +129,8 @@ export function renderPracticeTest(root, navigate) {
     idx = 0;
     sectionAnswers = new Array(questions.length).fill(null);
     timeLeft = section.timeMinutes * 60;
+    warnedAtFiveMin = false;
+    warnedAtOneMin = false;
     renderQuestion();
   }
 
@@ -127,6 +146,14 @@ export function renderPracticeTest(root, navigate) {
         // identical from 45:00 down to 0:00.
         el.classList.toggle("is-time-warning", timeLeft <= TIME_WARNING_SECONDS && timeLeft > TIME_CRITICAL_SECONDS);
         el.classList.toggle("is-time-critical", timeLeft <= TIME_CRITICAL_SECONDS);
+      }
+      if (!warnedAtFiveMin && timeLeft <= TIME_WARNING_SECONDS && timeLeft > TIME_CRITICAL_SECONDS) {
+        warnedAtFiveMin = true;
+        showToast("⏱️ 5 minutes remaining");
+      }
+      if (!warnedAtOneMin && timeLeft > 0 && timeLeft <= TIME_CRITICAL_SECONDS) {
+        warnedAtOneMin = true;
+        showToast("⏱️ 1 minute remaining!");
       }
       if (timeLeft <= 0) {
         stopTimer();
@@ -281,6 +308,7 @@ export function renderPracticeTest(root, navigate) {
   }
 
   function showResults() {
+    testInProgress = false; // recorded below — nothing left to lose by navigating away now
     const composite = Math.round(sectionResults.reduce((sum, s) => sum + s.subscore, 0) / sectionResults.length);
     const totalCorrect = sectionResults.reduce((sum, s) => sum + s.correctCount, 0);
     const starsEarned = totalCorrect;
