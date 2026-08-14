@@ -91,6 +91,11 @@ function scheduleSync() {
 
 async function handleSignedIn(user) {
   currentUser = user;
+  // Notify immediately once authenticated, before the Firestore round-trip
+  // below — otherwise a Firestore-side failure (bad rules, no network)
+  // leaves the dashboard's cloud card stuck on "Connecting…" forever,
+  // since the only other notify() calls are past that await.
+  notify();
   if (!unsubscribeSave) unsubscribeSave = gameState.onSave(scheduleSync);
 
   const snap = await getDoc(saveDocRef(user.uid));
@@ -132,18 +137,29 @@ export function resolveConflict(choice) {
   notify();
 }
 
+// signUp/signIn call handleSignedIn directly rather than waiting on
+// onAuthStateChanged: linkWithCredential (the anonymous-account upgrade
+// path below) keeps the same uid/session, so Firebase doesn't reliably
+// re-fire that listener for it, which left the dashboard's cloud card
+// stuck showing "Working…" after a successful sign-up. Calling it
+// explicitly here works for all three paths (link, create, sign-in) and
+// is harmless if onAuthStateChanged also happens to fire — handleSignedIn
+// just re-checks the same doc.
 export async function signUp(email, password) {
   if (currentUser?.isAnonymous) {
     const credential = EmailAuthProvider.credential(email, password);
     const result = await linkWithCredential(currentUser, credential);
+    await handleSignedIn(result.user);
     return result.user;
   }
   const result = await createUserWithEmailAndPassword(auth, email, password);
+  await handleSignedIn(result.user);
   return result.user;
 }
 
 export async function signIn(email, password) {
   const result = await signInWithEmailAndPassword(auth, email, password);
+  await handleSignedIn(result.user);
   return result.user;
 }
 
