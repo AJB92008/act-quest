@@ -1,6 +1,7 @@
 import { gameState } from "../state.js";
 import { monsterSVG } from "./monster.js";
 import { showDevPanel, toggleDevPanel } from "./devPanel.js";
+import { getCloudStatus, onCloudSyncChange, signOutCloud } from "../cloudSync.js";
 
 const DEV_MODE_CLICKS = 10;
 const DEV_MODE_WINDOW_MS = 5000;
@@ -60,15 +61,51 @@ export function hudHTML(activeScreen) {
         <button class="hud-theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="${gameState.darkMode ? "Switch to light mode" : "Switch to dark mode"}">${gameState.darkMode ? "☀️" : "🌙"}</button>
         <span class="hud-stat" title="Stars">⭐ ${gameState.totalStars}</span>
         <span class="hud-stat" title="Coins">🪙 ${gameState.coins}</span>
+        <span data-hud-account></span>
       </div>
     </header>
   `;
+}
+
+// The account/logout button depends on async cloud-auth state that isn't
+// known yet at initial HUD render, and can change while the player stays
+// on the same screen (e.g. signing out from a different tab) — so it
+// re-renders itself in place via onCloudSyncChange rather than being baked
+// into hudHTML's one-shot string, the same self-updating pattern used by
+// the dashboard's Cloud Account card and the auth gate.
+function hudAccountHTML() {
+  const status = getCloudStatus();
+  if (!status.signedIn) return "";
+  return `<button class="hud-logout-btn" id="hudLogoutBtn" title="Signed in as ${status.email} — log out" aria-label="Log out of ${status.email}">🚪</button>`;
+}
+
+function wireHudAccount(root) {
+  const container = root.querySelector("[data-hud-account]");
+  if (!container) return;
+  const render = () => {
+    if (!container.isConnected) {
+      unsubscribe();
+      return;
+    }
+    container.innerHTML = hudAccountHTML();
+    const logoutBtn = container.querySelector("#hudLogoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        if (confirm("Log out? This device keeps backing up progress anonymously, but you'll need to sign in again to reach this account from elsewhere.")) {
+          signOutCloud();
+        }
+      });
+    }
+  };
+  const unsubscribe = onCloudSyncChange(render);
+  render();
 }
 
 export function wireHud(root, navigate) {
   root.querySelectorAll("[data-nav]").forEach((btn) => {
     btn.addEventListener("click", () => navigate(btn.dataset.nav));
   });
+  wireHudAccount(root);
   const devToggleBtn = root.querySelector("#devToggleBtn");
   if (devToggleBtn) {
     devToggleBtn.addEventListener("click", () => toggleDevPanel(navigate));
