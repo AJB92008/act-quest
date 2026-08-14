@@ -17,7 +17,7 @@ import {
 import { test, assertEqual, assertTrue } from "./assert.js";
 
 test("getLessonCount is 20 for a real skill without needing any data loaded", () => {
-  assertEqual(getLessonCount("en-commas"), 20);
+  assertEqual(getLessonCount("en-relevance"), 20);
 });
 
 test("getLessonCount falls back to 1 for an unknown skill id", () => {
@@ -27,6 +27,7 @@ test("getLessonCount falls back to 1 for an unknown skill id", () => {
 test("getLessonCount reflects the real bank size for skills extended beyond 100 questions, still without loading data", () => {
   assertEqual(getLessonCount("re-mainidea"), 28);
   assertEqual(getLessonCount("sc-datarep"), 28);
+  assertEqual(getLessonCount("en-commas"), 21);
 });
 
 test("a skill extended beyond 100 questions actually has that many in its real bank once loaded", async () => {
@@ -34,6 +35,8 @@ test("a skill extended beyond 100 questions actually has that many in its real b
   assertEqual(getFullBank("re-mainidea").length, 140);
   await preloadSubjectForSkill("sc-datarep");
   assertEqual(getFullBank("sc-datarep").length, 140);
+  await preloadSubjectForSkill("en-commas");
+  assertEqual(getFullBank("en-commas").length, 105);
 });
 
 test("lesson 21 (the first bonus lesson) of an extended skill returns 5 real, valid questions", async () => {

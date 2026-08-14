@@ -1114,6 +1114,36 @@ export const english = {
       answer: 1,
       explain: "The parenthetical phrase \"in fact\" needs a comma on both sides when it interrupts a sentence.",
     },
+    {
+      q: "After the meeting <u>ended, the</u> team went out for lunch.",
+      choices: ["NO CHANGE", "ended the", "ended; the", "ended: the"],
+      answer: 0,
+      explain: "A comma correctly separates the introductory clause \"After the meeting ended\" from the main clause, so the underlined portion is already correct.",
+    },
+    {
+      q: "The museum's newest exhibit, <u>featuring dinosaur fossils</u> opens this weekend.",
+      choices: ["NO CHANGE", "featuring dinosaur fossils,", "featuring, dinosaur fossils,", "featuring dinosaur fossils;"],
+      answer: 1,
+      explain: "The nonessential phrase \"featuring dinosaur fossils\" needs a comma on both sides, not just before it.",
+    },
+    {
+      q: "The bakery sells bread <u>rolls, and</u> pastries every morning.",
+      choices: ["NO CHANGE", "rolls and", "rolls; and", "rolls, and,"],
+      answer: 1,
+      explain: "With only three items and no comma needed before a two-item pairing here, \"bread rolls and pastries\" reads as a simple list; the comma before \"and\" is misplaced since \"rolls\" isn't a separate list item from \"bread rolls.\"",
+    },
+    {
+      q: "Because the bridge was closed <u>drivers</u> had to take a longer route.",
+      choices: ["NO CHANGE", "drivers,", "drivers;", "drivers:"],
+      answer: 1,
+      explain: "A comma is needed after the introductory dependent clause \"Because the bridge was closed\" before the main clause begins.",
+    },
+    {
+      q: "Maria, <u>who works downtown walks</u> to work every day.",
+      choices: ["NO CHANGE", "who works downtown, walks", "who works downtown; walks", "who works downtown. Walks"],
+      answer: 1,
+      explain: "\"Who works downtown\" is a nonessential clause describing Maria and needs a comma on both sides, not just before it.",
+    },
   ],
   "en-apostrophes": [
     {
@@ -2215,6 +2245,36 @@ export const english = {
       ],
       answer: 1,
       explain: "The possessive form of \"it\" is \"its,\" with no apostrophe. \"It's\" only ever means \"it is\" or \"it has.\"",
+    },
+    {
+      q: "The <u>company's</u> profits rose sharply this quarter.",
+      choices: ["NO CHANGE", "companies", "companys", "company's'"],
+      answer: 0,
+      explain: "\"Company's\" correctly shows singular possession (the profits belonging to the company); the underlined portion is already correct.",
+    },
+    {
+      q: "Both <u>teams captain's</u> shook hands before the game.",
+      choices: ["NO CHANGE", "teams' captains", "team's captains", "teams captains'"],
+      answer: 1,
+      explain: "There are multiple teams (plural \"teams\"), each with one captain, so the possessive apostrophe belongs after the plural \"teams\": \"teams' captains.\"",
+    },
+    {
+      q: "The <u>childrens'</u> playground was recently renovated.",
+      choices: ["NO CHANGE", "children's", "childrens", "childs'"],
+      answer: 1,
+      explain: "\"Children\" is already an irregular plural, so its possessive simply adds 's: \"children's,\" not \"childrens'.\"",
+    },
+    {
+      q: "The two <u>witness's</u> accounts of the accident matched closely.",
+      choices: ["NO CHANGE", "witnesses'", "witnesses's", "witness's'"],
+      answer: 1,
+      explain: "\"Two witnesses\" is plural, so the possessive is formed by adding just an apostrophe after the s: \"witnesses'.\"",
+    },
+    {
+      q: "That backpack is <u>your's</u>, not mine.",
+      choices: ["NO CHANGE", "yours", "you're's", "yours'"],
+      answer: 1,
+      explain: "\"Yours\" is a possessive pronoun and never takes an apostrophe, unlike possessive nouns.",
     },
   ],
   "en-colons": [
@@ -3318,6 +3378,36 @@ export const english = {
       answer: 1,
       explain: "A colon introduces the explanation of what the \"one policy\" actually was.",
     },
+    {
+      q: "The itinerary <u>included: Paris</u>, Rome, and Athens.",
+      choices: ["NO CHANGE", "included Paris", "included, Paris", "included; Paris"],
+      answer: 1,
+      explain: "A colon must follow a complete independent clause; \"The itinerary included\" isn't complete without its object, so no punctuation belongs between \"included\" and \"Paris.\"",
+    },
+    {
+      q: "She had only one goal for the <u>summer: to</u> finish her novel.",
+      choices: ["NO CHANGE", "summer, to", "summer to", "summer; to"],
+      answer: 0,
+      explain: "A colon correctly introduces the explanation of what the \"one goal\" was, following a complete independent clause.",
+    },
+    {
+      q: "The recipe requires just <u>two: eggs and flour</u> ingredients.",
+      choices: ["NO CHANGE", "two ingredients: eggs and flour", "two, ingredients: eggs and flour", "two: ingredients eggs and flour"],
+      answer: 1,
+      explain: "A colon must follow a complete independent clause; \"The recipe requires just two ingredients\" is complete, so the colon belongs after \"ingredients,\" not before it.",
+    },
+    {
+      q: "The recipe's final <u>step: was</u> to let the dough rest overnight.",
+      choices: ["NO CHANGE", "step was", "step, was", "step; was"],
+      answer: 1,
+      explain: "A colon must follow a complete independent clause; \"The recipe's final step\" isn't complete on its own (it lacks a verb), so no punctuation belongs between \"step\" and \"was.\"",
+    },
+    {
+      q: "He packed for the trip: <u>a tent, a sleeping bag, and, boots</u>.",
+      choices: ["NO CHANGE", "a tent, a sleeping bag, and boots", "a tent a sleeping bag and boots", "a tent; a sleeping bag; and boots"],
+      answer: 1,
+      explain: "The stray comma before \"boots\" incorrectly splits the final list item from \"and\"; a list should read \"a tent, a sleeping bag, and boots.\"",
+    },
   ],
   "en-semicolons": [
     {
@@ -4419,6 +4509,36 @@ export const english = {
       ],
       answer: 2,
       explain: "Since each list item already contains an internal comma (before \"a sculptor,\" etc.), semicolons are needed to separate the three items clearly.",
+    },
+    {
+      q: "The storm knocked out <u>power, residents</u> relied on generators for days.",
+      choices: ["NO CHANGE", "power; residents", "power residents", "power: residents"],
+      answer: 1,
+      explain: "Two independent clauses joined without a conjunction need a semicolon, not just a comma; as written, this is a comma splice.",
+    },
+    {
+      q: "The trail was muddy <u>and, steep</u> so few hikers finished it.",
+      choices: ["NO CHANGE", "and steep,", "and steep;", "and, steep,"],
+      answer: 1,
+      explain: "\"Muddy and steep\" is a simple compound adjective phrase needing no internal comma; the comma belongs after the phrase, before \"so.\"",
+    },
+    {
+      q: "The recital included violin, piano<u>; and cello</u> performances.",
+      choices: ["NO CHANGE", ", and cello", "and cello", "; and, cello"],
+      answer: 1,
+      explain: "This is a simple list with no internal commas within items, so a comma (not a semicolon) belongs before the final \"and.\"",
+    },
+    {
+      q: "The engine stalled twice<u>; the mechanic</u> still couldn't find the cause.",
+      choices: ["NO CHANGE", ", the mechanic", "the mechanic", ": the mechanic"],
+      answer: 0,
+      explain: "A semicolon correctly joins two independent clauses that are closely related in meaning, and the underlined portion is already correct.",
+    },
+    {
+      q: "The award went to Elena Ruiz, a novelist<u>; and</u> her editor, Sam Voss.",
+      choices: ["NO CHANGE", ", and", "and", "; and,"],
+      answer: 1,
+      explain: "\"A novelist\" and \"her editor, Sam Voss\" are both nonessential appositives within one list, not independent clauses, so a comma before \"and\" is correct, not a semicolon.",
     },
   ],
   "en-dashes": [
@@ -5522,6 +5642,36 @@ export const english = {
       answer: 1,
       explain: "A dash introduces the list that explains what \"everything\" specifically included.",
     },
+    {
+      q: "One thing was <u>certain, the</u> flight would be delayed.",
+      choices: ["NO CHANGE", "certain; the", "certain the", "certain, and, the"],
+      answer: 1,
+      explain: "Two independent clauses joined without a conjunction need a semicolon, not just a comma; as written, this is a comma splice.",
+    },
+    {
+      q: "The clue was hidden in plain <u>sight — a</u> single, folded note.",
+      choices: ["NO CHANGE", "sight, a", "sight a", "sight; a"],
+      answer: 0,
+      explain: "A dash correctly sets off the emphatic explanation of where the clue was, and the underlined portion is already correct.",
+    },
+    {
+      q: "The chef's secret <u>ingredient — was</u> a splash of vinegar.",
+      choices: ["NO CHANGE", "ingredient was", "ingredient, was", "ingredient; was"],
+      answer: 1,
+      explain: "A dash shouldn't separate a subject from its verb; \"The chef's secret ingredient was a splash of vinegar\" needs no punctuation there at all.",
+    },
+    {
+      q: "The recipe called for <u>three eggs — sugar</u>, and butter.",
+      choices: ["NO CHANGE", "three eggs, sugar", "three eggs sugar", "three eggs; sugar"],
+      answer: 1,
+      explain: "A dash shouldn't interrupt a simple list; \"three eggs, sugar, and butter\" needs a comma there like the rest of the series, not a dash.",
+    },
+    {
+      q: "The twins looked <u>identical — down</u> to, their matching freckles.",
+      choices: ["NO CHANGE", "identical, down to their matching freckles", "identical down to their matching freckles", "identical — down to their matching freckles"],
+      answer: 1,
+      explain: "A single dash is enough to set off the trailing explanatory phrase; the stray comma after \"to\" incorrectly splits it further.",
+    },
   ],
   "en-endpunct": [
     {
@@ -6623,6 +6773,36 @@ export const english = {
       ],
       answer: 1,
       explain: "In formal writing, a plain statement of fact should end with a single period rather than multiple or unnecessary exclamation points.",
+    },
+    {
+      q: "Could you pass the salt, <u>please.</u>",
+      choices: ["NO CHANGE", "please?", "please!", "please;"],
+      answer: 1,
+      explain: "This sentence is phrased as a question (\"Could you...\"), so it needs a question mark, not a period.",
+    },
+    {
+      q: "Watch out for the wet <u>floor.</u>",
+      choices: ["NO CHANGE", "floor!", "floor?", "floor,"],
+      answer: 1,
+      explain: "This is an urgent warning, which calls for an exclamation point rather than a plain period.",
+    },
+    {
+      q: "The report is due by Friday <u>afternoon.</u>",
+      choices: ["NO CHANGE", "afternoon!", "afternoon?", "afternoon;"],
+      answer: 0,
+      explain: "This is a plain statement of fact, so a period is correct; the underlined portion is already correct.",
+    },
+    {
+      q: "I can't believe we actually won the <u>championship!!</u>",
+      choices: ["NO CHANGE", "championship!", "championship.", "championship?"],
+      answer: 1,
+      explain: "A single exclamation point is enough to convey excitement; doubling it up isn't standard in formal writing.",
+    },
+    {
+      q: "Did anyone remember to lock the <u>door.</u>",
+      choices: ["NO CHANGE", "door?", "door!", "door;"],
+      answer: 1,
+      explain: "This sentence asks a genuine question, so it needs a question mark rather than a period.",
     },
   ],
   "en-subobjpronouns": [
@@ -7726,6 +7906,36 @@ export const english = {
       answer: 1,
       explain: "As the object of the preposition \"to,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
     },
+    {
+      q: "<u>Her and me</u> volunteered to organize the fundraiser.",
+      choices: ["NO CHANGE", "She and I", "Her and I", "She and me"],
+      answer: 1,
+      explain: "\"Her and me\" are the subject of \"volunteered,\" so the subject pronoun forms \"She and I\" are needed, not the object forms.",
+    },
+    {
+      q: "The coach gave <u>him and I</u> extra practice time.",
+      choices: ["NO CHANGE", "he and I", "him and me", "he and me"],
+      answer: 2,
+      explain: "As the object of \"gave,\" both pronouns need the object form: \"him and me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "Between you and <u>me</u>, this plan seems risky.",
+      choices: ["NO CHANGE", "I", "myself", "we"],
+      answer: 0,
+      explain: "As the object of the preposition \"between,\" the object pronoun \"me\" is correct as already written.",
+    },
+    {
+      q: "My brother and <u>me</u> built the treehouse ourselves.",
+      choices: ["NO CHANGE", "I", "myself", "us"],
+      answer: 1,
+      explain: "\"My brother and I\" are the subject of \"built,\" so the subject pronoun \"I\" is needed, not the object form \"me.\"",
+    },
+    {
+      q: "The prize was shared equally between <u>she and he</u>.",
+      choices: ["NO CHANGE", "her and him", "her and he", "she and him"],
+      answer: 1,
+      explain: "As the object of the preposition \"between,\" both pronouns need the object form: \"her and him,\" not the subject forms \"she and he.\"",
+    },
   ],
   "en-thatwho": [
     {
@@ -8827,6 +9037,36 @@ export const english = {
       ],
       answer: 1,
       explain: "This clause identifies which specific jacket is meant, so it's essential and should use \"that\" with no surrounding commas.",
+    },
+    {
+      q: "The scientist <u>who</u> discovered the new species won an award.",
+      choices: ["NO CHANGE", "which", "that", "whom"],
+      answer: 0,
+      explain: "\"Who\" correctly refers to a person (the scientist); the underlined portion is already correct.",
+    },
+    {
+      q: "The novel, <u>who</u> was published in 1922, is now in the public domain.",
+      choices: ["NO CHANGE", "which", "that", "whom"],
+      answer: 1,
+      explain: "\"Which\" correctly refers to a thing (the novel); \"who\" is reserved for people.",
+    },
+    {
+      q: "The committee selected the design <u>that</u> best fit the budget.",
+      choices: ["NO CHANGE", "who", "whom", "which who"],
+      answer: 0,
+      explain: "\"That\" correctly introduces this essential clause identifying which design; the underlined portion is already correct.",
+    },
+    {
+      q: "The professor <u>which</u> taught the seminar retired last spring.",
+      choices: ["NO CHANGE", "who", "that which", "whose"],
+      answer: 1,
+      explain: "\"Who\" correctly refers to a person (the professor); \"which\" is reserved for things.",
+    },
+    {
+      q: "The company, <u>that</u> was founded in 1998, now operates worldwide.",
+      choices: ["NO CHANGE", "which", "who", "whom"],
+      answer: 1,
+      explain: "\"That\" shouldn't introduce a nonessential clause set off by commas; \"which\" is required here instead.",
     },
   ],
   "en-pronounagreement": [
@@ -9930,6 +10170,36 @@ export const english = {
       answer: 2,
       explain: "\"Panel\" is a singular collective noun here, so it needs the singular possessive pronoun \"its.\"",
     },
+    {
+      q: "Every student must bring <u>their own</u> laptop to the workshop.",
+      choices: ["NO CHANGE", "his or her own", "its own", "our own"],
+      answer: 1,
+      explain: "\"Every student\" is grammatically singular, so the traditionally formal agreement is \"his or her own\" rather than the plural \"their own.\"",
+    },
+    {
+      q: "The band released <u>its</u> first album to critical acclaim.",
+      choices: ["NO CHANGE", "their", "his", "our"],
+      answer: 0,
+      explain: "\"Band\" is a singular collective noun here, so the singular possessive \"its\" is correct as already written.",
+    },
+    {
+      q: "Neither of the twins finished <u>their</u> homework on time.",
+      choices: ["NO CHANGE", "his or her", "its", "our"],
+      answer: 1,
+      explain: "\"Neither\" is grammatically singular, so the traditionally formal agreement is \"his or her,\" not the plural \"their.\"",
+    },
+    {
+      q: "The jury announced <u>its</u> verdict after six hours of deliberation.",
+      choices: ["NO CHANGE", "their", "his", "our"],
+      answer: 0,
+      explain: "\"Jury\" is a singular collective noun acting as one unit here, so the singular possessive \"its\" is correct as already written.",
+    },
+    {
+      q: "Each of the applicants submitted <u>their</u> resume by the deadline.",
+      choices: ["NO CHANGE", "his or her", "its", "our"],
+      answer: 1,
+      explain: "\"Each\" is grammatically singular, so the traditionally formal agreement is \"his or her,\" not the plural \"their.\"",
+    },
   ],
   "en-ambiguous": [
     {
@@ -11031,6 +11301,36 @@ export const english = {
       ],
       answer: 1,
       explain: "\"Her\" could refer to either Zara or Aunt Layla; naming Zara directly removes the ambiguity.",
+    },
+    {
+      q: "Maria is the only woman on the panel, so <u>her</u> vote settled the tie.",
+      choices: ["NO CHANGE", "the panel's", "their", "its"],
+      answer: 0,
+      explain: "Since Maria is the only woman mentioned, \"her\" clearly and unambiguously refers to her; the underlined portion is already correct.",
+    },
+    {
+      q: "When the coach spoke with the referee, <u>he</u> apologized for the delay.",
+      choices: ["NO CHANGE", "the coach", "the referee", "somebody"],
+      answer: 1,
+      explain: "\"He\" could refer to either the coach or the referee; naming the coach directly removes the ambiguity.",
+    },
+    {
+      q: "The only witness at the scene gave <u>her</u> statement to police.",
+      choices: ["NO CHANGE", "the witness's", "their", "his or her"],
+      answer: 0,
+      explain: "Since there's only one witness clearly identified, \"her\" refers unambiguously to that witness; the underlined portion is already correct.",
+    },
+    {
+      q: "After the manager emailed the client, <u>they</u> requested a follow-up call.",
+      choices: ["NO CHANGE", "the client", "the manager", "someone"],
+      answer: 1,
+      explain: "\"They\" could refer to either the manager or the client; naming the client directly removes the ambiguity.",
+    },
+    {
+      q: "Since Grandpa told his son about the old house, <u>his</u> stories are treasured.",
+      choices: ["NO CHANGE", "Grandpa's", "their", "his or her"],
+      answer: 1,
+      explain: "\"His\" could refer to either Grandpa or his son; naming Grandpa directly removes the ambiguity.",
     },
   ],
   "en-verbtense": [
@@ -12134,6 +12434,36 @@ export const english = {
       answer: 1,
       explain: "All three verbs describing yesterday's actions should stay in the past tense.",
     },
+    {
+      q: "Last summer, the crew <u>paints</u> the entire fence in a single weekend.",
+      choices: ["NO CHANGE", "painted", "will paint", "had been painting"],
+      answer: 1,
+      explain: "\"Last summer\" signals a completed past action, so the simple past \"painted\" is needed, not the present tense \"paints.\"",
+    },
+    {
+      q: "By the time the guests arrived, the cake already <u>melts</u> in the heat.",
+      choices: ["NO CHANGE", "had already melted", "melted", "will melt"],
+      answer: 1,
+      explain: "The melting happened before another past event (the guests arriving), so the past perfect \"had already melted\" is needed.",
+    },
+    {
+      q: "Every winter, the lake <u>freezes</u> over completely by January.",
+      choices: ["NO CHANGE", "froze", "will freeze", "had frozen"],
+      answer: 0,
+      explain: "This describes a recurring, ongoing fact, so the present tense \"freezes\" is correct as already written.",
+    },
+    {
+      q: "She finished the marathon, then <u>celebrates</u> with her family that night.",
+      choices: ["NO CHANGE", "celebrated", "celebrate", "will celebrate"],
+      answer: 1,
+      explain: "Both actions happened in the past and should match: \"finished\" and \"celebrated.\"",
+    },
+    {
+      q: "Water <u>boils</u> at a lower temperature at high altitude.",
+      choices: ["NO CHANGE", "boiled", "will boil", "had boiled"],
+      answer: 0,
+      explain: "This states a general scientific fact, so the present tense \"boils\" is correct as already written.",
+    },
   ],
   "en-svagreement": [
     {
@@ -13235,6 +13565,36 @@ export const english = {
       ],
       answer: 1,
       explain: "\"Together with its negatives\" is a parenthetical phrase, not a second subject, so the singular \"photograph\" still takes \"has.\"",
+    },
+    {
+      q: "The list of ingredients <u>is</u> printed on the back of the box.",
+      choices: ["NO CHANGE", "are", "were", "have been"],
+      answer: 0,
+      explain: "The subject is the singular \"list\" (not \"ingredients\"), so the singular verb \"is\" is correct as already written.",
+    },
+    {
+      q: "Neither the players nor the coach <u>were</u> satisfied with the call.",
+      choices: ["NO CHANGE", "was", "have been", "being"],
+      answer: 1,
+      explain: "With \"neither...nor,\" the verb agrees with the nearer subject, the singular \"coach,\" so \"was\" is needed.",
+    },
+    {
+      q: "The committee members <u>disagree</u> about the new policy.",
+      choices: ["NO CHANGE", "disagrees", "has disagreed", "is disagreeing"],
+      answer: 0,
+      explain: "\"Members\" is plural, so the plural verb \"disagree\" is correct as already written.",
+    },
+    {
+      q: "A box of chocolates <u>were</u> left on the doorstep.",
+      choices: ["NO CHANGE", "was", "have been", "were being"],
+      answer: 1,
+      explain: "The subject is the singular \"box\" (not \"chocolates\"), so the singular verb \"was\" is needed.",
+    },
+    {
+      q: "Each of the runners <u>have</u> a personal best time to beat.",
+      choices: ["NO CHANGE", "has", "having", "having had"],
+      answer: 1,
+      explain: "\"Each\" is singular, so the singular verb \"has\" is needed, not \"have.\"",
     },
   ],
   "en-comparisons": [
@@ -14338,6 +14698,36 @@ export const english = {
       answer: 1,
       explain: "\"Traffic\" is uncountable, so it takes \"less\" and the singular verb \"was,\" not \"fewer\" or \"were.\"",
     },
+    {
+      q: "Of the two finalists, Priya scored <u>higher</u> on the written exam.",
+      choices: ["NO CHANGE", "highest", "more high", "most high"],
+      answer: 0,
+      explain: "Comparing exactly two things calls for the comparative form \"higher,\" which is correct as already written.",
+    },
+    {
+      q: "This recipe is the <u>more</u> difficult of all five in the cookbook.",
+      choices: ["NO CHANGE", "most", "more of the", "difficultest"],
+      answer: 1,
+      explain: "Comparing five items (more than two) calls for the superlative form \"most,\" not the comparative \"more.\"",
+    },
+    {
+      q: "Between the two routes, the coastal road is <u>shorter</u>.",
+      choices: ["NO CHANGE", "shortest", "more short", "most short"],
+      answer: 0,
+      explain: "Comparing exactly two routes calls for the comparative form \"shorter,\" which is correct as already written.",
+    },
+    {
+      q: "She is the <u>better</u> singer in the entire choir.",
+      choices: ["NO CHANGE", "best", "more good", "goodest"],
+      answer: 1,
+      explain: "Comparing her to the entire choir (more than two) calls for the superlative \"best,\" not the comparative \"better.\"",
+    },
+    {
+      q: "Of the three desserts, the pie was <u>tastier</u> than the other two.",
+      choices: ["NO CHANGE", "tastiest", "more tasty", "most tasty"],
+      answer: 1,
+      explain: "Comparing three or more desserts calls for the superlative form \"tastiest,\" not the comparative \"tastier.\"",
+    },
   ],
   "en-wordchoice": [
     {
@@ -15439,6 +15829,36 @@ export const english = {
       ],
       answer: 1,
       explain: "\"Conscience\" refers to one's moral sense of right and wrong, which fits this sentence.",
+    },
+    {
+      q: "The two paintings looked <u>too</u> similar to tell apart.",
+      choices: ["NO CHANGE", "to", "two", "too,"],
+      answer: 0,
+      explain: "\"Too\" correctly means \"excessively\" here, which fits this sentence as already written.",
+    },
+    {
+      q: "Please bring you're umbrella, <u>it's</u> supposed to rain.",
+      choices: ["NO CHANGE", "its", "its'", "it is'"],
+      answer: 0,
+      explain: "\"It's\" correctly means \"it is\" here, which fits this sentence as already written.",
+    },
+    {
+      q: "The store is right <u>their</u>, next to the pharmacy.",
+      choices: ["NO CHANGE", "there", "they're", "there's"],
+      answer: 1,
+      explain: "\"There\" correctly indicates location here; \"their\" is a possessive pronoun and doesn't fit.",
+    },
+    {
+      q: "We arrived earlier <u>then</u> everyone else at the party.",
+      choices: ["NO CHANGE", "than", "then,", "that"],
+      answer: 1,
+      explain: "\"Than\" is used for comparisons; \"then\" refers to time and doesn't fit this sentence.",
+    },
+    {
+      q: "The twins are identical, so <u>their</u> hard to tell apart.",
+      choices: ["NO CHANGE", "they're", "there", "there's"],
+      answer: 1,
+      explain: "\"They're\" correctly means \"they are\" here; \"their\" is a possessive pronoun and doesn't fit.",
     },
   ],
   "en-idioms": [
@@ -16542,6 +16962,36 @@ export const english = {
       answer: 1,
       explain: "The standard idiom is \"thankful for.\"",
     },
+    {
+      q: "She is capable <u>of</u> handling far more responsibility.",
+      choices: ["NO CHANGE", "for", "with", "to"],
+      answer: 0,
+      explain: "The standard idiom is \"capable of,\" which is correct as already written.",
+    },
+    {
+      q: "The manager was responsible <u>for</u> of the entire budget.",
+      choices: ["NO CHANGE", "for", "of", "with"],
+      answer: 1,
+      explain: "The standard idiom is \"responsible for,\" not \"responsible for of\"; the extra \"of\" needs to be removed.",
+    },
+    {
+      q: "He is interested <u>in</u> pursuing a career in engineering.",
+      choices: ["NO CHANGE", "on", "for", "with"],
+      answer: 0,
+      explain: "The standard idiom is \"interested in,\" which is correct as already written.",
+    },
+    {
+      q: "The team was consistent <u>on</u> its approach all season.",
+      choices: ["NO CHANGE", "in", "with", "for"],
+      answer: 1,
+      explain: "The standard idiom is \"consistent in,\" not \"consistent on.\"",
+    },
+    {
+      q: "The results were consistent <u>to</u> the researchers' original hypothesis.",
+      choices: ["NO CHANGE", "with", "for", "of"],
+      answer: 1,
+      explain: "The standard idiom is \"consistent with,\" not \"consistent to.\"",
+    },
   ],
   "en-verbalphrases": [
     {
@@ -17644,6 +18094,36 @@ export const english = {
       answer: 0,
       explain: "The past participial phrase \"Surprised by the sudden applause\" correctly modifies \"the speaker,\" who immediately follows it. This version is already correct.",
     },
+    {
+      q: "<u>Running</u> late, she skipped breakfast entirely.",
+      choices: ["NO CHANGE", "Ran", "To run", "Having run"],
+      answer: 0,
+      explain: "The gerund phrase \"Running late\" correctly modifies \"she,\" and the underlined portion is already correct.",
+    },
+    {
+      q: "<u>To winning</u> the scholarship, she had to submit three essays.",
+      choices: ["NO CHANGE", "To win", "Winning", "Won"],
+      answer: 1,
+      explain: "The infinitive \"To win\" correctly expresses purpose here (\"in order to win\"); \"To winning\" mixes an infinitive with a gerund incorrectly.",
+    },
+    {
+      q: "<u>Determined</u> to finish the race, he ignored the pain in his ankle.",
+      choices: ["NO CHANGE", "Determine", "Determining", "To determine"],
+      answer: 0,
+      explain: "The past participial phrase \"Determined to finish the race\" correctly modifies \"he,\" and the underlined portion is already correct.",
+    },
+    {
+      q: "<u>Study</u> for the exam took up her entire weekend.",
+      choices: ["NO CHANGE", "Studying", "To study", "Studied"],
+      answer: 1,
+      explain: "The gerund \"Studying\" functions as the subject of the sentence; the bare verb \"Study\" can't serve that role.",
+    },
+    {
+      q: "<u>Exhausting</u> from the long flight, they went straight to bed.",
+      choices: ["NO CHANGE", "Exhausted", "Exhaust", "To exhaust"],
+      answer: 1,
+      explain: "\"They\" were the ones exhausted (not exhausting to others), so the past participle \"Exhausted\" is needed, not the present participle \"Exhausting.\"",
+    },
   ],
   "en-fragments": [
     {
@@ -17707,16 +18187,16 @@ export const english = {
         "The original is a fragment (a dependent clause alone). It needs an independent clause to complete the thought.",
     },
     {
-      q: "The rain stopped the sun came out.",
+      q: "The clouds cleared the stars appeared.",
       choices: [
-        "The rain stopped the sun came out.",
-        "The rain stopped, the sun came out.",
-        "The rain stopped, and the sun came out.",
-        "The rain, stopped the sun came out.",
+        "The clouds cleared the stars appeared.",
+        "The clouds cleared, the stars appeared.",
+        "The clouds cleared, and the stars appeared.",
+        "The clouds, cleared the stars appeared.",
       ],
       answer: 2,
       explain:
-        "Two complete sentences (\"The rain stopped\" / \"the sun came out\") need a comma and coordinating conjunction, or other proper punctuation, to be joined correctly.",
+        "Two complete sentences (\"The clouds cleared\" / \"the stars appeared\") need a comma and coordinating conjunction, or other proper punctuation, to be joined correctly.",
     },
     {
       q: "Having finished her homework early. She watched a movie with her family.",
@@ -18753,6 +19233,36 @@ export const english = {
       ],
       answer: 1,
       explain: "These are two independent clauses with no conjunction between them, so a semicolon correctly joins them, avoiding a comma splice or run-on.",
+    },
+    {
+      q: "Because the power went <u>out, the</u> whole neighborhood lost internet access.",
+      choices: ["NO CHANGE", "out the", "out; the", "out. The"],
+      answer: 0,
+      explain: "\"Because the power went out\" is a dependent clause correctly attached to the main clause with a comma; the underlined portion is already correct.",
+    },
+    {
+      q: "The printer jammed <u>again the</u> report still hadn't finished.",
+      choices: ["NO CHANGE", "again, and the", "again and, the", "again; and, the"],
+      answer: 1,
+      explain: "This is a run-on joining two independent clauses with no punctuation; adding a comma and \"and\" correctly connects them.",
+    },
+    {
+      q: "<u>Although the trail was steep</u>, the hikers reached the summit by noon.",
+      choices: ["NO CHANGE", "The trail was steep,", "The trail was steep it", "Although, the trail was steep"],
+      answer: 0,
+      explain: "\"Although the trail was steep\" is correctly formed as a dependent clause introducing the sentence, set off with a comma.",
+    },
+    {
+      q: "The library closed early the students had to find another place to study.",
+      choices: ["NO CHANGE", "The library closed early, so the students", "The library closed early. The students", "The library closed early; so the students"],
+      answer: 1,
+      explain: "This run-on needs a comma plus a coordinating conjunction (\"so\") to correctly join the two independent clauses; a period would also work but only one choice offered here fixes it correctly with \"so.\"",
+    },
+    {
+      q: "<u>The meeting ran long</u>, lunch was pushed back an hour.",
+      choices: ["NO CHANGE", "Since the meeting ran long", "The meeting ran long it", "Since, the meeting ran long"],
+      answer: 1,
+      explain: "Without a subordinating word, this is a comma splice joining two independent clauses; \"Since the meeting ran long\" correctly turns the first clause into a dependent one.",
     },
   ],
   "en-parallel": [
@@ -19856,6 +20366,36 @@ export const english = {
       answer: 1,
       explain: "The comparison should use matching forms. Since \"Drawing\" is a gerund, \"writing\" should be too.",
     },
+    {
+      q: "The workshop covered <u>planning, budgeting, and marketing</u> strategies.",
+      choices: ["NO CHANGE", "planning, budgeting, and how to market", "planning, to budget, and marketing", "planning, budgeted, and marketing"],
+      answer: 0,
+      explain: "All three items are matching gerund forms (\"planning, budgeting, marketing\"), which is already correct.",
+    },
+    {
+      q: "The coach wants players who are fast, strong, and <u>who hustle</u>.",
+      choices: ["NO CHANGE", "hustling", "hustle", "have hustle"],
+      answer: 2,
+      explain: "The list should use matching adjective forms: \"fast, strong, and eager\" or similar; \"hustle\" (as a plain adjective-like description) fits better than the mismatched clause \"who hustle.\"",
+    },
+    {
+      q: "She spent the afternoon <u>reading, journaling, and sketching</u> by the lake.",
+      choices: ["NO CHANGE", "reading, journaling, and to sketch", "reading, to journal, and sketching", "read, journaling, and sketching"],
+      answer: 0,
+      explain: "All three items are matching gerund forms, which is already correct.",
+    },
+    {
+      q: "The candidate promised to cut taxes, to create jobs, and <u>improving</u> schools.",
+      choices: ["NO CHANGE", "to improve", "improve", "improvement of"],
+      answer: 1,
+      explain: "The list should use matching infinitive forms: \"to cut, to create, and to improve.\"",
+    },
+    {
+      q: "Good leaders listen carefully, <u>communicating clearly, and delegate</u> wisely.",
+      choices: ["NO CHANGE", "communicate clearly, and delegate", "communicate clearly, and delegating", "communication is clear, and delegate"],
+      answer: 1,
+      explain: "All three items need matching base-form verbs: \"listen, communicate, delegate,\" not the gerund \"communicating.\"",
+    },
   ],
   "en-modifiers": [
     {
@@ -20957,6 +21497,36 @@ export const english = {
       ],
       answer: 1,
       explain: "The modifier \"framed in gold\" should sit next to \"painting,\" the word it describes, rather than next to \"window.\"",
+    },
+    {
+      q: "<u>Eager to impress the judges</u>, the baker decorated the cake with intricate flowers.",
+      choices: ["NO CHANGE", "The judges, eager to impress,", "Eager to impress, the judges", "The cake, eager to impress the judges,"],
+      answer: 0,
+      explain: "\"Eager to impress the judges\" correctly modifies \"the baker,\" who immediately follows it — already correct.",
+    },
+    {
+      q: "Covered in frost, the farmer surveyed the fields early that morning.",
+      choices: ["NO CHANGE", "The farmer surveyed the frost-covered fields early that morning.", "The farmer, covered in frost, surveyed the fields early that morning.", "Early that morning, covered in frost, the farmer surveyed the fields."],
+      answer: 1,
+      explain: "The original implies the farmer, not the fields, was covered in frost; rewording to \"frost-covered fields\" places the modifier correctly.",
+    },
+    {
+      q: "<u>Determined to set a new record</u>, the sprinter trained twice a day.",
+      choices: ["NO CHANGE", "The sprinter, determined to set a new record", "Determined to set a new record, training", "The record, determined to be set,"],
+      answer: 0,
+      explain: "\"Determined to set a new record\" correctly modifies \"the sprinter,\" who immediately follows it — already correct.",
+    },
+    {
+      q: "Wrapped in newspaper, the mover carried the fragile vase carefully.",
+      choices: ["NO CHANGE", "The mover carried the fragile, newspaper-wrapped vase carefully.", "The mover, wrapped in newspaper, carried the fragile vase carefully.", "Carefully, wrapped in newspaper, the mover carried the fragile vase."],
+      answer: 1,
+      explain: "The original implies the mover, not the vase, was wrapped in newspaper; rewording to \"newspaper-wrapped vase\" places the modifier correctly.",
+    },
+    {
+      q: "<u>Freshly baked</u>, the aroma of the bread filled the kitchen.",
+      choices: ["NO CHANGE", "The bread, freshly baked,", "Freshly baking,", "The kitchen, freshly baked,"],
+      answer: 1,
+      explain: "The original implies the aroma was freshly baked, not the bread; \"The bread, freshly baked,\" correctly attaches the modifier to what it describes.",
     },
   ],
   "en-relevance": [
@@ -24008,6 +24578,36 @@ export const english = {
       answer: 1,
       explain: "\"Consequently\" signals that the lost blossoms were a direct result of the frozen irrigation lines.",
     },
+    {
+      q: "The bakery raised its prices last month. <u>As a result</u>, several regular customers stopped coming in.",
+      choices: ["NO CHANGE", "For example", "Similarly", "In addition"],
+      answer: 0,
+      explain: "The price increase directly caused customers to stop coming, so the cause-and-effect transition \"As a result\" is correct as already written.",
+    },
+    {
+      q: "The intern arrived early every single day. <u>However</u>, her manager praised her dedication.",
+      choices: ["NO CHANGE", "As a result", "Therefore", "Consequently"],
+      answer: 1,
+      explain: "The manager's praise is a direct result of the intern's dedication, not a contrast to it, so \"Therefore\" fits better than \"However.\"",
+    },
+    {
+      q: "The novelist rewrote the ending three times. <u>Similarly</u>, the editor revised the opening chapter twice.",
+      choices: ["NO CHANGE", "In contrast", "As a result", "Therefore"],
+      answer: 0,
+      explain: "Both the novelist and editor made multiple revisions, a parallel action, so \"Similarly\" is correct as already written.",
+    },
+    {
+      q: "The city cut funding for the youth program. <u>For example</u>, enrollment dropped by half the following year.",
+      choices: ["NO CHANGE", "As a result", "Similarly", "In addition"],
+      answer: 1,
+      explain: "The enrollment drop was a direct consequence of the funding cut, not an example of it, so \"As a result\" fits better.",
+    },
+    {
+      q: "The trail was steep and rocky. <u>However</u>, sudden afternoon storms made it more dangerous.",
+      choices: ["NO CHANGE", "In addition", "Nevertheless", "As a result"],
+      answer: 1,
+      explain: "The storms add another difficulty on top of the steep, rocky terrain rather than contrasting with it, so the additive transition \"In addition\" is needed, not \"However.\"",
+    },
   ],
   "en-macrologic": [
     {
@@ -26051,6 +26651,36 @@ export const english = {
       answer: 1,
       explain: "\"Extra\" and \"additional\" repeat the same idea. Choice B keeps only the necessary word.",
     },
+    {
+      q: "The results of the <u>study clearly demonstrate and show</u> a strong correlation.",
+      choices: ["NO CHANGE", "study clearly demonstrate", "study demonstrate and clearly show", "study clearly, demonstrate, and show"],
+      answer: 1,
+      explain: "\"Demonstrate\" and \"show\" repeat the same idea; keeping just \"demonstrate\" removes the redundancy.",
+    },
+    {
+      q: "The report <u>summarizes the key findings</u> from the survey.",
+      choices: ["NO CHANGE", "briefly summarizes and recaps the key findings", "summarizes the key main findings", "summarizes, in brief, the key findings"],
+      answer: 0,
+      explain: "\"Summarizes the key findings\" is already concise with no redundant words, so the underlined portion is correct as written.",
+    },
+    {
+      q: "Due to the fact that <u>the roads were icy</u>, the school closed for the day.",
+      choices: ["NO CHANGE", "the roads were icy and covered in ice", "the roads, which were icy,", "the roads were, in fact, icy"],
+      answer: 0,
+      explain: "\"The roads were icy\" is already concise; the wordiness problem in this sentence is actually in \"Due to the fact that,\" not the underlined portion.",
+    },
+    {
+      q: "The museum's new wing <u>houses a large and extensive</u> collection of fossils.",
+      choices: ["NO CHANGE", "houses a large", "houses an extensive", "houses a big, large, extensive"],
+      answer: 2,
+      explain: "\"Large\" and \"extensive\" repeat the same idea; keeping just one word (like \"extensive\") removes the redundancy.",
+    },
+    {
+      q: "The volunteers <u>worked together, collaboratively,</u> to clean up the park.",
+      choices: ["NO CHANGE", "worked together", "worked together as a team collectively", "all worked together, all as one"],
+      answer: 1,
+      explain: "\"Together\" and \"collaboratively\" repeat the same idea; keeping just \"worked together\" removes the redundancy.",
+    },
   ],
   "en-tone": [
     {
@@ -26917,6 +27547,36 @@ export const english = {
       ],
       answer: 1,
       explain: "This revision states the finding in precise, objective language appropriate for a formal quality control report.",
+    },
+    {
+      q: "In a formal lab report, the results were <u>consistent</u> with the initial hypothesis.",
+      choices: ["NO CHANGE", "totally in line", "pretty much matching", "basically the same as"],
+      answer: 0,
+      explain: "\"Consistent with\" is precise, objective phrasing appropriate for a formal lab report, so the underlined portion is correct as written.",
+    },
+    {
+      q: "In a casual text to a friend, that movie was <u>utterly and profoundly disappointing</u> to me.",
+      choices: ["NO CHANGE", "honestly kind of a letdown", "aesthetically deficient", "a source of considerable disappointment"],
+      answer: 1,
+      explain: "A casual text between friends calls for informal phrasing like \"honestly kind of a letdown,\" not the overly formal original.",
+    },
+    {
+      q: "In a formal cover letter, I am <u>super pumped</u> about the opportunity to join your team.",
+      choices: ["NO CHANGE", "genuinely enthusiastic", "totally stoked", "really hyped"],
+      answer: 1,
+      explain: "A formal cover letter calls for professional phrasing like \"genuinely enthusiastic,\" not casual slang.",
+    },
+    {
+      q: "In a formal city council memo, the proposed budget cuts would be <u>detrimental</u> to public services.",
+      choices: ["NO CHANGE", "a real bummer for", "kind of bad for", "no good for"],
+      answer: 0,
+      explain: "\"Detrimental\" is precise, formal language appropriate for an official memo, so the underlined portion is correct as written.",
+    },
+    {
+      q: "In an email to a close friend, dinner last night was <u>an exceptionally delightful culinary experience</u>.",
+      choices: ["NO CHANGE", "so good", "gastronomically superb", "a remarkably pleasurable dining occasion"],
+      answer: 1,
+      explain: "A casual email to a close friend calls for simple, informal phrasing like \"so good,\" not the overly formal original.",
     },
   ],
 };
