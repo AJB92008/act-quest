@@ -22,6 +22,7 @@ import { renderVocabulary } from "./ui/vocabulary.js";
 import { renderVocabQuiz } from "./ui/vocabQuiz.js";
 import { renderEndlessMode } from "./ui/endlessMode.js";
 import { renderPracticeTest } from "./ui/practiceTest.js";
+import { renderEssay } from "./ui/essay.js";
 import { ensureDevPanel } from "./ui/devPanel.js";
 import { runDevBootstrap } from "./devBootstrap.js";
 
@@ -50,6 +51,7 @@ const SCREENS = {
   vocabQuiz: (r, nav, params) => renderVocabQuiz(r, nav, params),
   endless: (r, nav) => renderEndlessMode(r, nav),
   practiceTest: (r, nav) => renderPracticeTest(r, nav),
+  essay: (r, nav, params) => renderEssay(r, nav, params),
 };
 
 function navigate(screen, params = {}) {

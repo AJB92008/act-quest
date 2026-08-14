@@ -63,6 +63,11 @@ export function renderPracticeTest(root, navigate) {
   // once total across the whole test or re-firing on every question render.
   let warnedAtFiveMin = false;
   let warnedAtOneMin = false;
+  // Real ACT Writing doesn't affect the 1-36 composite (it's reported
+  // separately, 2-12) so this only decides whether the results screen
+  // offers to continue into the Writing section afterward — it never
+  // touches sectionResults/composite math above.
+  let includeWriting = false;
 
   function stopTimer() {
     if (timerInterval) clearInterval(timerInterval);
@@ -105,6 +110,10 @@ export function renderPracticeTest(root, navigate) {
               ? `<div class="endless-best-tile"><span class="endless-best-num">${best}</span><span>Best Composite</span></div>`
               : ""
           }
+          <label class="drill-skill-row" style="margin-bottom:14px;">
+            <input type="checkbox" id="includeWritingCheckbox" />
+            <span class="drill-skill-name">✍️ Include the optional Writing section (+40 min)</span>
+          </label>
           <button class="btn-primary lesson-start-btn" data-start>Start Test &rarr;</button>
         </div>
       </main>
@@ -114,6 +123,7 @@ export function renderPracticeTest(root, navigate) {
     root.querySelector("[data-back]").addEventListener("click", () => navigate("dashboard"));
     const startBtn = root.querySelector("[data-start]");
     startBtn.addEventListener("click", () => {
+      includeWriting = root.querySelector("#includeWritingCheckbox").checked;
       startBtn.disabled = true;
       startBtn.textContent = "Loading…";
       sectionIndex = 0;
@@ -357,7 +367,8 @@ export function renderPracticeTest(root, navigate) {
             <span>🪙 +${coinsEarned} coins</span>
           </div>
           <div class="results-actions">
-            <button class="btn-primary" data-retry>Take Another Test</button>
+            ${includeWriting ? `<button class="btn-primary" data-writing>Continue to Writing Section &rarr;</button>` : ""}
+            <button class="${includeWriting ? "btn-secondary" : "btn-primary"}" data-retry>Take Another Test</button>
             <button class="btn-secondary" data-dashboard>Back to Progress</button>
             <button class="btn-secondary" data-map>World Map</button>
           </div>
@@ -366,6 +377,7 @@ export function renderPracticeTest(root, navigate) {
     `;
 
     wireHud(root, goTo);
+    root.querySelector("[data-writing]")?.addEventListener("click", () => navigate("essay", { fromPracticeTest: true, practiceTestResults: { sectionResults, composite } }));
     root.querySelector("[data-retry]").addEventListener("click", () => renderPracticeTest(root, navigate));
     root.querySelector("[data-dashboard]").addEventListener("click", () => navigate("dashboard"));
     root.querySelector("[data-map]").addEventListener("click", () => navigate("map"));

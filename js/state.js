@@ -168,6 +168,10 @@ function defaultSave() {
       bestComposite: 0,
       history: [],
     },
+    essays: {
+      bestScore: 0,
+      history: [],
+    },
     streak: {
       lastActiveDate: null,
       current: 0,
@@ -216,6 +220,7 @@ export class GameState {
       fresh.bossCleared = { ...fresh.bossCleared, ...parsed.bossCleared };
       fresh.monster = { ...fresh.monster, ...parsed.monster };
       fresh.practiceTests = { ...fresh.practiceTests, ...parsed.practiceTests };
+      fresh.essays = { ...fresh.essays, ...parsed.essays };
       fresh.streak = { ...fresh.streak, ...parsed.streak };
       fresh.achievements = {
         ...fresh.achievements,
@@ -696,6 +701,35 @@ export class GameState {
     if (isNewBest) this.data.practiceTests.bestComposite = composite;
     this.data.practiceTests.history.push({ date: Date.now(), composite, sectionResults });
     if (this.data.practiceTests.history.length > 20) this.data.practiceTests.history.shift();
+    const levelResult = this._grantXp(starsEarned);
+    this._recordDailyActivity();
+    const newlyUnlocked = this._checkAchievements();
+    this.save();
+    return { isNewBest, newlyUnlocked, ...levelResult };
+  }
+
+  // --- optional Writing section ---
+  get essayBest() {
+    return this.data.essays.bestScore;
+  }
+
+  getEssayHistory() {
+    return this.data.essays.history;
+  }
+
+  /** Records a finished, self-scored essay. `domainScores` is
+   * { ideas, development, organization, language }, each 1-6 (this
+   * player's own single-rater rubric self-assessment); `totalScore` is the
+   * 2-12 scale result the essay screen derives from those the same way the
+   * real ACT averages two raters' domain scores into one, just with one
+   * rater instead of two. */
+  recordEssayResult({ promptId, wordCount, domainScores, totalScore, starsEarned, coinsEarned }) {
+    this.data.totalStars += starsEarned;
+    this.data.coins += coinsEarned;
+    const isNewBest = totalScore > this.data.essays.bestScore;
+    if (isNewBest) this.data.essays.bestScore = totalScore;
+    this.data.essays.history.push({ date: Date.now(), promptId, wordCount, domainScores, totalScore });
+    if (this.data.essays.history.length > 20) this.data.essays.history.shift();
     const levelResult = this._grantXp(starsEarned);
     this._recordDailyActivity();
     const newlyUnlocked = this._checkAchievements();
