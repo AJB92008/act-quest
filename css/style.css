@@ -2544,3 +2544,101 @@ button.drill-skill-row:hover {
     width: calc(100vw - 16px);
   }
 }
+
+/* ---------- color wheel picker ---------- */
+.color-wheel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 31, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.color-wheel-panel {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  padding: 24px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 300px;
+}
+
+.color-wheel-panel h3 {
+  margin: 0;
+}
+
+.color-wheel-canvas-wrap {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  touch-action: none;
+}
+
+.color-wheel-canvas {
+  border-radius: 50%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.color-wheel-cursor {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.color-wheel-lightness-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.color-wheel-lightness {
+  width: 100%;
+}
+
+.color-wheel-footer {
+  width: 100%;
+}
+
+.color-wheel-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.color-wheel-preview {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.color-wheel-hex {
+  font-weight: 800;
+  font-family: monospace;
+  font-size: 0.95rem;
+}
+
+.color-wheel-exit {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+}

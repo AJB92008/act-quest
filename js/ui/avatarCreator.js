@@ -12,6 +12,7 @@ import {
   itemsByCategory,
 } from "./monster.js";
 import { hudHTML, wireHud } from "./hud.js";
+import { openColorWheel } from "./colorWheel.js";
 
 const TABS = [
   { id: "body", name: "Body", icon: "🧬" },
@@ -151,7 +152,6 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
       <div class="control-group">
         <h4>Color</h4>
         <div class="swatch-row">${colorSwatches}${colorWheelSwatch}</div>
-        <input type="color" id="bodyColorWheelInput" value="${avatar.bodyColor}" hidden />
       </div>
       <div class="control-group">
         <h4>Body Shape</h4>
@@ -287,13 +287,29 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
     });
 
     const colorWheelBtn = root.querySelector("[data-color-wheel]");
-    const colorWheelInput = root.querySelector("#bodyColorWheelInput");
-    if (colorWheelBtn && !colorWheelBtn.disabled && colorWheelInput) {
-      colorWheelBtn.addEventListener("click", () => colorWheelInput.click());
-      colorWheelInput.addEventListener("input", () => {
-        gameState.setAvatar({ bodyColor: colorWheelInput.value });
-        quip = "";
-        render();
+    if (colorWheelBtn && !colorWheelBtn.disabled) {
+      colorWheelBtn.addEventListener("click", () => {
+        openColorWheel({
+          initialColor: gameState.getAvatar().bodyColor,
+          // Live-updates the big preview directly, in place, rather than
+          // calling render() — a full root.innerHTML rebuild on every
+          // drag tick would destroy the picker's own DOM (it lives
+          // outside root, appended to document.body, specifically to
+          // avoid that) and, before this fix, was exactly what made a
+          // native <input type="color"> picker vanish the instant it was
+          // touched.
+          onChange: (hex) => {
+            gameState.setAvatar({ bodyColor: hex });
+            const previewEl = root.querySelector(".avatar-preview");
+            if (previewEl) previewEl.innerHTML = monsterSVG(gameState.getDisplayAvatar(), { size: 270 });
+          },
+          // Only re-render the full screen once the picker actually
+          // closes, to refresh swatch selection state, evolution notes, etc.
+          onClose: () => {
+            quip = "";
+            render();
+          },
+        });
       });
     }
 
