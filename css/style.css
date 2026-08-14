@@ -134,6 +134,20 @@ input[type="password"] {
   max-width: 320px;
 }
 
+.auth-gate-card {
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.auth-gate-card .cloud-auth-form {
+  align-items: stretch;
+}
+
+.auth-gate-card [data-gate-skip] {
+  margin-top: 14px;
+}
+
 .screen {
   max-width: 980px;
   margin: 0 auto;

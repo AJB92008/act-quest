@@ -13,6 +13,7 @@ import { renderShop } from "./ui/shop.js";
 import { renderDashboard } from "./ui/dashboard.js";
 import { renderAchievements } from "./ui/achievements.js";
 import { renderAvatarCreator } from "./ui/avatarCreator.js";
+import { renderAuthGate } from "./ui/authGate.js";
 import { renderBackgroundLesson } from "./ui/background.js";
 import { renderBackgroundQuiz } from "./ui/backgroundQuiz.js";
 import { renderVocabulary } from "./ui/vocabulary.js";
@@ -38,6 +39,7 @@ const SCREENS = {
   dashboard: (r, nav) => renderDashboard(r, nav),
   achievements: (r, nav) => renderAchievements(r, nav),
   avatarCreator: (r, nav, params) => renderAvatarCreator(r, nav, params),
+  authGate: (r, nav) => renderAuthGate(r, nav),
   background: (r, nav, params) => renderBackgroundLesson(r, nav, params),
   backgroundQuiz: (r, nav, params) => renderBackgroundQuiz(r, nav, params),
   vocabulary: (r, nav) => renderVocabulary(r, nav),
@@ -69,7 +71,11 @@ const devTarget = runDevBootstrap(gameState);
 if (devTarget) {
   navigate(devTarget.screen, devTarget.params);
 } else if (!gameState.data.onboarded) {
-  navigate("avatarCreator", { onboarding: true });
+  // Account creation (or an explicit "skip for now") gates onboarding —
+  // see ui/authGate.js. Once onboarded flips true, this branch is never
+  // reached again for this save, so returning players go straight to the
+  // map without re-prompting.
+  navigate("authGate");
 } else {
   navigate("map");
 }

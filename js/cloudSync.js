@@ -45,6 +45,7 @@ const REMOTE_MARKER_KEY = "act-quest-last-known-remote-update";
 
 let currentUser = null;
 let pendingConflict = null; // { remoteData, remoteUpdatedAt } while awaiting the player's choice
+let isSyncing = false;
 let pushTimer = null;
 let unsubscribeSave = null;
 const listeners = new Set();
@@ -67,6 +68,14 @@ export function getCloudStatus() {
     signedIn: !!currentUser && !currentUser.isAnonymous,
     email: currentUser?.email ?? null,
     conflict: pendingConflict,
+    // True from the moment a user is authenticated until the initial
+    // Firestore pull (and any resulting import/push) has actually
+    // settled. Callers that route based on signedIn — the auth gate,
+    // notably — need to wait for this to clear first: `signedIn` alone
+    // flips true before gameState has had a chance to absorb a pulled
+    // remote save, which previously sent brand-new devices straight to
+    // avatar creation instead of the account's real, already-onboarded data.
+    syncing: isSyncing,
   };
 }
 
@@ -91,32 +100,49 @@ function scheduleSync() {
 
 async function handleSignedIn(user) {
   currentUser = user;
+  isSyncing = true;
   // Notify immediately once authenticated, before the Firestore round-trip
   // below — otherwise a Firestore-side failure (bad rules, no network)
   // leaves the dashboard's cloud card stuck on "Connecting…" forever,
-  // since the only other notify() calls are past that await.
+  // since the only other notify() calls are past that await. `syncing`
+  // stays true through this whole call, though, so callers that route
+  // based on `signedIn` (the auth gate) know not to act on this first
+  // notification alone.
   notify();
   if (!unsubscribeSave) unsubscribeSave = gameState.onSave(scheduleSync);
 
-  const snap = await getDoc(saveDocRef(user.uid));
-  if (!snap.exists()) {
-    await pushNow();
+  try {
+    const snap = await getDoc(saveDocRef(user.uid));
+    if (!snap.exists()) {
+      await pushNow();
+      return;
+    }
+
+    const remote = snap.data();
+    const lastKnown = Number(localStorage.getItem(REMOTE_MARKER_KEY) || 0);
+    const remoteChangedElsewhere = remote.updatedAt > lastKnown;
+    const remoteDiffersFromLocal = JSON.stringify(remote.data) !== JSON.stringify(gameState.data);
+    // A local save that hasn't been onboarded yet (no monster made, nothing
+    // played) has nothing worth protecting — this is the common "signing
+    // into an existing account on a brand-new device" case, most notably
+    // right at the auth gate before onboarding. Adopt the remote save
+    // outright instead of interrupting a first-time sign-in with a choice
+    // that isn't really a choice.
+    const localHasProgress = gameState.data.onboarded;
+
+    if (remoteChangedElsewhere && remoteDiffersFromLocal && localHasProgress) {
+      pendingConflict = { remoteData: remote.data, remoteUpdatedAt: remote.updatedAt };
+    } else {
+      if (remoteDiffersFromLocal && !localHasProgress) {
+        gameState.importSave(JSON.stringify(remote.data));
+      }
+      localStorage.setItem(REMOTE_MARKER_KEY, String(remote.updatedAt));
+      await pushNow();
+    }
+  } finally {
+    isSyncing = false;
     notify();
-    return;
   }
-
-  const remote = snap.data();
-  const lastKnown = Number(localStorage.getItem(REMOTE_MARKER_KEY) || 0);
-  const remoteChangedElsewhere = remote.updatedAt > lastKnown;
-  const remoteDiffersFromLocal = JSON.stringify(remote.data) !== JSON.stringify(gameState.data);
-
-  if (remoteChangedElsewhere && remoteDiffersFromLocal) {
-    pendingConflict = { remoteData: remote.data, remoteUpdatedAt: remote.updatedAt };
-  } else {
-    localStorage.setItem(REMOTE_MARKER_KEY, String(remote.updatedAt));
-    await pushNow();
-  }
-  notify();
 }
 
 /** Resolves a pending cloud/local conflict per the player's explicit
