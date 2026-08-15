@@ -367,6 +367,7 @@ export function renderDashboard(root, navigate) {
         </div>
         <button class="btn-secondary" data-practice-test>📝 Practice Test</button>
         <button class="btn-secondary" data-essay>✍️ Writing</button>
+        <button class="btn-secondary" data-score-report>📄 Score Report</button>
       </div>
       ${streakCalendarHTML()}
       ${achievementsPreviewHTML()}
@@ -417,6 +418,7 @@ export function renderDashboard(root, navigate) {
   wireCloudCard(root);
   root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
   root.querySelector("[data-essay]").addEventListener("click", () => navigate("essay"));
+  root.querySelector("[data-score-report]").addEventListener("click", () => navigate("scoreReport"));
   root.querySelector("[data-achievements]").addEventListener("click", () => navigate("achievements"));
   root.querySelector("[data-mistake-journal]").addEventListener("click", () => navigate("mistakeJournal"));
   root.querySelector("[data-study-plan]").addEventListener("click", () => navigate("studyPlan"));

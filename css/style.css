@@ -2690,3 +2690,22 @@ button.drill-skill-row:hover {
   bottom: 14px;
   right: 14px;
 }
+
+/* Score Report's "Print / Save as PDF" relies entirely on this — no PDF
+   library involved, just hiding everything but the report card so the
+   browser's own print dialog (which every modern browser already offers
+   "Save as PDF" as a destination for) produces something clean. */
+@media print {
+  .hud,
+  .back-btn,
+  .no-print {
+    display: none !important;
+  }
+  .score-report-screen {
+    padding: 0;
+  }
+  .score-report-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}

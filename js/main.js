@@ -24,6 +24,7 @@ import { renderEndlessMode } from "./ui/endlessMode.js";
 import { renderPracticeTest } from "./ui/practiceTest.js";
 import { renderEssay } from "./ui/essay.js";
 import { renderMistakeJournal } from "./ui/mistakeJournal.js";
+import { renderScoreReport, renderSharedReport } from "./ui/scoreReport.js";
 import { ensureDevPanel } from "./ui/devPanel.js";
 import { runDevBootstrap } from "./devBootstrap.js";
 
@@ -54,6 +55,7 @@ const SCREENS = {
   practiceTest: (r, nav) => renderPracticeTest(r, nav),
   essay: (r, nav, params) => renderEssay(r, nav, params),
   mistakeJournal: (r, nav) => renderMistakeJournal(r, nav),
+  scoreReport: (r, nav) => renderScoreReport(r, nav),
 };
 
 function navigate(screen, params = {}) {
@@ -73,22 +75,33 @@ function navigate(screen, params = {}) {
 
 document.documentElement.dataset.theme = gameState.darkMode ? "dark" : "light";
 
-initCloudSync();
-
-const devTarget = runDevBootstrap(gameState);
-if (devTarget) {
-  navigate(devTarget.screen, devTarget.params);
-} else if (!gameState.data.onboarded) {
-  // Account creation (or an explicit "skip for now") gates onboarding —
-  // see ui/authGate.js. Once onboarded flips true, this branch is never
-  // reached again for this save, so returning players go straight to the
-  // map without re-prompting.
-  navigate("authGate");
+// A `?report=<encoded>` link (see ui/scoreReport.js's "Copy Share Link")
+// is a self-contained, read-only view of *someone else's* score snapshot
+// — it needs no save data, no auth, no cloud sync, and must work even for
+// a visitor with nothing stored on this device/browser, so it's checked
+// before any of that spins up and short-circuits the entire rest of
+// bootstrap when present.
+const reportParam = new URLSearchParams(location.search).get("report");
+if (reportParam) {
+  renderSharedReport(root, reportParam);
 } else {
-  navigate("map");
-}
+  initCloudSync();
 
-// If dev mode was unlocked in a previous session, the floating panel
-// should already be there on load rather than waiting for another unlock
-// tap sequence.
-ensureDevPanel(navigate);
+  const devTarget = runDevBootstrap(gameState);
+  if (devTarget) {
+    navigate(devTarget.screen, devTarget.params);
+  } else if (!gameState.data.onboarded) {
+    // Account creation (or an explicit "skip for now") gates onboarding —
+    // see ui/authGate.js. Once onboarded flips true, this branch is never
+    // reached again for this save, so returning players go straight to the
+    // map without re-prompting.
+    navigate("authGate");
+  } else {
+    navigate("map");
+  }
+
+  // If dev mode was unlocked in a previous session, the floating panel
+  // should already be there on load rather than waiting for another unlock
+  // tap sequence.
+  ensureDevPanel(navigate);
+}
