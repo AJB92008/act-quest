@@ -127,7 +127,7 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
     const q = questions[idx];
     const correct = choiceIdx === q.answer;
     const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
-    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
+    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx);
 
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.disabled = true;

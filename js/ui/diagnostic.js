@@ -202,7 +202,7 @@ export function renderDiagnostic(root, navigate, { onboarding = false } = {}) {
     // diagnostic hit genuinely counts toward that 5-attempt threshold
     // rather than only feeding per-question stats and patterns.
     gameState.recordWeakReviewAnswer(q.skillId, correct);
-    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
+    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx);
 
     const tally = sessionSkillTally[q.skillId] || { skillName: q.skillName, subjectId: q.subjectId, attempts: 0, correct: 0 };
     tally.attempts += 1;

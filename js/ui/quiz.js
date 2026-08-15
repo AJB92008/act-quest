@@ -132,7 +132,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     const q = questions[idx];
     const correct = choiceIdx === q.answer;
     const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
-    gameState.recordQuestionAnswer(skillId, q.bankIndex, correct);
+    gameState.recordQuestionAnswer(skillId, q.bankIndex, correct, choiceIdx);
     const elapsedSeconds = (Date.now() - questionStartedAt) / 1000;
     gameState.recordPaceSample(subject.id, elapsedSeconds);
 

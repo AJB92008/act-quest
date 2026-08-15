@@ -5,6 +5,12 @@ import { ACHIEVEMENTS } from "./data/achievements.js";
 const STORAGE_KEY = "act-quest-save-v1";
 const PASS_THRESHOLD = 0.7; // score needed to pass a mini-lesson / master a skill
 const SRS_DAY_MS = 24 * 60 * 60 * 1000;
+// A soft ceiling on the Mistake Journal, not a "recent history" window —
+// at a few dozen bytes per entry this is still a few hundred KB even at
+// the cap, well within localStorage's typical budget, and no realistic
+// amount of normal play gets close to it; it exists purely so an
+// extremely long-lived save can't grow without bound.
+const MISTAKE_JOURNAL_CAP = 10000;
 
 // SM-2 spaced-repetition update, in place on `item` ({efactor, interval,
 // repetitions, dueAt}). Quality is collapsed to just two buckets (correct
@@ -195,6 +201,7 @@ function defaultSave() {
       bestScore: 0,
       history: [],
     },
+    mistakeJournal: [],
     streak: {
       lastActiveDate: null,
       current: 0,
@@ -244,6 +251,7 @@ export class GameState {
       fresh.monster = { ...fresh.monster, ...parsed.monster };
       fresh.practiceTests = { ...fresh.practiceTests, ...parsed.practiceTests };
       fresh.essays = { ...fresh.essays, ...parsed.essays };
+      fresh.mistakeJournal = Array.isArray(parsed.mistakeJournal) ? parsed.mistakeJournal : fresh.mistakeJournal;
       fresh.streak = { ...fresh.streak, ...parsed.streak };
       fresh.achievements = {
         ...fresh.achievements,
@@ -600,7 +608,7 @@ export class GameState {
    * one specific question, not just their overall accuracy on the skill it
    * belongs to. Sparse by design — most of a skill's 100 questions will
    * never appear here if the player hasn't happened to hit them yet. */
-  recordQuestionAnswer(skillId, bankIndex, correct) {
+  recordQuestionAnswer(skillId, bankIndex, correct, chosenIndex = null) {
     const progress = this.data.skillProgress[skillId];
     if (!progress || bankIndex == null) return;
     if (!progress.questionStats) progress.questionStats = {};
@@ -614,6 +622,19 @@ export class GameState {
     // hook is enough to keep the SM-2 review queue up to date everywhere
     // without touching each of those screens individually.
     this._srsTouch(this.data.srs.questions, `${skillId}:${bankIndex}`, correct);
+    // Same reasoning extends to the Mistake Journal: this is the one place
+    // that sees every missed question regardless of which screen it
+    // happened on, so it's a comprehensive longitudinal log for free
+    // rather than something each screen would need to opt into
+    // separately. Deliberately *not* rolled/capped to a small "recent N"
+    // window the way practiceTests/essays history is — the entire point
+    // is a full history that's expensive to reconstruct after the fact —
+    // just a generous ceiling so an extremely long-lived save can't grow
+    // localStorage without bound.
+    if (!correct) {
+      this.data.mistakeJournal.push({ skillId, bankIndex, chosenIndex, date: Date.now() });
+      if (this.data.mistakeJournal.length > MISTAKE_JOURNAL_CAP) this.data.mistakeJournal.shift();
+    }
   }
 
   /** A specific question's own {attempts, correct} (or undefined if the
@@ -621,6 +642,20 @@ export class GameState {
    * recordQuestionAnswer(). */
   getQuestionStat(skillId, bankIndex) {
     return this.data.skillProgress[skillId]?.questionStats?.[bankIndex];
+  }
+
+  /** Every logged mistake, newest first. Raw entries only
+   * ({skillId, bankIndex, chosenIndex, date}) — resolving the actual
+   * question text/choices/explain is the UI's job (ui/mistakeJournal.js),
+   * done by loading the relevant subject's bank the same way every other
+   * screen does, so this stays a plain data accessor with no dependency on
+   * question-bank content. */
+  getMistakeJournal() {
+    return this.data.mistakeJournal.slice().reverse();
+  }
+
+  mistakeJournalCount() {
+    return this.data.mistakeJournal.length;
   }
 
   /** Banks the stars/coins earned from a Weak Skill Review session (call

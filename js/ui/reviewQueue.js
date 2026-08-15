@@ -191,7 +191,7 @@ export function renderReviewQueue(root, navigate) {
     const reactor = root.querySelector("#monsterReactor");
     reactor.classList.add(correct ? "react-happy" : "react-sad");
 
-    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
+    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx);
 
     if (correct) {
       correctCount++;

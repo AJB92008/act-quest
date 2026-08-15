@@ -268,7 +268,7 @@ export function renderPracticeTest(root, navigate) {
       // Skipped questions (sectionAnswers[i] === null) were never actually
       // attempted, so they shouldn't count as a personal "miss" for the
       // adaptive review weighting.
-      if (sectionAnswers[i] !== null) gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
+      if (sectionAnswers[i] !== null) gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, sectionAnswers[i]);
       const catDef = categories.find((c) => c.id === q.reportingCategory);
       if (!catDef) return;
       const entry = categoryTotals[catDef.id] || { name: catDef.name, correct: 0, total: 0 };

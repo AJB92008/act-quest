@@ -125,6 +125,20 @@ function studyPlanCardHTML() {
   `;
 }
 
+function mistakeJournalPreviewHTML() {
+  const count = gameState.mistakeJournalCount();
+  return `
+    <div class="dash-predictor-card">
+      <div class="dash-predictor-score">${count}</div>
+      <div class="dash-predictor-info">
+        <strong>Mistake Journal</strong>
+        <p class="dash-monster-substat">${count === 0 ? "No missed questions logged yet." : `${count} missed question${count === 1 ? "" : "s"} logged across your whole history, searchable by skill or text.`}</p>
+      </div>
+      <button class="btn-secondary" data-mistake-journal>📓 View All</button>
+    </div>
+  `;
+}
+
 // A single styled tooltip element, positioned near the cursor on hover —
 // the native `title` attribute works but is slow to appear and unstyled,
 // so heatmap cells use `data-tip` instead and this wires the hover/move/
@@ -356,6 +370,7 @@ export function renderDashboard(root, navigate) {
       </div>
       ${streakCalendarHTML()}
       ${achievementsPreviewHTML()}
+      ${mistakeJournalPreviewHTML()}
       ${studyPlanCardHTML()}
       ${pacingCardHTML()}
       ${
@@ -403,6 +418,7 @@ export function renderDashboard(root, navigate) {
   root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
   root.querySelector("[data-essay]").addEventListener("click", () => navigate("essay"));
   root.querySelector("[data-achievements]").addEventListener("click", () => navigate("achievements"));
+  root.querySelector("[data-mistake-journal]").addEventListener("click", () => navigate("mistakeJournal"));
   root.querySelector("[data-study-plan]").addEventListener("click", () => navigate("studyPlan"));
   root.querySelector("[data-reset]").addEventListener("click", () => {
     if (confirm("Reset all progress, coins, and your monster's look? This can't be undone.")) {

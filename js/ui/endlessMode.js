@@ -219,7 +219,7 @@ export function renderEndlessMode(root, navigate) {
     const q = currentQuestion;
     const correct = choiceIdx === q.answer;
     const timed = gameState.endlessTimerEnabled;
-    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
+    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx);
 
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.disabled = true;

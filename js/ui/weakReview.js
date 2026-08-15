@@ -224,7 +224,7 @@ export function renderWeakReview(root, navigate) {
     reactor.classList.add(correct ? "react-happy" : "react-sad");
 
     gameState.recordWeakReviewAnswer(q.skillId, correct);
-    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct);
+    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx);
 
     if (correct) {
       correctCount++;
