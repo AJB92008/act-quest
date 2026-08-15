@@ -47,7 +47,7 @@ const RANDOM_QUIPS = [
 ];
 
 function traitButton(active, label, dataAttr, value) {
-  return `<button class="trait-btn ${active ? "is-selected" : ""}" data-${dataAttr}="${value}">${label}</button>`;
+  return `<button class="trait-btn ${active ? "is-selected" : ""}" data-${dataAttr}="${value}" aria-pressed="${active}">${label}</button>`;
 }
 
 function itemRow(category) {
@@ -60,7 +60,7 @@ function itemRow(category) {
       const selected = current === item.id;
       return `
         <button class="accessory-btn ${selected ? "is-selected" : ""} ${owned ? "" : "is-locked"}"
-          data-category="${category}" data-item="${item.id}" ${owned ? "" : "disabled"}>
+          data-category="${category}" data-item="${item.id}" ${owned ? "" : "disabled"} aria-pressed="${selected}">
           ${item.name}${owned ? "" : " 🔒"}
         </button>
       `;
@@ -70,6 +70,27 @@ function itemRow(category) {
 
 function randomChoice(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// The rendered SVG is aria-hidden everywhere else it appears (purely
+// decorative branding in the HUD, results screens, etc.), but here it's
+// the actual thing being edited — a screen-reader user customizing their
+// monster gets zero feedback about the result otherwise. Describing a
+// generated creature's exact rendered art precisely isn't practical, so
+// this composes a plain-text summary from the same trait data already
+// driving the visible controls instead.
+function describeAvatar(avatar) {
+  const shape = BODY_SHAPES.find((s) => s.id === avatar.bodyShape)?.name || "Round";
+  const color = BODY_COLOR_NAMES[avatar.bodyColor] || avatar.bodyColor;
+  const eyes = EYE_NAMES[avatar.eyeType] || EYE_NAMES[0];
+  const mouth = MOUTH_NAMES[avatar.mouthType] || MOUTH_NAMES[0];
+  const parts = [`${color} ${shape.toLowerCase()}-shaped monster`, `${eyes.toLowerCase()} eyes`, `${mouth.toLowerCase()} mouth`];
+  if (avatar.spots) parts.push("with spots");
+  const accessories = CATEGORIES.filter((c) => avatar[c.id] && avatar[c.id] !== "none")
+    .map((c) => SHOP_ITEMS.find((i) => i.id === avatar[c.id])?.name)
+    .filter(Boolean);
+  if (accessories.length > 0) parts.push(`wearing ${accessories.join(", ")}`);
+  return parts.join(", ");
 }
 
 export function renderAvatarCreator(root, navigate, { onboarding = false } = {}) {
@@ -234,7 +255,7 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
         }</p>
         <div class="avatar-layout">
           <div class="avatar-preview-col">
-            <div class="avatar-preview">${monsterSVG(displayAvatar, { size: 270 })}</div>
+            <div class="avatar-preview" role="img" aria-label="Your monster: ${describeAvatar(displayAvatar)}">${monsterSVG(displayAvatar, { size: 270 })}</div>
             ${quip ? `<p class="avatar-quip">${quip}</p>` : ""}
             ${
               onboarding
@@ -259,8 +280,8 @@ export function renderAvatarCreator(root, navigate, { onboarding = false } = {})
               onboarding
                 ? `
               <div class="control-group">
-                <h4>Name your monster's trainer (you!)</h4>
-                <input type="text" id="nameInput" placeholder="Your name" maxlength="20" />
+                <h4 id="nameInputLabel">Name your monster's trainer (you!)</h4>
+                <input type="text" id="nameInput" aria-labelledby="nameInputLabel" placeholder="Your name" maxlength="20" />
               </div>
               <button class="btn-primary" id="startBtn">Begin the Quest &rarr;</button>
             `

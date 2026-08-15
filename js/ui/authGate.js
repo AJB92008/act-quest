@@ -45,8 +45,10 @@ export function renderAuthGate(root, navigate) {
     }
     return `
       <form class="cloud-auth-form" data-gate-form>
-        <input type="email" name="email" placeholder="Email" required autocomplete="email" />
-        <input type="password" name="password" placeholder="Password (6+ characters)" required minlength="6" autocomplete="new-password" />
+        <label class="visually-hidden" for="gateEmailInput">Email</label>
+        <input type="email" id="gateEmailInput" name="email" placeholder="Email" required autocomplete="email" />
+        <label class="visually-hidden" for="gatePasswordInput">Password (6+ characters)</label>
+        <input type="password" id="gatePasswordInput" name="password" placeholder="Password (6+ characters)" required minlength="6" autocomplete="new-password" />
         <div class="results-actions">
           <button type="submit" class="btn-primary" data-gate-action="signUp">Create Account</button>
           <button type="button" class="btn-secondary" data-gate-action="signIn">I Already Have One</button>

@@ -221,8 +221,10 @@ function cloudCardInnerHTML() {
     <h3 class="dash-history-title">☁️ Cloud Account</h3>
     <p class="lesson-paragraph">Progress is already backing up to the cloud automatically for this browser. Create a free account so you can pick up on another device too.</p>
     <form class="cloud-auth-form" data-cloud-form>
-      <input type="email" name="email" placeholder="Email" required autocomplete="email" />
-      <input type="password" name="password" placeholder="Password (6+ characters)" required minlength="6" autocomplete="new-password" />
+      <label class="visually-hidden" for="cloudEmailInput">Email</label>
+      <input type="email" id="cloudEmailInput" name="email" placeholder="Email" required autocomplete="email" />
+      <label class="visually-hidden" for="cloudPasswordInput">Password (6+ characters)</label>
+      <input type="password" id="cloudPasswordInput" name="password" placeholder="Password (6+ characters)" required minlength="6" autocomplete="new-password" />
       <div class="results-actions">
         <button type="submit" class="btn-secondary" data-cloud-action="signUp">Create Account</button>
         <button type="button" class="btn-secondary" data-cloud-action="signIn">I Already Have One</button>

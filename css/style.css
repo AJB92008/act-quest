@@ -71,6 +71,21 @@
   box-sizing: border-box;
 }
 
+/* Every screen sets --island-color inline to its subject's saturated
+   brand accent (e.g. Science's #ffb238), which looks great as a small
+   background fill or a border/ring but badly fails WCAG contrast when
+   used as actual body/heading text on a light background — three of the
+   four subject colors measured under 2.75:1 against white, against the
+   4.5:1 AA text requires. Rather than dulling the brand color everywhere
+   (including where it's fine, e.g. rings/borders/large fills), this
+   derives a darker text-safe variant once per screen and every
+   `color: var(--island-color...)` text rule below uses it instead —
+   `border-color`/`background` usages are untouched since those judge
+   against a lower 3:1 (or no) contrast requirement. */
+.screen {
+  --island-color-text: color-mix(in srgb, var(--island-color, var(--purple)) 55%, black);
+}
+
 /* The app's buttons are almost all pill/circle shapes on colorful
    backgrounds — the browser's default focus outline is easy to lose
    against them (or, on some of the rounder shapes, barely shows at all).
@@ -80,6 +95,45 @@
   outline: 3px solid var(--purple);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Standard "visually hidden but still announced by screen readers"
+   technique (not display:none/visibility:hidden, which pull content out
+   of the accessibility tree entirely). Used for the route-change live
+   region and any label text that's redundant on-screen but still needed
+   for an accessible name. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Off-screen until focused (keyboard Tab from page load), then pinned to
+   the top-left corner above everything else — this app has no other
+   persistent chrome above the HUD, so a fixed corner is unambiguous. Every
+   screen renders its own <main>, so this jumps past the HUD's nav
+   buttons/theme toggle straight to that screen's actual content. */
+.skip-link {
+  position: absolute;
+  top: -60px;
+  left: 8px;
+  z-index: 1000;
+  background: var(--purple);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 8px;
 }
 
 html,
@@ -311,7 +365,10 @@ input[type="password"] {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #7c6bff, #5a48f0);
+  /* The original lighter gradient stop measured ~3.89:1 against the white
+     text on top, short of WCAG AA's 4.5:1 for normal-size text — this
+     darker stop keeps the same gradient character at a safe ~5.2:1. */
+  background: linear-gradient(135deg, #6152f5, #5a48f0);
   color: #fff;
   box-shadow: 0 6px 16px rgba(90, 72, 240, 0.35);
 }
@@ -501,7 +558,7 @@ input[type="password"] {
 }
 
 .map-island-label h3 {
-  color: var(--island-color, var(--ink));
+  color: var(--island-color-text, var(--ink));
   font-size: 1.1rem;
   margin-bottom: 1px;
 }
@@ -597,7 +654,7 @@ input[type="password"] {
 }
 
 .island-heading {
-  color: var(--island-color);
+  color: var(--island-color-text, var(--island-color));
 }
 
 .island-heading-blurb {
@@ -638,7 +695,7 @@ input[type="password"] {
 }
 
 .background-lesson-text strong {
-  color: var(--island-color, var(--ink));
+  color: var(--island-color-text, var(--ink));
 }
 
 .background-lesson-text span {
@@ -648,7 +705,7 @@ input[type="password"] {
 
 .background-lesson-arrow {
   font-size: 1.3rem;
-  color: var(--island-color, var(--purple));
+  color: var(--island-color-text, var(--purple));
   flex: 0 0 auto;
 }
 
@@ -693,7 +750,7 @@ input[type="password"] {
 
 .boss-encounter-info h3 {
   margin: 0 0 2px;
-  color: var(--island-color);
+  color: var(--island-color-text, var(--island-color));
 }
 
 .boss-encounter-subtitle {
@@ -805,7 +862,7 @@ input[type="password"] {
   display: inline-block;
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--island-color, var(--purple));
+  color: var(--island-color-text, var(--purple));
   background: var(--island-bg, #f1eeff);
   border-radius: 999px;
   padding: 2px 10px;
@@ -850,7 +907,7 @@ input[type="password"] {
   font-weight: 800;
   font-family: "Baloo 2", sans-serif;
   font-size: 1.1rem;
-  color: var(--island-color, var(--purple));
+  color: var(--island-color-text, var(--purple));
 }
 
 .practice-test-timer.is-time-warning {
@@ -887,7 +944,7 @@ input[type="password"] {
 }
 
 .quiz-skill-name {
-  color: var(--island-color);
+  color: var(--island-color-text, var(--island-color));
   margin-top: 10px;
   margin-bottom: 0;
 }
@@ -931,7 +988,7 @@ input[type="password"] {
 }
 
 .stimulus-title {
-  color: var(--island-color);
+  color: var(--island-color-text, var(--island-color));
 }
 
 .passage-box,
@@ -943,7 +1000,7 @@ input[type="password"] {
 }
 
 .stimulus-subtitle {
-  color: var(--island-color, var(--ink));
+  color: var(--island-color-text, var(--ink));
   margin: 14px 0 4px;
 }
 
@@ -995,7 +1052,7 @@ input[type="password"] {
 
 .viewpoint-card h5 {
   margin-bottom: 6px;
-  color: var(--island-color);
+  color: var(--island-color-text, var(--island-color));
 }
 
 .question-card {
@@ -1046,7 +1103,7 @@ input[type="password"] {
 
 .lesson-title {
   text-align: center;
-  color: var(--island-color, var(--purple));
+  color: var(--island-color-text, var(--purple));
   margin-bottom: 4px;
 }
 
@@ -1212,7 +1269,7 @@ input[type="password"] {
 }
 
 .flashcard-back {
-  background: linear-gradient(135deg, #7c6bff, #5a48f0);
+  background: linear-gradient(135deg, #6152f5, #5a48f0);
   color: #fff;
   transform: rotateY(180deg);
 }
@@ -1310,18 +1367,32 @@ input[type="password"] {
 }
 
 .choice-btn:hover:not(:disabled) {
-  border-color: var(--island-color, var(--purple));
+  border-color: var(--island-color-text, var(--purple));
   transform: translateY(-2px);
 }
 
+/* Color-coding correct/incorrect alone (green/red) is invisible to
+   colorblind and low-vision players — the ::before icon carries the same
+   meaning independent of color (WCAG 1.4.1, Use of Color). Screen readers
+   get the equivalent information from the explain panel's text instead,
+   which is marked aria-live so it's announced without needing color or
+   icons at all. */
 .choice-btn.is-correct {
   border-color: #2fb573;
   background: #e6fbf1;
+}
+.choice-btn.is-correct::before {
+  content: "✓ ";
+  font-weight: 800;
 }
 
 .choice-btn.is-incorrect {
   border-color: #e1594f;
   background: #fdeceb;
+}
+.choice-btn.is-incorrect::before {
+  content: "✗ ";
+  font-weight: 800;
 }
 
 .choice-btn.is-eliminated {
@@ -1331,7 +1402,7 @@ input[type="password"] {
 }
 
 .choice-btn.is-selected {
-  border-color: var(--island-color, var(--purple));
+  border-color: var(--island-color-text, var(--purple));
   background: var(--surface-alt);
 }
 
@@ -1384,7 +1455,7 @@ input[type="password"] {
 .next-btn {
   margin-top: 20px;
   border: none;
-  background: linear-gradient(135deg, #7c6bff, #5a48f0);
+  background: linear-gradient(135deg, #6152f5, #5a48f0);
   color: #fff;
   padding: 13px 26px;
   border-radius: 999px;
@@ -1412,7 +1483,7 @@ input[type="password"] {
 .results-score {
   font-size: 1.3rem;
   font-weight: 800;
-  color: var(--island-color);
+  color: var(--island-color-text, var(--island-color));
 }
 
 .results-flag {
@@ -1637,9 +1708,9 @@ input[type="password"] {
 }
 
 .btn-secondary.is-active {
-  border-color: var(--island-color, var(--purple));
+  border-color: var(--island-color-text, var(--purple));
   background: var(--surface-alt);
-  color: var(--island-color, var(--purple));
+  color: var(--island-color-text, var(--purple));
 }
 
 .drill-skill-list {
@@ -1664,7 +1735,7 @@ input[type="password"] {
 }
 
 .drill-skill-row.is-checked {
-  border-color: var(--island-color, var(--purple));
+  border-color: var(--island-color-text, var(--purple));
 }
 
 .drill-skill-row input {
@@ -1693,7 +1764,7 @@ button.drill-skill-row {
 
 button.drill-skill-row:hover {
   transform: translateY(-1px);
-  border-color: var(--island-color, var(--purple));
+  border-color: var(--island-color-text, var(--purple));
 }
 
 .study-plan-form {
@@ -2330,7 +2401,7 @@ button.drill-skill-row:hover {
   font-family: "Baloo 2", sans-serif;
   font-size: 2rem;
   font-weight: 800;
-  color: var(--island-color, var(--purple));
+  color: var(--island-color-text, var(--purple));
 }
 
 .endless-lives {
@@ -2340,7 +2411,7 @@ button.drill-skill-row:hover {
 
 .endless-score {
   font-weight: 800;
-  color: var(--island-color);
+  color: var(--island-color-text, var(--island-color));
 }
 
 .endless-tags-row {
@@ -2361,7 +2432,7 @@ button.drill-skill-row:hover {
 }
 
 .endless-difficulty-tag {
-  color: var(--island-color, var(--ink));
+  color: var(--island-color-text, var(--ink));
   background: var(--card);
   border: 1.5px solid var(--island-color, var(--border));
 }

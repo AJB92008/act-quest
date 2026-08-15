@@ -41,6 +41,7 @@ export function renderIsland(root, navigate, { subjectId }) {
         <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
           ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 59 })}</div>` : ""}
           <button class="node-circle ${stateClass}" data-skill="${skill.id}"
+            aria-label="${skill.name}: ${progress.mastered ? "mastered" : `${progress.lessonsCompleted} of ${totalLessons} lessons complete`}"
             style="--node-color:${subject.color}">
             ${badge}
           </button>

@@ -28,6 +28,7 @@ export function renderSkillPath(root, navigate, { skillId, subjectId }) {
       <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
         ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 54 })}</div>` : ""}
         <button class="node-circle node-circle-small ${stateClass}" data-lesson="${i}" ${unlocked ? "" : "disabled"}
+          aria-label="Lesson ${i + 1}${done ? ", complete" : unlocked ? "" : ", locked"}"
           style="--node-color:${subject.color}">
           ${badge}
         </button>

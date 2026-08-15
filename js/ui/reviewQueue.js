@@ -147,7 +147,7 @@ export function renderReviewQueue(root, navigate) {
             ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
           </div>
           ${renderHintButton()}
-          <div class="explain-panel" id="explainPanel" hidden></div>
+          <div class="explain-panel" id="explainPanel" role="status" aria-live="polite" hidden></div>
           <button class="next-btn" id="nextBtn" hidden>${qIdx === questionQueue.length - 1 ? "Continue" : "Next Question"} &rarr;</button>
         </div>
       </main>

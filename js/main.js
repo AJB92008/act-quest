@@ -58,6 +58,28 @@ const SCREENS = {
   scoreReport: (r, nav) => renderScoreReport(r, nav),
 };
 
+// Every screen swap replaces `root`'s entire innerHTML — invisible to
+// assistive tech by default, unlike a real page load or a History-API
+// route change most AT already knows how to announce. Fixed once here
+// rather than in each of the 30+ screen files: shift focus to the new
+// screen's own <main> landmark (so keyboard/AT focus lands somewhere
+// sane instead of staying on a button that no longer exists), and update
+// a visually-hidden aria-live region with that screen's heading so it
+// gets spoken even if focus-shift alone doesn't trigger an announcement
+// in a given AT/browser combination.
+function announceRouteChange() {
+  const main = root.querySelector("main");
+  if (main) {
+    if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+    main.focus({ preventScroll: true });
+  }
+  const announcer = document.getElementById("route-announcer");
+  if (announcer) {
+    const heading = root.querySelector("h1, h2")?.textContent?.trim();
+    announcer.textContent = heading || "Page updated";
+  }
+}
+
 function navigate(screen, params = {}) {
   window.scrollTo(0, 0);
   const renderFn = SCREENS[screen];
@@ -68,9 +90,11 @@ function navigate(screen, params = {}) {
     // for whoever's debugging it.
     console.warn(`navigate(): unknown screen "${screen}", falling back to "map"`);
     SCREENS.map(root, navigate, {});
+    announceRouteChange();
     return;
   }
   renderFn(root, navigate, params);
+  announceRouteChange();
 }
 
 document.documentElement.dataset.theme = gameState.darkMode ? "dark" : "light";

@@ -183,7 +183,7 @@ export function renderEndlessMode(root, navigate) {
             ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
           </div>
           ${renderHintButton()}
-          <div class="explain-panel" id="explainPanel" hidden></div>
+          <div class="explain-panel" id="explainPanel" role="status" aria-live="polite" hidden></div>
           <button class="next-btn" id="nextBtn" hidden></button>
         </div>
       </main>

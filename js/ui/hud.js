@@ -17,6 +17,8 @@ let toggleClickTimestamps = [];
 export function showToast(text) {
   const toast = document.createElement("div");
   toast.className = "toast";
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
   toast.textContent = text;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3200);

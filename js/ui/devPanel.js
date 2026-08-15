@@ -285,8 +285,8 @@ function createPanel() {
     <div class="dev-panel-header" id="devPanelHeader">
       <span>🛠️ Developer Mode</span>
       <div class="dev-panel-header-actions">
-        <button id="devPanelCollapseBtn" title="Collapse">▾</button>
-        <button id="devPanelCloseBtn" title="Hide">×</button>
+        <button id="devPanelCollapseBtn" title="Collapse" aria-label="Collapse developer panel">▾</button>
+        <button id="devPanelCloseBtn" title="Hide" aria-label="Hide developer panel">×</button>
       </div>
     </div>
     <div class="dev-panel-body" id="devPanelBody"></div>

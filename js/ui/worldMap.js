@@ -38,9 +38,9 @@ export function renderWorldMap(root, navigate) {
     return `
       <div class="map-node-wrap" style="left:${x}%;top:${y}px;">
         ${isCurrent ? `<div class="map-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 69 })}</div>` : ""}
-        <button class="map-island-node" data-subject="${subject.id}" style="--island-color:${subject.color};--island-bg:${subject.bg};--ring-pct:${pct}%">
+        <button class="map-island-node" data-subject="${subject.id}" aria-label="${subject.name}: ${stat.masteredCount} of ${stat.totalSkills} skills mastered" style="--island-color:${subject.color};--island-bg:${subject.bg};--ring-pct:${pct}%">
           <span class="map-island-ring"></span>
-          <span class="map-island-icon">${subject.icon}</span>
+          <span class="map-island-icon" aria-hidden="true">${subject.icon}</span>
         </button>
         <div class="map-island-label">
           <h3>${subject.name}</h3>
