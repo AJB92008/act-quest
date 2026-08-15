@@ -111,6 +111,29 @@ export function scaledScoreFromRaw(subjectId, correctCount) {
   return table[clamped];
 }
 
+// National percentile rank by 1-36 composite score. Same honesty as
+// ACT_SCORE_TABLES above: ACT re-norms these against each year's actual
+// test-taking population and publishes updated tables periodically, so
+// there's no single permanent "true" table to copy — this is a
+// consistently-shaped approximation based on the general contour of ACT's
+// published national percentile ranks in recent years, not a live feed of
+// the current official numbers. Composite only; real ACT percentiles also
+// vary slightly by section, which this doesn't attempt to model.
+const COMPOSITE_PERCENTILES = [
+  1, 1, 1, 1, 1, 1, 1, 1, // 1-8
+  1, 2, 3, 5, 8, 12, 18, 25, // 9-16
+  32, 38, 44, 50, 57, 63, 69, 75, // 17-24
+  80, 84, 87, 90, 93, 95, 96, 97, // 25-32
+  98, 99, 99, 100, // 33-36
+];
+
+/** 1-36 composite -> approximate national percentile (1-100). See
+ * COMPOSITE_PERCENTILES above for what this is (and isn't) based on. */
+export function percentileForComposite(score) {
+  const clamped = Math.max(1, Math.min(36, Math.round(score)));
+  return COMPOSITE_PERCENTILES[clamped - 1];
+}
+
 function defaultSave() {
   const skillProgress = {};
   const bossCleared = {};

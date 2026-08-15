@@ -7,7 +7,7 @@
 // becomes the dashboard's score predictor going forward.
 import { getSubject, REPORTING_CATEGORIES } from "../data/skills.js";
 import { getPracticeTestSectionQuestions, preloadAllSubjects } from "../data/questions/index.js";
-import { gameState, scaledScoreFromRaw } from "../state.js";
+import { gameState, scaledScoreFromRaw, percentileForComposite } from "../state.js";
 import { hudHTML, wireHud, showToast } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { renderQuestionStimulus } from "./stimulusPanels.js";
@@ -355,6 +355,7 @@ export function renderPracticeTest(root, navigate) {
           <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 160 })}</div>
           <h1>${outcome.isNewBest ? "New Best Composite!" : "Test Complete!"}</h1>
           <p class="results-score">Composite: ${composite} / 36</p>
+          <p class="results-flag results-flag-muted">You scored better than approximately ${percentileForComposite(composite)}% of test-takers nationally.</p>
           ${
             outcome.isNewBest
               ? `<p class="results-flag">🏆 New personal best!</p>`

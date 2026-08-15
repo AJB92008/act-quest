@@ -1,5 +1,5 @@
 import { getSubject, SUBJECTS } from "../data/skills.js";
-import { gameState } from "../state.js";
+import { gameState, percentileForComposite } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { renderPacingTag } from "./pacingFeedback.js";
@@ -345,6 +345,11 @@ export function renderDashboard(root, navigate) {
               ? "Based on your most recent full-length practice test."
               : "A rough estimate from your lesson accuracy. Take a full-length practice test for a stronger read."
           }</p>
+          ${
+            predicted.score !== null
+              ? `<p class="dash-monster-substat">Approximately the ${percentileForComposite(predicted.score)}th percentile nationally.</p>`
+              : ""
+          }
         </div>
         <button class="btn-secondary" data-practice-test>📝 Practice Test</button>
         <button class="btn-secondary" data-essay>✍️ Writing</button>
