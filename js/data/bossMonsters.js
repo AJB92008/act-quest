@@ -79,6 +79,24 @@ export const BOSS_MONSTERS = {
       scar: "none",
     },
   },
+  "sat-rw": {
+    name: "The Archive Owl",
+    avatar: {
+      bodyColor: "#2a9d8f",
+      bodyShape: "avian",
+      limbs: 2,
+      eyeType: 3,
+      mouthType: 1,
+      skin: "fur",
+      spots: false,
+      head: "none",
+      face: "studyGlasses",
+      back: "none",
+      tail: "none",
+      outfit: "none",
+      scar: "none",
+    },
+  },
 };
 
 // A boss always renders a few levels ahead of the player — enough to read

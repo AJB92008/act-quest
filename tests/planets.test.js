@@ -1,14 +1,15 @@
 // Regression tests for the multi-planet infrastructure (data/tests.js) —
-// ACT is the only planet with playable content; SAT's Reading & Writing
-// subject (data/satSkills.js) has a real, named skill tree with no lesson
-// content behind it yet (`contentPending: true`), and the rest are still
-// fully empty. These tests guard the things that actually matter at this
-// stage: ACT's data is untouched by being folded into the registry, every
-// id across every planet stays globally unique (the one hard rule the
-// cross-planet getSubject()/getSkill() lookups depend on), and a subject
-// with a real skill tree but pending content is correctly reported as not
-// playable rather than crashing something downstream that assumes real
-// lesson data exists wherever a skill id does.
+// ACT and SAT's Reading & Writing subject (data/satSkills.js, full
+// 100-question-per-skill banks in data/questions/satRw.js) both have
+// playable content; the rest of SAT and every subject on PSAT/State
+// Assessments are still fully empty scaffolding. These tests guard the
+// things that actually matter at this stage: ACT's data is untouched by
+// being folded into the registry, every id across every planet stays
+// globally unique (the one hard rule the cross-planet
+// getSubject()/getSkill() lookups depend on), and a subject with a real
+// skill tree but no content yet (contentPending) is correctly reported as
+// not playable rather than crashing something downstream that assumes
+// real lesson data exists wherever a skill id does.
 import { SUBJECTS as ACT_SUBJECTS } from "../js/data/skills.js";
 import { REPORTING_CATEGORIES as SAT_REPORTING_CATEGORIES, SAT_SUBJECTS } from "../js/data/satSkills.js";
 import { TESTS, TEST_IDS, getTest, getTestSubjects, isTestReady, isSubjectPlayable, getSubject, getSkill } from "../js/data/tests.js";
@@ -29,9 +30,9 @@ test("getTest returns undefined for an unknown planet id rather than throwing", 
   assertEqual(getTestSubjects("not-a-real-planet").length, 0);
 });
 
-test("only ACT is ready — SAT has a real skill tree but pending content, PSAT/State have neither", () => {
+test("ACT and SAT are ready now that SAT Reading & Writing has real content; PSAT/State are still empty", () => {
   assertTrue(isTestReady("act"));
-  assertTrue(!isTestReady("sat"));
+  assertTrue(isTestReady("sat"));
   assertTrue(!isTestReady("psat"));
   assertTrue(!isTestReady("stateAssessments"));
 });
@@ -54,11 +55,16 @@ test("SAT Reading & Writing's skill tree is folded into the sat planet by refere
   assertEqual(subject, SAT_SUBJECTS[0]);
 });
 
-test("SAT Reading & Writing is marked contentPending and reported as not playable", () => {
+test("SAT Reading & Writing has a real skill tree and is reported as playable", () => {
   const subject = getSubject("sat-rw");
-  assertTrue(subject.contentPending === true);
+  assertTrue(!subject.contentPending, "sat-rw's content is complete — contentPending should be unset");
   assertTrue(subject.skills.length > 0, "expected a real skill tree, not an empty placeholder");
-  assertTrue(!isSubjectPlayable(subject), "a skill tree with contentPending should not count as playable");
+  assertTrue(isSubjectPlayable(subject), "a skill tree with real content and no contentPending flag should count as playable");
+});
+
+test("a subject still marked contentPending is correctly reported as not playable", () => {
+  const pendingSubject = { id: "test-pending", skills: [{ id: "test-skill" }], contentPending: true };
+  assertTrue(!isSubjectPlayable(pendingSubject), "a skill tree with contentPending should not count as playable");
 });
 
 test("every SAT Reading & Writing skill's reportingCategory is a real domain in its REPORTING_CATEGORIES", () => {
@@ -104,7 +110,7 @@ test("a fresh save has a real skillProgress entry for every SAT Reading & Writin
   localStorage.removeItem("act-quest-save-v1");
 });
 
-test("getSubjectStats doesn't crash on a subject with real skills but no lesson content yet", () => {
+test("getSubjectStats works correctly for a subject with real skills and content", () => {
   localStorage.removeItem("act-quest-save-v1");
   const gs = new GameState();
   const stats = gs.getSubjectStats("sat-rw");

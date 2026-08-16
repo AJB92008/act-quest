@@ -4,16 +4,16 @@
 // blurb, skills }`) the World Map/island/skill-path screens already know
 // how to render, so a planet with real content needs zero new UI code.
 //
-// ACT is the only planet with playable content right now — its subjects
-// are skills.js's existing SUBJECTS, included here by reference (not
-// copied), so nothing about the live ACT experience changes by a single
-// byte. Every other planet is infrastructure: some subjects (like SAT's
-// Reading & Writing, see satSkills.js) have a real, named skill tree
-// already planned out but no lesson/question content behind it yet
-// (`contentPending: true` — see isSubjectPlayable below); others are
-// still fully empty (`skills: []`). Either way the World Map/island
-// screens have something real to render and the right "coming soon"
-// state to show. Writing the actual question banks is future work.
+// ACT is the original planet with playable content — its subjects are
+// skills.js's existing SUBJECTS, included here by reference (not copied),
+// so nothing about the live ACT experience changes by a single byte. SAT's
+// Reading & Writing subject (see satSkills.js) now has real content too:
+// a full 100-question bank per skill in data/questions/satRw.js. Other
+// subjects are still infrastructure — either a real, named skill tree
+// planned out but no lesson/question content behind it yet
+// (`contentPending: true` — see isSubjectPlayable below), or still fully
+// empty (`skills: []`). Either way the World Map/island screens have
+// something real to render and the right "coming soon" state to show.
 //
 // Subject/skill ids across every planet have to stay globally unique
 // (e.g. "sat-math", not "math") since getSubject()/getSkill() below

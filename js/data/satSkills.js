@@ -12,16 +12,10 @@
 // by domain instead of drawing uniformly across skills regardless of how
 // the real test actually weights them.
 //
-// `skills` here have `id`/`name`/`blurb`/`reportingCategory` but, unlike
-// ACT's, no question bank behind them yet (see BANK_SIZE_OVERRIDES/
-// SUBJECT_LOADERS in data/questions/index.js) and no BOSS_MONSTERS entry
-// — this subject is marked `contentPending: true` in its definition below
-// specifically so the World Map/island screens know to show it as a real,
-// planned-out skill tree that isn't playable yet rather than either an
-// empty "nothing planned" placeholder or (worse) trying to render lessons
-// that don't exist. Writing the actual question banks, wiring up
-// SUBJECT_LOADERS/BANK_SIZE_OVERRIDES, adding a BOSS_MONSTERS entry, and
-// then dropping `contentPending` is the next phase of this work.
+// `skills` here have `id`/`name`/`blurb`/`reportingCategory`, same as
+// ACT's — each skill's 100-question bank lives in data/questions/satRw.js,
+// loaded via SUBJECT_LOADERS in data/questions/index.js, with a
+// BOSS_MONSTERS entry ("The Archive Owl") like every other playable subject.
 export const REPORTING_CATEGORIES = {
   "sat-rw": [
     { id: "ii", name: "Information and Ideas", weight: 0.26 },
@@ -41,7 +35,6 @@ export const SAT_SUBJECTS = [
     bg: "#e8f6f4",
     icon: "📘",
     blurb: "Passage reading, vocabulary, rhetoric, and grammar, SAT-style.",
-    contentPending: true,
     skills: [
       // --- Information and Ideas (~26%) ---
       {

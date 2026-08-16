@@ -51,10 +51,26 @@ export function renderStimulus(stimulusId) {
   return `<div class="stimulus-panel"><h4 class="stimulus-title">${s.title}</h4>${body}</div>`;
 }
 
-// A question can carry either a passageId (Reading) or a stimulusId
-// (Science); resolve whichever applies, or "" for plain questions.
+// SAT Reading & Writing's real format is one short, self-contained text
+// per question (not shared across several questions the way ACT Reading's
+// passages are) — too short-lived to earn its own id/lookup entry in a
+// shared `passages` array, so it just rides along on the question object
+// itself and renders in the same panel styling as a real Reading passage.
+export function renderInlinePassage(text) {
+  if (!text) return "";
+  return `
+    <div class="stimulus-panel">
+      <div class="passage-box">${text}</div>
+    </div>
+  `;
+}
+
+// A question can carry a passageId (ACT Reading), a stimulusId (ACT
+// Science), or an inline `passage` (SAT Reading & Writing); resolve
+// whichever applies, or "" for a plain question with no stimulus at all.
 export function renderQuestionStimulus(q) {
   if (q.passageId) return renderPassage(q.passageId);
   if (q.stimulusId) return renderStimulus(q.stimulusId);
+  if (q.passage) return renderInlinePassage(q.passage);
   return "";
 }

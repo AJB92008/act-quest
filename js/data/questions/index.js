@@ -1,4 +1,5 @@
-import { SUBJECTS, allSkillIds, REPORTING_CATEGORIES } from "../skills.js";
+import { SUBJECTS, REPORTING_CATEGORIES } from "../skills.js";
+import { allSubjects as allTestSubjects, allSkillIds as allTestSkillIds } from "../tests.js";
 import { getQuestionPatterns, PATTERN_DEFS } from "./patterns.js";
 
 // Each skill's bank is chunked into fixed-size mini-lessons — bite-sized
@@ -73,7 +74,12 @@ const BANK_SIZE_OVERRIDES = {
   "sc-conflicting": 140,
   "sc-evaluate": 140,
 };
-const KNOWN_SKILL_IDS = new Set(allSkillIds());
+// Every planet's skill ids, not just ACT's — a still-contentPending
+// subject's skills contribute nothing extra here (getLessonCount/
+// getLessonQuestions only matter once a subject actually has a question
+// bank registered in SUBJECT_LOADERS below), but a subject that *does*
+// have one (like SAT Reading & Writing) needs its real ids known here too.
+const KNOWN_SKILL_IDS = new Set(allTestSkillIds());
 
 export function getLessonCount(skillId) {
   if (!KNOWN_SKILL_IDS.has(skillId)) return 1;
@@ -86,15 +92,15 @@ export function isBossLessonIndex(skillId, lessonIndex) {
   return lessonIndex === getLessonCount(skillId) - 1;
 }
 
-// skillId -> { skillName, subjectId }, built once from the skill tree —
-// this never needs question data, just the (tiny, always-loaded) skill
-// tree in data/skills.js.
+// skillId -> { skillName, subjectId }, built once from every planet's
+// skill tree — this never needs question data, just the (tiny, always-
+// loaded) skill trees in data/skills.js/data/satSkills.js/etc.
 const SKILL_META = {};
 // skillId -> reportingCategory id, same construction — feeds the
 // Practice Test's category-proportional sampling and score breakdown
 // below without needing question data loaded either.
 const SKILL_CATEGORY = {};
-for (const subject of SUBJECTS) {
+for (const subject of allTestSubjects()) {
   subject.skills.forEach((skill) => {
     SKILL_META[skill.id] = { skillName: skill.name, subjectId: subject.id };
     SKILL_CATEGORY[skill.id] = skill.reportingCategory;
@@ -111,6 +117,7 @@ const SUBJECT_LOADERS = {
   math: () => import("./math.js").then((m) => ({ questions: m.math })),
   reading: () => import("./reading.js").then((m) => ({ questions: m.reading, passages: m.passages })),
   science: () => import("./science.js").then((m) => ({ questions: m.science, stimuli: m.stimuli })),
+  "sat-rw": () => import("./satRw.js").then((m) => ({ questions: m.satRw })),
 };
 
 const loadedSubjects = {}; // subjectId -> { questions, passages?, stimuli? }
