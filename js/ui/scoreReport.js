@@ -27,7 +27,7 @@
 //     opens the link sees the data as of when it was copied, not this
 //     player's current progress.
 import { SUBJECTS, getSubject } from "../data/skills.js";
-import { gameState, percentileForComposite } from "../state.js";
+import { gameState, percentileForComposite, scoreFromAccuracy } from "../state.js";
 import { hudHTML, wireHud, showToast } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 
@@ -68,6 +68,13 @@ function sanitizeCategoryBreakdown(raw) {
     total: safeNum(c?.total, { min: 0, max: 999, fallback: 0 }),
   }));
 }
+function sanitizePredictedSections(raw) {
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.slice(0, 8).map((s) => ({
+    subjectId: safeStr(s?.subjectId, 20),
+    score: safeNum(s?.score, { min: 1, max: 36 }),
+  }));
+}
 function sanitizeReportData(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
   const rawSections = Array.isArray(r.latestTest?.sectionResults) ? r.latestTest.sectionResults : null;
@@ -75,6 +82,7 @@ function sanitizeReportData(raw) {
     name: safeStr(r.name, 30, "Explorer"),
     generatedAt: safeNum(r.generatedAt, { min: 0, max: 99999999999999, fallback: Date.now() }),
     predictedScore: safeNum(r.predictedScore, { min: 1, max: 36 }),
+    predictedSections: sanitizePredictedSections(r.predictedSections),
     latestTest:
       r.latestTest && rawSections
         ? {
@@ -107,17 +115,32 @@ function decodeReportPayload(str) {
   return sanitizeReportData(parsed);
 }
 
+// Same 20-attempt bar getPredictedScore() uses for the overall composite
+// estimate ("once there's enough of it to mean anything") — applied per
+// subject here, so a section with too little practice shows as unscored
+// instead of a number built on a handful of lucky/unlucky guesses.
+const MIN_ATTEMPTS_FOR_SECTION_ESTIMATE = 20;
+
 function buildReportPayload() {
   const predicted = gameState.getPredictedScore();
   const history = gameState.getPracticeTestHistory();
   const latestTest = history.length > 0 ? history[history.length - 1] : null;
   const overall = gameState.getOverallStats();
+  // Only meaningful when there's no full Practice Test yet (see
+  // reportCardHTML) — a rough per-section estimate from lesson accuracy,
+  // the same way predictedScore itself falls back to lesson accuracy.
+  const predictedSections = ["math", "science", "english", "reading"].map((subjectId) => {
+    const stats = gameState.getSubjectStats(subjectId);
+    const score = stats.attempts >= MIN_ATTEMPTS_FOR_SECTION_ESTIMATE && stats.accuracy != null ? scoreFromAccuracy(stats.accuracy) : null;
+    return { subjectId, score };
+  });
 
   return {
     name: gameState.data.createdName || "Explorer",
     generatedAt: Date.now(),
     predictedScore: predicted.score,
     predictedSource: predicted.source,
+    predictedSections,
     latestTest: latestTest
       ? {
           date: latestTest.date,
@@ -152,6 +175,20 @@ function sectionsBySubject(data) {
   const map = Object.create(null);
   (data.latestTest?.sectionResults || []).forEach((s) => {
     map[s.subjectId] = s;
+  });
+  return map;
+}
+
+/** subjectId -> {subscore} built from lesson-accuracy estimates (see
+ * buildReportPayload's predictedSections) — same shape sectionsBySubject()
+ * produces from a real Practice Test, so scoreTilesHTML/scoreGraphHTML can
+ * render either without caring which one they got. A subject with too
+ * little lesson data (score: null) is simply left out, same as a subject
+ * sectionsBySubject() never saw. */
+function predictedSectionsMap(data) {
+  const map = Object.create(null);
+  (data.predictedSections || []).forEach((s) => {
+    if (s.score != null) map[s.subjectId] = { subscore: s.score };
   });
   return map;
 }
@@ -334,8 +371,9 @@ function ncrcPanelHTML(compositeScore) {
 }
 
 function reportCardHTML(data, { shared }) {
-  const sections = sectionsBySubject(data);
   const hasFullTest = !!data.latestTest;
+  const sections = hasFullTest ? sectionsBySubject(data) : predictedSectionsMap(data);
+  const hasSectionScores = Object.keys(sections).length > 0;
   const compositeScore = data.latestTest?.composite ?? data.predictedScore;
   const scoreLabel = hasFullTest ? "Practice Test Composite" : "Predicted ACT Score";
   const percentile = compositeScore != null ? percentileForComposite(compositeScore) : null;
@@ -353,9 +391,14 @@ function reportCardHTML(data, { shared }) {
           : `
             <details class="score-section-details" open>
               <summary class="score-section-heading">Score Information</summary>
-              ${hasFullTest ? scoreTilesHTML(sections, compositeScore) : `<p class="results-score">${scoreLabel}: ${compositeScore} / 36</p>`}
+              ${hasSectionScores ? scoreTilesHTML(sections, compositeScore) : `<p class="results-score">${scoreLabel}: ${compositeScore} / 36</p>`}
               <p class="results-flag results-flag-muted">Approximately the ${percentile}th percentile nationally.</p>
-              ${hasFullTest ? scoreGraphHTML(data, sections, compositeScore) : ""}
+              ${hasSectionScores ? scoreGraphHTML(data, sections, compositeScore) : ""}
+              ${
+                !hasFullTest && hasSectionScores
+                  ? `<p class="score-caption">Section scores above are rough estimates from lesson accuracy, not a timed test &mdash; take a full-length Practice Test for real section scores.</p>`
+                  : ""
+              }
               <details class="score-info-detail">
                 <summary>What is Composite Score?</summary>
                 <p class="lesson-paragraph">Your Composite score is the average of your four section scores (English, Math, Reading, Science), rounded to the nearest whole number, on the ACT's 1&ndash;36 scale.</p>
@@ -372,7 +415,13 @@ function reportCardHTML(data, { shared }) {
           `
       }
 
-      ${hasFullTest ? scoreDetailsHTML(sections) : compositeScore != null ? `<p class="lesson-paragraph score-caption">Take a full-length Practice Test to unlock the full score breakdown by category.</p>` : ""}
+      ${
+        hasFullTest
+          ? scoreDetailsHTML(sections)
+          : compositeScore != null
+          ? `<p class="lesson-paragraph score-caption">Take a full-length Practice Test to unlock a real per-category "ACT Readiness Range" breakdown.</p>`
+          : ""
+      }
 
       <p class="lesson-paragraph">${data.masteredCount} / ${data.totalSkills} skills mastered across ${SUBJECTS.length} subjects.</p>
 

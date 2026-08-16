@@ -713,6 +713,7 @@ export class GameState {
     }
     return {
       accuracy: attempts > 0 ? correct / attempts : null,
+      attempts,
       masteredCount,
       totalSkills: subject.skills.length,
     };
