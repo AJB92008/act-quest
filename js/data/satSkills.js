@@ -13,16 +13,11 @@
 // the real test actually weights them.
 //
 // `skills` here have `id`/`name`/`blurb`/`reportingCategory`, same as
-// ACT's — each skill's 100-question bank lives in data/questions/satRw.js,
-// loaded via SUBJECT_LOADERS in data/questions/index.js, with a
-// BOSS_MONSTERS entry ("The Archive Owl") like every other playable subject.
-//
-// SAT Math (id "sat-math") is one phase behind: its skill tree and domain
-// weights below are the College Board's real, official ones, but it has no
-// question bank yet (same `contentPending: true` gap Reading & Writing
-// itself started in) — no BANK_SIZE_OVERRIDES/SUBJECT_LOADERS entry, no
-// BOSS_MONSTERS entry. Writing data/questions/satMath.js and dropping
-// `contentPending` is the next phase, same playbook satRw.js followed.
+// ACT's — each skill's 100-question bank lives in data/questions/satRw.js
+// (Reading & Writing) or data/questions/satMath.js (Math), loaded via
+// SUBJECT_LOADERS in data/questions/index.js, each with its own
+// BOSS_MONSTERS entry ("The Archive Owl" / "The Vector Wraith") like every
+// other playable subject.
 export const REPORTING_CATEGORIES = {
   "sat-rw": [
     { id: "ii", name: "Information and Ideas", weight: 0.26 },
@@ -176,7 +171,6 @@ export const SAT_SUBJECTS = [
     bg: "#fdeee9",
     icon: "📐",
     blurb: "Algebra, problem-solving, and data analysis, SAT-style.",
-    contentPending: true,
     skills: [
       // --- Algebra (~35%) ---
       {

@@ -1,11 +1,11 @@
 // Regression tests for the multi-planet infrastructure (data/tests.js) —
-// ACT and SAT's Reading & Writing subject (data/satSkills.js, full
-// 100-question-per-skill banks in data/questions/satRw.js) both have
-// playable content; the rest of SAT and every subject on PSAT/State
-// Assessments are still fully empty scaffolding. These tests guard the
-// things that actually matter at this stage: ACT's data is untouched by
-// being folded into the registry, every id across every planet stays
-// globally unique (the one hard rule the cross-planet
+// ACT and both of SAT's subjects (data/satSkills.js: Reading & Writing and
+// Math, full 100-question-per-skill banks in data/questions/satRw.js and
+// data/questions/satMath.js) all have playable content now; every subject
+// on PSAT/State Assessments is still fully empty scaffolding. These tests
+// guard the things that actually matter at this stage: ACT's data is
+// untouched by being folded into the registry, every id across every
+// planet stays globally unique (the one hard rule the cross-planet
 // getSubject()/getSkill() lookups depend on), and a subject with a real
 // skill tree but no content yet (contentPending) is correctly reported as
 // not playable rather than crashing something downstream that assumes
@@ -95,11 +95,11 @@ test("getSubject/getSkill resolve a scaffolded (contentless) planet's subject, a
 
 // --- SAT Math (data/satSkills.js) ---
 
-test("SAT Math has a real skill tree but is still contentPending, so it's reported as not playable", () => {
+test("SAT Math has a real skill tree and is reported as playable", () => {
   const subject = getSubject("sat-math");
-  assertTrue(subject.contentPending === true);
+  assertTrue(!subject.contentPending, "sat-math's content is complete — contentPending should be unset");
   assertTrue(subject.skills.length > 0, "expected a real skill tree, not an empty placeholder");
-  assertTrue(!isSubjectPlayable(subject), "a skill tree with contentPending should not count as playable");
+  assertTrue(isSubjectPlayable(subject), "a skill tree with real content and no contentPending flag should count as playable");
 });
 
 test("SAT Math lists the College Board's real 19 skills across its 4 domains", () => {
