@@ -264,4 +264,152 @@ export const LESSONS = {
     "These questions ask you to reason beyond the data that's directly given: predicting what a result would likely be under a new, untested condition, identifying an unstated assumption a claim depends on, or judging which piece of new evidence would most strengthen or weaken a specific hypothesis.",
     "A reliable approach is to extend whatever pattern the data already shows, rather than guessing randomly. If a trend has been consistently increasing, decreasing, or leveling off, the most reasonable prediction continues that same pattern rather than assuming a sudden, unexplained reversal. For strengthen and weaken questions, ask what new fact would make a hypothesis's specific claim either more believable or directly contradicted.",
   ],
+
+  // ---------------- SAT READING & WRITING ----------------
+  "satrw-centralidea": [
+    "Every digital SAT passage, however short, is built around a single central idea: the point every sentence in it is ultimately working to support. These questions ask you to name that idea directly, so it helps to treat every detail in the passage as evidence pointing toward one specific claim rather than a loose collection of facts.",
+    "The correct answer has to be broad enough to cover the entire passage, not just one sentence of it, but specific enough that it couldn't just as easily summarize a completely different passage on a similar topic. A choice that's true but only describes a supporting detail, or one that's so general it says almost nothing, is the two most common wrong-answer traps.",
+  ],
+  "satrw-evidence-text": [
+    "These questions give you a claim and ask which quoted sentence from the passage best supports it, or which one would most directly weaken it. The claim is always something the passage discusses, so your job isn't to evaluate whether the claim is true; it's to find the specific line of text that backs it up (or undercuts it) most precisely.",
+    "Read each answer choice as literally as possible before deciding. A tempting wrong answer is often related to the right general topic but doesn't actually address the specific claim in the question, or it supports a slightly different point the passage also happens to make nearby.",
+  ],
+  "satrw-evidence-data": [
+    "Chart Reader questions pair a short passage or claim with a table, bar graph, or line graph and ask which choice the data actually supports. Since the numbers are given to you directly, these questions test careful reading of the data at least as much as any math skill.",
+    "Check every answer choice against the actual figures before picking one; a wrong choice will often flip a comparison (claiming the smaller value is larger), get a trend backward, or make a claim about a total the numbers don't actually support. Only one choice will hold up against every number in the data, so it's worth double-checking your answer against the data one more time before moving on.",
+  ],
+  "satrw-inference": [
+    "An inference is a conclusion that reasonably follows from what a passage describes, even though the passage never states that conclusion outright. These questions reward reading between the lines of a specific action or detail: what does it imply about the people or situation involved?",
+    "The correct inference always stays tightly anchored to the text; it can go slightly beyond the literal words, but it can never require an outside assumption the passage gives no support for. Eliminate any choice that's a bigger leap than the evidence justifies, even if it sounds plausible on its own.",
+  ],
+  "satrw-detailsort": [
+    "Not every detail an author includes is there to support the passage's main point. These questions ask you to sort the details that genuinely support a stated claim from the ones that are true, and maybe even interesting, but don't actually do any work for that specific claim.",
+    "A detail that's related to the general topic but doesn't connect to the exact claim in question is the classic trap here. Before picking an answer, ask specifically what job each detail is doing: is it evidence for the claim, or is it just color that happens to sit nearby in the passage?",
+  ],
+  "satrw-wordsincontext": [
+    "These questions ask what a word or short phrase means specifically as it's used in that one sentence, which is often a less common meaning than the word's most familiar dictionary definition. Many of the words tested have several unrelated meanings, and the wrong answers are almost always other real definitions of the same word that just don't fit this particular context.",
+    "Before looking at the choices, cover the tested word and predict your own replacement based on the surrounding sentence. Then pick whichever answer choice most closely matches that prediction, rather than whichever definition you recognize first.",
+  ],
+  "satrw-textstructure": [
+    "These questions ask how a passage or paragraph is organized as a whole: does it move from a specific example to a broader point, present a problem and then a solution, compare two things, or build toward a single conclusion? Recognizing the shape of a passage matters more here than recalling any individual fact from it.",
+    "As you read, briefly notice each paragraph's job: is it introducing an idea, providing evidence, presenting a contrast, or wrapping up? The correct answer will describe that overall shape accurately from start to finish, not just how the passage begins or one section in the middle.",
+  ],
+  "satrw-purpose": [
+    "These questions ask why an author included a specific detail, sentence, or example, not just what that detail says. The same true fact can serve very different purposes depending on context: illustrating a point, creating contrast, building credibility, or setting up a later idea.",
+    "The trap is picking an answer that accurately describes the detail itself but misses the reason the author chose to include it. Ask what the sentence accomplishes for the passage as a whole, not just what it means on its own.",
+  ],
+  "satrw-crosstext": [
+    "These questions give you two short, related texts and ask how the second relates to the first: does it support the first text's claim, complicate or contradict it, extend it to a new situation, or simply restate it in different words? Understanding each text individually is only the first step; the real question is about the relationship between them.",
+    "Summarize each text's claim in your own words before comparing them. Then ask specifically what Text 2 does to Text 1's claim, since the answer choices usually offer several plausible-sounding relationships and only one accurately describes what's actually happening between the two texts.",
+  ],
+  "satrw-figurative": [
+    "Figurative language, a metaphor or simile, isn't meant to be taken literally; it's a compressed way of conveying an idea, feeling, or comparison. These questions ask what a figurative phrase is really communicating, not what it would mean if taken at face value.",
+    "The most common wrong answer takes the image literally instead of interpreting it. If a passage says a crowd \"became an ocean of exhausted travelers,\" the point is the crowd's scale and weary movement, not that the terminal actually filled with water. Ask what feeling or idea the comparison is standing in for.",
+  ],
+  "satrw-transitions": [
+    "Transition questions ask which word or phrase most logically connects two sentences: contrast (however, yet), cause and effect (therefore, as a result), addition (moreover, furthermore), or similarity (similarly, likewise). Picking correctly depends entirely on understanding how the two surrounding ideas actually relate to each other.",
+    "Cover the transition, read the two sentences it connects, and ask: do they agree, disagree, does one cause the other, or does one simply add another example? Once you've identified that relationship, only one category of transition word will correctly fit, no matter how sophisticated the other choices sound.",
+  ],
+  "satrw-rhetoricalsynth": [
+    "These questions give you a set of bullet-point notes and a specific goal the writer wants to accomplish, then ask which sentence best uses the notes to meet that exact goal. Every choice will use real information from the notes; the question is which choice actually accomplishes the stated goal, not just which one sounds well written.",
+    "Reread the goal carefully before looking at the choices, since it's easy to get pulled toward an answer that's accurate but answers a slightly different question than the one asked. The correct choice usually has to combine two specific pieces of the notes; a choice built from only one note is almost always missing something the goal requires.",
+  ],
+  "satrw-organization": [
+    "These questions present a short, numbered sequence of sentences describing a process or set of events and ask whether one of them is out of order. Since each sentence usually depends on something established earlier, the right placement is often a matter of cause and effect: what has to be true before the next step can happen?",
+    "Look for logical dependencies between sentences, like a result that can't occur until its cause is mentioned, or a detail that only makes sense once an earlier step has been established. The sentence that's out of place will usually make more sense once you find the exact point in the sequence it actually belongs.",
+  ],
+  "satrw-boundaries": [
+    "A complete sentence needs a subject, a verb, and a complete thought that can stand entirely on its own. These questions test whether you can spot a fragment, missing one of those pieces, and a run-on or comma splice, two complete sentences incorrectly joined with no punctuation or with only a comma.",
+    "To fix a run-on or comma splice, you generally need a period, a semicolon, or a comma paired with a coordinating conjunction like \"and\" or \"but.\" To test whether something is a complete sentence on its own, check that it doesn't start with a subordinating word, like \"because\" or \"although,\" that would make it dependent on another clause.",
+  ],
+  "satrw-punctuation": [
+    "Commas, semicolons, colons, and dashes each have a specific job, and most punctuation questions come down to recognizing which job is actually needed in that sentence rather than guessing based on where a pause feels natural. A colon or semicolon generally requires a complete sentence before it; a comma alone can't join two complete sentences without a conjunction.",
+    "Dashes and commas can both set off a nonessential aside, but they can't be mixed within the same pair; if a dash opens an interruption, a matching dash has to close it. When in doubt, identify whether what comes before and after the punctuation mark is a complete sentence on its own, since that single check resolves most punctuation questions.",
+  ],
+  "satrw-agreement": [
+    "A verb has to agree in number with its actual subject, and a pronoun has to agree in number with the noun it refers to, even when other words sit between them and make the true subject harder to spot. Cross out prepositional phrases and other interruptions to find the exact word a verb or pronoun actually needs to match.",
+    "Collective nouns like \"team\" or \"committee\" are usually treated as singular, and indefinite pronouns like \"everyone\" or \"each\" are always singular, even though they refer to more than one person. Watch especially for a sentence that starts referring to something one way and then switches partway through.",
+  ],
+  "satrw-verbforms": [
+    "Verb tense has to stay logically consistent with the timeline a sentence or passage establishes, and these questions test whether you can spot a tense that breaks that timeline, an incorrect verb form, or a modifier placed too far from the word it's meant to describe.",
+    "When one past event happened before another past event, the earlier one usually needs the past perfect tense (\"had\" plus a past participle) to make the sequence clear. And a modifier at the start of a sentence needs its logical subject to appear immediately after it, or the sentence ends up describing the wrong thing entirely.",
+  ],
+
+  // ---------------- SAT MATH ----------------
+  "satmath-linear1var": [
+    "A linear equation in one variable is solved by isolating that variable: undo addition and subtraction first, then undo multiplication and division, applying the same operation to both sides every time. Digital SAT questions often dress this up by burying the equation inside a word problem, so translating the words into an equation correctly is usually the harder half of the question.",
+    "Watch for equations with variables on both sides; combine like terms and move every variable term to one side before isolating it. And when a question describes a real situation, define what the variable actually represents before setting up the equation, since a wrong setup gives a wrong answer no matter how carefully you solve it afterward.",
+  ],
+  "satmath-linearfunc": [
+    "A linear function's graph is a straight line, and its equation, y = mx + b, packs two key values into one expression: m is the slope (the rate the output changes as the input changes), and b is the y-intercept (the value when x is 0). Given two points, the slope is the change in y divided by the change in x.",
+    "These questions often describe a linear function in words, a starting value plus a constant rate of change, and ask you to translate that description into an equation or read a specific value off it. The starting value is always the y-intercept, and the rate of change is always the slope, no matter how the scenario is phrased.",
+  ],
+  "satmath-linear2var": [
+    "A linear equation in two variables describes every point on a line, and it can be written in several equivalent forms: slope-intercept (y = mx + b), point-slope (y − y₁ = m(x − x₁)), or standard form (Ax + By = C). Being able to convert between these forms quickly is often the fastest path to an answer.",
+    "Two lines are parallel exactly when they share the same slope, and perpendicular exactly when their slopes are negative reciprocals of each other. Questions that describe a line's relationship to another line, or that ask you to write an equation given a point and a slope, almost always reduce to one of these two facts.",
+  ],
+  "satmath-systems": [
+    "A system of two linear equations can be solved by substitution, solving one equation for a variable and plugging that expression into the other, or by elimination, adding or subtracting the equations to cancel out a variable entirely. Both methods always give the same solution; picking whichever is faster for a given system is mostly a matter of practice.",
+    "A system has no solution when the two lines are parallel but not identical (same slope, different intercept), and it has infinitely many solutions when the two equations describe the exact same line. Digital SAT questions frequently ask about this special case directly, without ever asking you to actually solve for x and y.",
+  ],
+  "satmath-linineq": [
+    "Solving a linear inequality follows the same steps as solving an equation, with one essential exception: multiplying or dividing both sides by a negative number flips the direction of the inequality sign. Forgetting this single rule is the most common way an otherwise easy inequality question gets missed.",
+    "A system of two linear inequalities describes a whole region of the coordinate plane rather than a single line, the overlap of each inequality's own shaded half-plane. Questions that ask which point satisfies a system of inequalities are really just asking which point lands inside that overlapping region.",
+  ],
+  "satmath-nonlinearfunc": [
+    "Nonlinear functions, quadratics, exponentials, and others, don't change at a constant rate the way linear functions do, so their graphs curve instead of forming a straight line. A quadratic's graph is a parabola, and its vertex form, y = a(x − h)² + k, directly reveals the vertex at the point (h, k).",
+    "An exponential function, y = a·b^x, grows or shrinks by a constant multiplying factor with every step rather than by a constant added amount; b greater than 1 means growth, and b between 0 and 1 means decay. These questions often ask you to match a real-world description, like a population doubling every year, to the correct type of function and its key values.",
+  ],
+  "satmath-nonlineareq": [
+    "A quadratic equation can be solved by factoring into two binomials whose constant terms multiply to the equation's last term and add to its middle coefficient, or by the quadratic formula when it doesn't factor cleanly. The discriminant, b² − 4ac, tells you how many real solutions to expect before you even solve: positive means two, zero means exactly one, and negative means none.",
+    "A system pairing a line with a curve, like a parabola, can be solved by substituting the linear expression into the nonlinear equation, which usually turns the system into a single quadratic equation to solve. Depending on how the line and curve intersect, that system can have zero, one, or two solutions.",
+  ],
+  "satmath-equivexpr": [
+    "Rewriting an expression into an equivalent form, factoring it, expanding it, or simplifying a rational expression, doesn't change its value, only how it's written. These questions test whether you recognize that two differently formatted expressions are actually the same, or can transform one into a more useful form for a specific purpose.",
+    "Exponent rules make a lot of this work mechanical: multiplying powers with the same base adds the exponents, dividing subtracts them, and raising a power to another power multiplies them. A difference of squares, x² − y², always factors into (x + y)(x − y), a pattern worth recognizing on sight rather than re-deriving each time.",
+  ],
+  "satmath-ratios": [
+    "A ratio compares two quantities, and a rate compares two quantities with different units, like miles per hour. Most ratio and rate questions can be solved by setting up a proportion, two equal fractions, and cross-multiplying to solve for the unknown value.",
+    "Unit conversion questions are really just ratios in disguise: multiplying by a conversion factor written as a fraction (like 60 minutes over 1 hour) lets you cancel out the unit you don't want and keep the one you do. Chaining several conversion factors together handles even multi-step conversions in one continuous calculation.",
+  ],
+  "satmath-percentages": [
+    "A percent is just a ratio out of 100, so \"x percent of y\" always translates directly to (x/100) × y. Percent change is calculated as the amount of change divided by the original starting value, never the new value, which is a distinction the digital SAT tests often.",
+    "Percent error follows the same basic structure as percent change: the difference between an estimated and an actual value, divided by the actual value. And when a value increases by one percentage and then decreases by another, the two percentages don't cancel out, since the second percentage applies to a new, already-changed amount.",
+  ],
+  "satmath-onevardata": [
+    "The mean is the sum of all values divided by how many values there are; the median is the middle value once everything is sorted (or the average of the two middle values, for an even-sized data set); and the mode is whichever value appears most often. Each measures the \"center\" of a data set slightly differently, and a question's wording usually signals exactly which one it wants.",
+    "The median is far less affected by extreme outliers than the mean, so a data set with one unusually large or small value will often show a mean and median that are noticeably different from each other. Spread, how far values stretch from the center, is often measured by range (the highest value minus the lowest) or by standard deviation, which the digital SAT tests conceptually rather than asking you to calculate directly.",
+  ],
+  "satmath-twovardata": [
+    "A scatterplot shows the relationship between two variables, and these questions ask you to describe that relationship: does it look linear or nonlinear, and if linear, is the association positive (both variables tend to rise together) or negative (one rises as the other falls)? A line of best fit summarizes that overall trend without needing to pass exactly through every point.",
+    "Once you have a line of best fit's equation, you can use it to predict a value for any input, even one not directly shown in the data, by plugging that input into the equation like any other function. Questions often ask you to interpret what the slope or y-intercept of that line actually means in the real-world context the scatterplot describes.",
+  ],
+  "satmath-probability": [
+    "Basic probability is a fraction: the number of favorable outcomes divided by the total number of possible outcomes. For two independent events, ones where the outcome of one doesn't affect the other, the probability that both happen is the product of their individual probabilities.",
+    "Conditional probability asks for the probability of one event given that another has already happened, which usually means narrowing your total outcomes down to only the ones consistent with that given condition before calculating the fraction. Data presented in a two-way table makes this especially direct: the condition tells you which row or column to restrict your count to.",
+  ],
+  "satmath-inference": [
+    "When a sample is drawn randomly from a larger population, its statistics, like a sample mean or proportion, can be used to estimate the same value for the entire population, as long as the sample was selected in a way that fairly represents that population. A margin of error acknowledges that a sample estimate won't exactly match the true population value, and it defines a range the true value is likely to fall within.",
+    "A larger, more carefully selected random sample generally produces a smaller margin of error, meaning a more precise estimate of the true population value. These questions often ask you to interpret what a specific margin of error means in context, or to compare which of two described samples would likely produce the more reliable estimate.",
+  ],
+  "satmath-statclaims": [
+    "An observational study simply records what naturally happens without the researcher assigning any treatment, which means it can reveal a correlation between two variables but can never establish that one directly causes the other. An experiment, by contrast, randomly assigns subjects to different treatment groups, which is what actually allows a causal conclusion to be drawn.",
+    "Random assignment is the key ingredient that separates the two: it's specifically what lets researchers rule out other explanations for a difference between groups. These questions often ask you to identify whether a described study can support a causal claim, or only a correlational one, based on whether random assignment was actually used.",
+  ],
+  "satmath-areavolume": [
+    "Area and volume questions are mostly a matter of matching a described shape to its correct formula and plugging in the given values carefully. A rectangular box's volume is length times width times height; a cylinder's volume is its circular base's area multiplied by its height; a sphere's volume is four-thirds pi times the radius cubed.",
+    "Because area formulas square a linear dimension like radius or side length, doubling that dimension always quadruples the resulting area, while volume formulas cube a linear dimension, so doubling it multiplies the volume by eight. Questions that ask how a shape's area or volume changes when a dimension scales are really just testing whether you know which power that dimension is raised to.",
+  ],
+  "satmath-linesangles": [
+    "The angles inside any triangle always add up to 180 degrees, a fact that lets you find a missing angle once you know the other two. When two parallel lines are cut by a third line, a transversal, the resulting angles follow predictable relationships: corresponding angles are equal, alternate interior angles are equal, and same-side interior angles add up to 180 degrees.",
+    "The triangle inequality theorem requires that the sum of any two sides of a triangle be greater than the third side, or the triangle simply couldn't physically close up; this fact is often used to test which set of three lengths could form a real triangle. And a triangle's exterior angle always equals the sum of the two interior angles that aren't adjacent to it.",
+  ],
+  "satmath-righttri": [
+    "In a right triangle, the Pythagorean theorem, a² + b² = c², relates the two legs to the hypotenuse, the longest side, opposite the right angle. A handful of Pythagorean triples, like 3-4-5 and 5-12-13, show up constantly and let you skip the algebra entirely once you recognize them, along with their multiples.",
+    "The three basic trig ratios compare two sides of a right triangle relative to a given angle: sine is opposite over hypotenuse, cosine is adjacent over hypotenuse, and tangent is opposite over adjacent, often remembered with the acronym SOHCAHTOA. Two special right triangles are worth memorizing outright: a 45-45-90 triangle's sides are in the ratio 1 to 1 to the square root of 2, and a 30-60-90 triangle's sides are in the ratio 1 to the square root of 3 to 2.",
+  ],
+  "satmath-circles": [
+    "A circle's area (pi times the radius squared) and circumference (pi times the diameter) are the two most frequently used circle formulas, and most circle questions are really testing whether you plug the right value into the right one. An arc's length or a sector's area is simply a fraction of the whole circle, found by taking the central angle over 360 degrees.",
+    "A circle centered at the origin follows the equation x² + y² = r²; shifting its center to the point (h, k) changes the equation to (x − h)² + (y − k)² = r², with r still equal to the radius. An inscribed angle, formed by two chords meeting at the circle's edge, always measures exactly half the arc it intercepts, and any angle inscribed in a semicircle is always exactly 90 degrees.",
+  ],
 };
