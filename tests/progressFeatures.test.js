@@ -104,6 +104,39 @@ test("recordLessonResult's returned outcome includes newlyUnlocked", () => {
   assertTrue(Array.isArray(outcome.newlyUnlocked));
 });
 
+// --- boss lesson (lesson 21) gates mastery ---
+
+test("finishing all 20 regular lessons doesn't master a skill on its own — the boss lesson is still required", () => {
+  const gs = freshGameState();
+  for (let i = 0; i < 20; i++) {
+    gs.recordLessonResult("en-relevance", i, { correctCount: 5, totalCount: 5, starsEarned: 5, coinsEarned: 20 });
+  }
+  const progress = gs.getSkillProgress("en-relevance");
+  assertEqual(progress.lessonsCompleted, 20);
+  assertTrue(!progress.mastered, "expected the skill to stay unmastered until the boss lesson (21) is cleared too");
+});
+
+test("passing the boss lesson (21) after all regular lessons masters the skill", () => {
+  const gs = freshGameState();
+  for (let i = 0; i < 20; i++) {
+    gs.recordLessonResult("en-relevance", i, { correctCount: 5, totalCount: 5, starsEarned: 5, coinsEarned: 20 });
+  }
+  const outcome = gs.recordLessonResult("en-relevance", 20, { correctCount: 11, totalCount: 15, starsEarned: 11, coinsEarned: 40 });
+  assertTrue(outcome.justMastered, "expected clearing the boss lesson to master the skill");
+  assertTrue(gs.getSkillProgress("en-relevance").mastered);
+});
+
+test("the boss lesson isn't unlocked until all 20 regular lessons are cleared", () => {
+  const gs = freshGameState();
+  assertTrue(!gs.isLessonUnlocked("en-relevance", 20));
+  for (let i = 0; i < 19; i++) {
+    gs.recordLessonResult("en-relevance", i, { correctCount: 5, totalCount: 5, starsEarned: 5, coinsEarned: 20 });
+  }
+  assertTrue(!gs.isLessonUnlocked("en-relevance", 20), "boss should still be locked with one regular lesson left");
+  gs.recordLessonResult("en-relevance", 19, { correctCount: 5, totalCount: 5, starsEarned: 5, coinsEarned: 20 });
+  assertTrue(gs.isLessonUnlocked("en-relevance", 20), "boss should unlock right after the 20th regular lesson");
+});
+
 // --- pacing ---
 
 test("getPacingStats is null before any samples are recorded", () => {

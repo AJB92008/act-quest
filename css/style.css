@@ -833,6 +833,17 @@ input[type="password"] {
   transform: scale(1.06);
 }
 
+.node-circle.is-boss-node {
+  width: 58px;
+  height: 58px;
+  font-size: 1.4rem;
+  box-shadow: 0 6px 18px rgba(255, 159, 56, 0.45), 0 0 0 3px #ffcf5c;
+}
+
+.node-circle.is-boss-node.is-locked {
+  box-shadow: 0 0 0 3px #e3e1f0;
+}
+
 .node-label {
   margin-top: 6px;
 }

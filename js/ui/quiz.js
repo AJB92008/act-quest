@@ -1,5 +1,5 @@
-import { getSkill } from "../data/skills.js";
-import { getLessonQuestions, getLessonCount, preloadSubjectForSkill } from "../data/questions/index.js";
+import { getSkill, getSkillBossName } from "../data/skills.js";
+import { getLessonQuestions, getLessonCount, isBossLessonIndex, preloadSubjectForSkill } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -14,6 +14,8 @@ const QUESTION_TIME = 20; // seconds budgeted per question, for the speed bonus
 
 export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) {
   const { subject, skill } = getSkill(skillId);
+  const isBoss = isBossLessonIndex(lessonIndex);
+  const bossName = getSkillBossName(skill.name);
 
   // The island page already kicked this subject's data off loading as soon
   // as the player opened it, so this almost always resolves instantly; the
@@ -77,7 +79,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
 
     root.innerHTML = `
       ${hudHTML("map")}
-      <main class="screen quiz-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
+      <main class="screen quiz-screen ${isBoss ? "boss-quiz-screen" : ""}" style="--island-color:${subject.color};--island-bg:${subject.bg}">
         <div class="quiz-top">
           <button class="back-btn" data-quit>&larr; Quit to Path</button>
           <div class="quiz-progress-dots">
@@ -87,8 +89,8 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
           </div>
           <div class="quiz-streak">🔥 Streak: ${streak}</div>
         </div>
-        <h2 class="quiz-skill-name">${skill.name}</h2>
-        <p class="quiz-lesson-label">Lesson ${lessonIndex + 1} of ${totalLessons}</p>
+        <h2 class="quiz-skill-name">${isBoss ? `👑 ${bossName}` : skill.name}</h2>
+        <p class="quiz-lesson-label">${isBoss ? `Boss Battle &mdash; Question ${idx + 1} of ${questions.length}` : `Lesson ${lessonIndex + 1} of ${totalLessons}`}</p>
         ${gameState.timerEnabled ? `<div class="timer-bar-track"><div class="timer-bar-fill" id="timerFill"></div></div>` : ""}
         ${stimulusHTML}
         <div class="question-card">
@@ -194,14 +196,14 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
       <main class="screen results-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
         <div class="results-card">
           <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 160 })}</div>
-          <h1>${outcome.passed ? "Lesson Passed!" : "Keep Practicing!"}</h1>
+          <h1>${outcome.passed ? (isBoss ? "👑 Boss Defeated!" : "Lesson Passed!") : isBoss ? "The Boss Wins This Round!" : "Keep Practicing!"}</h1>
           <p class="results-score">${correctCount} / ${total} correct (${scorePct}%)</p>
           ${
             outcome.justMastered
               ? `<p class="results-flag">🏅 Skill mastered!</p>`
               : outcome.passed
-              ? `<p class="results-flag">✅ Lesson ${lessonIndex + 1} of ${totalLessons} cleared</p>`
-              : `<p class="results-flag results-flag-muted">Score 70% or higher to pass and unlock the next lesson.</p>`
+              ? `<p class="results-flag">${isBoss ? `👑 ${bossName} defeated!` : `✅ Lesson ${lessonIndex + 1} of ${totalLessons} cleared`}</p>`
+              : `<p class="results-flag results-flag-muted">Score 70% or higher to ${isBoss ? `defeat ${bossName}` : "pass and unlock the next lesson"}.</p>`
           }
           ${renderProgressBanners(outcome)}
           <div class="results-stats">
@@ -211,7 +213,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
           ${renderPacingTag(pacing)}
           <div class="results-actions">
             ${hasNextLesson ? `<button class="btn-primary" data-next>Next Lesson &rarr;</button>` : ""}
-            <button class="${hasNextLesson ? "btn-secondary" : "btn-primary"}" data-retry>Retry Lesson</button>
+            <button class="${hasNextLesson ? "btn-secondary" : "btn-primary"}" data-retry>${isBoss ? "Retry Boss" : "Retry Lesson"}</button>
             <button class="btn-secondary" data-path>Back to Path</button>
             <button class="btn-secondary" data-map>World Map</button>
           </div>

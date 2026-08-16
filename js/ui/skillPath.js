@@ -1,5 +1,5 @@
-import { getSkill } from "../data/skills.js";
-import { getLessonCount } from "../data/questions/index.js";
+import { getSkill, getSkillBossName } from "../data/skills.js";
+import { getLessonCount, isBossLessonIndex } from "../data/questions/index.js";
 import { LESSONS } from "../data/lessons.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
@@ -13,26 +13,30 @@ export function renderSkillPath(root, navigate, { skillId, subjectId }) {
   const totalLessons = getLessonCount(skillId);
   const progress = gameState.getSkillProgress(skillId);
   const paragraphs = LESSONS[skillId] || [];
+  const bossName = getSkillBossName(skill.name);
 
   const positions = pathPositions(totalLessons, { rowHeight: ROW_HEIGHT });
   const totalHeight = pathHeight(totalLessons, ROW_HEIGHT);
 
   const nodes = Array.from({ length: totalLessons }, (_, i) => {
     const { x, y } = positions[i];
+    const isBoss = isBossLessonIndex(i);
     const unlocked = gameState.isLessonUnlocked(skillId, i);
     const done = i < progress.lessonsCompleted;
-    const stateClass = done ? "is-mastered" : unlocked ? "is-open" : "is-locked";
+    const stateClass = `${done ? "is-mastered" : unlocked ? "is-open" : "is-locked"}${isBoss ? " is-boss-node" : ""}`;
     const isCurrent = !progress.mastered && i === progress.lessonsCompleted;
-    const badge = done ? "✓" : unlocked ? String(i + 1) : "🔒";
+    const badge = done ? "✓" : unlocked ? (isBoss ? "👑" : String(i + 1)) : "🔒";
+    const label = isBoss ? "👑 Boss" : `Lesson ${i + 1}`;
+    const ariaLabel = isBoss ? `Boss: ${bossName}` : `Lesson ${i + 1}`;
     return `
       <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
         ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 54 })}</div>` : ""}
         <button class="node-circle node-circle-small ${stateClass}" data-lesson="${i}" ${unlocked ? "" : "disabled"}
-          aria-label="Lesson ${i + 1}${done ? ", complete" : unlocked ? "" : ", locked"}"
+          aria-label="${ariaLabel}${done ? ", complete" : unlocked ? "" : ", locked"}"
           style="--node-color:${subject.color}">
           ${badge}
         </button>
-        <div class="node-label node-label-compact"><h4>Lesson ${i + 1}</h4></div>
+        <div class="node-label node-label-compact"><h4>${label}</h4></div>
       </div>
     `;
   }).join("");

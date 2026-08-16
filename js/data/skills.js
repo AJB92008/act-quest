@@ -464,3 +464,10 @@ export function getSkill(skillId) {
 export function allSkillIds() {
   return SUBJECTS.flatMap((s) => s.skills.map((sk) => sk.id));
 }
+
+// Every skill's path ends in a capstone "boss lesson" (see BOSS_LESSON_INDEX
+// in data/questions/index.js) — named off the skill itself rather than
+// hand-authored per skill, since there are 59 of these and counting.
+export function getSkillBossName(skillName) {
+  return `${skillName} Champion`;
+}
