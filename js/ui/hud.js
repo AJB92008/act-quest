@@ -45,13 +45,21 @@ export function hudHTML(activeScreen) {
   // "Progress" isn't a separate top-level nav item, and there's no
   // standalone logout shortcut either; the dashboard's own Cloud Account
   // card is the one place to sign in/out.
+  // One tab, not two: "Map" goes to the current planet's World Map, which
+  // already has its own "← Solar System" link back up to the planet
+  // picker (see worldMap.js) — no separate top-level "Planets" tab needed
+  // for what's a rare action (switching planets) next to a frequent one
+  // (getting back to where you're studying).
   const nav = [
-    { id: "solarSystem", icon: "🌌", label: "Planets" },
     { id: "map", icon: "🗺️", label: "Map" },
     { id: "endless", icon: "🔁", label: "Endless" },
     { id: "shop", icon: "🛍️", label: "Shop" },
     { id: "avatarCreator", icon: "🐲", label: "Monster" },
   ];
+  // The Solar System (planet picker) is a sub-screen of Map now, not its
+  // own tab — still highlight "Map" while there instead of leaving the
+  // whole nav looking unselected.
+  const navActiveScreen = activeScreen === "solarSystem" ? "map" : activeScreen;
   return `
     <header class="hud">
       <button type="button" class="hud-avatar ${activeScreen === "dashboard" ? "is-active" : ""}" data-nav="dashboard" title="Level ${gameState.level} · ${gameState.getEvolutionStageName()} · ${Math.round(gameState.getMasteryPct() * 100)}% mastery" aria-label="View progress, stats, and account">${monsterSVG(avatar, { size: 59 })}<span class="hud-level-badge">${gameState.level}</span></button>
@@ -59,7 +67,7 @@ export function hudHTML(activeScreen) {
         ${nav
           .map(
             (n) =>
-              `<button class="hud-btn ${activeScreen === n.id ? "is-active" : ""}" data-nav="${n.id}"><span class="hud-btn-icon">${n.icon}</span><span class="hud-btn-label">${n.label}</span></button>`
+              `<button class="hud-btn ${navActiveScreen === n.id ? "is-active" : ""}" data-nav="${n.id}"><span class="hud-btn-icon">${n.icon}</span><span class="hud-btn-label">${n.label}</span></button>`
           )
           .join("")}
         ${
