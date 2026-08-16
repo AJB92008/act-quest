@@ -48,7 +48,9 @@
 :root[data-theme="dark"] .map-island-node,
 :root[data-theme="dark"] .node-progress-badge,
 :root[data-theme="dark"] .stimulus-panel,
-:root[data-theme="dark"] .endless-best-tile {
+:root[data-theme="dark"] .endless-best-tile,
+:root[data-theme="dark"] .score-tile,
+:root[data-theme="dark"] .score-detail-panel {
   background: var(--card);
 }
 
@@ -2768,6 +2770,268 @@ button.drill-skill-row:hover {
   position: absolute;
   bottom: 14px;
   right: 14px;
+}
+
+/* ---------- score report ---------- */
+.score-report-card {
+  max-width: 640px;
+  text-align: left;
+}
+
+.score-report-card > .results-monster,
+.score-report-card > h1,
+.score-report-card > .lesson-blurb,
+.score-report-card > .score-disclaimer {
+  text-align: center;
+}
+
+.score-disclaimer {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 0 0 14px;
+}
+
+.score-section-details {
+  margin-top: 22px;
+}
+
+.ncrc-panel {
+  margin-top: 22px;
+}
+
+.score-section-heading {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.score-caption {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 4px 0 12px;
+}
+
+.score-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.score-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--island-bg, var(--surface-alt));
+  border: 2px solid var(--island-color, var(--border));
+  border-radius: 14px;
+  padding: 12px 8px;
+}
+
+.score-tile-primary {
+  background: var(--surface-alt);
+  border-color: var(--purple);
+}
+
+.score-tile-value {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--island-color, var(--ink));
+}
+
+.score-tile-primary .score-tile-value {
+  color: var(--ink);
+}
+
+.score-tile-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.score-graph {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.score-graph-row {
+  display: grid;
+  grid-template-columns: 92px 1fr 28px;
+  align-items: center;
+  gap: 10px;
+}
+
+.score-graph-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.score-graph-track {
+  height: 14px;
+  border-radius: 999px;
+  /* --surface-alt (not --island-bg) since it's already redefined per
+     theme — the per-subject pastel is fine on the light card this app
+     mostly shows it against, but has no dark counterpart of its own. */
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+
+.score-graph-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--island-color, var(--purple));
+}
+
+.score-graph-value {
+  font-weight: 800;
+  text-align: right;
+  color: var(--ink);
+}
+
+.score-graph-desc {
+  font-style: italic;
+}
+
+.score-info-detail {
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+.score-info-detail summary {
+  font-weight: 700;
+  color: var(--purple);
+  cursor: pointer;
+}
+
+.score-info-detail p {
+  margin: 6px 0 0;
+  color: var(--ink);
+}
+
+.score-detail-panel {
+  background: var(--island-bg, var(--surface-alt));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-top: 12px;
+}
+
+.score-detail-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.score-detail-score {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--island-color, var(--purple));
+}
+
+.score-detail-name {
+  font-weight: 800;
+}
+
+.score-category-row {
+  margin-top: 8px;
+}
+
+.score-category-row-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.score-category-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+
+.score-category-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--island-color, var(--purple));
+}
+
+.ncrc-panel {
+  background: var(--surface-alt);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+.ncrc-your-score {
+  font-weight: 800;
+  margin: 4px 0 10px;
+}
+
+.ncrc-scale {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.ncrc-tier {
+  flex: 1;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 4px 0;
+  border-radius: 8px;
+}
+
+.ncrc-tier.is-current {
+  color: #fff;
+  background: var(--purple);
+}
+
+.ncrc-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.ncrc-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #cd7f32, #c0c0c0, #ffd700, #7fd1ae);
+}
+
+.ncrc-scale-endpoints {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .score-tile-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .score-graph-row {
+    grid-template-columns: 76px 1fr 26px;
+  }
 }
 
 /* Score Report's "Print / Save as PDF" relies entirely on this — no PDF
