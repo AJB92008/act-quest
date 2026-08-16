@@ -45,20 +45,7 @@ export const TESTS = [
     color: "#2a9d8f",
     colorDark: "#1c6f65",
     bg: "#e8f6f4",
-    subjects: [
-      ...SAT_SUBJECTS,
-      {
-        id: "sat-math",
-        name: "Math",
-        place: "Function Fields",
-        color: "#e07a5f",
-        colorDark: "#b3563e",
-        bg: "#fdeee9",
-        icon: "📐",
-        blurb: "Algebra, problem-solving, and data analysis, SAT-style — coming soon.",
-        skills: [],
-      },
-    ],
+    subjects: SAT_SUBJECTS,
   },
   {
     id: "psat",

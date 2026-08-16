@@ -88,9 +88,36 @@ test("getSubject/getSkill (data/tests.js) resolve real ACT ids exactly like skil
 });
 
 test("getSubject/getSkill resolve a scaffolded (contentless) planet's subject, and correctly find no skill in it", () => {
-  const subject = getSubject("sat-math");
+  const subject = getSubject("psat-math");
   assertTrue(!!subject && subject.name === "Math" && subject.skills.length === 0);
   assertEqual(getSkill("sat-anything-not-real"), null);
+});
+
+// --- SAT Math (data/satSkills.js) ---
+
+test("SAT Math has a real skill tree but is still contentPending, so it's reported as not playable", () => {
+  const subject = getSubject("sat-math");
+  assertTrue(subject.contentPending === true);
+  assertTrue(subject.skills.length > 0, "expected a real skill tree, not an empty placeholder");
+  assertTrue(!isSubjectPlayable(subject), "a skill tree with contentPending should not count as playable");
+});
+
+test("SAT Math lists the College Board's real 19 skills across its 4 domains", () => {
+  const subject = getSubject("sat-math");
+  assertEqual(subject.skills.length, 19);
+});
+
+test("every SAT Math skill's reportingCategory is a real domain in its REPORTING_CATEGORIES", () => {
+  const domainIds = new Set(SAT_REPORTING_CATEGORIES["sat-math"].map((c) => c.id));
+  const subject = getSubject("sat-math");
+  for (const skill of subject.skills) {
+    assertTrue(domainIds.has(skill.reportingCategory), `skill "${skill.id}" has an unrecognized reportingCategory "${skill.reportingCategory}"`);
+  }
+});
+
+test("SAT Math's four domain weights sum to 1", () => {
+  const total = SAT_REPORTING_CATEGORIES["sat-math"].reduce((sum, c) => sum + c.weight, 0);
+  assertTrue(Math.abs(total - 1) < 1e-9, `expected domain weights to sum to 1, got ${total}`);
 });
 
 test("getSubject/getSkill return undefined/null (not throw) for a completely unknown id", () => {

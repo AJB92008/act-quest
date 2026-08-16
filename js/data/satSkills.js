@@ -16,12 +16,32 @@
 // ACT's — each skill's 100-question bank lives in data/questions/satRw.js,
 // loaded via SUBJECT_LOADERS in data/questions/index.js, with a
 // BOSS_MONSTERS entry ("The Archive Owl") like every other playable subject.
+//
+// SAT Math (id "sat-math") is one phase behind: its skill tree and domain
+// weights below are the College Board's real, official ones, but it has no
+// question bank yet (same `contentPending: true` gap Reading & Writing
+// itself started in) — no BANK_SIZE_OVERRIDES/SUBJECT_LOADERS entry, no
+// BOSS_MONSTERS entry. Writing data/questions/satMath.js and dropping
+// `contentPending` is the next phase, same playbook satRw.js followed.
 export const REPORTING_CATEGORIES = {
   "sat-rw": [
     { id: "ii", name: "Information and Ideas", weight: 0.26 },
     { id: "cs", name: "Craft and Structure", weight: 0.28 },
     { id: "eoi", name: "Expression of Ideas", weight: 0.2 },
     { id: "sec", name: "Standard English Conventions", weight: 0.26 },
+  ],
+  // The College Board publishes these four content domains with an exact
+  // question-count range per module (e.g. Algebra 13-15 of ~44), not the
+  // more granular "reporting categories" language R&W's official docs use
+  // — but they're the same kind of thing (a fixed set of tested domains
+  // each skill belongs to), so they're named REPORTING_CATEGORIES here too
+  // for consistency with every other subject. Weights are each domain's
+  // question-count range's midpoint (14, 14, 6, 6) normalized to sum to 1.
+  "sat-math": [
+    { id: "algebra", name: "Algebra", weight: 0.35 },
+    { id: "advmath", name: "Advanced Math", weight: 0.35 },
+    { id: "psda", name: "Problem-Solving and Data Analysis", weight: 0.15 },
+    { id: "geotrig", name: "Geometry and Trigonometry", weight: 0.15 },
   ],
 };
 
@@ -144,6 +164,140 @@ export const SAT_SUBJECTS = [
         name: "Verb Form Fix",
         blurb: "Choose the correct verb tense, form, and modifier placement.",
         reportingCategory: "sec",
+      },
+    ],
+  },
+  {
+    id: "sat-math",
+    name: "Math",
+    place: "Function Fields",
+    color: "#e07a5f",
+    colorDark: "#b3563e",
+    bg: "#fdeee9",
+    icon: "📐",
+    blurb: "Algebra, problem-solving, and data analysis, SAT-style.",
+    contentPending: true,
+    skills: [
+      // --- Algebra (~35%) ---
+      {
+        id: "satmath-linear1var",
+        name: "Equation Solver",
+        blurb: "Solve linear equations in one variable.",
+        reportingCategory: "algebra",
+      },
+      {
+        id: "satmath-linearfunc",
+        name: "Line Reader",
+        blurb: "Interpret and build linear functions from tables, graphs, and words.",
+        reportingCategory: "algebra",
+      },
+      {
+        id: "satmath-linear2var",
+        name: "Graph Plotter",
+        blurb: "Work with linear equations in two variables and their graphs.",
+        reportingCategory: "algebra",
+      },
+      {
+        id: "satmath-systems",
+        name: "Crossing Point",
+        blurb: "Solve systems of two linear equations in two variables.",
+        reportingCategory: "algebra",
+      },
+      {
+        id: "satmath-linineq",
+        name: "Boundary Setter",
+        blurb: "Solve and graph linear inequalities in one or two variables.",
+        reportingCategory: "algebra",
+      },
+
+      // --- Advanced Math (~35%) ---
+      {
+        id: "satmath-nonlinearfunc",
+        name: "Curve Shaper",
+        blurb: "Analyze nonlinear functions, including quadratics and exponentials.",
+        reportingCategory: "advmath",
+      },
+      {
+        id: "satmath-nonlineareq",
+        name: "Root Finder",
+        blurb: "Solve nonlinear equations and systems pairing a line with a curve.",
+        reportingCategory: "advmath",
+      },
+      {
+        id: "satmath-equivexpr",
+        name: "Expression Rebuilder",
+        blurb: "Rewrite and simplify expressions into equivalent forms.",
+        reportingCategory: "advmath",
+      },
+
+      // --- Problem-Solving and Data Analysis (~15%) ---
+      {
+        id: "satmath-ratios",
+        name: "Rate Tracker",
+        blurb: "Solve problems involving ratios, rates, proportions, and unit conversions.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "satmath-percentages",
+        name: "Percent Play",
+        blurb: "Apply percentages, percent change, and percent error.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "satmath-onevardata",
+        name: "Spread Sense",
+        blurb: "Describe a single data set's center, spread, and shape.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "satmath-twovardata",
+        name: "Scatter Scout",
+        blurb: "Interpret models and scatterplots relating two variables.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "satmath-probability",
+        name: "Odds Maker",
+        blurb: "Calculate probability and conditional probability.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "satmath-inference",
+        name: "Sample Says",
+        blurb: "Draw conclusions from sample statistics and margin of error.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "satmath-statclaims",
+        name: "Study Skeptic",
+        blurb: "Evaluate statistical claims from observational studies and experiments.",
+        reportingCategory: "psda",
+      },
+
+      // --- Geometry and Trigonometry (~15%) ---
+      {
+        id: "satmath-areavolume",
+        name: "Space Filler",
+        blurb: "Calculate area, surface area, and volume.",
+        reportingCategory: "geotrig",
+      },
+      {
+        id: "satmath-linesangles",
+        name: "Angle Chase",
+        blurb: "Work with lines, angles, and triangle relationships.",
+        reportingCategory: "geotrig",
+      },
+      {
+        id: "satmath-righttri",
+        name: "Triangle Ratios",
+        blurb: "Apply right-triangle relationships and trigonometric ratios.",
+        reportingCategory: "geotrig",
+      },
+      {
+        id: "satmath-circles",
+        name: "Circle Logic",
+        blurb: "Solve problems involving circles: arcs, angles, and equations.",
+        reportingCategory: "geotrig",
       },
     ],
   },
