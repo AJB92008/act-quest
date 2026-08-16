@@ -92,18 +92,20 @@ just that one question, not a full-file rewrite), so review the git diff
 afterward like any other change. It only edits existing questions in
 place; it never adds or removes one.
 
-Most skills have exactly 100 questions (20 regular lessons), but a skill's
-bank *can* be extended beyond that in multiples of `LESSON_SIZE` (5) — the
+Most skills have exactly 100 questions (20 lessons), but a skill's bank
+*can* be extended beyond that in multiples of `LESSON_SIZE` (5) — the
 ten Reading and six Science skills have each gotten four extra
 10-question/2-lesson batches so far, referencing new passages/stimuli,
-for exactly this reason (currently 140 questions / 28 regular lessons
-each). Every skill's path also ends in a 15-question "boss lesson" —
-always lesson 21 (`BOSS_LESSON_INDEX` in `js/data/questions/index.js`),
-regardless of how many regular lessons the skill has, drawing a fresh
-mixed-difficulty sample from that skill's whole bank rather than one more
-graduated slice of it, and required to pass (same 70% threshold as any
-other lesson) to master the skill. `getLessonCount()` always reports one
-more than the regular-lesson count above to account for it. Extending
+for exactly this reason (currently 140 questions / 28 lessons each). A
+skill's *final* lesson is always its "boss lesson" — not an extra lesson
+tacked on, but that same last slot replaced with a bigger, harder one:
+`BOSS_LESSON_SIZE` (15) questions, the hardest in the bank by the same
+difficulty ordering every other lesson slices from, instead of the usual
+`LESSON_SIZE` (5) — see `isBossLessonIndex()`/`getLessonQuestions()` in
+`js/data/questions/index.js`. Still required to pass (same 70% threshold
+as any lesson) to master the skill; `getLessonCount()` is untouched by
+any of this, since the boss doesn't add a lesson, just replaces one.
+Extending
 a skill takes two steps: append the new questions to its array in
 `js/data/questions/<subject>.js` (a multiple of 5), then add or update
 that skill's entry in `BANK_SIZE_OVERRIDES` in

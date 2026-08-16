@@ -20,7 +20,7 @@ export function renderSkillPath(root, navigate, { skillId, subjectId }) {
 
   const nodes = Array.from({ length: totalLessons }, (_, i) => {
     const { x, y } = positions[i];
-    const isBoss = isBossLessonIndex(i);
+    const isBoss = isBossLessonIndex(skillId, i);
     const unlocked = gameState.isLessonUnlocked(skillId, i);
     const done = i < progress.lessonsCompleted;
     const stateClass = `${done ? "is-mastered" : unlocked ? "is-open" : "is-locked"}${isBoss ? " is-boss-node" : ""}`;

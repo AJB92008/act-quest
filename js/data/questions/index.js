@@ -6,21 +6,18 @@ import { getQuestionPatterns, PATTERN_DEFS } from "./patterns.js";
 // "Teach Your Monster" paces its games.
 export const LESSON_SIZE = 5;
 
-// Every skill's path ends in a capstone "boss lesson": a bigger, mixed-
-// difficulty gauntlet drawn from that skill's own full bank rather than one
-// more slice of it, inserted right after the 20th regular lesson (so it's
-// always "lesson 21", 0-indexed lesson 20, no matter how large a skill's
-// bank is) and required to pass like any other lesson to master the skill —
-// see getLessonCount/getLessonQuestions below for how it's spliced in, and
-// state.js's existing lessonsCompleted/mastered logic (already generic over
-// getLessonCount(), unchanged here) for why nothing else had to change to
-// make it gate mastery.
-export const BOSS_LESSON_INDEX = 20;
+// Every skill's path ends in a capstone "boss lesson" — not an extra lesson
+// tacked on, but the skill's own final lesson replaced with a bigger,
+// harder one: BOSS_LESSON_SIZE questions (the hardest ones in the bank, by
+// the same difficulty ordering every other lesson uses) instead of the
+// usual LESSON_SIZE. So it lands wherever a skill's final lesson already
+// was — lesson 20 for a standard 100-question skill, lesson 21 for the
+// +5-question English skills, lesson 28 for the +40-question Reading/
+// Science skills — never a fixed lesson number. See isBossLessonIndex/
+// getLessonQuestions below; state.js's existing lessonsCompleted/mastered
+// logic is already generic over getLessonCount() (unchanged by any of
+// this), so it keeps gating mastery on the final lesson same as always.
 export const BOSS_LESSON_SIZE = 15;
-
-export function isBossLessonIndex(lessonIndex) {
-  return lessonIndex === BOSS_LESSON_INDEX;
-}
 
 // Most skills' question banks are exactly 100 questions, so lesson count is
 // normally a fixed constant rather than something derived from the loaded
@@ -80,10 +77,13 @@ const KNOWN_SKILL_IDS = new Set(allSkillIds());
 
 export function getLessonCount(skillId) {
   if (!KNOWN_SKILL_IDS.has(skillId)) return 1;
-  // +1 for the boss lesson (see BOSS_LESSON_INDEX) — it's spliced in on top
-  // of the skill's regular slices, not one of them, so it doesn't shrink
-  // the bank's other lesson count even for a 100-question skill.
-  return Math.ceil((BANK_SIZE_OVERRIDES[skillId] ?? 100) / LESSON_SIZE) + 1;
+  return Math.ceil((BANK_SIZE_OVERRIDES[skillId] ?? 100) / LESSON_SIZE);
+}
+
+// The boss lesson is always a skill's *last* lesson — see the comment above
+// BOSS_LESSON_SIZE for why that's a per-skill index, not a fixed one.
+export function isBossLessonIndex(skillId, lessonIndex) {
+  return lessonIndex === getLessonCount(skillId) - 1;
 }
 
 // skillId -> { skillName, subjectId }, built once from the skill tree —
@@ -274,18 +274,14 @@ function gentleReorder(arr) {
 // pure text heuristic, unchanged.
 export function getLessonQuestions(skillId, lessonIndex, { getQuestionStat } = {}) {
   const bank = getDifficultySortedBank(skillId, getQuestionStat);
-  if (isBossLessonIndex(lessonIndex)) {
-    // The boss draws a fresh mixed-difficulty sample from the *whole* bank
-    // (not a fixed slice) — a real capstone check across everything the
-    // skill covers, easy through hard, rather than one more graduated step.
-    return shuffled(bank).slice(0, BOSS_LESSON_SIZE);
+  if (isBossLessonIndex(skillId, lessonIndex)) {
+    // Replaces the skill's final slice with a bigger, harder one: the
+    // BOSS_LESSON_SIZE hardest questions in the bank (the tail end of the
+    // same difficulty ordering every other lesson slices from) instead of
+    // just the last LESSON_SIZE of them.
+    return gentleReorder(bank.slice(Math.max(0, bank.length - BOSS_LESSON_SIZE)));
   }
-  // Lessons after the boss slot shift back by one slice, since the boss
-  // was spliced in rather than replacing one of the skill's own slices —
-  // e.g. old lesson 21 (index 20) of an extended skill is now lesson 22
-  // (index 21), same content, just renumbered around the boss.
-  const sliceIndex = lessonIndex < BOSS_LESSON_INDEX ? lessonIndex : lessonIndex - 1;
-  const start = sliceIndex * LESSON_SIZE;
+  const start = lessonIndex * LESSON_SIZE;
   return gentleReorder(bank.slice(start, start + LESSON_SIZE));
 }
 

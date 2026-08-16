@@ -104,37 +104,39 @@ test("recordLessonResult's returned outcome includes newlyUnlocked", () => {
   assertTrue(Array.isArray(outcome.newlyUnlocked));
 });
 
-// --- boss lesson (lesson 21) gates mastery ---
+// --- boss lesson: a skill's own final lesson (index 19 for a standard
+// 20-lesson skill like en-relevance), replaced with a bigger 15-question
+// one rather than added on top — gates mastery ---
 
-test("finishing all 20 regular lessons doesn't master a skill on its own — the boss lesson is still required", () => {
+test("finishing the 19 lessons before the boss doesn't master a skill on its own — the boss (its final lesson) is still required", () => {
   const gs = freshGameState();
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 19; i++) {
     gs.recordLessonResult("en-relevance", i, { correctCount: 5, totalCount: 5, starsEarned: 5, coinsEarned: 20 });
   }
   const progress = gs.getSkillProgress("en-relevance");
-  assertEqual(progress.lessonsCompleted, 20);
-  assertTrue(!progress.mastered, "expected the skill to stay unmastered until the boss lesson (21) is cleared too");
+  assertEqual(progress.lessonsCompleted, 19);
+  assertTrue(!progress.mastered, "expected the skill to stay unmastered until the boss lesson (its final lesson, index 19) is cleared too");
 });
 
-test("passing the boss lesson (21) after all regular lessons masters the skill", () => {
+test("passing the boss lesson (a skill's final lesson) after the lessons before it masters the skill", () => {
   const gs = freshGameState();
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 19; i++) {
     gs.recordLessonResult("en-relevance", i, { correctCount: 5, totalCount: 5, starsEarned: 5, coinsEarned: 20 });
   }
-  const outcome = gs.recordLessonResult("en-relevance", 20, { correctCount: 11, totalCount: 15, starsEarned: 11, coinsEarned: 40 });
+  const outcome = gs.recordLessonResult("en-relevance", 19, { correctCount: 11, totalCount: 15, starsEarned: 11, coinsEarned: 40 });
   assertTrue(outcome.justMastered, "expected clearing the boss lesson to master the skill");
   assertTrue(gs.getSkillProgress("en-relevance").mastered);
 });
 
-test("the boss lesson isn't unlocked until all 20 regular lessons are cleared", () => {
+test("the boss lesson isn't unlocked until the lessons before it are cleared", () => {
   const gs = freshGameState();
-  assertTrue(!gs.isLessonUnlocked("en-relevance", 20));
-  for (let i = 0; i < 19; i++) {
+  assertTrue(!gs.isLessonUnlocked("en-relevance", 19));
+  for (let i = 0; i < 18; i++) {
     gs.recordLessonResult("en-relevance", i, { correctCount: 5, totalCount: 5, starsEarned: 5, coinsEarned: 20 });
   }
-  assertTrue(!gs.isLessonUnlocked("en-relevance", 20), "boss should still be locked with one regular lesson left");
-  gs.recordLessonResult("en-relevance", 19, { correctCount: 5, totalCount: 5, starsEarned: 5, coinsEarned: 20 });
-  assertTrue(gs.isLessonUnlocked("en-relevance", 20), "boss should unlock right after the 20th regular lesson");
+  assertTrue(!gs.isLessonUnlocked("en-relevance", 19), "boss should still be locked with one lesson left before it");
+  gs.recordLessonResult("en-relevance", 18, { correctCount: 5, totalCount: 5, starsEarned: 5, coinsEarned: 20 });
+  assertTrue(gs.isLessonUnlocked("en-relevance", 19), "boss should unlock right after the lesson before it");
 });
 
 // --- pacing ---

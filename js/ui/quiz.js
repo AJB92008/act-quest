@@ -14,7 +14,7 @@ const QUESTION_TIME = 20; // seconds budgeted per question, for the speed bonus
 
 export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) {
   const { subject, skill } = getSkill(skillId);
-  const isBoss = isBossLessonIndex(lessonIndex);
+  const isBoss = isBossLessonIndex(skillId, lessonIndex);
   const bossName = getSkillBossName(skill.name);
 
   // The island page already kicked this subject's data off loading as soon
