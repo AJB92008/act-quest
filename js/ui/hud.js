@@ -1,7 +1,6 @@
 import { gameState } from "../state.js";
 import { monsterSVG } from "./monster.js";
 import { showDevPanel, toggleDevPanel } from "./devPanel.js";
-import { getCloudStatus, onCloudSyncChange, signOutCloud } from "../cloudSync.js";
 
 const DEV_MODE_CLICKS = 10;
 const DEV_MODE_WINDOW_MS = 5000;
@@ -41,16 +40,20 @@ function registerThemeToggleClick(navigate) {
 
 export function hudHTML(activeScreen) {
   const avatar = gameState.getDisplayAvatar();
+  // Stats and account access live behind the avatar button (data-nav
+  // wires it up the same as any other nav button, see wireHud below) —
+  // "Progress" isn't a separate top-level nav item, and there's no
+  // standalone logout shortcut either; the dashboard's own Cloud Account
+  // card is the one place to sign in/out.
   const nav = [
     { id: "map", icon: "🗺️", label: "Map" },
     { id: "endless", icon: "🔁", label: "Endless" },
-    { id: "dashboard", icon: "📊", label: "Progress" },
     { id: "shop", icon: "🛍️", label: "Shop" },
     { id: "avatarCreator", icon: "🐲", label: "Monster" },
   ];
   return `
     <header class="hud">
-      <div class="hud-avatar" title="Level ${gameState.level} · ${gameState.getEvolutionStageName()} · ${Math.round(gameState.getMasteryPct() * 100)}% mastery">${monsterSVG(avatar, { size: 59 })}<span class="hud-level-badge">${gameState.level}</span></div>
+      <button type="button" class="hud-avatar ${activeScreen === "dashboard" ? "is-active" : ""}" data-nav="dashboard" title="Level ${gameState.level} · ${gameState.getEvolutionStageName()} · ${Math.round(gameState.getMasteryPct() * 100)}% mastery" aria-label="View progress, stats, and account">${monsterSVG(avatar, { size: 59 })}<span class="hud-level-badge">${gameState.level}</span></button>
       <nav class="hud-nav">
         ${nav
           .map(
@@ -68,51 +71,15 @@ export function hudHTML(activeScreen) {
         <button class="hud-theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="${gameState.darkMode ? "Switch to light mode" : "Switch to dark mode"}">${gameState.darkMode ? "☀️" : "🌙"}</button>
         <span class="hud-stat" title="Stars">⭐ ${gameState.totalStars}</span>
         <span class="hud-stat" title="Coins">🪙 ${gameState.coins}</span>
-        <span data-hud-account></span>
       </div>
     </header>
   `;
-}
-
-// The account/logout button depends on async cloud-auth state that isn't
-// known yet at initial HUD render, and can change while the player stays
-// on the same screen (e.g. signing out from a different tab) — so it
-// re-renders itself in place via onCloudSyncChange rather than being baked
-// into hudHTML's one-shot string, the same self-updating pattern used by
-// the dashboard's Cloud Account card and the auth gate.
-function hudAccountHTML() {
-  const status = getCloudStatus();
-  if (!status.signedIn) return "";
-  return `<button class="hud-logout-btn" id="hudLogoutBtn" title="Signed in as ${status.email}. Click to log out." aria-label="Log out of ${status.email}">🚪</button>`;
-}
-
-function wireHudAccount(root) {
-  const container = root.querySelector("[data-hud-account]");
-  if (!container) return;
-  const render = () => {
-    if (!container.isConnected) {
-      unsubscribe();
-      return;
-    }
-    container.innerHTML = hudAccountHTML();
-    const logoutBtn = container.querySelector("#hudLogoutBtn");
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", () => {
-        if (confirm("Log out? This device keeps backing up progress anonymously, but you'll need to sign in again to reach this account from elsewhere.")) {
-          signOutCloud();
-        }
-      });
-    }
-  };
-  const unsubscribe = onCloudSyncChange(render);
-  render();
 }
 
 export function wireHud(root, navigate) {
   root.querySelectorAll("[data-nav]").forEach((btn) => {
     btn.addEventListener("click", () => navigate(btn.dataset.nav));
   });
-  wireHudAccount(root);
   const devToggleBtn = root.querySelector("#devToggleBtn");
   if (devToggleBtn) {
     devToggleBtn.addEventListener("click", () => toggleDevPanel(navigate));

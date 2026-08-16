@@ -64,11 +64,6 @@
   border-color: #5c4d1f;
 }
 
-:root[data-theme="dark"] .hud-logout-btn:hover {
-  background: #3a2420;
-  border-color: #6b3d34;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -233,6 +228,22 @@ input[type="password"] {
   flex: 0 0 auto;
   line-height: 0;
   position: relative;
+  border: none;
+  background: transparent;
+  padding: 4px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hud-avatar:hover,
+.hud-avatar:focus-visible {
+  background: var(--surface-alt);
+}
+
+.hud-avatar.is-active {
+  background: var(--surface-alt);
+  box-shadow: 0 0 0 2px var(--purple);
 }
 
 .hud-level-badge {
@@ -337,22 +348,6 @@ input[type="password"] {
 
 .hud-theme-toggle:hover {
   background: var(--surface-alt);
-}
-
-.hud-logout-btn {
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: 999px;
-  width: 34px;
-  height: 34px;
-  font-size: 1rem;
-  line-height: 1;
-  flex: 0 0 auto;
-}
-
-.hud-logout-btn:hover {
-  background: #ffe8e0;
-  border-color: #f0a898;
 }
 
 /* ---------- buttons ---------- */
