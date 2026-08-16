@@ -46,6 +46,7 @@ export function hudHTML(activeScreen) {
   // standalone logout shortcut either; the dashboard's own Cloud Account
   // card is the one place to sign in/out.
   const nav = [
+    { id: "solarSystem", icon: "🌌", label: "Planets" },
     { id: "map", icon: "🗺️", label: "Map" },
     { id: "endless", icon: "🔁", label: "Endless" },
     { id: "shop", icon: "🛍️", label: "Shop" },

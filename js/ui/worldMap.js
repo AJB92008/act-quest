@@ -1,4 +1,4 @@
-import { SUBJECTS } from "../data/skills.js";
+import { getTest, getTestSubjects } from "../data/tests.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -19,18 +19,29 @@ const SHORTCUTS = [
   { screen: "drillBuilder", icon: "🎛️", name: "Custom Drill", blurb: "Pick your own skills", color: "#ff9f38", bg: "#fff4e6" },
 ];
 
-export function renderWorldMap(root, navigate) {
-  const positions = pathPositions(SUBJECTS.length, { rowHeight: ROW_HEIGHT, leftPct: 26, rightPct: 74 });
-  const totalHeight = pathHeight(SUBJECTS.length, ROW_HEIGHT);
+export function renderWorldMap(root, navigate, { testId } = {}) {
+  // Arriving here *with* a testId (from the Solar System screen picking a
+  // planet) switches the player's current planet; arriving without one
+  // (every existing "Back to Map"/HUD "Map" click across the whole app)
+  // just stays on whichever planet was already current — so none of those
+  // ~15 call sites needed to change to keep working.
+  if (testId) gameState.setCurrentTestId(testId);
+  const activeTestId = testId || gameState.currentTestId;
+  const test = getTest(activeTestId);
+  const subjects = getTestSubjects(activeTestId);
+  const isReady = subjects.some((s) => s.skills.length > 0);
 
-  const stats = SUBJECTS.map((subject) => gameState.getSubjectStats(subject.id));
+  const positions = pathPositions(subjects.length, { rowHeight: ROW_HEIGHT, leftPct: 26, rightPct: 74 });
+  const totalHeight = pathHeight(subjects.length, ROW_HEIGHT);
+
+  const stats = subjects.map((subject) => gameState.getSubjectStats(subject.id));
   const reviewQueueDueCount = gameState.getDueQuestionKeys(99).length + gameState.getDueVocabWords(99).length;
   // Point the mascot at the first subject that isn't fully cleared yet, so
   // the map always shows "here's where to pick back up."
   let currentIndex = stats.findIndex((s) => s.masteredCount < s.totalSkills);
-  if (currentIndex === -1) currentIndex = SUBJECTS.length - 1;
+  if (currentIndex === -1) currentIndex = subjects.length - 1;
 
-  const islands = SUBJECTS.map((subject, i) => {
+  const islands = subjects.map((subject, i) => {
     const { x, y } = positions[i];
     const stat = stats[i];
     const pct = stat.totalSkills > 0 ? Math.round((stat.masteredCount / stat.totalSkills) * 100) : 0;
@@ -51,29 +62,43 @@ export function renderWorldMap(root, navigate) {
     `;
   }).join("");
 
-  const shortcuts = SHORTCUTS.map((s) => {
-    const badge = s.screen === "reviewQueue" && reviewQueueDueCount > 0 ? `<span class="map-shortcut-badge">${reviewQueueDueCount}</span>` : "";
-    return `
-      <button class="map-shortcut" data-shortcut="${s.screen}" style="--island-color:${s.color};--island-bg:${s.bg}">
-        <span class="map-island-node map-shortcut-node">
-          <span class="map-island-ring" style="--ring-pct:100%"></span>
-          <span class="map-island-icon">${s.icon}</span>
-          ${badge}
-        </span>
-        <span class="map-island-label">
-          <h3>${s.name}</h3>
-          <p class="map-island-place">${s.blurb}</p>
-        </span>
-      </button>
-    `;
-  }).join("");
+  // The shortcut modes (diagnostic, weak review, adaptive practice, review
+  // queue, custom drill) all draw from skills.js's ACT-only question data
+  // directly — showing them on a planet with no content of its own yet
+  // would just be a row of buttons into empty screens, so they're an ACT
+  // exclusive until a planet actually has something for them to draw from.
+  const shortcuts =
+    activeTestId === "act"
+      ? SHORTCUTS.map((s) => {
+          const badge = s.screen === "reviewQueue" && reviewQueueDueCount > 0 ? `<span class="map-shortcut-badge">${reviewQueueDueCount}</span>` : "";
+          return `
+            <button class="map-shortcut" data-shortcut="${s.screen}" style="--island-color:${s.color};--island-bg:${s.bg}">
+              <span class="map-island-node map-shortcut-node">
+                <span class="map-island-ring" style="--ring-pct:100%"></span>
+                <span class="map-island-icon">${s.icon}</span>
+                ${badge}
+              </span>
+              <span class="map-island-label">
+                <h3>${s.name}</h3>
+                <p class="map-island-place">${s.blurb}</p>
+              </span>
+            </button>
+          `;
+        }).join("")
+      : "";
 
   root.innerHTML = `
     ${hudHTML("map")}
     <main class="screen map-screen">
+      <button class="back-btn" data-solar-system>&larr; Solar System</button>
       <h1 class="map-title">Choose an Island to Explore</h1>
-      <p class="map-subtitle">Acto is ready to study. Pick a subject to begin the path.</p>
-      <div class="map-shortcuts-row">${shortcuts}</div>
+      <p class="map-subtitle">${
+        activeTestId === "act"
+          ? "Acto is ready to study. Pick a subject to begin the path."
+          : `${test.planetName} (${test.name}) &mdash; pick a subject to begin the path.`
+      }</p>
+      ${!isReady ? `<p class="map-coming-soon-banner">🚧 ${test.name} content is still being built &mdash; the islands below are here, just empty for now.</p>` : ""}
+      ${shortcuts ? `<div class="map-shortcuts-row">${shortcuts}</div>` : ""}
       <div class="map-path-container" style="height:${totalHeight}px">
         ${renderPathSvg(positions, totalHeight, { color: "#b6aeff" })}
         <div class="path-decorations">${renderDecorations(totalHeight, 1)}</div>
@@ -83,6 +108,7 @@ export function renderWorldMap(root, navigate) {
   `;
 
   wireHud(root, navigate);
+  root.querySelector("[data-solar-system]").addEventListener("click", () => navigate("solarSystem"));
   root.querySelectorAll("[data-subject]").forEach((node) => {
     node.addEventListener("click", () => navigate("island", { subjectId: node.dataset.subject }));
   });

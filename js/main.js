@@ -1,5 +1,6 @@
 import { gameState } from "./state.js";
 import { initCloudSync } from "./cloudSync.js";
+import { renderSolarSystem } from "./ui/solarSystem.js";
 import { renderWorldMap } from "./ui/worldMap.js";
 import { renderIsland } from "./ui/island.js";
 import { renderSkillPath } from "./ui/skillPath.js";
@@ -31,7 +32,8 @@ import { runDevBootstrap } from "./devBootstrap.js";
 const root = document.getElementById("app");
 
 const SCREENS = {
-  map: (r, nav) => renderWorldMap(r, nav),
+  solarSystem: (r, nav) => renderSolarSystem(r, nav),
+  map: (r, nav, params) => renderWorldMap(r, nav, params),
   island: (r, nav, params) => renderIsland(r, nav, params),
   skillPath: (r, nav, params) => renderSkillPath(r, nav, params),
   quiz: (r, nav, params) => renderQuiz(r, nav, params),

@@ -1,4 +1,5 @@
-import { getSkill, getSkillBossName } from "../data/skills.js";
+import { getSkillBossName } from "../data/skills.js";
+import { getSkill } from "../data/tests.js";
 import { getLessonCount, isBossLessonIndex } from "../data/questions/index.js";
 import { LESSONS } from "../data/lessons.js";
 import { gameState } from "../state.js";

@@ -1,6 +1,7 @@
 import { SUBJECTS, allSkillIds } from "./data/skills.js";
 import { getLessonCount } from "./data/questions/index.js";
 import { ACHIEVEMENTS } from "./data/achievements.js";
+import { TEST_IDS, getSubject as getAnySubject } from "./data/tests.js";
 
 const STORAGE_KEY = "act-quest-save-v1";
 const PASS_THRESHOLD = 0.7; // score needed to pass a mini-lesson / master a skill
@@ -160,6 +161,10 @@ function defaultSave() {
   return {
     version: 1,
     createdName: "",
+    // Which planet's World Map/island/skill-path the shared navigation
+    // spine currently points at (see data/tests.js) — everyone starts on
+    // the one planet with real content.
+    currentTestId: "act",
     avatar: {
       bodyColor: "#7fd1ae",
       bodyShape: "round",
@@ -249,6 +254,11 @@ export class GameState {
       // `?? fresh.createdName` would happily carry through a non-string
       // value into a field several screens render as text.
       fresh.createdName = typeof parsed.createdName === "string" ? parsed.createdName.slice(0, 40) : fresh.createdName;
+      // Guarded against more than just the wrong type — a stale save could
+      // reference a planet id that no longer exists (or never did, if this
+      // came from a tampered/imported save), and that id flows straight
+      // into data/tests.js lookups downstream with no further checking.
+      fresh.currentTestId = typeof parsed.currentTestId === "string" && TEST_IDS.has(parsed.currentTestId) ? parsed.currentTestId : fresh.currentTestId;
       fresh.onboarded = parsed.onboarded ?? fresh.onboarded;
       fresh.settings = { ...fresh.settings, ...parsed.settings };
       fresh.endless = { ...fresh.endless, ...parsed.endless };
@@ -354,6 +364,16 @@ export class GameState {
   setName(name) {
     this.data.createdName = name;
     this.data.onboarded = true;
+    this.save();
+  }
+
+  get currentTestId() {
+    return this.data.currentTestId;
+  }
+
+  setCurrentTestId(testId) {
+    if (!TEST_IDS.has(testId)) return;
+    this.data.currentTestId = testId;
     this.save();
   }
 
@@ -701,7 +721,11 @@ export class GameState {
   }
 
   getSubjectStats(subjectId) {
-    const subject = SUBJECTS.find((s) => s.id === subjectId);
+    // getAnySubject (data/tests.js), not skills.js's ACT-only SUBJECTS —
+    // this is called for any planet's subjects from the World Map, and a
+    // still-contentless planet's subject (skills: []) needs to resolve to
+    // real zeros here, not throw on `.skills` of an undefined lookup.
+    const subject = getAnySubject(subjectId);
     let attempts = 0;
     let correct = 0;
     let masteredCount = 0;

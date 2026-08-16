@@ -1,4 +1,5 @@
-import { getSkill, getSkillBossName } from "../data/skills.js";
+import { getSkillBossName } from "../data/skills.js";
+import { getSkill } from "../data/tests.js";
 import { getLessonQuestions, getLessonCount, isBossLessonIndex, preloadSubjectForSkill } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
