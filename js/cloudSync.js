@@ -24,7 +24,7 @@ import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/fireb
 import { gameState } from "./state.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC9b9j6359BjKqHDc2V7Am-DPtI0LP6FUw",
+  apiKey: "AIzaSyAwifJR-Srt9Q8x_LbG2ACyLX5Yfiw3-jc",
   authDomain: "act-quest.firebaseapp.com",
   projectId: "act-quest",
   storageBucket: "act-quest.firebasestorage.app",
