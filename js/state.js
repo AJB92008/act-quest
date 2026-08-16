@@ -243,7 +243,12 @@ export class GameState {
       fresh.coins = parsed.coins ?? fresh.coins;
       fresh.totalStars = parsed.totalStars ?? fresh.totalStars;
       fresh.ownedItems = parsed.ownedItems ?? fresh.ownedItems;
-      fresh.createdName = parsed.createdName ?? fresh.createdName;
+      // Type-checked, not just presence-checked: this same merge runs for
+      // a cloud-pulled remote save (see cloudSync.js's importSave call),
+      // which this device has no control over the contents of — a plain
+      // `?? fresh.createdName` would happily carry through a non-string
+      // value into a field several screens render as text.
+      fresh.createdName = typeof parsed.createdName === "string" ? parsed.createdName.slice(0, 40) : fresh.createdName;
       fresh.onboarded = parsed.onboarded ?? fresh.onboarded;
       fresh.settings = { ...fresh.settings, ...parsed.settings };
       fresh.endless = { ...fresh.endless, ...parsed.endless };
@@ -266,6 +271,8 @@ export class GameState {
       };
       fresh.pacing = { ...fresh.pacing, ...parsed.pacing, bySubject: { ...fresh.pacing.bySubject, ...parsed.pacing?.bySubject } };
       fresh.studyPlan = { ...fresh.studyPlan, ...parsed.studyPlan };
+      if (typeof fresh.studyPlan.testDate !== "string") fresh.studyPlan.testDate = null;
+      if (typeof fresh.studyPlan.targetScore !== "number" || !Number.isFinite(fresh.studyPlan.targetScore)) fresh.studyPlan.targetScore = null;
       for (const id of allSkillIds()) {
         if (parsed.skillProgress && parsed.skillProgress[id]) {
           fresh.skillProgress[id] = { ...fresh.skillProgress[id], ...parsed.skillProgress[id] };

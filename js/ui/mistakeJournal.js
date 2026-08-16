@@ -13,6 +13,10 @@ import { getFullBank, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 // A generous but real cap on how many resolved rows get built into the
 // DOM at once — the underlying log itself isn't capped this low (see
 // MISTAKE_JOURNAL_CAP in state.js), this is purely about not handing the
@@ -108,7 +112,7 @@ export function renderMistakeJournal(root, navigate) {
           all.length > 0
             ? `
               <label class="visually-hidden" for="journalSearch">Search the mistake journal by skill or question text</label>
-              <input type="text" id="journalSearch" placeholder="Search by skill or question text…" value="${searchText}" style="width:100%;max-width:480px;margin-bottom:12px;font-family:inherit;font-size:1rem;padding:10px 14px;border-radius:12px;border:2px solid var(--border);background:var(--card);color:var(--ink);" />
+              <input type="text" id="journalSearch" placeholder="Search by skill or question text…" value="${escapeHtml(searchText)}" style="width:100%;max-width:480px;margin-bottom:12px;font-family:inherit;font-size:1rem;padding:10px 14px;border-radius:12px;border:2px solid var(--border);background:var(--card);color:var(--ink);" />
               <div class="choices" role="group" aria-label="Filter by subject" style="margin-bottom:16px;">${subjectChips}</div>
               <p class="dash-monster-substat" aria-live="polite">${filtered.length === all.length ? `Showing all ${filtered.length}` : `${filtered.length} match${filtered.length === 1 ? "" : "es"}`}${filtered.length > MAX_RENDERED ? ` (most recent ${MAX_RENDERED} shown)` : ""}</p>
               <div class="dash-rows">${rows || `<p class="lesson-paragraph">No mistakes match that search.</p>`}</div>

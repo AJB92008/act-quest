@@ -50,6 +50,10 @@ function wordCount(text) {
   return trimmed.length === 0 ? 0 : trimmed.split(/\s+/).length;
 }
 
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 export function renderEssay(root, navigate, { fromPracticeTest = false, practiceTestResults = null } = {}) {
   let prompt = null;
   let essayText = "";
@@ -177,7 +181,7 @@ export function renderEssay(root, navigate, { fromPracticeTest = false, practice
           ${perspectivesHTML}
         </div>
         <div class="question-card">
-          <textarea id="essayInput" class="essay-textarea" placeholder="Write your response here…" spellcheck="true">${essayText}</textarea>
+          <textarea id="essayInput" class="essay-textarea" placeholder="Write your response here…" spellcheck="true">${escapeHtml(essayText)}</textarea>
           <p class="lesson-paragraph" id="wordCountLabel">${wordCount(essayText)} words</p>
           <button class="btn-primary lesson-start-btn" id="submitBtn">Submit Essay &rarr;</button>
         </div>

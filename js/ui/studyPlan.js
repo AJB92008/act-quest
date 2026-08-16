@@ -13,6 +13,10 @@ function formatDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 export function renderStudyPlan(root, navigate) {
   function render() {
     const { testDate, targetScore } = gameState.getStudyPlanSettings();
@@ -50,11 +54,11 @@ export function renderStudyPlan(root, navigate) {
           <form id="planForm" class="study-plan-form">
             <label class="study-plan-field">
               <span>Test date</span>
-              <input type="date" id="testDateInput" value="${testDate || ""}" />
+              <input type="date" id="testDateInput" value="${escapeHtml(testDate || "")}" />
             </label>
             <label class="study-plan-field">
               <span>Target composite score (1-36)</span>
-              <input type="number" id="targetScoreInput" min="1" max="36" value="${targetScore ?? ""}" />
+              <input type="number" id="targetScoreInput" min="1" max="36" value="${escapeHtml(targetScore ?? "")}" />
             </label>
             <button type="submit" class="btn-primary">Save</button>
           </form>
