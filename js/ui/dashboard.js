@@ -3,7 +3,7 @@ import { gameState, percentileForComposite } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { renderPacingTag } from "./pacingFeedback.js";
-import { getCloudStatus, onCloudSyncChange, signUp, signIn, signOutCloud, resolveConflict } from "../cloudSync.js";
+import { getCloudStatus, onCloudSyncChange, signUp, signIn, signOutCloud, resolveConflict, retryCloudInit } from "../cloudSync.js";
 
 // A pure-SVG sparkline (no charting library) plotting composite score (1-36,
 // a fixed y-domain so the line's shape is comparable across sessions rather
@@ -196,6 +196,14 @@ function cloudErrorMessage(err) {
 function cloudCardInnerHTML() {
   const status = getCloudStatus();
   if (!status.ready) {
+    if (status.initError) {
+      return `
+        <h3 class="dash-history-title">☁️ Cloud Account</h3>
+        <p class="lesson-paragraph">Couldn't reach cloud sync. Your progress still saves normally on this device.</p>
+        <p class="backup-status is-error">${status.initError.message || "Connection failed."}</p>
+        <button class="btn-secondary" data-cloud-retry>Try Again</button>
+      `;
+    }
     return `<h3 class="dash-history-title">☁️ Cloud Account</h3><p class="lesson-paragraph">Connecting…</p>`;
   }
   if (status.conflict) {
@@ -235,6 +243,11 @@ function cloudCardInnerHTML() {
 }
 
 function wireCloudCardEvents(container) {
+  const retryBtn = container.querySelector("[data-cloud-retry]");
+  if (retryBtn) {
+    retryBtn.addEventListener("click", () => retryCloudInit());
+    return;
+  }
   const useRemoteBtn = container.querySelector("[data-cloud-use-remote]");
   if (useRemoteBtn) {
     useRemoteBtn.addEventListener("click", () => resolveConflict("useCloud"));

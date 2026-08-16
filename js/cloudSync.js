@@ -49,6 +49,14 @@ let isSyncing = false;
 let pushTimer = null;
 let unsubscribeSave = null;
 const listeners = new Set();
+// Set whenever the anonymous sign-in every visitor gets automatically (or
+// the auth listener itself) fails — a blocked network request, an
+// over-restricted API key, Anonymous auth disabled in the Firebase
+// console, etc. Without this, `ready` (currentUser !== null) never
+// becomes true and both the auth gate and the dashboard's Cloud Account
+// card are stuck showing "Connecting…" forever, with no way for the
+// player to even continue as a guest — see getCloudStatus()/retryCloudInit().
+let initError = null;
 
 function notify() {
   const status = getCloudStatus();
@@ -76,7 +84,25 @@ export function getCloudStatus() {
     // remote save, which previously sent brand-new devices straight to
     // avatar creation instead of the account's real, already-onboarded data.
     syncing: isSyncing,
+    // Set when the automatic anonymous sign-in (or the auth listener
+    // itself) failed and `ready` is never going to become true on its
+    // own. Callers should offer a way past "Connecting…" once this is
+    // set, not keep showing it indefinitely.
+    initError,
   };
+}
+
+/** Re-attempts the automatic anonymous sign-in after initCloudSync()'s
+ * first try failed — offered to the player as "Retry" wherever
+ * `status.initError` is shown, rather than requiring a full page reload. */
+export function retryCloudInit() {
+  initError = null;
+  notify();
+  signInAnonymously(auth).catch((err) => {
+    console.error("Anonymous sign-in retry failed:", err);
+    initError = err;
+    notify();
+  });
 }
 
 function saveDocRef(uid) {
@@ -206,13 +232,46 @@ export async function signOutCloud() {
 
 /** Call once at app startup. */
 export function initCloudSync() {
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      handleSignedIn(user).catch((err) => console.error("Cloud sync init failed:", err));
-    } else {
-      currentUser = null;
+  // Belt-and-suspenders against every failure mode leaving `ready` stuck
+  // false forever with nothing telling the player why: if neither a real
+  // auth state nor an explicit error has arrived within a few seconds
+  // (blocked network request, an over-restricted API key, etc.), treat
+  // that itself as an error rather than spinning indefinitely.
+  const readyTimeout = setTimeout(() => {
+    if (currentUser === null && !initError) {
+      initError = new Error("Cloud sync is taking longer than expected — check your connection, or continue without an account.");
       notify();
-      signInAnonymously(auth).catch((err) => console.error("Anonymous sign-in failed:", err));
     }
-  });
+  }, 8000);
+
+  onAuthStateChanged(
+    auth,
+    (user) => {
+      clearTimeout(readyTimeout);
+      if (user) {
+        handleSignedIn(user).catch((err) => {
+          console.error("Cloud sync init failed:", err);
+          initError = err;
+          notify();
+        });
+      } else {
+        currentUser = null;
+        notify();
+        signInAnonymously(auth).catch((err) => {
+          console.error("Anonymous sign-in failed:", err);
+          initError = err;
+          notify();
+        });
+      }
+    },
+    (err) => {
+      // onAuthStateChanged's own error path — fires if Auth can't even
+      // determine a signed-in/signed-out state (e.g. the request that
+      // would answer that is what's actually blocked).
+      clearTimeout(readyTimeout);
+      console.error("Auth state listener failed:", err);
+      initError = err;
+      notify();
+    }
+  );
 }

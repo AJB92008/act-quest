@@ -1,5 +1,5 @@
 import { gameState } from "../state.js";
-import { getCloudStatus, onCloudSyncChange, signUp, signIn, resolveConflict } from "../cloudSync.js";
+import { getCloudStatus, onCloudSyncChange, signUp, signIn, resolveConflict, retryCloudInit } from "../cloudSync.js";
 
 // Shown before onboarding (avatar creation) so a player either has an
 // account backing up their progress from the very first monster they make,
@@ -27,6 +27,16 @@ export function renderAuthGate(root, navigate) {
   function cardInnerHTML() {
     const status = getCloudStatus();
     if (!status.ready) {
+      if (status.initError) {
+        return `
+          <p class="lesson-paragraph">Couldn't reach cloud sync. Your progress still saves normally on this device.</p>
+          <p class="backup-status is-error">${status.initError.message || "Connection failed."}</p>
+          <div class="results-actions">
+            <button class="btn-secondary" data-gate-retry>Try Again</button>
+            <button class="btn-ghost" data-gate-skip-error>Continue without an account</button>
+          </div>
+        `;
+      }
       return `<p class="lesson-paragraph">Connecting…</p>`;
     }
     if (status.conflict) {
@@ -60,6 +70,14 @@ export function renderAuthGate(root, navigate) {
   }
 
   function wireCard(container) {
+    const retryBtn = container.querySelector("[data-gate-retry]");
+    if (retryBtn) {
+      retryBtn.addEventListener("click", () => retryCloudInit());
+      container.querySelector("[data-gate-skip-error]").addEventListener("click", () => {
+        navigate("avatarCreator", { onboarding: true });
+      });
+      return;
+    }
     const useRemoteBtn = container.querySelector("[data-cloud-use-remote]");
     if (useRemoteBtn) {
       // resolveConflict() triggers notify() internally, which re-renders
