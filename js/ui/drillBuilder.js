@@ -4,7 +4,7 @@
 // (shuffled, evenly split across skills) rather than the difficulty-sorted
 // lesson slices getLessonQuestions() builds — a drill is meant to be a
 // grab-bag review, not a curriculum stop.
-import { SUBJECTS, getSubject } from "../data/skills.js";
+import { getTestSubjects, getSubject } from "../data/tests.js";
 import { getFullBank, preloadSubject } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
@@ -30,8 +30,9 @@ function shuffled(arr) {
   return copy;
 }
 
-export function renderDrillBuilder(root, navigate) {
-  let subjectId = SUBJECTS[0].id;
+export function renderDrillBuilder(root, navigate, { testId = "act" } = {}) {
+  const subjects = getTestSubjects(testId);
+  let subjectId = subjects[0].id;
   let selectedSkillIds = new Set();
   let questions = [];
   let idx = 0;
@@ -49,7 +50,7 @@ export function renderDrillBuilder(root, navigate) {
 
   function renderBuilder() {
     const subject = getSubject(subjectId);
-    const tabs = SUBJECTS.map(
+    const tabs = subjects.map(
       (s) => `<button class="btn-secondary ${s.id === subjectId ? "is-active" : ""}" data-subject-tab="${s.id}">${s.icon} ${s.name}</button>`
     ).join("");
     const skillRows = subject.skills
@@ -152,7 +153,7 @@ export function renderDrillBuilder(root, navigate) {
     `;
 
     wireHud(root, goTo);
-    root.querySelector("[data-quit]").addEventListener("click", () => goTo("drillBuilder"));
+    root.querySelector("[data-quit]").addEventListener("click", () => goTo("drillBuilder", { testId }));
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
     });
@@ -240,7 +241,7 @@ export function renderDrillBuilder(root, navigate) {
     `;
 
     wireHud(root, goTo);
-    root.querySelector("[data-retry]").addEventListener("click", () => goTo("drillBuilder"));
+    root.querySelector("[data-retry]").addEventListener("click", () => goTo("drillBuilder", { testId }));
     root.querySelector("[data-map]").addEventListener("click", () => goTo("map"));
   }
 

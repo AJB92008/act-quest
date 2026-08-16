@@ -63,12 +63,14 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
   }).join("");
 
   // The shortcut modes (diagnostic, weak review, adaptive practice, review
-  // queue, custom drill) all draw from skills.js's ACT-only question data
-  // directly — showing them on a planet with no content of its own yet
-  // would just be a row of buttons into empty screens, so they're an ACT
-  // exclusive until a planet actually has something for them to draw from.
+  // queue, custom drill) all draw from real question content behind a
+  // planet's subjects — showing them on a planet with nothing playable yet
+  // would just be a row of buttons into empty screens, so they only appear
+  // once the planet has at least one subject with real content (isReady),
+  // same gate the World Map itself uses to decide "real path" vs.
+  // "coming soon" banner.
   const shortcuts =
-    activeTestId === "act"
+    isReady
       ? SHORTCUTS.map((s) => {
           const badge = s.screen === "reviewQueue" && reviewQueueDueCount > 0 ? `<span class="map-shortcut-badge">${reviewQueueDueCount}</span>` : "";
           return `
@@ -113,6 +115,6 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
     node.addEventListener("click", () => navigate("island", { subjectId: node.dataset.subject }));
   });
   root.querySelectorAll("[data-shortcut]").forEach((node) => {
-    node.addEventListener("click", () => navigate(node.dataset.shortcut));
+    node.addEventListener("click", () => navigate(node.dataset.shortcut, { testId: activeTestId }));
   });
 }

@@ -1,5 +1,5 @@
 import { SUBJECTS, REPORTING_CATEGORIES } from "../skills.js";
-import { allSubjects as allTestSubjects, allSkillIds as allTestSkillIds } from "../tests.js";
+import { allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSubjects } from "../tests.js";
 import { getQuestionPatterns, PATTERN_DEFS } from "./patterns.js";
 
 // Each skill's bank is chunked into fixed-size mini-lessons — bite-sized
@@ -173,6 +173,28 @@ export function getFullBank(skillId) {
   return loadedSubjects[meta.subjectId]?.questions?.[skillId] || [];
 }
 
+// Hydrates a list of `skillId:bankIndex` keys (the SRS due-queue's own
+// storage format — see gameState.getDueQuestionKeys) back into full question
+// objects, directly off each key's own skill bank rather than building one
+// big flat pool across a single planet and filtering it down. SKILL_META is
+// already cross-planet, so this works for a due key from any planet with no
+// testId to pick — Review Queue is meant to surface whatever's actually due
+// regardless of which planet it came from, same as its spaced-repetition
+// due dates don't care which planet the player is currently standing on.
+export function getQuestionsByKeys(keys) {
+  return keys
+    .map((key) => {
+      const [skillId, bankIndexStr] = key.split(":");
+      const meta = SKILL_META[skillId];
+      if (!meta) return null;
+      const bankIndex = Number(bankIndexStr);
+      const q = getFullBank(skillId)[bankIndex];
+      if (!q) return null;
+      return { ...q, skillId, skillName: meta.skillName, subjectId: meta.subjectId, bankIndex };
+    })
+    .filter(Boolean);
+}
+
 // Individual questions aren't hand-tagged with a difficulty rating, so this
 // is a lightweight proxy, not a guarantee: longer question/choice text and
 // ACT's classic "trap" negation words (NOT/EXCEPT/LEAST, which require
@@ -321,11 +343,18 @@ export function getStimulusById(id) {
 // its toughest skill), so a skill's position within its own subject is used
 // as a stand-in for how hard its questions are, scaled to the same 0-1
 // range regardless of how long that subject's skill list is.
-let allQuestionsFlatCache = null;
-export function getAllQuestionsFlat() {
-  if (allQuestionsFlatCache) return allQuestionsFlatCache;
+// Cached per planet (testId) rather than once globally: the default
+// ("act") has to stay byte-for-byte what every existing unparameterized
+// caller (Boss Quiz, Practice Test, Endless Mode) has always gotten, while
+// the SAT-side shortcut screens need the same kind of flat pool scoped to
+// *their* planet instead — two different pools, not one pool filtered
+// after the fact.
+const allQuestionsFlatCache = {};
+export function getAllQuestionsFlat(testId = "act") {
+  if (allQuestionsFlatCache[testId]) return allQuestionsFlatCache[testId];
+  const subjects = getTestSubjects(testId);
   const flat = [];
-  for (const subject of SUBJECTS) {
+  for (const subject of subjects) {
     const lastIndex = Math.max(1, subject.skills.length - 1);
     subject.skills.forEach((skill, skillIndex) => {
       const qs = loadedSubjects[subject.id]?.questions?.[skill.id] || [];
@@ -335,7 +364,7 @@ export function getAllQuestionsFlat() {
       });
     });
   }
-  allQuestionsFlatCache = flat;
+  allQuestionsFlatCache[testId] = flat;
   return flat;
 }
 
@@ -480,8 +509,8 @@ const MIN_PATTERN_QUESTIONS = 3;
 // same injected callback getWeakReviewQuestions takes, for the same
 // circular-import reason. Returns the `count` lowest-accuracy patterns
 // with enough data to be meaningful, worst first.
-export function getWeakPatterns(getQuestionStat, { minAttempts = MIN_PATTERN_ATTEMPTS, minQuestions = MIN_PATTERN_QUESTIONS, count = 5 } = {}) {
-  const flat = getAllQuestionsFlat();
+export function getWeakPatterns(getQuestionStat, { minAttempts = MIN_PATTERN_ATTEMPTS, minQuestions = MIN_PATTERN_QUESTIONS, count = 5, testId = "act" } = {}) {
+  const flat = getAllQuestionsFlat(testId);
   const agg = {};
   for (const q of flat) {
     const stat = getQuestionStat(q.skillId, q.bankIndex);
@@ -516,11 +545,11 @@ export function getWeakPatterns(getQuestionStat, { minAttempts = MIN_PATTERN_ATT
 // targets the specific pattern instead of the whole skill. Weight is driven
 // by the weakest pattern a question matches, then nudged further by this
 // player's own history with that exact question, same as getWeakReviewQuestions.
-export function getAdaptivePracticeQuestions(weakPatterns, count = 10, { getQuestionStat } = {}) {
+export function getAdaptivePracticeQuestions(weakPatterns, count = 10, { getQuestionStat, testId = "act" } = {}) {
   if (weakPatterns.length === 0) return [];
   const weakPatternIds = new Set(weakPatterns.map((p) => p.id));
   const pool = [];
-  for (const q of getAllQuestionsFlat()) {
+  for (const q of getAllQuestionsFlat(testId)) {
     const matched = getQuestionPatterns(q).filter((id) => weakPatternIds.has(id));
     if (matched.length === 0) continue;
     const weakestMatch = weakPatterns.filter((p) => matched.includes(p.id)).sort((a, b) => a.accuracy - b.accuracy)[0];
@@ -554,11 +583,12 @@ export function getAdaptivePracticeQuestions(weakPatterns, count = 10, { getQues
 // than its easiest or hardest end, so a miss reads as a genuine signal
 // instead of "the diagnostic just happened to ask this player's hardest
 // item in that skill."
-export function getDiagnosticQuestions(count = 24) {
-  const perSubject = Math.floor(count / SUBJECTS.length);
-  let remainder = count - perSubject * SUBJECTS.length;
+export function getDiagnosticQuestions(count = 24, testId = "act") {
+  const subjects = getTestSubjects(testId);
+  const perSubject = Math.floor(count / subjects.length);
+  let remainder = count - perSubject * subjects.length;
   const picks = [];
-  for (const subject of SUBJECTS) {
+  for (const subject of subjects) {
     const quota = perSubject + (remainder > 0 ? 1 : 0);
     if (remainder > 0) remainder--;
     const skills = subject.skills;

@@ -8,7 +8,7 @@
 // entire point — by drawing from getDiagnosticQuestions() instead, which
 // spreads across as many distinct skills as it can rather than weighting
 // toward skills that already look weak.
-import { getSkill, getSubject } from "../data/skills.js";
+import { getSkill, getSubject } from "../data/tests.js";
 import { getDiagnosticQuestions, getWeakPatterns, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
@@ -23,7 +23,7 @@ const SESSION_SIZE = 24;
 const DIAG_COLOR = "#2a6df5";
 const DIAG_BG = "#eaf1ff";
 
-export function renderDiagnostic(root, navigate, { onboarding = false } = {}) {
+export function renderDiagnostic(root, navigate, { onboarding = false, testId = "act" } = {}) {
   const dataReady = preloadAllSubjects();
   let questions = [];
   // Per-skill session tally (not gameState's 5-attempt-minimum weak-skill
@@ -116,7 +116,7 @@ export function renderDiagnostic(root, navigate, { onboarding = false } = {}) {
       startBtn.disabled = true;
       startBtn.textContent = "Loading…";
       dataReady.then(() => {
-        questions = getDiagnosticQuestions(SESSION_SIZE);
+        questions = getDiagnosticQuestions(SESSION_SIZE, testId);
         idx = 0;
         renderQuestion();
       });
@@ -260,7 +260,7 @@ export function renderDiagnostic(root, navigate, { onboarding = false } = {}) {
       .sort((a, b) => a.accuracy - b.accuracy)
       .slice(0, 6);
 
-    const weakPatterns = getWeakPatterns((skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex));
+    const weakPatterns = getWeakPatterns((skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex), { testId });
 
     const revisitHTML =
       revisitSkills.length > 0
@@ -311,7 +311,7 @@ export function renderDiagnostic(root, navigate, { onboarding = false } = {}) {
     `;
 
     if (!onboarding) wireHud(root, goTo);
-    root.querySelector("[data-retry]").addEventListener("click", () => goTo("diagnostic"));
+    root.querySelector("[data-retry]").addEventListener("click", () => goTo("diagnostic", { testId }));
     root.querySelector("[data-map]").addEventListener("click", () => goTo("map"));
     root.querySelectorAll("[data-focus-skill]").forEach((btn) => {
       btn.addEventListener("click", () => goTo("skillPath", { skillId: btn.dataset.focusSkill, subjectId: btn.dataset.subjectId }));

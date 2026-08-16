@@ -3,7 +3,7 @@
 // skills show up more often. Doesn't gate or unlock anything — it's just
 // extra reps where you need them, and it feeds back into each skill's
 // ongoing accuracy stats as you go.
-import { getSkill, getSubject } from "../data/skills.js";
+import { getSkill, getSubject } from "../data/tests.js";
 import { getWeakReviewQuestions, preloadSubjectForSkill } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
@@ -19,8 +19,8 @@ const PREVIEW_SIZE = 5;
 const REVIEW_COLOR = "#22b8a3";
 const REVIEW_BG = "#e8fbf7";
 
-export function renderWeakReview(root, navigate) {
-  let weakSkills = gameState.getWeakSkills(5);
+export function renderWeakReview(root, navigate, { testId = "act" } = {}) {
+  let weakSkills = gameState.getWeakSkills(5, 5, 0.9, testId);
   // A brand-new (or lightly-played) account won't have 5+ attempts on
   // anything yet, so the real "weakest skills" read above comes back
   // empty. Rather than hard-blocking until that history exists, fall back
@@ -28,7 +28,7 @@ export function renderWeakReview(root, navigate) {
   // shorter warm-up session instead — some reps beat a dead end.
   let isPreview = false;
   if (weakSkills.length === 0) {
-    weakSkills = gameState.getWeakSkills(5, 1, 1.01);
+    weakSkills = gameState.getWeakSkills(5, 1, 1.01, testId);
     isPreview = weakSkills.length > 0;
   }
   const reviewSize = isPreview ? PREVIEW_SIZE : REVIEW_SIZE;
@@ -287,7 +287,7 @@ export function renderWeakReview(root, navigate) {
     `;
 
     wireHud(root, goTo);
-    root.querySelector("[data-retry]").addEventListener("click", () => goTo("weakReview"));
+    root.querySelector("[data-retry]").addEventListener("click", () => goTo("weakReview", { testId }));
     root.querySelector("[data-map]").addEventListener("click", () => goTo("map"));
   }
 

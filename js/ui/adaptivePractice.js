@@ -6,7 +6,7 @@
 // might need entirely different practice depending on which pattern is
 // actually tripping them up; this is the session built from that finer
 // signal instead of the skill-level one.
-import { getSubject } from "../data/skills.js";
+import { getSubject } from "../data/tests.js";
 import { getWeakPatterns, getAdaptivePracticeQuestions, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
@@ -21,7 +21,7 @@ const SESSION_SIZE = 10;
 const ADAPTIVE_COLOR = "#c2410c";
 const ADAPTIVE_BG = "#fff1e8";
 
-export function renderAdaptivePractice(root, navigate) {
+export function renderAdaptivePractice(root, navigate, { testId = "act" } = {}) {
   // Needs every subject's real question text loaded to tag patterns at
   // all (a pattern like "paired-passage comparison" only exists in
   // Reading/Science), unlike Weak Skill Review which only ever needs the
@@ -132,6 +132,7 @@ export function renderAdaptivePractice(root, navigate) {
         dataReady.then(() => {
           questions = getAdaptivePracticeQuestions(weakPatterns, SESSION_SIZE, {
             getQuestionStat: (skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex),
+            testId,
           });
           idx = 0;
           renderQuestion();
@@ -278,13 +279,13 @@ export function renderAdaptivePractice(root, navigate) {
     `;
 
     wireHud(root, goTo);
-    root.querySelector("[data-retry]").addEventListener("click", () => goTo("adaptivePractice"));
+    root.querySelector("[data-retry]").addEventListener("click", () => goTo("adaptivePractice", { testId }));
     root.querySelector("[data-map]").addEventListener("click", () => goTo("map"));
   }
 
   renderLoading();
   dataReady.then(() => {
-    weakPatterns = getWeakPatterns((skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex));
+    weakPatterns = getWeakPatterns((skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex), { testId });
     renderIntro();
   });
 }

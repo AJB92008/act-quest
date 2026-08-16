@@ -128,6 +128,13 @@ export function getTestSubjects(testId) {
   return getTest(testId)?.subjects || [];
 }
 
+// Every skill id belonging to one planet — the testId-scoped counterpart to
+// allSkillIds() below, for callers (gameState.getWeakSkills, mainly) that
+// need "every skill on this planet" rather than "every skill that exists."
+export function getTestSkillIds(testId) {
+  return getTestSubjects(testId).flatMap((s) => s.skills.map((sk) => sk.id));
+}
+
 // A planet is "ready" once at least one of its subjects actually has
 // lessons to offer — the signal the Solar System/World Map screens use to
 // decide between a real island layout and a "coming soon" empty state.

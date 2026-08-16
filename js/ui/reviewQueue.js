@@ -6,9 +6,9 @@
 // flashcards have no multiple-choice to check against, so they're
 // self-graded with a "Got it" / "Didn't know it" pair, same idea as
 // physical SRS flashcard apps.
-import { getAllQuestionsFlat, preloadAllSubjects } from "../data/questions/index.js";
+import { getQuestionsByKeys, preloadAllSubjects } from "../data/questions/index.js";
 import { VOCABULARY } from "../data/vocabulary.js";
-import { getSubject } from "../data/skills.js";
+import { getSubject } from "../data/tests.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -105,9 +105,7 @@ export function renderReviewQueue(root, navigate) {
       e.target.disabled = true;
       e.target.textContent = "Loading…";
       dataReady.then(() => {
-        const flat = getAllQuestionsFlat();
-        const byKey = new Map(flat.map((q) => [`${q.skillId}:${q.bankIndex}`, q]));
-        questionQueue = dueKeys.map((k) => byKey.get(k)).filter(Boolean);
+        questionQueue = getQuestionsByKeys(dueKeys);
         qIdx = 0;
         mode = "questions";
         renderQuestion();

@@ -1,7 +1,7 @@
 import { SUBJECTS, allSkillIds } from "./data/skills.js";
 import { getLessonCount } from "./data/questions/index.js";
 import { ACHIEVEMENTS } from "./data/achievements.js";
-import { TEST_IDS, getSubject as getAnySubject, allSubjects as allTestSubjects, allSkillIds as allTestSkillIds } from "./data/tests.js";
+import { TEST_IDS, getSubject as getAnySubject, allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSkillIds } from "./data/tests.js";
 
 const STORAGE_KEY = "act-quest-save-v1";
 const PASS_THRESHOLD = 0.7; // score needed to pass a mini-lesson / master a skill
@@ -610,8 +610,8 @@ export class GameState {
    * at or above `maxAccuracy` are excluded outright, so a genuinely strong
    * skill never gets padded into the list just to fill it out to `count`.
    */
-  getWeakSkills(count = 5, minAttempts = 5, maxAccuracy = 0.9) {
-    return allSkillIds()
+  getWeakSkills(count = 5, minAttempts = 5, maxAccuracy = 0.9, testId = "act") {
+    return getTestSkillIds(testId)
       .map((id) => ({ id, progress: this.data.skillProgress[id] }))
       .filter((s) => s.progress.attempts >= minAttempts)
       .map((s) => ({ id: s.id, accuracy: s.progress.correct / s.progress.attempts }))
