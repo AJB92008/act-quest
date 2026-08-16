@@ -1,4 +1,4 @@
-import { getSubject } from "../data/tests.js";
+import { getSubject, isSubjectPlayable } from "../data/tests.js";
 import { getLessonCount, preloadSubject } from "../data/questions/index.js";
 import { getBossMonster } from "../data/bossMonsters.js";
 import { gameState } from "../state.js";
@@ -17,15 +17,19 @@ export function renderIsland(root, navigate, { subjectId }) {
   preloadSubject(subjectId);
 
   const subject = getSubject(subjectId);
-  // Empty until this planet's content gets written (see data/tests.js) —
-  // `[].every(...)` is vacuously true, which would otherwise misreport an
-  // empty island as "all mastered" and try to render a boss encounter for
-  // a subject with no BOSS_MONSTERS entry at all.
-  const hasSkills = subject.skills.length > 0;
+  const hasSkillTree = subject.skills.length > 0;
+  // A subject can have a real skill tree planned out before it has real
+  // lesson/question content behind it (see isSubjectPlayable in
+  // data/tests.js) — `playable` gates anything that would otherwise assume
+  // real content exists: clicking into a lesson, the boss encounter (no
+  // BOSS_MONSTERS entry for a subject with no content yet), and lesson
+  // counts (getLessonCount falls back to a meaningless "1" for a skill id
+  // data/questions/index.js has never heard of).
+  const playable = isSubjectPlayable(subject);
   const positions = pathPositions(subject.skills.length, { rowHeight: ROW_HEIGHT });
   const totalHeight = pathHeight(subject.skills.length, ROW_HEIGHT);
-  const allMastered = hasSkills && subject.skills.every((skill) => gameState.isMastered(skill.id));
-  const bossCleared = hasSkills && gameState.isBossCleared(subjectId);
+  const allMastered = playable && subject.skills.every((skill) => gameState.isMastered(skill.id));
+  const bossCleared = playable && gameState.isBossCleared(subjectId);
 
   let currentIndex = subject.skills.findIndex((skill) => !gameState.isMastered(skill.id));
   if (currentIndex === -1) currentIndex = subject.skills.length - 1;
@@ -38,22 +42,22 @@ export function renderIsland(root, navigate, { subjectId }) {
     .map((skill, i) => {
       const { x, y } = positions[i];
       const progress = gameState.getSkillProgress(skill.id);
-      const totalLessons = getLessonCount(skill.id);
-      const stateClass = progress.mastered ? "is-mastered" : "is-open";
-      const isCurrent = i === currentIndex;
-      const badge = progress.mastered ? "✓" : String(i + 1);
+      const totalLessons = playable ? getLessonCount(skill.id) : null;
+      const stateClass = !playable ? "is-locked" : progress.mastered ? "is-mastered" : "is-open";
+      const isCurrent = playable && i === currentIndex;
+      const badge = !playable ? "🚧" : progress.mastered ? "✓" : String(i + 1);
       return `
         <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
           ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 59 })}</div>` : ""}
-          <button class="node-circle ${stateClass}" data-skill="${skill.id}"
-            aria-label="${skill.name}: ${progress.mastered ? "mastered" : `${progress.lessonsCompleted} of ${totalLessons} lessons complete`}"
+          <button class="node-circle ${stateClass}" data-skill="${skill.id}" ${playable ? "" : "disabled"}
+            aria-label="${skill.name}${playable ? `: ${progress.mastered ? "mastered" : `${progress.lessonsCompleted} of ${totalLessons} lessons complete`}` : ", lessons not written yet"}"
             style="--node-color:${subject.color}">
             ${badge}
           </button>
           <div class="node-label">
             <h4>${skill.name}</h4>
             <p>${skill.blurb}</p>
-            <div class="node-progress-badge">${progress.lessonsCompleted}/${totalLessons} lessons</div>
+            ${playable ? `<div class="node-progress-badge">${progress.lessonsCompleted}/${totalLessons} lessons</div>` : `<div class="node-progress-badge">Coming soon</div>`}
           </div>
         </div>
       `;
@@ -91,7 +95,7 @@ export function renderIsland(root, navigate, { subjectId }) {
   // for subjects with actual skills — a still-empty subject has no
   // BOSS_MONSTERS entry to render at all.
   let bossEncounterHTML = "";
-  if (hasSkills) {
+  if (playable) {
     const boss = getBossMonster(subjectId, gameState.level);
     const bossStateClass = bossCleared ? "is-cleared" : allMastered ? "is-unlocked" : "is-locked";
     bossEncounterHTML = `
@@ -114,8 +118,16 @@ export function renderIsland(root, navigate, { subjectId }) {
     `;
   }
 
-  const comingSoonHTML = hasSkills
+  const comingSoonHTML = playable
     ? ""
+    : hasSkillTree
+    ? `
+      <div class="island-coming-soon">
+        <span class="island-coming-soon-icon">🚧</span>
+        <h3>${subject.name}'s skill tree is planned — lessons aren't written yet</h3>
+        <p>The ${subject.skills.length} skills below are the real plan for this island; none of them have lessons to play yet.</p>
+      </div>
+    `
     : `
       <div class="island-coming-soon">
         <span class="island-coming-soon-icon">🚧</span>

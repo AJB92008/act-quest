@@ -1,4 +1,4 @@
-import { getTest, getTestSubjects } from "../data/tests.js";
+import { getTest, getTestSubjects, isSubjectPlayable } from "../data/tests.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -29,7 +29,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
   const activeTestId = testId || gameState.currentTestId;
   const test = getTest(activeTestId);
   const subjects = getTestSubjects(activeTestId);
-  const isReady = subjects.some((s) => s.skills.length > 0);
+  const isReady = subjects.some(isSubjectPlayable);
 
   const positions = pathPositions(subjects.length, { rowHeight: ROW_HEIGHT, leftPct: 26, rightPct: 74 });
   const totalHeight = pathHeight(subjects.length, ROW_HEIGHT);
@@ -97,7 +97,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
           ? "Acto is ready to study. Pick a subject to begin the path."
           : `${test.planetName} (${test.name}) &mdash; pick a subject to begin the path.`
       }</p>
-      ${!isReady ? `<p class="map-coming-soon-banner">🚧 ${test.name} content is still being built &mdash; the islands below are here, just empty for now.</p>` : ""}
+      ${!isReady ? `<p class="map-coming-soon-banner">🚧 ${test.name} content is still being built &mdash; pick an island below to see what's planned.</p>` : ""}
       ${shortcuts ? `<div class="map-shortcuts-row">${shortcuts}</div>` : ""}
       <div class="map-path-container" style="height:${totalHeight}px">
         ${renderPathSvg(positions, totalHeight, { color: "#b6aeff" })}

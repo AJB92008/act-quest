@@ -4,14 +4,16 @@
 // blurb, skills }`) the World Map/island/skill-path screens already know
 // how to render, so a planet with real content needs zero new UI code.
 //
-// ACT is the only planet with real content right now — its subjects are
-// skills.js's existing SUBJECTS, included here by reference (not copied),
-// so nothing about the live ACT experience changes by a single byte. The
-// other three planets are infrastructure only: their subjects exist (so
-// the map/island screens have something real to render and a "coming
-// soon" empty state to exercise) but every one of them has `skills: []`
-// — no lessons, no question banks, no boss. Writing that content is
-// future work; this just makes sure there's somewhere for it to go.
+// ACT is the only planet with playable content right now — its subjects
+// are skills.js's existing SUBJECTS, included here by reference (not
+// copied), so nothing about the live ACT experience changes by a single
+// byte. Every other planet is infrastructure: some subjects (like SAT's
+// Reading & Writing, see satSkills.js) have a real, named skill tree
+// already planned out but no lesson/question content behind it yet
+// (`contentPending: true` — see isSubjectPlayable below); others are
+// still fully empty (`skills: []`). Either way the World Map/island
+// screens have something real to render and the right "coming soon"
+// state to show. Writing the actual question banks is future work.
 //
 // Subject/skill ids across every planet have to stay globally unique
 // (e.g. "sat-math", not "math") since getSubject()/getSkill() below
@@ -20,6 +22,7 @@
 // functions for why that's the one hard rule extending a planet has to
 // follow.
 import { SUBJECTS as ACT_SUBJECTS } from "./skills.js";
+import { SAT_SUBJECTS } from "./satSkills.js";
 
 export const TESTS = [
   {
@@ -43,17 +46,7 @@ export const TESTS = [
     colorDark: "#1c6f65",
     bg: "#e8f6f4",
     subjects: [
-      {
-        id: "sat-rw",
-        name: "Reading & Writing",
-        place: "Lexicon Shoals",
-        color: "#2a9d8f",
-        colorDark: "#1c6f65",
-        bg: "#e8f6f4",
-        icon: "📘",
-        blurb: "SAT-style passage reading, grammar, and rhetoric — coming soon.",
-        skills: [],
-      },
+      ...SAT_SUBJECTS,
       {
         id: "sat-math",
         name: "Math",
@@ -150,8 +143,34 @@ export function getTestSubjects(testId) {
 // A planet is "ready" once at least one of its subjects actually has
 // lessons to offer — the signal the Solar System/World Map screens use to
 // decide between a real island layout and a "coming soon" empty state.
+// A subject can have a real skill tree (see satSkills.js) before it has
+// real lesson/question content behind it — `contentPending: true` marks
+// that gap explicitly, rather than inferring readiness from `skills.length`
+// alone, which would otherwise say "ready" the moment a skill tree exists
+// even though data/questions/index.js has no bank, no SUBJECT_LOADER, and
+// no BOSS_MONSTERS entry for it yet. Absent entirely (as on every ACT
+// subject) counts as ready, so nothing needed to change on skills.js's
+// side for ACT to keep working.
+export function isSubjectPlayable(subject) {
+  return subject.skills.length > 0 && !subject.contentPending;
+}
+
 export function isTestReady(testId) {
-  return getTestSubjects(testId).some((s) => s.skills.length > 0);
+  return getTestSubjects(testId).some(isSubjectPlayable);
+}
+
+// Every subject across every planet, flattened — used where something
+// needs to exist (a skillProgress record, mainly) for every skill
+// regardless of whether that skill has real lesson content yet, so a
+// subject can grow a real skill tree (see satSkills.js) without a save
+// crashing on `skillProgress[skillId]` being undefined the moment
+// something reads it.
+export function allSubjects() {
+  return TESTS.flatMap((t) => t.subjects);
+}
+
+export function allSkillIds() {
+  return allSubjects().flatMap((s) => s.skills.map((sk) => sk.id));
 }
 
 // Generalized versions of skills.js's getSubject()/getSkill(): search

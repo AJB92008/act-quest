@@ -1,7 +1,7 @@
 import { SUBJECTS, allSkillIds } from "./data/skills.js";
 import { getLessonCount } from "./data/questions/index.js";
 import { ACHIEVEMENTS } from "./data/achievements.js";
-import { TEST_IDS, getSubject as getAnySubject } from "./data/tests.js";
+import { TEST_IDS, getSubject as getAnySubject, allSubjects as allTestSubjects, allSkillIds as allTestSkillIds } from "./data/tests.js";
 
 const STORAGE_KEY = "act-quest-save-v1";
 const PASS_THRESHOLD = 0.7; // score needed to pass a mini-lesson / master a skill
@@ -144,7 +144,11 @@ export function percentileForComposite(score) {
 function defaultSave() {
   const skillProgress = {};
   const bossCleared = {};
-  for (const subject of SUBJECTS) {
+  // Every planet's subjects, not just ACT's SUBJECTS — a skill needs a
+  // real progress record the moment it exists in a skill tree (see
+  // data/tests.js's satSkills.js-backed subjects), whether or not it has
+  // playable lesson content behind it yet.
+  for (const subject of allTestSubjects()) {
     subject.skills.forEach((skill) => {
       skillProgress[skill.id] = {
         mastered: false,
@@ -283,7 +287,7 @@ export class GameState {
       fresh.studyPlan = { ...fresh.studyPlan, ...parsed.studyPlan };
       if (typeof fresh.studyPlan.testDate !== "string") fresh.studyPlan.testDate = null;
       if (typeof fresh.studyPlan.targetScore !== "number" || !Number.isFinite(fresh.studyPlan.targetScore)) fresh.studyPlan.targetScore = null;
-      for (const id of allSkillIds()) {
+      for (const id of allTestSkillIds()) {
         if (parsed.skillProgress && parsed.skillProgress[id]) {
           fresh.skillProgress[id] = { ...fresh.skillProgress[id], ...parsed.skillProgress[id] };
         }
