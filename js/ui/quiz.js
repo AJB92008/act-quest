@@ -10,6 +10,7 @@ import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
 import { renderLoadingScreen } from "./loadingScreen.js";
 import { renderPacingTag } from "./pacingFeedback.js";
+import { isWrittenQuestion, checkWrittenAnswer, renderWrittenAnswerHTML, wireWrittenAnswer, markWrittenAnswer } from "./writtenAnswer.js";
 
 const QUESTION_TIME = 20; // seconds budgeted per question, for the speed bonus
 
@@ -67,7 +68,11 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
       if (fill) fill.style.width = `${(timeLeft / QUESTION_TIME) * 100}%`;
       if (timeLeft <= 0) {
         stopTimer();
-        if (!answered) selectChoice(-1);
+        if (!answered) {
+          const q = questions[idx];
+          if (isWrittenQuestion(q)) selectWritten("");
+          else selectChoice(-1);
+        }
       }
     }, 100);
   }
@@ -97,10 +102,8 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
         <div class="question-card">
           <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <p class="question-text">${q.q}</p>
-          <div class="choices" id="choices">
-            ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
-          </div>
-          ${renderHintButton()}
+          ${isWrittenQuestion(q) ? renderWrittenAnswerHTML() : `<div class="choices" id="choices">${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}</div>`}
+          ${isWrittenQuestion(q) ? "" : renderHintButton()}
           <div class="explain-panel" id="explainPanel" role="status" aria-live="polite" hidden></div>
           <button class="next-btn" id="nextBtn" hidden>${
             idx === questions.length - 1 ? "See Results" : "Next Question"
@@ -111,16 +114,20 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
 
     wireHud(root, goTo);
     root.querySelector("[data-quit]").addEventListener("click", () => goTo("skillPath", { skillId, subjectId }));
-    root.querySelectorAll("[data-choice]").forEach((btn) => {
-      btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
-    });
-    wireHintButton(root, q);
+    if (isWrittenQuestion(q)) {
+      wireWrittenAnswer(root, (value) => selectWritten(value));
+    } else {
+      root.querySelectorAll("[data-choice]").forEach((btn) => {
+        btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
+      });
+      wireHintButton(root, q);
+    }
     if (gameState.timerEnabled) startTimer();
 
     unbindKeys();
     unbindKeys = bindQuizKeys({
       onChoice: (i) => {
-        if (i < q.choices.length) selectChoice(i);
+        if (!isWrittenQuestion(q) && i < q.choices.length) selectChoice(i);
       },
       onNext: () => root.querySelector("#nextBtn:not([hidden])")?.click(),
     });
@@ -128,16 +135,9 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
 
   function selectChoice(choiceIdx) {
     if (answered) return;
-    answered = true;
-    stopTimer();
-    removeHintButton(root);
-
     const q = questions[idx];
     const correct = choiceIdx === q.answer;
-    const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
-    gameState.recordQuestionAnswer(skillId, q.bankIndex, correct, choiceIdx);
-    const elapsedSeconds = (Date.now() - questionStartedAt) / 1000;
-    gameState.recordPaceSample(subject.id, elapsedSeconds);
+    finishAnswer(correct, choiceIdx, null);
 
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.disabled = true;
@@ -145,6 +145,30 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
       if (i === q.answer) btn.classList.add("is-correct");
       else if (i === choiceIdx) btn.classList.add("is-incorrect");
     });
+  }
+
+  function selectWritten(userInput) {
+    if (answered) return;
+    const q = questions[idx];
+    const correct = checkWrittenAnswer(userInput, q);
+    finishAnswer(correct, null, userInput);
+    markWrittenAnswer(root, correct);
+  }
+
+  // Shared tail for both answer paths above: scoring, pacing, gameState
+  // recording, the explain panel, and the Next button — everything that
+  // doesn't care whether the answer came from a clicked choice or a typed
+  // one, once `correct` is already known.
+  function finishAnswer(correct, choiceIdx, chosenText) {
+    answered = true;
+    stopTimer();
+    removeHintButton(root);
+
+    const q = questions[idx];
+    const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
+    gameState.recordQuestionAnswer(skillId, q.bankIndex, correct, choiceIdx, chosenText);
+    const elapsedSeconds = (Date.now() - questionStartedAt) / 1000;
+    gameState.recordPaceSample(subject.id, elapsedSeconds);
 
     const reactor = root.querySelector("#monsterReactor");
     reactor.classList.add(correct ? "react-happy" : "react-sad");
@@ -164,7 +188,7 @@ export function renderQuiz(root, navigate, { skillId, subjectId, lessonIndex }) 
     panel.className = `explain-panel ${correct ? "is-correct-bg" : "is-incorrect-bg"}`;
     panel.innerHTML = correct
       ? `<strong>Nice, that's right!</strong><p>${q.explain}</p>`
-      : `<strong>Not quite. The correct answer: ${q.choices[q.answer]}</strong><p>${q.explain}</p>`;
+      : `<strong>Not quite. The correct answer: ${isWrittenQuestion(q) ? q.answer : q.choices[q.answer]}</strong><p>${q.explain}</p>`;
 
     const nextBtn = root.querySelector("#nextBtn");
     nextBtn.hidden = false;

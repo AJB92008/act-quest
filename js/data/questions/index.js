@@ -1,5 +1,5 @@
 import { SUBJECTS, REPORTING_CATEGORIES } from "../skills.js";
-import { allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSubjects } from "../tests.js";
+import { allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSubjects, getSubject as getAnySubject } from "../tests.js";
 import { getQuestionPatterns, PATTERN_DEFS } from "./patterns.js";
 
 // Each skill's bank is chunked into fixed-size mini-lessons — bite-sized
@@ -73,6 +73,50 @@ const BANK_SIZE_OVERRIDES = {
   "sc-investigation": 140,
   "sc-conflicting": 140,
   "sc-evaluate": 140,
+  // Every sat-math/psat-math skill was extended with a batch of "written"
+  // (student-produced-response) questions on top of its original 100
+  // multiple-choice ones — see satMath.js/psatMath.js's own header
+  // comments. Batch sizes vary slightly per skill (not a flat +25) because
+  // a handful of written questions that turned out to duplicate existing
+  // question text were dropped rather than kept as near-copies.
+  "satmath-linear1var": 125,
+  "satmath-linearfunc": 125,
+  "satmath-linear2var": 124,
+  "satmath-systems": 125,
+  "satmath-linineq": 125,
+  "satmath-nonlinearfunc": 122,
+  "satmath-nonlineareq": 121,
+  "satmath-equivexpr": 125,
+  "satmath-ratios": 123,
+  "satmath-percentages": 124,
+  "satmath-onevardata": 125,
+  "satmath-twovardata": 125,
+  "satmath-probability": 125,
+  "satmath-inference": 125,
+  "satmath-statclaims": 125,
+  "satmath-areavolume": 122,
+  "satmath-linesangles": 123,
+  "satmath-righttri": 125,
+  "satmath-circles": 125,
+  "psatmath-linear1var": 125,
+  "psatmath-linearfunc": 124,
+  "psatmath-linear2var": 122,
+  "psatmath-systems": 125,
+  "psatmath-linineq": 125,
+  "psatmath-nonlinearfunc": 124,
+  "psatmath-nonlineareq": 121,
+  "psatmath-equivexpr": 125,
+  "psatmath-ratios": 123,
+  "psatmath-percentages": 125,
+  "psatmath-onevardata": 125,
+  "psatmath-twovardata": 125,
+  "psatmath-probability": 125,
+  "psatmath-inference": 125,
+  "psatmath-statclaims": 125,
+  "psatmath-areavolume": 118,
+  "psatmath-linesangles": 120,
+  "psatmath-righttri": 125,
+  "psatmath-circles": 125,
 };
 // Every planet's skill ids, not just ACT's — a still-contentPending
 // subject's skills contribute nothing extra here (getLessonCount/
@@ -208,7 +252,10 @@ export function getQuestionsByKeys(keys) {
 // there's enough of it.
 function questionDifficulty(q) {
   const stemLen = q.q.length;
-  const choicesLen = q.choices.reduce((sum, c) => sum + c.length, 0);
+  // Written (student-produced-response) questions carry no `choices` at
+  // all — nothing to type in response to eliminate, so there's no choice
+  // text to fold into the length proxy for these.
+  const choicesLen = Array.isArray(q.choices) ? q.choices.reduce((sum, c) => sum + c.length, 0) : 0;
   const hasNegation = /\b(NOT|EXCEPT|LEAST)\b/.test(q.q);
   let score = stemLen + choicesLen * 0.4;
   if (hasNegation) score += 60;
@@ -372,9 +419,22 @@ export function getAllQuestionsFlat(testId = "act") {
 
 // A big (default 20-question), no-repeat sample from every skill in one
 // subject — the Boss Quiz capstone, unlocked once every skill on an island
-// is mastered.
+// is mastered. Built directly from the one target subject (via getSubject,
+// which searches every planet) rather than filtering getAllQuestionsFlat()
+// down to one subjectId — that pool defaults to "act" and would silently
+// come back empty for any SAT/PSAT subject, since a boss quiz only ever
+// needs one subject's questions anyway.
 export function getBossQuizQuestions(subjectId, count = 20) {
-  const pool = getAllQuestionsFlat().filter((q) => q.subjectId === subjectId);
+  const subject = getAnySubject(subjectId);
+  if (!subject) return [];
+  const pool = [];
+  const lastIndex = Math.max(1, subject.skills.length - 1);
+  subject.skills.forEach((skill, skillIndex) => {
+    const difficultyPct = skillIndex / lastIndex;
+    getFullBank(skill.id).forEach((q, bankIndex) => {
+      pool.push({ ...q, skillId: skill.id, skillName: skill.name, subjectId: subject.id, difficultyPct, bankIndex });
+    });
+  });
   return shuffled(pool).slice(0, count);
 }
 

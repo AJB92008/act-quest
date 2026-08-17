@@ -10,6 +10,13 @@
 // ranges and fresh word-problem scenario text, calibrated to PSAT/NMSQT's
 // easier difficulty band per College Board's published specs (same
 // tested skills as SAT Math, different difficulty calibration).
+//
+// Each skill's original 100 multiple-choice questions are followed by a
+// batch of "written" (student-produced-response) questions — no `choices`
+// or integer `answer` index; the player types their own answer instead of
+// picking one of four (see js/ui/writtenAnswer.js). Batch sizes vary
+// slightly per skill — see data/questions/index.js's BANK_SIZE_OVERRIDES
+// comment for why it's not a flat +25 everywhere.
 export const psatMath = {
   "psatmath-linear1var": [
     {
@@ -1111,7 +1118,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "Let n be the number of weeks: 13 + 4n = 45 → 4n = 32 → n = 8.",
-    },  ],
+    },
+    {
+      q: "Solve for x: 5x + 3 = -7",
+      answer: "-2",
+      explain: "5x + 3 = -7 → 5x = -10 → x = -2.",
+    },
+    {
+      q: "Solve for x: 4(x + 6) = 20",
+      answer: "-1",
+      explain: "4(x + 6) = 20 → x + 6 = 5 → x = -1.",
+    },
+    {
+      q: "Solve for x: 4x - 3 = 1x - 18",
+      answer: "-5",
+      explain: "4x - 3 = 1x - 18 → 3x = -15 → x = -5.",
+    },
+    {
+      q: "Solve for x: (x + 6)/1 = 3",
+      answer: "-3",
+      explain: "(x + 6)/1 = 3 → x + 6 = 3 → x = -3.",
+    },
+    {
+      q: "A company that charges for storage charges a flat fee of $11 plus $2 per month. If a customer's total storage came to $25, how many months did the customer use?",
+      answer: "7",
+      explain: "Let n be the number of months: 11 + 2n = 25 → 2n = 14 → n = 7.",
+    },
+    {
+      q: "Solve for x: 1x + 5 = 7",
+      answer: "2",
+      explain: "1x + 5 = 7 → 1x = 2 → x = 2.",
+    },
+    {
+      q: "Solve for x: 3(x + 6) = 9",
+      answer: "-3",
+      explain: "3(x + 6) = 9 → x + 6 = 3 → x = -3.",
+    },
+    {
+      q: "Solve for x: 5x + 6 = 3x + 16",
+      answer: "5",
+      explain: "5x + 6 = 3x + 16 → 2x = 10 → x = 5.",
+    },
+    {
+      q: "Solve for x: (x - 6)/1 = -4",
+      answer: "2",
+      explain: "(x - 6)/1 = -4 → x - 6 = -4 → x = 2.",
+    },
+    {
+      q: "A company that charges for storage charges a flat fee of $11 plus $3 per month. If a customer's total storage came to $14, how many months did the customer use?",
+      answer: "1",
+      explain: "Let n be the number of months: 11 + 3n = 14 → 3n = 3 → n = 1.",
+    },
+    {
+      q: "Solve for x: 2x + 3 = -5",
+      answer: "-4",
+      explain: "2x + 3 = -5 → 2x = -8 → x = -4.",
+    },
+    {
+      q: "Solve for x: 2(x - 5) = -20",
+      answer: "-5",
+      explain: "2(x - 5) = -20 → x - 5 = -10 → x = -5.",
+    },
+    {
+      q: "Solve for x: 5x + 3 = 4x + 2",
+      answer: "-1",
+      explain: "5x + 3 = 4x + 2 → x = -1.",
+    },
+    {
+      q: "Solve for x: (x + 1)/4 = -1",
+      answer: "-5",
+      explain: "(x + 1)/4 = -1 → x + 1 = -4 → x = -5.",
+    },
+    {
+      q: "A company that charges for storage charges a flat fee of $17 plus $9 per month. If a customer's total storage came to $53, how many months did the customer use?",
+      answer: "4",
+      explain: "Let n be the number of months: 17 + 9n = 53 → 9n = 36 → n = 4.",
+    },
+    {
+      q: "Solve for x: 1x + 8 = 4",
+      answer: "-4",
+      explain: "1x + 8 = 4 → 1x = -4 → x = -4.",
+    },
+    {
+      q: "Solve for x: 1(x - 4) = -8",
+      answer: "-4",
+      explain: "1(x - 4) = -8 → x - 4 = -8 → x = -4.",
+    },
+    {
+      q: "Solve for x: 3x - 7 = 2x - 2",
+      answer: "5",
+      explain: "3x - 7 = 2x - 2 → x = 5.",
+    },
+    {
+      q: "Solve for x: (x + 6)/5 = 1",
+      answer: "-1",
+      explain: "(x + 6)/5 = 1 → x + 6 = 5 → x = -1.",
+    },
+    {
+      q: "A company that charges for storage charges a flat fee of $12 plus $10 per month. If a customer's total storage came to $72, how many months did the customer use?",
+      answer: "6",
+      explain: "Let n be the number of months: 12 + 10n = 72 → 10n = 60 → n = 6.",
+    },
+    {
+      q: "Solve for x: 3x + 7 = 19",
+      answer: "4",
+      explain: "3x + 7 = 19 → 3x = 12 → x = 4.",
+    },
+    {
+      q: "Solve for x: 3(x - 3) = -12",
+      answer: "-1",
+      explain: "3(x - 3) = -12 → x - 3 = -4 → x = -1.",
+    },
+    {
+      q: "Solve for x: 4x + 6 = 1x + 12",
+      answer: "2",
+      explain: "4x + 6 = 1x + 12 → 3x = 6 → x = 2.",
+    },
+    {
+      q: "Solve for x: (x + 6)/1 = 0",
+      answer: "-6",
+      explain: "(x + 6)/1 = 0 → x + 6 = 0 → x = -6.",
+    },
+    {
+      q: "A company that charges for storage charges a flat fee of $3 plus $6 per month. If a customer's total storage came to $27, how many months did the customer use?",
+      answer: "4",
+      explain: "Let n be the number of months: 3 + 6n = 27 → 6n = 24 → n = 4.",
+    },
+  ],
   "psatmath-linearfunc": [
     {
       q: "If f(x) = -5x + 6, what is f(-1)?",
@@ -2212,7 +2345,128 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "Value = 91 + 4(2) = 91 + 8 = 99.",
-    },  ],
+    },
+    {
+      q: "If f(x) = -5x + 2, what is f(4)?",
+      answer: "-18",
+      explain: "f(4) = -5(4) + 2 = -20 + 2 = -18.",
+    },
+    {
+      q: "A line passes through (0, -2) and (3, -5). What is its slope?",
+      answer: "-1",
+      explain: "slope = (-5 - (-2)) / (3 - 0) = -3/3 = -1.",
+    },
+    {
+      q: "A line with a slope of 3 passes through the point (-3, -8). What is the line's y-intercept?",
+      answer: "1",
+      explain: "y = 3x + b, and (-3, -8) is on the line, so -8 = 3(-3) + b → b = -8 - (-9) = 1.",
+    },
+    {
+      q: "A runner's total distance starts at 23 and grows by 9 each week. What is the distance after 6 weeks?",
+      answer: "77",
+      explain: "Value = 23 + 9(6) = 23 + 54 = 77.",
+    },
+    {
+      q: "The function g is defined by g(x) = 3x - 6. For what value of x does g(x) = -15?",
+      answer: "-3",
+      explain: "-15 = 3x - 6 → 3x = -9 → x = -3.",
+    },
+    {
+      q: "A linear function has the following values: f(-2) = -7, f(-1) = -3, f(0) = 1, f(1) = 5. What is the rate of change of this function?",
+      answer: "4",
+      explain: "The output changes by 4 every time the input increases by 1, so the rate of change is 4.",
+    },
+    {
+      q: "If f(x) = 3x + 1, what is f(1)?",
+      answer: "4",
+      explain: "f(1) = 3(1) + 1 = 3 + 1 = 4.",
+    },
+    {
+      q: "A line passes through (1, 2) and (-4, 17). What is its slope?",
+      answer: "-3",
+      explain: "slope = (17 - 2) / (-4 - 1) = 15/-5 = -3.",
+    },
+    {
+      q: "A line with a slope of -1 passes through the point (-3, -1). What is the line's y-intercept?",
+      answer: "-4",
+      explain: "y = -x + b, and (-3, -1) is on the line, so -1 = -(-3) + b → b = -1 - 3 = -4.",
+    },
+    {
+      q: "A library's book collection starts at 37 and grows by 7 each month. What is the collection size after 1 months?",
+      answer: "44",
+      explain: "Value = 37 + 7(1) = 37 + 7 = 44.",
+    },
+    {
+      q: "The function g is defined by g(x) = 3x + 6. For what value of x does g(x) = -9?",
+      answer: "-5",
+      explain: "-9 = 3x + 6 → 3x = -15 → x = -5.",
+    },
+    {
+      q: "A linear function has the following values: f(1) = 7, f(2) = 11, f(3) = 15, f(4) = 19. What is the rate of change of this function?",
+      answer: "4",
+      explain: "The output changes by 4 every time the input increases by 1, so the rate of change is 4.",
+    },
+    {
+      q: "If f(x) = -3x + 2, what is f(1)?",
+      answer: "-1",
+      explain: "f(1) = -3(1) + 2 = -3 + 2 = -1.",
+    },
+    {
+      q: "A line passes through (-4, 0) and (3, 7). What is its slope?",
+      answer: "1",
+      explain: "slope = (7 - 0) / (3 - (-4)) = 7/7 = 1.",
+    },
+    {
+      q: "A line with a slope of -1 passes through the point (-1, -1). What is the line's y-intercept?",
+      answer: "-2",
+      explain: "y = -x + b, and (-1, -1) is on the line, so -1 = -(-1) + b → b = -1 - 1 = -2.",
+    },
+    {
+      q: "A savings account starts at 31 and grows by 5 each week. What is the balance after 1 weeks?",
+      answer: "36",
+      explain: "Value = 31 + 5(1) = 31 + 5 = 36.",
+    },
+    {
+      q: "The function g is defined by g(x) = 2x - 8. For what value of x does g(x) = -18?",
+      answer: "-5",
+      explain: "-18 = 2x - 8 → 2x = -10 → x = -5.",
+    },
+    {
+      q: "A linear function has the following values: f(-2) = -5, f(-1) = -2, f(0) = 1, f(1) = 4. What is the rate of change of this function?",
+      answer: "3",
+      explain: "The output changes by 3 every time the input increases by 1, so the rate of change is 3.",
+    },
+    {
+      q: "A line passes through (-2, -3) and (1, -12). What is its slope?",
+      answer: "-3",
+      explain: "slope = (-12 - (-3)) / (1 - (-2)) = -9/3 = -3.",
+    },
+    {
+      q: "A line with a slope of 2 passes through the point (5, 16). What is the line's y-intercept?",
+      answer: "6",
+      explain: "y = 2x + b, and (5, 16) is on the line, so 16 = 2(5) + b → b = 16 - 10 = 6.",
+    },
+    {
+      q: "A plant's height starts at 74 and grows by 2 each week. What is the height after 8 weeks?",
+      answer: "90",
+      explain: "Value = 74 + 2(8) = 74 + 16 = 90.",
+    },
+    {
+      q: "The function g is defined by g(x) = 2x + 5. For what value of x does g(x) = 15?",
+      answer: "5",
+      explain: "15 = 2x + 5 → 2x = 10 → x = 5.",
+    },
+    {
+      q: "A linear function has the following values: f(2) = -5, f(3) = -7, f(4) = -9, f(5) = -11. What is the rate of change of this function?",
+      answer: "-2",
+      explain: "The output changes by -2 every time the input increases by 1, so the rate of change is -2.",
+    },
+    {
+      q: "If f(x) = 5x + 4, what is f(-2)?",
+      answer: "-6",
+      explain: "f(-2) = 5(-2) + 4 = -10 + 4 = -6.",
+    },
+  ],
   "psatmath-linear2var": [
     {
       q: "What is the x-intercept of the line y = -3x + 18?",
@@ -3313,7 +3567,118 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "Set x = 0: 3y = -15 → y = -5. The y-intercept is (0, -5).",
-    },  ],
+    },
+    {
+      q: "What is the x-coordinate of the x-intercept of the line y = -2x - 4?",
+      answer: "-2",
+      explain: "Set y = 0: 0 = -2x - 4 → 4 = -2x → x = -2.",
+    },
+    {
+      q: "What is the slope of the line 3x - y = 2?",
+      answer: "3",
+      explain: "Solving for y: -y = 2 - 3x → y = 3x - 2, so the slope is 3.",
+    },
+    {
+      q: "What is the y-coordinate of the y-intercept of the line -3x - 2y = -12?",
+      answer: "6",
+      explain: "Set x = 0: -2y = -12 → y = 6.",
+    },
+    {
+      q: "A line passes through (-1, -3) and (0, -4). What is the y-coordinate of the point on this line where x = 3?",
+      answer: "-7",
+      explain: "The line's slope is (-4 - (-3))/(0 - (-1)) = -1. Starting from (-1, -3), moving to x = 3 changes y by -1(3 - (-1)) = -4, giving y = -7.",
+    },
+    {
+      q: "A line passes through the point (1, 4) and has a slope of 1. When written in slope-intercept form y = mx + b, what is the value of b?",
+      answer: "3",
+      explain: "y - 4 = (x - 1) → y = x - 1 + 4 → y = x + 3, so b = 3.",
+    },
+    {
+      q: "What is the x-coordinate of the x-intercept of the line y = 2x + 8?",
+      answer: "-4",
+      explain: "Set y = 0: 0 = 2x + 8 → -8 = 2x → x = -4.",
+    },
+    {
+      q: "What is the slope of the line -4x + 2y = -4?",
+      answer: "2",
+      explain: "Solving for y: 2y = -4 + 4x → y = 2x - 2, so the slope is 2.",
+    },
+    {
+      q: "A line has a slope of -3. What is the slope of a line perpendicular to it?",
+      answer: "1/3",
+      explain: "A perpendicular line's slope is the negative reciprocal of -3, which is 1/3.",
+    },
+    {
+      q: "What is the y-coordinate of the y-intercept of the line -x + 3y = 6?",
+      answer: "2",
+      explain: "Set x = 0: 3y = 6 → y = 2.",
+    },
+    {
+      q: "A line passes through (1, -2) and (4, -8). What is the y-coordinate of the point on this line where x = 3?",
+      answer: "-6",
+      explain: "The line's slope is (-8 - (-2))/(4 - 1) = -2. Starting from (1, -2), moving to x = 3 changes y by -2(3 - 1) = -4, giving y = -6.",
+    },
+    {
+      q: "A line passes through the point (2, 7) and has a slope of 3. When written in slope-intercept form y = mx + b, what is the value of b?",
+      answer: "1",
+      explain: "y - 7 = 3(x - 2) → y = 3x - 6 + 7 → y = 3x + 1, so b = 1.",
+    },
+    {
+      q: "What is the x-coordinate of the x-intercept of the line y = x + 3?",
+      answer: "-3",
+      explain: "Set y = 0: 0 = x + 3 → -3 = x → x = -3.",
+    },
+    {
+      q: "What is the slope of the line -4x - 2y = 4?",
+      answer: "-2",
+      explain: "Solving for y: -2y = 4 + 4x → y = -2x - 2, so the slope is -2.",
+    },
+    {
+      q: "What is the y-coordinate of the y-intercept of the line x + y = 3?",
+      answer: "3",
+      explain: "Set x = 0: y = 3 → y = 3.",
+    },
+    {
+      q: "A line passes through (0, 3) and (1, 2). What is the y-coordinate of the point on this line where x = 2?",
+      answer: "1",
+      explain: "The line's slope is (2 - 3)/(1 - 0) = -1. Starting from (0, 3), moving to x = 2 changes y by -1(2 - 0) = -2, giving y = 1.",
+    },
+    {
+      q: "A line passes through the point (1, 6) and has a slope of 2. When written in slope-intercept form y = mx + b, what is the value of b?",
+      answer: "4",
+      explain: "y - 6 = 2(x - 1) → y = 2x - 2 + 6 → y = 2x + 4, so b = 4.",
+    },
+    {
+      q: "What is the x-coordinate of the x-intercept of the line y = 3x + 12?",
+      answer: "-4",
+      explain: "Set y = 0: 0 = 3x + 12 → -12 = 3x → x = -4.",
+    },
+    {
+      q: "What is the slope of the line -6x + 3y = -12?",
+      answer: "2",
+      explain: "Solving for y: 3y = -12 + 6x → y = 2x - 4, so the slope is 2.",
+    },
+    {
+      q: "What is the y-coordinate of the y-intercept of the line x - y = 1?",
+      answer: "-1",
+      explain: "Set x = 0: -y = 1 → y = -1.",
+    },
+    {
+      q: "A line passes through (1, -2) and (-2, 1). What is the y-coordinate of the point on this line where x = 2?",
+      answer: "-3",
+      explain: "The line's slope is (1 - (-2))/(-2 - 1) = -1. Starting from (1, -2), moving to x = 2 changes y by -1(2 - 1) = -1, giving y = -3.",
+    },
+    {
+      q: "A line passes through the point (-5, -7) and has a slope of 4. When written in slope-intercept form y = mx + b, what is the value of b?",
+      answer: "13",
+      explain: "y - (-7) = 4(x - (-5)) → y = 4x + 20 - 7 → y = 4x + 13, so b = 13.",
+    },
+    {
+      q: "What is the x-coordinate of the x-intercept of the line y = -x + 5?",
+      answer: "5",
+      explain: "Set y = 0: 0 = -x + 5 → -5 = -x → x = 5.",
+    },
+  ],
   "psatmath-systems": [
     {
       q: "Solve the system of equations: x - 3y = 3 and 3x + 2y = -24. What is the value of x?",
@@ -4414,7 +4779,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "A system has no solution when its two equations are parallel but not identical. Since the second equation's x-coefficient (6) is 2 times the first's (3), the y-coefficient must also be 2 times the first's for the lines to be parallel: k = 2 × -3 = -6. (The constant terms aren't in that same ratio, so the lines are parallel but distinct, giving no solution.)",
-    },  ],
+    },
+    {
+      q: "Solve the system of equations: 2x + 3y = -9 and 2x + y = -7. What is the value of x?",
+      answer: "-3",
+      explain: "Solving the system (by substitution or elimination) gives x = -3 and y = -1.",
+    },
+    {
+      q: "If x + 3y = -2 and 2x + 3y = 2, what is the value of y?",
+      answer: "-2",
+      explain: "Solving the system gives x = 4 and y = -2.",
+    },
+    {
+      q: "The system x + 3y = 8 and 3x + 2y = 17 has solution (x, y). What is the value of x + y?",
+      answer: "6",
+      explain: "Solving the system gives x = 5 and y = 1, so x + y = 6.",
+    },
+    {
+      q: "The system of equations 2x - 3y = 3 and 4x + ky = 9 has no solution. What is the value of k?",
+      answer: "-6",
+      explain: "A system has no solution when its two equations are parallel but not identical. Since the second equation's x-coefficient (4) is 2 times the first's (2), the y-coefficient must also be 2 times the first's for the lines to be parallel: k = 2 × -3 = -6. (The constant terms aren't in that same ratio, so the lines are parallel but distinct, giving no solution.)",
+    },
+    {
+      q: "At a warehouse, large boxes cost $10 each and small boxes cost $7 each. A total of 28 boxes were sold for a combined $220. How many large boxes were sold?",
+      answer: "8",
+      explain: "Let a = large boxes and b = small boxes: a + b = 28 and 10a + 7b = 220. Solving gives a = 8 and b = 20.",
+    },
+    {
+      q: "Solve the system of equations: 3x - y = -8 and x + 2y = 9. What is the value of x?",
+      answer: "-1",
+      explain: "Solving the system (by substitution or elimination) gives x = -1 and y = 5.",
+    },
+    {
+      q: "If 3x + 3y = -12 and 2x + 3y = -11, what is the value of y?",
+      answer: "-3",
+      explain: "Solving the system gives x = -1 and y = -3.",
+    },
+    {
+      q: "The system 3x - 2y = -19 and -3x + 3y = 24 has solution (x, y). What is the value of x + y?",
+      answer: "2",
+      explain: "Solving the system gives x = -3 and y = 5, so x + y = 2.",
+    },
+    {
+      q: "The system of equations 2x + 3y = 3 and -4x + ky = -3 has no solution. What is the value of k?",
+      answer: "-6",
+      explain: "A system has no solution when its two equations are parallel but not identical. Since the second equation's x-coefficient (-4) is -2 times the first's (2), the y-coefficient must also be -2 times the first's for the lines to be parallel: k = -2 × 3 = -6. (The constant terms aren't in that same ratio, so the lines are parallel but distinct, giving no solution.)",
+    },
+    {
+      q: "At a theater, adult tickets cost $10 each and child tickets cost $3 each. A total of 18 tickets were sold for a combined $82. How many adult tickets were sold?",
+      answer: "4",
+      explain: "Let a = adult tickets and b = child tickets: a + b = 18 and 10a + 3b = 82. Solving gives a = 4 and b = 14.",
+    },
+    {
+      q: "Solve the system of equations: 2x - y = 0 and 3x + y = 10. What is the value of x?",
+      answer: "2",
+      explain: "Solving the system (by substitution or elimination) gives x = 2 and y = 4.",
+    },
+    {
+      q: "If 3x + 2y = -19 and -3x + 2y = 11, what is the value of y?",
+      answer: "-2",
+      explain: "Solving the system gives x = -5 and y = -2.",
+    },
+    {
+      q: "The system 3x + y = 13 and -3x + 3y = -9 has solution (x, y). What is the value of x + y?",
+      answer: "5",
+      explain: "Solving the system gives x = 4 and y = 1, so x + y = 5.",
+    },
+    {
+      q: "The system of equations 3x - 3y = 3 and 9x + ky = 12 has no solution. What is the value of k?",
+      answer: "-9",
+      explain: "A system has no solution when its two equations are parallel but not identical. Since the second equation's x-coefficient (9) is 3 times the first's (3), the y-coefficient must also be 3 times the first's for the lines to be parallel: k = 3 × -3 = -9. (The constant terms aren't in that same ratio, so the lines are parallel but distinct, giving no solution.)",
+    },
+    {
+      q: "At a event, student passes cost $6 each and guest passes cost $9 each. A total of 23 passes were sold for a combined $186. How many student passes were sold?",
+      answer: "7",
+      explain: "Let a = student passes and b = guest passes: a + b = 23 and 6a + 9b = 186. Solving gives a = 7 and b = 16.",
+    },
+    {
+      q: "Solve the system of equations: x - 3y = 2 and 2x + 3y = -14. What is the value of x?",
+      answer: "-4",
+      explain: "Solving the system (by substitution or elimination) gives x = -4 and y = -2.",
+    },
+    {
+      q: "If 2x - 2y = 4 and x + 3y = -2, what is the value of y?",
+      answer: "-1",
+      explain: "Solving the system gives x = 1 and y = -1.",
+    },
+    {
+      q: "The system x - 2y = -2 and -x + 3y = 1 has solution (x, y). What is the value of x + y?",
+      answer: "-5",
+      explain: "Solving the system gives x = -4 and y = -1, so x + y = -5.",
+    },
+    {
+      q: "The system of equations x + 2y = -3 and 2x + ky = -5 has no solution. What is the value of k?",
+      answer: "4",
+      explain: "A system has no solution when its two equations are parallel but not identical. Since the second equation's x-coefficient (2) is 2 times the first's (1), the y-coefficient must also be 2 times the first's for the lines to be parallel: k = 2 × 2 = 4. (The constant terms aren't in that same ratio, so the lines are parallel but distinct, giving no solution.)",
+    },
+    {
+      q: "At a warehouse, large boxes cost $11 each and small boxes cost $6 each. A total of 23 boxes were sold for a combined $193. How many large boxes were sold?",
+      answer: "11",
+      explain: "Let a = large boxes and b = small boxes: a + b = 23 and 11a + 6b = 193. Solving gives a = 11 and b = 12.",
+    },
+    {
+      q: "Solve the system of equations: 3x - 2y = 4 and -2x + y = -3. What is the value of x?",
+      answer: "2",
+      explain: "Solving the system (by substitution or elimination) gives x = 2 and y = 1.",
+    },
+    {
+      q: "If 2x + y = 5 and -x + y = -1, what is the value of y?",
+      answer: "1",
+      explain: "Solving the system gives x = 2 and y = 1.",
+    },
+    {
+      q: "The system 2x + 2y = -10 and x + 3y = -9 has solution (x, y). What is the value of x + y?",
+      answer: "-5",
+      explain: "Solving the system gives x = -3 and y = -2, so x + y = -5.",
+    },
+    {
+      q: "The system of equations x - 2y = -4 and -2x + ky = 12 has no solution. What is the value of k?",
+      answer: "4",
+      explain: "A system has no solution when its two equations are parallel but not identical. Since the second equation's x-coefficient (-2) is -2 times the first's (1), the y-coefficient must also be -2 times the first's for the lines to be parallel: k = -2 × -2 = 4. (The constant terms aren't in that same ratio, so the lines are parallel but distinct, giving no solution.)",
+    },
+    {
+      q: "At a theater, adult tickets cost $8 each and child tickets cost $2 each. A total of 21 tickets were sold for a combined $72. How many adult tickets were sold?",
+      answer: "5",
+      explain: "Let a = adult tickets and b = child tickets: a + b = 21 and 8a + 2b = 72. Solving gives a = 5 and b = 16.",
+    },
+  ],
   "psatmath-linineq": [
     {
       q: "Which of the following represents the full solution to -4x - 1 < -9?",
@@ -5515,7 +6006,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "At x = 2, the boundary line gives y = -4. The inequality requires y ≤ -4 there, so (2, -6) works but the other points, which fall on the wrong side of that boundary, don't.",
-    },  ],
+    },
+    {
+      q: "What is the smallest integer value of x that satisfies -3x + 2 < -16?",
+      answer: "7",
+      explain: "-3x + 2 < -16 → -3x < -18 → x > 6 (dividing by a negative number flips the inequality). The smallest integer satisfying that is 7.",
+    },
+    {
+      q: "Each ticket costs $3, and there is a one-time fee of $7. If a customer has a budget of $31, what is the maximum number of tickets the customer can purchase?",
+      answer: "8",
+      explain: "3n + 7 ≤ 31 → n ≤ 8 → the maximum whole number of tickets is 8.",
+    },
+    {
+      q: "What is the largest integer value of x that satisfies 2x + 1 ≤ x - 3?",
+      answer: "-4",
+      explain: "2x + 1 ≤ x - 3 → x ≤ -4 → x ≤ -4. The largest integer satisfying that is -4.",
+    },
+    {
+      q: "How many integer values of x from -8 to -2, inclusive, satisfy -2x + 5 ≥ 15?",
+      answer: "4",
+      explain: "Checking each integer from -8 to -2 against -2x + 5 ≥ 15 gives 4 values that work.",
+    },
+    {
+      q: "What is the smallest integer value of x that satisfies -2x + 1 < -7?",
+      answer: "5",
+      explain: "-2x + 1 < -7 → -2x < -8 → x > 4 (dividing by a negative number flips the inequality). The smallest integer satisfying that is 5.",
+    },
+    {
+      q: "Each ticket costs $7, and there is a one-time fee of $9. If a customer has a budget of $30, what is the maximum number of tickets the customer can purchase?",
+      answer: "3",
+      explain: "7n + 9 ≤ 30 → n ≤ 3 → the maximum whole number of tickets is 3.",
+    },
+    {
+      q: "What is the smallest integer value of x that satisfies 2x + 6 ≤ 3x + 1?",
+      answer: "5",
+      explain: "2x + 6 ≤ 3x + 1 → -x ≤ -5 → x ≥ 5 (dividing by a negative number flips the inequality). The smallest integer satisfying that is 5.",
+    },
+    {
+      q: "How many integer values of x from 3 to 9, inclusive, satisfy x - 4 ≥ 2?",
+      answer: "4",
+      explain: "Checking each integer from 3 to 9 against x - 4 ≥ 2 gives 4 values that work.",
+    },
+    {
+      q: "What is the smallest integer value of x that satisfies -x - 3 < -6?",
+      answer: "4",
+      explain: "-x - 3 < -6 → -x < -3 → x > 3 (dividing by a negative number flips the inequality). The smallest integer satisfying that is 4.",
+    },
+    {
+      q: "Each ticket costs $14, and there is a one-time fee of $4. If a customer has a budget of $60, what is the maximum number of tickets the customer can purchase?",
+      answer: "4",
+      explain: "14n + 4 ≤ 60 → n ≤ 4 → the maximum whole number of tickets is 4.",
+    },
+    {
+      q: "What is the largest integer value of x that satisfies 3x + 2 ≤ x + 6?",
+      answer: "2",
+      explain: "3x + 2 ≤ x + 6 → 2x ≤ 4 → x ≤ 2. The largest integer satisfying that is 2.",
+    },
+    {
+      q: "How many integer values of x from -6 to 0, inclusive, satisfy 4x + 1 ≥ -11?",
+      answer: "4",
+      explain: "Checking each integer from -6 to 0 against 4x + 1 ≥ -11 gives 4 values that work.",
+    },
+    {
+      q: "What is the largest integer value of x that satisfies 3x + 1 < 16?",
+      answer: "4",
+      explain: "3x + 1 < 16 → 3x < 15 → x < 5. The largest integer satisfying that is 4.",
+    },
+    {
+      q: "Each ticket costs $12, and there is a one-time fee of $3. If a customer has a budget of $63, what is the maximum number of tickets the customer can purchase?",
+      answer: "5",
+      explain: "12n + 3 ≤ 63 → n ≤ 5 → the maximum whole number of tickets is 5.",
+    },
+    {
+      q: "What is the largest integer value of x that satisfies 4x - 1 ≤ 2x - 3?",
+      answer: "-1",
+      explain: "4x - 1 ≤ 2x - 3 → 2x ≤ -2 → x ≤ -1. The largest integer satisfying that is -1.",
+    },
+    {
+      q: "How many integer values of x from 0 to 6, inclusive, satisfy 3x - 7 ≥ 2?",
+      answer: "4",
+      explain: "Checking each integer from 0 to 6 against 3x - 7 ≥ 2 gives 4 values that work.",
+    },
+    {
+      q: "What is the smallest integer value of x that satisfies -x - 6 < -12?",
+      answer: "7",
+      explain: "-x - 6 < -12 → -x < -6 → x > 6 (dividing by a negative number flips the inequality). The smallest integer satisfying that is 7.",
+    },
+    {
+      q: "Each ticket costs $15, and there is a one-time fee of $8. If a customer has a budget of $38, what is the maximum number of tickets the customer can purchase?",
+      answer: "2",
+      explain: "15n + 8 ≤ 38 → n ≤ 2 → the maximum whole number of tickets is 2.",
+    },
+    {
+      q: "What is the smallest integer value of x that satisfies 2x + 4 ≤ 4x + 0?",
+      answer: "2",
+      explain: "2x + 4 ≤ 4x + 0 → -2x ≤ -4 → x ≥ 2 (dividing by a negative number flips the inequality). The smallest integer satisfying that is 2.",
+    },
+    {
+      q: "How many integer values of x from -1 to 5, inclusive, satisfy -3x - 2 ≥ -8?",
+      answer: "4",
+      explain: "Checking each integer from -1 to 5 against -3x - 2 ≥ -8 gives 4 values that work.",
+    },
+    {
+      q: "What is the largest integer value of x that satisfies 4x + 2 < 6?",
+      answer: "0",
+      explain: "4x + 2 < 6 → 4x < 4 → x < 1. The largest integer satisfying that is 0.",
+    },
+    {
+      q: "Each ticket costs $11, and there is a one-time fee of $6. If a customer has a budget of $127, what is the maximum number of tickets the customer can purchase?",
+      answer: "11",
+      explain: "11n + 6 ≤ 127 → n ≤ 11 → the maximum whole number of tickets is 11.",
+    },
+    {
+      q: "What is the largest integer value of x that satisfies 5x + 2 ≤ 3x - 2?",
+      answer: "-2",
+      explain: "5x + 2 ≤ 3x - 2 → 2x ≤ -4 → x ≤ -2. The largest integer satisfying that is -2.",
+    },
+    {
+      q: "How many integer values of x from -9 to -3, inclusive, satisfy -3x + 5 ≥ 23?",
+      answer: "4",
+      explain: "Checking each integer from -9 to -3 against -3x + 5 ≥ 23 gives 4 values that work.",
+    },
+    {
+      q: "What is the smallest integer value of x that satisfies -3x + 3 < 21?",
+      answer: "-5",
+      explain: "-3x + 3 < 21 → -3x < 18 → x > -6 (dividing by a negative number flips the inequality). The smallest integer satisfying that is -5.",
+    },
+  ],
   "psatmath-nonlinearfunc": [
     {
       q: "What is the vertex of the parabola y = 2(x + 3)² + 3?",
@@ -6616,7 +7233,128 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "Since a is negative, the parabola opens downward and its vertex is a maximum. The vertex is (-4, -5), so the maximum value of f is -5.",
-    },  ],
+    },
+    {
+      q: "What is the x-coordinate of the vertex of the parabola y = 2(x + 3)² + 0?",
+      answer: "-3",
+      explain: "In vertex form y = a(x - h)² + k, the vertex is (h, k). Here h = -3 and k = 0, so the x-coordinate of the vertex is -3.",
+    },
+    {
+      q: "If f(x) = -x² + 3x + 4, what is f(-3)?",
+      answer: "-14",
+      explain: "f(-3) = -(-3)² + 3(-3) + 4 = -9 - 9 + 4 = -14.",
+    },
+    {
+      q: "If g(x) = 2 · 5^x, what is g(3)?",
+      answer: "250",
+      explain: "g(3) = 2 · 5^3 = 2 · 125 = 250.",
+    },
+    {
+      q: "A virus sample's cell count starts at 13 and triples every hour. What is the value after 2 hours?",
+      answer: "117",
+      explain: "Value = 13 · 3^2 = 13 · 9 = 117.",
+    },
+    {
+      q: "The function f is defined by f(x) = -(x + 4)² + 1. What is the maximum value of f?",
+      answer: "1",
+      explain: "Since a is negative, the parabola opens downward and its vertex is a maximum. The vertex is (-4, 1), so the maximum value of f is 1.",
+    },
+    {
+      q: "What is the y-coordinate of the vertex of the parabola y = -2(x + 1)² + 6?",
+      answer: "6",
+      explain: "In vertex form y = a(x - h)² + k, the vertex is (h, k). Here h = -1 and k = 6, so the y-coordinate of the vertex is 6.",
+    },
+    {
+      q: "If f(x) = -x² - 3x + 2, what is f(2)?",
+      answer: "-8",
+      explain: "f(2) = -(2)² - 3(2) + 2 = -4 - 6 + 2 = -8.",
+    },
+    {
+      q: "If g(x) = 3 · 3^x, what is g(3)?",
+      answer: "81",
+      explain: "g(3) = 3 · 3^3 = 3 · 27 = 81.",
+    },
+    {
+      q: "A population of bacteria starts at 11 and doubles every hour. What is the value after 2 hours?",
+      answer: "44",
+      explain: "Value = 11 · 2^2 = 11 · 4 = 44.",
+    },
+    {
+      q: "The function f is defined by f(x) = -2(x + 3)² + 1. What is the maximum value of f?",
+      answer: "1",
+      explain: "Since a is negative, the parabola opens downward and its vertex is a maximum. The vertex is (-3, 1), so the maximum value of f is 1.",
+    },
+    {
+      q: "What is the x-coordinate of the vertex of the parabola y = -3(x - 2)² - 3?",
+      answer: "2",
+      explain: "In vertex form y = a(x - h)² + k, the vertex is (h, k). Here h = 2 and k = -3, so the x-coordinate of the vertex is 2.",
+    },
+    {
+      q: "If f(x) = 2x² - 2x - 4, what is f(2)?",
+      answer: "0",
+      explain: "f(2) = 2(2)² - 2(2) - 4 = 8 - 4 - 4 = 0.",
+    },
+    {
+      q: "If g(x) = 3 · 2^x, what is g(3)?",
+      answer: "24",
+      explain: "g(3) = 3 · 2^3 = 3 · 8 = 24.",
+    },
+    {
+      q: "The value of an investment starts at 2 and triples every year. What is the value after 2 years?",
+      answer: "18",
+      explain: "Value = 2 · 3^2 = 2 · 9 = 18.",
+    },
+    {
+      q: "The function f is defined by f(x) = (x - 1)² - 1. What is the minimum value of f?",
+      answer: "-1",
+      explain: "Since a is positive, the parabola opens upward and its vertex is a minimum. The vertex is (1, -1), so the minimum value of f is -1.",
+    },
+    {
+      q: "What is the y-coordinate of the vertex of the parabola y = 2(x - 1)² + 5?",
+      answer: "5",
+      explain: "In vertex form y = a(x - h)² + k, the vertex is (h, k). Here h = 1 and k = 5, so the y-coordinate of the vertex is 5.",
+    },
+    {
+      q: "If f(x) = 2x² - 2x - 1, what is f(-3)?",
+      answer: "23",
+      explain: "f(-3) = 2(-3)² - 2(-3) - 1 = 18 + 6 - 1 = 23.",
+    },
+    {
+      q: "The number of subscribers to a channel starts at 6 and doubles every month. What is the value after 2 months?",
+      answer: "24",
+      explain: "Value = 6 · 2^2 = 6 · 4 = 24.",
+    },
+    {
+      q: "The function f is defined by f(x) = -(x - 2)² - 1. What is the maximum value of f?",
+      answer: "-1",
+      explain: "Since a is negative, the parabola opens downward and its vertex is a maximum. The vertex is (2, -1), so the maximum value of f is -1.",
+    },
+    {
+      q: "What is the x-coordinate of the vertex of the parabola y = -3(x - 2)² + 0?",
+      answer: "2",
+      explain: "In vertex form y = a(x - h)² + k, the vertex is (h, k). Here h = 2 and k = 0, so the x-coordinate of the vertex is 2.",
+    },
+    {
+      q: "If f(x) = -2x² + 3x + 5, what is f(3)?",
+      answer: "-4",
+      explain: "f(3) = -2(3)² + 3(3) + 5 = -18 + 9 + 5 = -4.",
+    },
+    {
+      q: "If g(x) = 3 · 3^x, what is g(1)?",
+      answer: "9",
+      explain: "g(1) = 3 · 3^1 = 3 · 3 = 9.",
+    },
+    {
+      q: "A virus sample's cell count starts at 7 and triples every hour. What is the value after 3 hours?",
+      answer: "189",
+      explain: "Value = 7 · 3^3 = 7 · 27 = 189.",
+    },
+    {
+      q: "The function f is defined by f(x) = -(x - 2)² + 1. What is the maximum value of f?",
+      answer: "1",
+      explain: "Since a is negative, the parabola opens downward and its vertex is a maximum. The vertex is (2, 1), so the maximum value of f is 1.",
+    },
+  ],
   "psatmath-nonlineareq": [
     {
       q: "What are the solutions to x² - 4x - 5 = 0?",
@@ -7717,7 +8455,113 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "3x² - 3x - 18 = 3(x + 2)(x - 3) = 0, so x = -2 or x = 3.",
-    },  ],
+    },
+    {
+      q: "What is the larger of the two solutions to x² - 3x + 2 = 0?",
+      answer: "2",
+      explain: "x² - 3x + 2 factors as (x - 1)(x - 2) = 0, so x = 1 or x = 2. The larger solution is 2.",
+    },
+    {
+      q: "What is the sum of the solutions to x² - 5x + 4 = 0?",
+      answer: "5",
+      explain: "For x² + bx + c = 0, the sum of the solutions equals -b. Here b = -5, so the sum is 5.",
+    },
+    {
+      q: "What is the product of the solutions to x² + 6x + 8 = 0?",
+      answer: "8",
+      explain: "For x² + bx + c = 0, the product of the solutions equals c. Here c = 8, so the product is 8.",
+    },
+    {
+      q: "What is the larger of the two solutions to 3x² - 6x - 24 = 0?",
+      answer: "4",
+      explain: "3x² - 6x - 24 = 3(x + 2)(x - 4) = 0, so x = -2 or x = 4. The larger solution is 4.",
+    },
+    {
+      q: "The parabola y = x² + 2 intersects the line y = -2x + 5 at two points. What is the sum of the x-coordinates of those two points?",
+      answer: "-2",
+      explain: "Setting x² + 2 = -2x + 5 gives a quadratic whose solutions are the intersection x-coordinates; their sum equals the coefficient of x on the line side (by Vieta's formulas), which is -2.",
+    },
+    {
+      q: "What is the larger of the two solutions to x² + 4x - 5 = 0?",
+      answer: "1",
+      explain: "x² + 4x - 5 factors as (x + 5)(x - 1) = 0, so x = -5 or x = 1. The larger solution is 1.",
+    },
+    {
+      q: "What is the larger of the two solutions to 2x² - 6x - 8 = 0?",
+      answer: "4",
+      explain: "2x² - 6x - 8 = 2(x + 1)(x - 4) = 0, so x = -1 or x = 4. The larger solution is 4.",
+    },
+    {
+      q: "The parabola y = x² - 3 intersects the line y = -2x + 0 at two points. What is the sum of the x-coordinates of those two points?",
+      answer: "-2",
+      explain: "Setting x² - 3 = -2x + 0 gives a quadratic whose solutions are the intersection x-coordinates; their sum equals the coefficient of x on the line side (by Vieta's formulas), which is -2.",
+    },
+    {
+      q: "What is the larger of the two solutions to x² - 7x + 12 = 0?",
+      answer: "4",
+      explain: "x² - 7x + 12 factors as (x - 3)(x - 4) = 0, so x = 3 or x = 4. The larger solution is 4.",
+    },
+    {
+      q: "What is the sum of the solutions to x² - 5x + 6 = 0?",
+      answer: "5",
+      explain: "For x² + bx + c = 0, the sum of the solutions equals -b. Here b = -5, so the sum is 5.",
+    },
+    {
+      q: "What is the product of the solutions to x² - 2x - 8 = 0?",
+      answer: "-8",
+      explain: "For x² + bx + c = 0, the product of the solutions equals c. Here c = -8, so the product is -8.",
+    },
+    {
+      q: "What is the larger of the two solutions to 3x² + 18x + 24 = 0?",
+      answer: "-2",
+      explain: "3x² + 18x + 24 = 3(x + 4)(x + 2) = 0, so x = -4 or x = -2. The larger solution is -2.",
+    },
+    {
+      q: "The parabola y = x² + 1 intersects the line y = x + 7 at two points. What is the sum of the x-coordinates of those two points?",
+      answer: "1",
+      explain: "Setting x² + 1 = x + 7 gives a quadratic whose solutions are the intersection x-coordinates; their sum equals the coefficient of x on the line side (by Vieta's formulas), which is 1.",
+    },
+    {
+      q: "What is the larger of the two solutions to x² - 6x + 8 = 0?",
+      answer: "4",
+      explain: "x² - 6x + 8 factors as (x - 2)(x - 4) = 0, so x = 2 or x = 4. The larger solution is 4.",
+    },
+    {
+      q: "What is the sum of the solutions to x² + x - 2 = 0?",
+      answer: "-1",
+      explain: "For x² + bx + c = 0, the sum of the solutions equals -b. Here b = 1, so the sum is -1.",
+    },
+    {
+      q: "What is the larger of the two solutions to 2x² + 14x + 24 = 0?",
+      answer: "-3",
+      explain: "2x² + 14x + 24 = 2(x + 4)(x + 3) = 0, so x = -4 or x = -3. The larger solution is -3.",
+    },
+    {
+      q: "The parabola y = x² + 2 intersects the line y = -2x + 10 at two points. What is the sum of the x-coordinates of those two points?",
+      answer: "-2",
+      explain: "Setting x² + 2 = -2x + 10 gives a quadratic whose solutions are the intersection x-coordinates; their sum equals the coefficient of x on the line side (by Vieta's formulas), which is -2.",
+    },
+    {
+      q: "What is the larger of the two solutions to x² - 2x - 8 = 0?",
+      answer: "4",
+      explain: "x² - 2x - 8 factors as (x + 2)(x - 4) = 0, so x = -2 or x = 4. The larger solution is 4.",
+    },
+    {
+      q: "What is the product of the solutions to x² - 3x + 2 = 0?",
+      answer: "2",
+      explain: "For x² + bx + c = 0, the product of the solutions equals c. Here c = 2, so the product is 2.",
+    },
+    {
+      q: "What is the larger of the two solutions to 3x² + 9x + 6 = 0?",
+      answer: "-1",
+      explain: "3x² + 9x + 6 = 3(x + 2)(x + 1) = 0, so x = -2 or x = -1. The larger solution is -1.",
+    },
+    {
+      q: "The parabola y = x² + 5 intersects the line y = 5x - 1 at two points. What is the sum of the x-coordinates of those two points?",
+      answer: "5",
+      explain: "Setting x² + 5 = 5x - 1 gives a quadratic whose solutions are the intersection x-coordinates; their sum equals the coefficient of x on the line side (by Vieta's formulas), which is 5.",
+    },
+  ],
   "psatmath-equivexpr": [
     {
       q: "Which expression is equivalent to x^4 · x^4?",
@@ -8818,7 +9662,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "A difference of squares, x² - n², always factors as (x - n)(x + n). Here n² = 400, so n = 20, giving (x - 20)(x + 20).",
-    },  ],
+    },
+    {
+      q: "If x^4 · x^2 is equivalent to x^n, what is the value of n?",
+      answer: "6",
+      explain: "When multiplying powers with the same base, add the exponents: x^4 · x^2 = x^(4+2) = x^6, so n = 6.",
+    },
+    {
+      q: "If y^6 / y^2 is equivalent to y^n, what is the value of n?",
+      answer: "4",
+      explain: "When dividing powers with the same base, subtract the exponents: y^6 / y^2 = y^(6-2) = y^4, so n = 4.",
+    },
+    {
+      q: "If (a^3)^1 is equivalent to a^n, what is the value of n?",
+      answer: "3",
+      explain: "When raising a power to another power, multiply the exponents: (a^3)^1 = a^(3×1) = a^3, so n = 3.",
+    },
+    {
+      q: "If x² - 400 is equivalent to (x - n)(x + n) for a positive integer n, what is the value of n?",
+      answer: "20",
+      explain: "A difference of squares, x² - n², always factors as (x - n)(x + n). Here n² = 400, so n = 20.",
+    },
+    {
+      q: "When (x - 1)(x - 2) is expanded to the form x² + bx + c, what is the value of c?",
+      answer: "2",
+      explain: "(x - 1)(x - 2) = x² + (-1+-2)x + (-1)(-2) = x² - 3x + 2, so c = 2.",
+    },
+    {
+      q: "When (x - 4)(x + 1) is expanded to the form x² + bx + c, what is the value of b?",
+      answer: "-3",
+      explain: "(x - 4)(x + 1) = x² + (-4+1)x + (-4)(1) = x² - 3x - 4, so b = -3.",
+    },
+    {
+      q: "If a^5 · a^5 is equivalent to a^n, what is the value of n?",
+      answer: "10",
+      explain: "When multiplying powers with the same base, add the exponents: a^5 · a^5 = a^(5+5) = a^10, so n = 10.",
+    },
+    {
+      q: "If n^6 / n^3 is equivalent to n^n, what is the value of n?",
+      answer: "3",
+      explain: "When dividing powers with the same base, subtract the exponents: n^6 / n^3 = n^(6-3) = n^3, so n = 3.",
+    },
+    {
+      q: "If (x^2)^3 is equivalent to x^n, what is the value of n?",
+      answer: "6",
+      explain: "When raising a power to another power, multiply the exponents: (x^2)^3 = x^(2×3) = x^6, so n = 6.",
+    },
+    {
+      q: "If x² - 4 is equivalent to (x - n)(x + n) for a positive integer n, what is the value of n?",
+      answer: "2",
+      explain: "A difference of squares, x² - n², always factors as (x - n)(x + n). Here n² = 4, so n = 2.",
+    },
+    {
+      q: "When (x + 3)(x - 2) is expanded to the form x² + bx + c, what is the value of c?",
+      answer: "-6",
+      explain: "(x + 3)(x - 2) = x² + (3+-2)x + (3)(-2) = x² + 1x - 6, so c = -6.",
+    },
+    {
+      q: "When (x - 3)(x - 5) is expanded to the form x² + bx + c, what is the value of b?",
+      answer: "-8",
+      explain: "(x - 3)(x - 5) = x² + (-3+-5)x + (-3)(-5) = x² - 8x + 15, so b = -8.",
+    },
+    {
+      q: "If x^3 · x^5 is equivalent to x^n, what is the value of n?",
+      answer: "8",
+      explain: "When multiplying powers with the same base, add the exponents: x^3 · x^5 = x^(3+5) = x^8, so n = 8.",
+    },
+    {
+      q: "If y^4 / y^2 is equivalent to y^n, what is the value of n?",
+      answer: "2",
+      explain: "When dividing powers with the same base, subtract the exponents: y^4 / y^2 = y^(4-2) = y^2, so n = 2.",
+    },
+    {
+      q: "If (a^2)^3 is equivalent to a^n, what is the value of n?",
+      answer: "6",
+      explain: "When raising a power to another power, multiply the exponents: (a^2)^3 = a^(2×3) = a^6, so n = 6.",
+    },
+    {
+      q: "If x² - 169 is equivalent to (x - n)(x + n) for a positive integer n, what is the value of n?",
+      answer: "13",
+      explain: "A difference of squares, x² - n², always factors as (x - n)(x + n). Here n² = 169, so n = 13.",
+    },
+    {
+      q: "When (x + 1)(x - 2) is expanded to the form x² + bx + c, what is the value of c?",
+      answer: "-2",
+      explain: "(x + 1)(x - 2) = x² + (1+-2)x + (1)(-2) = x² - 1x - 2, so c = -2.",
+    },
+    {
+      q: "When (x + 3)(x - 5) is expanded to the form x² + bx + c, what is the value of b?",
+      answer: "-2",
+      explain: "(x + 3)(x - 5) = x² + (3+-5)x + (3)(-5) = x² - 2x - 15, so b = -2.",
+    },
+    {
+      q: "If a^2 · a^3 is equivalent to a^n, what is the value of n?",
+      answer: "5",
+      explain: "When multiplying powers with the same base, add the exponents: a^2 · a^3 = a^(2+3) = a^5, so n = 5.",
+    },
+    {
+      q: "If n^4 / n^2 is equivalent to n^n, what is the value of n?",
+      answer: "2",
+      explain: "When dividing powers with the same base, subtract the exponents: n^4 / n^2 = n^(4-2) = n^2, so n = 2.",
+    },
+    {
+      q: "If (x^2)^2 is equivalent to x^n, what is the value of n?",
+      answer: "4",
+      explain: "When raising a power to another power, multiply the exponents: (x^2)^2 = x^(2×2) = x^4, so n = 4.",
+    },
+    {
+      q: "If x² - 16 is equivalent to (x - n)(x + n) for a positive integer n, what is the value of n?",
+      answer: "4",
+      explain: "A difference of squares, x² - n², always factors as (x - n)(x + n). Here n² = 16, so n = 4.",
+    },
+    {
+      q: "When (x - 5)(x + 5) is expanded to the form x² + bx + c, what is the value of c?",
+      answer: "-25",
+      explain: "(x - 5)(x + 5) = x² + (-5+5)x + (-5)(5) = x² + 0x - 25, so c = -25.",
+    },
+    {
+      q: "When (x + 5)(x + 1) is expanded to the form x² + bx + c, what is the value of b?",
+      answer: "6",
+      explain: "(x + 5)(x + 1) = x² + (5+1)x + (5)(1) = x² + 6x + 5, so b = 6.",
+    },
+    {
+      q: "If x^4 · x^3 is equivalent to x^n, what is the value of n?",
+      answer: "7",
+      explain: "When multiplying powers with the same base, add the exponents: x^4 · x^3 = x^(4+3) = x^7, so n = 7.",
+    },
+  ],
   "psatmath-ratios": [
     {
       q: "A recipe for a batch of pancakes that serves 4 people uses 1 cups of milk. How many cups of milk are needed to serve 16 people, keeping the same ratio?",
@@ -9919,7 +10889,123 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "Drain A's rate is 1/6 of the task per hour and drain B's is 1/3 per hour. Combined, that's 1/6 + 1/3 = 1/2 of the task per hour, so together they take 2 hours.",
-    },  ],
+    },
+    {
+      q: "A recipe for a pot of soup that serves 3 people uses 2 cups of rice. How many cups of rice are needed to serve 6 people, keeping the same ratio?",
+      answer: "4",
+      explain: "The recipe uses 2 cups of rice per 3 people, a rate of 2/3. For 6 people (2 times as many), that's 2 × 2 = 4 cups of rice.",
+    },
+    {
+      q: "A car travels at a constant speed of 24 miles per hour for 2 hours. How many miles does it travel?",
+      answer: "48",
+      explain: "distance = rate × time = 24 × 2 = 48 miles.",
+    },
+    {
+      q: "Given that 1 pound = 16 ounces, how many ounces are in 10 pounds?",
+      answer: "160",
+      explain: "10 pounds × 16 ounces per pound = 160 ounces.",
+    },
+    {
+      q: "On a map, 1 inch represents 16 miles. If two towns are 2 inches apart on the map, how many miles apart are they in reality?",
+      answer: "32",
+      explain: "The scale is 16 miles per 1 map inch. 2 map inches is 2 times 1, so the real distance is 16 × 2 = 32 miles.",
+    },
+    {
+      q: "Working alone, printer A can print a batch of documents in 8 hours, and printer B can print a batch of documents in 8 hours. Working together at their individual rates, how many hours would it take them to print a batch of documents?",
+      answer: "4",
+      explain: "Printer A's rate is 1/8 of the task per hour and printer B's is 1/8 per hour. Combined, that's 1/8 + 1/8 = 1/4 of the task per hour, so together they take 4 hours.",
+    },
+    {
+      q: "A recipe for a tray of brownies that serves 3 people uses 3 ounces of chocolate. How many ounces of chocolate are needed to serve 6 people, keeping the same ratio?",
+      answer: "6",
+      explain: "The recipe uses 3 ounces of chocolate per 3 people, a rate of 3/3. For 6 people (2 times as many), that's 3 × 2 = 6 ounces of chocolate.",
+    },
+    {
+      q: "A car travels at a constant speed of 26 miles per hour. How many hours does it take to travel 52 miles?",
+      answer: "2",
+      explain: "time = distance / rate = 52 / 26 = 2 hours.",
+    },
+    {
+      q: "On a map, 1 inch represents 18 miles. If two towns are 3 inches apart on the map, how many miles apart are they in reality?",
+      answer: "54",
+      explain: "The scale is 18 miles per 1 map inch. 3 map inches is 3 times 1, so the real distance is 18 × 3 = 54 miles.",
+    },
+    {
+      q: "Working alone, pipe A can fill a tank in 8 hours, and pipe B can fill a tank in 8 hours. Working together at their individual rates, how many hours would it take them to fill a tank?",
+      answer: "4",
+      explain: "Pipe A's rate is 1/8 of the task per hour and pipe B's is 1/8 per hour. Combined, that's 1/8 + 1/8 = 1/4 of the task per hour, so together they take 4 hours.",
+    },
+    {
+      q: "A recipe for a pitcher of lemonade that serves 3 people uses 2 cups of sugar. How many cups of sugar are needed to serve 6 people, keeping the same ratio?",
+      answer: "4",
+      explain: "The recipe uses 2 cups of sugar per 3 people, a rate of 2/3. For 6 people (2 times as many), that's 2 × 2 = 4 cups of sugar.",
+    },
+    {
+      q: "A car travels at a constant speed of 19 miles per hour for 2 hours. How many miles does it travel?",
+      answer: "38",
+      explain: "distance = rate × time = 19 × 2 = 38 miles.",
+    },
+    {
+      q: "On a map, 1 inch represents 14 miles. If two towns are 4 inches apart on the map, how many miles apart are they in reality?",
+      answer: "56",
+      explain: "The scale is 14 miles per 1 map inch. 4 map inches is 4 times 1, so the real distance is 14 × 4 = 56 miles.",
+    },
+    {
+      q: "Working alone, pipe A can fill a tank in 4 hours, and pipe B can fill a tank in 4 hours. Working together at their individual rates, how many hours would it take them to fill a tank?",
+      answer: "2",
+      explain: "Pipe A's rate is 1/4 of the task per hour and pipe B's is 1/4 per hour. Combined, that's 1/4 + 1/4 = 1/2 of the task per hour, so together they take 2 hours.",
+    },
+    {
+      q: "A recipe for a pan of cornbread that serves 4 people uses 3 tablespoons of butter. How many tablespoons of butter are needed to serve 12 people, keeping the same ratio?",
+      answer: "9",
+      explain: "The recipe uses 3 tablespoons of butter per 4 people, a rate of 3/4. For 12 people (3 times as many), that's 3 × 3 = 9 tablespoons of butter.",
+    },
+    {
+      q: "A car travels at a constant speed of 27 miles per hour. How many hours does it take to travel 81 miles?",
+      answer: "3",
+      explain: "time = distance / rate = 81 / 27 = 3 hours.",
+    },
+    {
+      q: "Given that 1 yard = 3 feet, how many feet are in 9 yards?",
+      answer: "27",
+      explain: "9 yards × 3 feet per yard = 27 feet.",
+    },
+    {
+      q: "On a map, 2 inches represents 25 miles. If two towns are 4 inches apart on the map, how many miles apart are they in reality?",
+      answer: "50",
+      explain: "The scale is 25 miles per 2 map inches. 4 map inches is 2 times 2, so the real distance is 25 × 2 = 50 miles.",
+    },
+    {
+      q: "Working alone, printer A can print a batch of documents in 4 hours, and printer B can print a batch of documents in 4 hours. Working together at their individual rates, how many hours would it take them to print a batch of documents?",
+      answer: "2",
+      explain: "Printer A's rate is 1/4 of the task per hour and printer B's is 1/4 per hour. Combined, that's 1/4 + 1/4 = 1/2 of the task per hour, so together they take 2 hours.",
+    },
+    {
+      q: "A recipe for a pitcher of lemonade that serves 2 people uses 2 cups of sugar. How many cups of sugar are needed to serve 6 people, keeping the same ratio?",
+      answer: "6",
+      explain: "The recipe uses 2 cups of sugar per 2 people, a rate of 2/2. For 6 people (3 times as many), that's 2 × 3 = 6 cups of sugar.",
+    },
+    {
+      q: "A car travels at a constant speed of 18 miles per hour for 4 hours. How many miles does it travel?",
+      answer: "72",
+      explain: "distance = rate × time = 18 × 4 = 72 miles.",
+    },
+    {
+      q: "Given that 1 dozen = 12 items, how many items are in 9 dozens?",
+      answer: "108",
+      explain: "9 dozens × 12 items per dozen = 108 items.",
+    },
+    {
+      q: "On a map, 1 inch represents 24 miles. If two towns are 4 inches apart on the map, how many miles apart are they in reality?",
+      answer: "96",
+      explain: "The scale is 24 miles per 1 map inch. 4 map inches is 4 times 1, so the real distance is 24 × 4 = 96 miles.",
+    },
+    {
+      q: "Working alone, printer A can print a batch of documents in 4 hours, and printer B can print a batch of documents in 12 hours. Working together at their individual rates, how many hours would it take them to print a batch of documents?",
+      answer: "3",
+      explain: "Printer A's rate is 1/4 of the task per hour and printer B's is 1/12 per hour. Combined, that's 1/4 + 1/12 = 1/3 of the task per hour, so together they take 3 hours.",
+    },
+  ],
   "psatmath-percentages": [
     {
       q: "What is 4% of 75?",
@@ -11020,7 +12106,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "After the first change: 30000 × 1.16 = 34800. After the second change: 34800 × 1.33 = 46284.",
-    },  ],
+    },
+    {
+      q: "What is 2% of 100?",
+      answer: "2",
+      explain: "2% of 100 = (2/100) × 100 = 2.",
+    },
+    {
+      q: "A value changed from 100 to 127. By what percent did it increase? (Enter the number only, without a percent sign.)",
+      answer: "27",
+      explain: "Percent change = |127 - 100| / 100 × 100 = 27 / 100 × 100 = 27%.",
+    },
+    {
+      q: "After a 6% decrease, a value became 470. What was the original value?",
+      answer: "500",
+      explain: "If the original value is x, then x × 0.94 = 470, so x = 470 / 0.94 = 500.",
+    },
+    {
+      q: "A value of 30000 is first decreased by 24%, and the result is then increased by 14%. What is the final value?",
+      answer: "25992",
+      explain: "After the first change: 30000 × 0.76 = 22800. After the second change: 22800 × 1.14 = 25992.",
+    },
+    {
+      q: "A student estimated a quantity to be 315, but the actual value turned out to be 300. What was the percent error of the estimate? (Enter the number only, without a percent sign.)",
+      answer: "5",
+      explain: "Percent error = |estimate - actual| / actual × 100 = |315 - 300| / 300 × 100 = 15 / 300 × 100 = 5%.",
+    },
+    {
+      q: "A store prices a video game console at $100 and then discounts it by 5%. What is the new price, in dollars?",
+      answer: "95",
+      explain: "New price = 100 × (1 - 5/100) = 100 × 0.95 = $95.",
+    },
+    {
+      q: "What is 15% of 140?",
+      answer: "21",
+      explain: "15% of 140 = (15/100) × 140 = 21.",
+    },
+    {
+      q: "A value changed from 200 to 182. By what percent did it decrease? (Enter the number only, without a percent sign.)",
+      answer: "9",
+      explain: "Percent change = |182 - 200| / 200 × 100 = 18 / 200 × 100 = 9%.",
+    },
+    {
+      q: "After a 20% decrease, a value became 320. What was the original value?",
+      answer: "400",
+      explain: "If the original value is x, then x × 0.8 = 320, so x = 320 / 0.8 = 400.",
+    },
+    {
+      q: "A value of 30000 is first increased by 19%, and the result is then increased by 4%. What is the final value?",
+      answer: "37128",
+      explain: "After the first change: 30000 × 1.19 = 35700. After the second change: 35700 × 1.04 = 37128.",
+    },
+    {
+      q: "A student estimated a quantity to be 339, but the actual value turned out to be 300. What was the percent error of the estimate? (Enter the number only, without a percent sign.)",
+      answer: "13",
+      explain: "Percent error = |estimate - actual| / actual × 100 = |339 - 300| / 300 × 100 = 39 / 300 × 100 = 13%.",
+    },
+    {
+      q: "A store prices a video game console at $300 and then discounts it by 10%. What is the new price, in dollars?",
+      answer: "270",
+      explain: "New price = 300 × (1 - 10/100) = 300 × 0.9 = $270.",
+    },
+    {
+      q: "What is 60% of 20?",
+      answer: "12",
+      explain: "60% of 20 = (60/100) × 20 = 12.",
+    },
+    {
+      q: "A value changed from 200 to 222. By what percent did it increase? (Enter the number only, without a percent sign.)",
+      answer: "11",
+      explain: "Percent change = |222 - 200| / 200 × 100 = 22 / 200 × 100 = 11%.",
+    },
+    {
+      q: "After a 17% increase, a value became 117. What was the original value?",
+      answer: "100",
+      explain: "If the original value is x, then x × 1.17 = 117, so x = 117 / 1.17 = 100.",
+    },
+    {
+      q: "A value of 10000 is first increased by 12%, and the result is then increased by 23%. What is the final value?",
+      answer: "13776",
+      explain: "After the first change: 10000 × 1.12 = 11200. After the second change: 11200 × 1.23 = 13776.",
+    },
+    {
+      q: "A student estimated a quantity to be 570, but the actual value turned out to be 500. What was the percent error of the estimate? (Enter the number only, without a percent sign.)",
+      answer: "14",
+      explain: "Percent error = |estimate - actual| / actual × 100 = |570 - 500| / 500 × 100 = 70 / 500 × 100 = 14%.",
+    },
+    {
+      q: "A store prices a video game console at $500 and then discounts it by 15%. What is the new price, in dollars?",
+      answer: "425",
+      explain: "New price = 500 × (1 - 15/100) = 500 × 0.85 = $425.",
+    },
+    {
+      q: "What is 8% of 25?",
+      answer: "2",
+      explain: "8% of 25 = (8/100) × 25 = 2.",
+    },
+    {
+      q: "A value changed from 300 to 378. By what percent did it increase? (Enter the number only, without a percent sign.)",
+      answer: "26",
+      explain: "Percent change = |378 - 300| / 300 × 100 = 78 / 300 × 100 = 26%.",
+    },
+    {
+      q: "After a 23% increase, a value became 123. What was the original value?",
+      answer: "100",
+      explain: "If the original value is x, then x × 1.23 = 123, so x = 123 / 1.23 = 100.",
+    },
+    {
+      q: "A value of 20000 is first increased by 15%, and the result is then increased by 21%. What is the final value?",
+      answer: "27830",
+      explain: "After the first change: 20000 × 1.15 = 23000. After the second change: 23000 × 1.21 = 27830.",
+    },
+    {
+      q: "A student estimated a quantity to be 226, but the actual value turned out to be 200. What was the percent error of the estimate? (Enter the number only, without a percent sign.)",
+      answer: "13",
+      explain: "Percent error = |estimate - actual| / actual × 100 = |226 - 200| / 200 × 100 = 26 / 200 × 100 = 13%.",
+    },
+    {
+      q: "A store prices a video game console at $400 and then discounts it by 20%. What is the new price, in dollars?",
+      answer: "320",
+      explain: "New price = 400 × (1 - 20/100) = 400 × 0.8 = $320.",
+    },
+    {
+      q: "What is 30% of 60?",
+      answer: "18",
+      explain: "30% of 60 = (30/100) × 60 = 18.",
+    },
+  ],
   "psatmath-onevardata": [
     {
       q: "What is the mean of the following data set? 21, 24, 24, 24, 17",
@@ -12121,7 +13333,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "Range = maximum - minimum = 50 - 3 = 47.",
-    },  ],
+    },
+    {
+      q: "What is the mean of the following data set? 21, 19, 19, 22, 29",
+      answer: "22",
+      explain: "Mean = sum / count = 110 / 5 = 22.",
+    },
+    {
+      q: "What is the median of the following data set? 3, 9, 27, 41, 49, 31, 41",
+      answer: "31",
+      explain: "Sorted, the data set is 3, 9, 27, 31, 41, 41, 49. With 7 values, the median is the middle (4th) value: 31.",
+    },
+    {
+      q: "What is the mode of the following data set? 17, 17, 15, 2, 5, 14, 17",
+      answer: "17",
+      explain: "17 appears three times, more often than any other value in the data set, so it is the mode.",
+    },
+    {
+      q: "What is the range of the following data set? 47, 6, 20, 11, 23",
+      answer: "41",
+      explain: "Range = maximum - minimum = 47 - 6 = 41.",
+    },
+    {
+      q: "The mean of 4 numbers is 14. 3 of the numbers are 20, 11, 1, and one number is unknown. What is the missing number?",
+      answer: "24",
+      explain: "The sum of all 4 numbers is 14 × 4 = 56. The known numbers sum to 32, so the missing number is 56 - 32 = 24.",
+    },
+    {
+      q: "What is the mean of the following data set? 12, 6, 16, 10, 9, 8, 23",
+      answer: "12",
+      explain: "Mean = sum / count = 84 / 7 = 12.",
+    },
+    {
+      q: "What is the median of the following data set? 44, 12, 26, 3, 31",
+      answer: "26",
+      explain: "Sorted, the data set is 3, 12, 26, 31, 44. With 5 values, the median is the middle (3rd) value: 26.",
+    },
+    {
+      q: "What is the mode of the following data set? 13, 23, 10, 12, 12, 12, 19",
+      answer: "12",
+      explain: "12 appears three times, more often than any other value in the data set, so it is the mode.",
+    },
+    {
+      q: "What is the range of the following data set? 14, 22, 6, 31, 8",
+      answer: "25",
+      explain: "Range = maximum - minimum = 31 - 6 = 25.",
+    },
+    {
+      q: "The mean of 5 numbers is 18. 4 of the numbers are 26, 24, 7, 3, and one number is unknown. What is the missing number?",
+      answer: "30",
+      explain: "The sum of all 5 numbers is 18 × 5 = 90. The known numbers sum to 60, so the missing number is 90 - 60 = 30.",
+    },
+    {
+      q: "What is the mean of the following data set? 37, 33, 40, 37, 37, 32",
+      answer: "36",
+      explain: "Mean = sum / count = 216 / 6 = 36.",
+    },
+    {
+      q: "What is the median of the following data set? 1, 46, 30, 26, 27, 11, 28, 50, 18",
+      answer: "27",
+      explain: "Sorted, the data set is 1, 11, 18, 26, 27, 28, 30, 46, 50. With 9 values, the median is the middle (5th) value: 27.",
+    },
+    {
+      q: "What is the mode of the following data set? 17, 3, 17, 22, 17, 9, 11",
+      answer: "17",
+      explain: "17 appears three times, more often than any other value in the data set, so it is the mode.",
+    },
+    {
+      q: "What is the range of the following data set? 19, 2, 23, 43, 2, 27, 42",
+      answer: "41",
+      explain: "Range = maximum - minimum = 43 - 2 = 41.",
+    },
+    {
+      q: "The mean of 5 numbers is 21. 4 of the numbers are 7, 15, 23, 15, and one number is unknown. What is the missing number?",
+      answer: "45",
+      explain: "The sum of all 5 numbers is 21 × 5 = 105. The known numbers sum to 60, so the missing number is 105 - 60 = 45.",
+    },
+    {
+      q: "What is the mean of the following data set? 25, 19, 23, 19, 34",
+      answer: "24",
+      explain: "Mean = sum / count = 120 / 5 = 24.",
+    },
+    {
+      q: "What is the median of the following data set? 15, 39, 17, 50, 7, 5, 20",
+      answer: "17",
+      explain: "Sorted, the data set is 5, 7, 15, 17, 20, 39, 50. With 7 values, the median is the middle (4th) value: 17.",
+    },
+    {
+      q: "What is the mode of the following data set? 10, 1, 3, 14, 14, 21, 14",
+      answer: "14",
+      explain: "14 appears three times, more often than any other value in the data set, so it is the mode.",
+    },
+    {
+      q: "What is the range of the following data set? 43, 41, 11, 26, 9",
+      answer: "34",
+      explain: "Range = maximum - minimum = 43 - 9 = 34.",
+    },
+    {
+      q: "The mean of 4 numbers is 12. 3 of the numbers are 15, 2, 16, and one number is unknown. What is the missing number?",
+      answer: "15",
+      explain: "The sum of all 4 numbers is 12 × 4 = 48. The known numbers sum to 33, so the missing number is 48 - 33 = 15.",
+    },
+    {
+      q: "What is the mean of the following data set? 9, 16, 8, 8, 19, 16, 15",
+      answer: "13",
+      explain: "Mean = sum / count = 91 / 7 = 13.",
+    },
+    {
+      q: "What is the median of the following data set? 14, 11, 3, 20, 6",
+      answer: "11",
+      explain: "Sorted, the data set is 3, 6, 11, 14, 20. With 5 values, the median is the middle (3rd) value: 11.",
+    },
+    {
+      q: "What is the mode of the following data set? 17, 3, 21, 1, 17, 6, 17",
+      answer: "17",
+      explain: "17 appears three times, more often than any other value in the data set, so it is the mode.",
+    },
+    {
+      q: "What is the range of the following data set? 24, 31, 43, 5, 29",
+      answer: "38",
+      explain: "Range = maximum - minimum = 43 - 5 = 38.",
+    },
+    {
+      q: "The mean of 5 numbers is 13. 4 of the numbers are 9, 6, 10, 2, and one number is unknown. What is the missing number?",
+      answer: "38",
+      explain: "The sum of all 5 numbers is 13 × 5 = 65. The known numbers sum to 27, so the missing number is 65 - 27 = 38.",
+    },
+  ],
   "psatmath-twovardata": [
     {
       q: "A line of best fit relating the number of hours of sleep (x) and a student's alertness score (y) is given by y = 3x + 94. What does the slope of this line represent?",
@@ -13222,7 +14560,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "45 = 3x + 18 → 3x = 27 → x = 9.",
-    },  ],
+    },
+    {
+      q: "A line of best fit relating the number of hours studied (x) and the exam score (y) is given by y = -3x + 28. What is the slope of this line of best fit?",
+      answer: "-3",
+      explain: "In y = mx + b form, the coefficient of x is the slope. Here m = -3, so the slope is -3.",
+    },
+    {
+      q: "A line of best fit relating the outdoor temperature (°F) (x) and the number of ice cream cones sold (y) is given by y = 6x + 22. According to this model, what is the predicted value of y when x = 13?",
+      answer: "100",
+      explain: "y = 6(13) + 22 = 78 + 22 = 100.",
+    },
+    {
+      q: "A line of best fit relating the amount spent on advertising ($) (x) and the number of units sold (y) is given by y = x + 11. What is the y-intercept of this line?",
+      answer: "11",
+      explain: "In y = mx + b form, the constant term is the y-intercept. Here b = 11, so the y-intercept is 11.",
+    },
+    {
+      q: "A line of best fit relating the number of employees (x) and the factory's weekly output (y) is given by y = 5x + 37. According to this model, for what value of x does y = 42?",
+      answer: "1",
+      explain: "42 = 5x + 37 → 5x = 5 → x = 1.",
+    },
+    {
+      q: "A line of best fit relating the age of a car (years) (x) and the car's resale value ($) (y) is given by y = -7x + 26. According to this model, by how many dollars does the predicted value of y change when x increases by 4 years? (Enter a negative number if y decreases.)",
+      answer: "-28",
+      explain: "Each one-unit increase in x changes y by the slope, m = -7. Over 4 units, the total change is -7 × 4 = -28.",
+    },
+    {
+      q: "A line of best fit relating the number of training sessions (x) and the athlete's race time (seconds) (y) is given by y = -8x + 68. What is the slope of this line of best fit?",
+      answer: "-8",
+      explain: "In y = mx + b form, the coefficient of x is the slope. Here m = -8, so the slope is -8.",
+    },
+    {
+      q: "A line of best fit relating a plant's daily sunlight exposure (hours) (x) and the plant's height (cm) (y) is given by y = -x + 34. According to this model, what is the predicted value of y when x = 12?",
+      answer: "22",
+      explain: "y = -(12) + 34 = -12 + 34 = 22.",
+    },
+    {
+      q: "A line of best fit relating the number of customer service calls received (x) and the number of staff on duty (y) is given by y = x + 27. What is the y-intercept of this line?",
+      answer: "27",
+      explain: "In y = mx + b form, the constant term is the y-intercept. Here b = 27, so the y-intercept is 27.",
+    },
+    {
+      q: "A line of best fit relating a city's population (thousands) (x) and the number of registered vehicles (y) is given by y = 5x + 13. According to this model, for what value of x does y = 28?",
+      answer: "3",
+      explain: "28 = 5x + 13 → 5x = 15 → x = 3.",
+    },
+    {
+      q: "A line of best fit relating the number of weeks since a product launched (x) and the product's weekly sales (y) is given by y = -4x + 18. According to this model, by how many sales does the predicted value of y change when x increases by 2 weeks? (Enter a negative number if y decreases.)",
+      answer: "-8",
+      explain: "Each one-unit increase in x changes y by the slope, m = -4. Over 2 units, the total change is -4 × 2 = -8.",
+    },
+    {
+      q: "A line of best fit relating the number of hours studied (x) and the exam score (y) is given by y = 9x + 22. What is the slope of this line of best fit?",
+      answer: "9",
+      explain: "In y = mx + b form, the coefficient of x is the slope. Here m = 9, so the slope is 9.",
+    },
+    {
+      q: "A line of best fit relating the outdoor temperature (°F) (x) and the number of ice cream cones sold (y) is given by y = -8x + 7. According to this model, what is the predicted value of y when x = 9?",
+      answer: "-65",
+      explain: "y = -8(9) + 7 = -72 + 7 = -65.",
+    },
+    {
+      q: "A line of best fit relating the amount spent on advertising ($) (x) and the number of units sold (y) is given by y = -8x + 13. What is the y-intercept of this line?",
+      answer: "13",
+      explain: "In y = mx + b form, the constant term is the y-intercept. Here b = 13, so the y-intercept is 13.",
+    },
+    {
+      q: "A line of best fit relating the number of employees (x) and the factory's weekly output (y) is given by y = 8x + 12. According to this model, for what value of x does y = 28?",
+      answer: "2",
+      explain: "28 = 8x + 12 → 8x = 16 → x = 2.",
+    },
+    {
+      q: "A line of best fit relating the age of a car (years) (x) and the car's resale value ($) (y) is given by y = -4x + 54. According to this model, by how many dollars does the predicted value of y change when x increases by 2 years? (Enter a negative number if y decreases.)",
+      answer: "-8",
+      explain: "Each one-unit increase in x changes y by the slope, m = -4. Over 2 units, the total change is -4 × 2 = -8.",
+    },
+    {
+      q: "A line of best fit relating the number of training sessions (x) and the athlete's race time (seconds) (y) is given by y = -6x + 44. What is the slope of this line of best fit?",
+      answer: "-6",
+      explain: "In y = mx + b form, the coefficient of x is the slope. Here m = -6, so the slope is -6.",
+    },
+    {
+      q: "A line of best fit relating a plant's daily sunlight exposure (hours) (x) and the plant's height (cm) (y) is given by y = -3x + 52. According to this model, what is the predicted value of y when x = 2?",
+      answer: "46",
+      explain: "y = -3(2) + 52 = -6 + 52 = 46.",
+    },
+    {
+      q: "A line of best fit relating the number of customer service calls received (x) and the number of staff on duty (y) is given by y = -3x + 45. What is the y-intercept of this line?",
+      answer: "45",
+      explain: "In y = mx + b form, the constant term is the y-intercept. Here b = 45, so the y-intercept is 45.",
+    },
+    {
+      q: "A line of best fit relating a city's population (thousands) (x) and the number of registered vehicles (y) is given by y = 8x + 27. According to this model, for what value of x does y = 51?",
+      answer: "3",
+      explain: "51 = 8x + 27 → 8x = 24 → x = 3.",
+    },
+    {
+      q: "A line of best fit relating the number of weeks since a product launched (x) and the product's weekly sales (y) is given by y = -3x + 54. According to this model, by how many sales does the predicted value of y change when x increases by 3 weeks? (Enter a negative number if y decreases.)",
+      answer: "-9",
+      explain: "Each one-unit increase in x changes y by the slope, m = -3. Over 3 units, the total change is -3 × 3 = -9.",
+    },
+    {
+      q: "A line of best fit relating the number of hours studied (x) and the exam score (y) is given by y = 9x + 91. What is the slope of this line of best fit?",
+      answer: "9",
+      explain: "In y = mx + b form, the coefficient of x is the slope. Here m = 9, so the slope is 9.",
+    },
+    {
+      q: "A line of best fit relating the outdoor temperature (°F) (x) and the number of ice cream cones sold (y) is given by y = -7x + 20. According to this model, what is the predicted value of y when x = 7?",
+      answer: "-29",
+      explain: "y = -7(7) + 20 = -49 + 20 = -29.",
+    },
+    {
+      q: "A line of best fit relating the amount spent on advertising ($) (x) and the number of units sold (y) is given by y = 4x + 13. What is the y-intercept of this line?",
+      answer: "13",
+      explain: "In y = mx + b form, the constant term is the y-intercept. Here b = 13, so the y-intercept is 13.",
+    },
+    {
+      q: "A line of best fit relating the number of employees (x) and the factory's weekly output (y) is given by y = 5x + 15. According to this model, for what value of x does y = 65?",
+      answer: "10",
+      explain: "65 = 5x + 15 → 5x = 50 → x = 10.",
+    },
+    {
+      q: "A line of best fit relating the age of a car (years) (x) and the car's resale value ($) (y) is given by y = 7x + 75. According to this model, by how many dollars does the predicted value of y change when x increases by 4 years? (Enter a negative number if y decreases.)",
+      answer: "28",
+      explain: "Each one-unit increase in x changes y by the slope, m = 7. Over 4 units, the total change is 7 × 4 = 28.",
+    },
+  ],
   "psatmath-probability": [
     {
       q: "A bag contains 1 red marbles, 3 blue marbles, 1 green marbles. If one marble is drawn at random, what is the probability that it is green?",
@@ -14323,7 +15787,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "3 of the 5 committee members are women, so P = 3/5.",
-    },  ],
+    },
+    {
+      q: "A jar contains 3 purple marbles, 4 orange marbles, 3 teal marbles. If one marble is drawn at random, enter the probability that it is purple as a fraction.",
+      answer: "3/10",
+      explain: "P(purple) = purple marbles / total marbles = 3/10 = 3/10.",
+    },
+    {
+      q: "Event X and Event Y are independent. The probability that Event X occurs is 2/3, and the probability that Event Y occurs is 1/2. Enter the probability that both Event X and Event Y occur, as a fraction.",
+      answer: "1/3",
+      explain: "For independent events, P(X and Y) = P(X) × P(Y) = 2/3 × 1/2 = 4/12 = 1/3.",
+    },
+    {
+      q: "Among members surveyed, 7 attend the weekly meeting and read the newsletter, while 18 skip the weekly meeting and read the newsletter. In total, 25 members attend the weekly meeting, and 32 skip the weekly meeting. If a randomly selected person who attends the weekly meeting is chosen, enter the probability that they also read the newsletter, as a fraction.",
+      answer: "7/25",
+      explain: "Among the 25 members who attend the weekly meeting, 7 also read the newsletter. So P(read the newsletter | attend the weekly meeting) = 7/25 = 7/25.",
+    },
+    {
+      q: "The probability that a certain event occurs is 1/4. Enter the probability that the event does NOT occur, as a fraction.",
+      answer: "3/4",
+      explain: "The probability an event does not occur is 1 minus the probability it does: 1 - 1/4 = 3/4.",
+    },
+    {
+      q: "Two fair six-sided dice are rolled. Enter the probability that the sum of the two numbers rolled is 9, as a fraction.",
+      answer: "1/9",
+      explain: "There are 4 outcomes (out of 36 total equally likely outcomes) whose two numbers sum to 9, so P = 4/36 = 1/9.",
+    },
+    {
+      q: "A jar contains 8 indigo marbles, 7 amber marbles, 4 jade marbles. If one marble is drawn at random, enter the probability that it is indigo as a fraction.",
+      answer: "8/19",
+      explain: "P(indigo) = indigo marbles / total marbles = 8/19 = 8/19.",
+    },
+    {
+      q: "Event X and Event Y are independent. The probability that Event X occurs is 1/3, and the probability that Event Y occurs is 1/2. Enter the probability that both Event X and Event Y occur, as a fraction.",
+      answer: "1/6",
+      explain: "For independent events, P(X and Y) = P(X) × P(Y) = 1/3 × 1/2 = 2/12 = 1/6.",
+    },
+    {
+      q: "Among commuters surveyed, 17 commute by bike and recycle regularly, while 16 commute by car and recycle regularly. In total, 33 commuters commute by bike, and 16 commute by car. If a randomly selected person who commutes by bike is chosen, enter the probability that they also recycle regularly, as a fraction.",
+      answer: "17/33",
+      explain: "Among the 33 commuters who commute by bike, 17 also recycle regularly. So P(recycle regularly | commute by bike) = 17/33 = 17/33.",
+    },
+    {
+      q: "The probability that a certain event occurs is 2/3. Enter the probability that the event does NOT occur, as a fraction.",
+      answer: "1/3",
+      explain: "The probability an event does not occur is 1 minus the probability it does: 1 - 2/3 = 1/3.",
+    },
+    {
+      q: "Two fair six-sided dice are rolled. Enter the probability that the sum of the two numbers rolled is 10, as a fraction.",
+      answer: "1/12",
+      explain: "There are 3 outcomes (out of 36 total equally likely outcomes) whose two numbers sum to 10, so P = 3/36 = 1/12.",
+    },
+    {
+      q: "A jar contains 6 crimson marbles, 3 navy marbles, 3 gold marbles, 4 silver marbles. If one marble is drawn at random, enter the probability that it is silver as a fraction.",
+      answer: "1/4",
+      explain: "P(silver) = silver marbles / total marbles = 4/16 = 1/4.",
+    },
+    {
+      q: "Event X and Event Y are independent. The probability that Event X occurs is 1/2, and the probability that Event Y occurs is 1/3. Enter the probability that both Event X and Event Y occur, as a fraction.",
+      answer: "1/6",
+      explain: "For independent events, P(X and Y) = P(X) × P(Y) = 1/2 × 1/3 = 2/12 = 1/6.",
+    },
+    {
+      q: "Among adults surveyed, 9 live in an urban area and own a smartphone, while 12 live in a rural area and own a smartphone. In total, 21 adults live in an urban area, and 19 live in a rural area. If a randomly selected person who lives in an urban area is chosen, enter the probability that they also own a smartphone, as a fraction.",
+      answer: "3/7",
+      explain: "Among the 21 adults who live in an urban area, 9 also own a smartphone. So P(own a smartphone | live in an urban area) = 9/21 = 3/7.",
+    },
+    {
+      q: "The probability that a certain event occurs is 2/5. Enter the probability that the event does NOT occur, as a fraction.",
+      answer: "3/5",
+      explain: "The probability an event does not occur is 1 minus the probability it does: 1 - 2/5 = 3/5.",
+    },
+    {
+      q: "Two fair six-sided dice are rolled. Enter the probability that the sum of the two numbers rolled is 3, as a fraction.",
+      answer: "1/18",
+      explain: "There are 2 outcomes (out of 36 total equally likely outcomes) whose two numbers sum to 3, so P = 2/36 = 1/18.",
+    },
+    {
+      q: "A jar contains 1 purple marbles, 8 orange marbles, 2 teal marbles. If one marble is drawn at random, enter the probability that it is teal as a fraction.",
+      answer: "2/11",
+      explain: "P(teal) = teal marbles / total marbles = 2/11 = 2/11.",
+    },
+    {
+      q: "Event X and Event Y are independent. The probability that Event X occurs is 1/2, and the probability that Event Y occurs is 1/4. Enter the probability that both Event X and Event Y occur, as a fraction.",
+      answer: "1/8",
+      explain: "For independent events, P(X and Y) = P(X) × P(Y) = 1/2 × 1/4 = 2/16 = 1/8.",
+    },
+    {
+      q: "Among members surveyed, 7 attend the weekly meeting and read the newsletter, while 9 skip the weekly meeting and read the newsletter. In total, 16 members attend the weekly meeting, and 29 skip the weekly meeting. If a randomly selected person who attends the weekly meeting is chosen, enter the probability that they also read the newsletter, as a fraction.",
+      answer: "7/16",
+      explain: "Among the 16 members who attend the weekly meeting, 7 also read the newsletter. So P(read the newsletter | attend the weekly meeting) = 7/16 = 7/16.",
+    },
+    {
+      q: "The probability that a certain event occurs is 1/3. Enter the probability that the event does NOT occur, as a fraction.",
+      answer: "2/3",
+      explain: "The probability an event does not occur is 1 minus the probability it does: 1 - 1/3 = 2/3.",
+    },
+    {
+      q: "Two fair six-sided dice are rolled. Enter the probability that the sum of the two numbers rolled is 6, as a fraction.",
+      answer: "5/36",
+      explain: "There are 5 outcomes (out of 36 total equally likely outcomes) whose two numbers sum to 6, so P = 5/36 = 5/36.",
+    },
+    {
+      q: "A jar contains 2 indigo marbles, 3 amber marbles, 2 jade marbles. If one marble is drawn at random, enter the probability that it is amber as a fraction.",
+      answer: "3/7",
+      explain: "P(amber) = amber marbles / total marbles = 3/7 = 3/7.",
+    },
+    {
+      q: "Event X and Event Y are independent. The probability that Event X occurs is 1/2, and the probability that Event Y occurs is 1/2. Enter the probability that both Event X and Event Y occur, as a fraction.",
+      answer: "1/4",
+      explain: "For independent events, P(X and Y) = P(X) × P(Y) = 1/2 × 1/2 = 2/8 = 1/4.",
+    },
+    {
+      q: "Among commuters surveyed, 17 commute by bike and recycle regularly, while 12 commute by car and recycle regularly. In total, 29 commuters commute by bike, and 26 commute by car. If a randomly selected person who commutes by bike is chosen, enter the probability that they also recycle regularly, as a fraction.",
+      answer: "17/29",
+      explain: "Among the 29 commuters who commute by bike, 17 also recycle regularly. So P(recycle regularly | commute by bike) = 17/29 = 17/29.",
+    },
+    {
+      q: "The probability that a certain event occurs is 4/5. Enter the probability that the event does NOT occur, as a fraction.",
+      answer: "1/5",
+      explain: "The probability an event does not occur is 1 minus the probability it does: 1 - 4/5 = 1/5.",
+    },
+    {
+      q: "Two fair six-sided dice are rolled. Enter the probability that the sum of the two numbers rolled is 11, as a fraction.",
+      answer: "1/18",
+      explain: "There are 2 outcomes (out of 36 total equally likely outcomes) whose two numbers sum to 11, so P = 2/36 = 1/18.",
+    },
+  ],
   "psatmath-inference": [
     {
       q: "A survey of students found that 64% support adding a study hall period, with a margin of error of 2 percentage points. Based on this survey, which of the following is the most plausible range for the true percentage of all students who support adding a study hall period?",
@@ -15424,7 +17014,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "A smaller margin of error means a more precise estimate. Study A's margin of error (4 percentage points) is smaller than Study B's (7 percentage points), so Study A's estimate is more precise.",
-    },  ],
+    },
+    {
+      q: "A survey estimates that between 43% and 45% of all voters support a new transit initiative. Enter the survey's point estimate, as a percentage (do not include the % sign).",
+      answer: "44",
+      explain: "The point estimate is the midpoint of the interval: (43 + 45) / 2 = 44%.",
+    },
+    {
+      q: "A survey estimates that between 28% and 36% of all residents favor extending the library's weekend hours. Enter the survey's margin of error, in percentage points (do not include units).",
+      answer: "4",
+      explain: "The margin of error is half the width of the interval: (36 - 28) / 2 = 4 percentage points.",
+    },
+    {
+      q: "A survey of customers found that 27% prefer the redesigned mobile app, with a margin of error of 4 percentage points. Enter the upper bound of the plausible range for the true percentage of all customers who prefer the redesigned mobile app, as a percentage (do not include the % sign).",
+      answer: "31",
+      explain: "The upper bound is the point estimate plus the margin of error: 27% + 4% = 31%.",
+    },
+    {
+      q: "Two independent surveys asked the same question of a random sample from the same population: one surveyed 61 people, and the other surveyed 183 people. Enter how many more people were surveyed in the larger study than in the smaller study.",
+      answer: "122",
+      explain: "The larger study surveyed 183 people and the smaller study surveyed 61 people, so the difference is 183 - 61 = 122 people.",
+    },
+    {
+      q: "Study A surveyed 174 students and reported a margin of error of 1 percentage points. Study B surveyed 150 students and reported a margin of error of 2 percentage points. Enter by how many percentage points Study A's margin of error is smaller than Study B's.",
+      answer: "1",
+      explain: "Study A's margin of error is 1 percentage points and Study B's is 2 percentage points, so the difference is 2 - 1 = 1 percentage points.",
+    },
+    {
+      q: "A survey estimates that between 19% and 25% of all voters support a new transit initiative. Enter the survey's point estimate, as a percentage (do not include the % sign).",
+      answer: "22",
+      explain: "The point estimate is the midpoint of the interval: (19 + 25) / 2 = 22%.",
+    },
+    {
+      q: "A survey estimates that between 35% and 43% of all residents favor extending the library's weekend hours. Enter the survey's margin of error, in percentage points (do not include units).",
+      answer: "4",
+      explain: "The margin of error is half the width of the interval: (43 - 35) / 2 = 4 percentage points.",
+    },
+    {
+      q: "A survey of customers found that 48% prefer the redesigned mobile app, with a margin of error of 2 percentage points. Enter the lower bound of the plausible range for the true percentage of all customers who prefer the redesigned mobile app, as a percentage (do not include the % sign).",
+      answer: "46",
+      explain: "The lower bound is the point estimate minus the margin of error: 48% - 2% = 46%.",
+    },
+    {
+      q: "Two independent surveys asked the same question of a random sample from the same population: one surveyed 127 people, and the other surveyed 381 people. Enter how many more people were surveyed in the larger study than in the smaller study.",
+      answer: "254",
+      explain: "The larger study surveyed 381 people and the smaller study surveyed 127 people, so the difference is 381 - 127 = 254 people.",
+    },
+    {
+      q: "Study A surveyed 126 students and reported a margin of error of 3 percentage points. Study B surveyed 58 students and reported a margin of error of 4 percentage points. Enter by how many percentage points Study A's margin of error is smaller than Study B's.",
+      answer: "1",
+      explain: "Study A's margin of error is 3 percentage points and Study B's is 4 percentage points, so the difference is 4 - 3 = 1 percentage points.",
+    },
+    {
+      q: "A survey estimates that between 20% and 26% of all voters support a new transit initiative. Enter the survey's point estimate, as a percentage (do not include the % sign).",
+      answer: "23",
+      explain: "The point estimate is the midpoint of the interval: (20 + 26) / 2 = 23%.",
+    },
+    {
+      q: "A survey estimates that between 46% and 52% of all residents favor extending the library's weekend hours. Enter the survey's margin of error, in percentage points (do not include units).",
+      answer: "3",
+      explain: "The margin of error is half the width of the interval: (52 - 46) / 2 = 3 percentage points.",
+    },
+    {
+      q: "A survey of customers found that 37% prefer the redesigned mobile app, with a margin of error of 1 percentage points. Enter the upper bound of the plausible range for the true percentage of all customers who prefer the redesigned mobile app, as a percentage (do not include the % sign).",
+      answer: "38",
+      explain: "The upper bound is the point estimate plus the margin of error: 37% + 1% = 38%.",
+    },
+    {
+      q: "Two independent surveys asked the same question of a random sample from the same population: one surveyed 144 people, and the other surveyed 432 people. Enter how many more people were surveyed in the larger study than in the smaller study.",
+      answer: "288",
+      explain: "The larger study surveyed 432 people and the smaller study surveyed 144 people, so the difference is 432 - 144 = 288 people.",
+    },
+    {
+      q: "Study A surveyed 173 students and reported a margin of error of 2 percentage points. Study B surveyed 171 students and reported a margin of error of 3 percentage points. Enter by how many percentage points Study A's margin of error is smaller than Study B's.",
+      answer: "1",
+      explain: "Study A's margin of error is 2 percentage points and Study B's is 3 percentage points, so the difference is 3 - 2 = 1 percentage points.",
+    },
+    {
+      q: "A survey estimates that between 42% and 46% of all voters support a new transit initiative. Enter the survey's point estimate, as a percentage (do not include the % sign).",
+      answer: "44",
+      explain: "The point estimate is the midpoint of the interval: (42 + 46) / 2 = 44%.",
+    },
+    {
+      q: "A survey estimates that between 28% and 34% of all residents favor extending the library's weekend hours. Enter the survey's margin of error, in percentage points (do not include units).",
+      answer: "3",
+      explain: "The margin of error is half the width of the interval: (34 - 28) / 2 = 3 percentage points.",
+    },
+    {
+      q: "A survey of customers found that 36% prefer the redesigned mobile app, with a margin of error of 4 percentage points. Enter the lower bound of the plausible range for the true percentage of all customers who prefer the redesigned mobile app, as a percentage (do not include the % sign).",
+      answer: "32",
+      explain: "The lower bound is the point estimate minus the margin of error: 36% - 4% = 32%.",
+    },
+    {
+      q: "Two independent surveys asked the same question of a random sample from the same population: one surveyed 84 people, and the other surveyed 252 people. Enter how many more people were surveyed in the larger study than in the smaller study.",
+      answer: "168",
+      explain: "The larger study surveyed 252 people and the smaller study surveyed 84 people, so the difference is 252 - 84 = 168 people.",
+    },
+    {
+      q: "Study A surveyed 145 students and reported a margin of error of 3 percentage points. Study B surveyed 65 students and reported a margin of error of 5 percentage points. Enter by how many percentage points Study A's margin of error is smaller than Study B's.",
+      answer: "2",
+      explain: "Study A's margin of error is 3 percentage points and Study B's is 5 percentage points, so the difference is 5 - 3 = 2 percentage points.",
+    },
+    {
+      q: "A survey estimates that between 18% and 26% of all voters support a new transit initiative. Enter the survey's point estimate, as a percentage (do not include the % sign).",
+      answer: "22",
+      explain: "The point estimate is the midpoint of the interval: (18 + 26) / 2 = 22%.",
+    },
+    {
+      q: "A survey estimates that between 49% and 51% of all residents favor extending the library's weekend hours. Enter the survey's margin of error, in percentage points (do not include units).",
+      answer: "1",
+      explain: "The margin of error is half the width of the interval: (51 - 49) / 2 = 1 percentage points.",
+    },
+    {
+      q: "A survey of customers found that 25% prefer the redesigned mobile app, with a margin of error of 3 percentage points. Enter the upper bound of the plausible range for the true percentage of all customers who prefer the redesigned mobile app, as a percentage (do not include the % sign).",
+      answer: "28",
+      explain: "The upper bound is the point estimate plus the margin of error: 25% + 3% = 28%.",
+    },
+    {
+      q: "Two independent surveys asked the same question of a random sample from the same population: one surveyed 139 people, and the other surveyed 417 people. Enter how many more people were surveyed in the larger study than in the smaller study.",
+      answer: "278",
+      explain: "The larger study surveyed 417 people and the smaller study surveyed 139 people, so the difference is 417 - 139 = 278 people.",
+    },
+    {
+      q: "Study A surveyed 77 students and reported a margin of error of 1 percentage points. Study B surveyed 71 students and reported a margin of error of 3 percentage points. Enter by how many percentage points Study A's margin of error is smaller than Study B's.",
+      answer: "2",
+      explain: "Study A's margin of error is 1 percentage points and Study B's is 3 percentage points, so the difference is 3 - 1 = 2 percentage points.",
+    },
+  ],
   "psatmath-statclaims": [
     {
       q: "Researchers randomly assigned 186 baristas to either receive a new espresso machine or not, then measured each participant's drink preparation time. Is this study an experiment or an observational study?",
@@ -16525,7 +18241,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "Because the study is observational, the two variables could be linked through some other underlying factor rather than one directly causing the other. Here, towns that can afford more parks may also have more resources for other stress-reducing programs, which the study can't rule out.",
-    },  ],
+    },
+    {
+      q: "Researchers randomly assigned 36 volunteers to a treatment group and a control group in a ratio of 1:1 (treatment to control). Enter how many volunteers were assigned to the treatment group.",
+      answer: "18",
+      explain: "The 36 volunteers are split into 2 equal shares of 18 each. The treatment group gets 1 of those shares: 1 × 18 = 18.",
+    },
+    {
+      q: "An observational study identified 120 shoppers who had already chosen on their own whether to use a revised dosage schedule. Of these, 18 used a revised dosage schedule. Enter the percentage of the sample that used a revised dosage schedule (do not include the % sign).",
+      answer: "15",
+      explain: "The percentage is (part / whole) × 100 = (18 / 120) × 100 = 15%.",
+    },
+    {
+      q: "Researchers randomly assigned 146 patients to the treatment group and 166 patients to the control group. Enter how many more patients were in the control group than in the treatment group.",
+      answer: "20",
+      explain: "The difference between the group sizes is 166 - 146 = 20 patients.",
+    },
+    {
+      q: "A researcher randomly selected 13 commuters to survey from a complete population of 65 commuters. Enter what percentage of the population was sampled (do not include the % sign).",
+      answer: "20",
+      explain: "The percentage sampled is (sample size / population size) × 100 = (13 / 65) × 100 = 20%.",
+    },
+    {
+      q: "A study began with 120 enrolled students. 32 students dropped out before the study concluded. Enter how many students completed the study.",
+      answer: "88",
+      explain: "The number who completed the study is the number enrolled minus the number who dropped out: 120 - 32 = 88.",
+    },
+    {
+      q: "Researchers randomly assigned 48 gym members to a treatment group and a control group in a ratio of 3:3 (treatment to control). Enter how many gym members were assigned to the treatment group.",
+      answer: "24",
+      explain: "The 48 gym members are split into 6 equal shares of 8 each. The treatment group gets 3 of those shares: 3 × 8 = 24.",
+    },
+    {
+      q: "An observational study identified 220 app users who had already chosen on their own whether to use a new commute incentive. Of these, 22 used a new commute incentive. Enter the percentage of the sample that used a new commute incentive (do not include the % sign).",
+      answer: "10",
+      explain: "The percentage is (part / whole) × 100 = (22 / 220) × 100 = 10%.",
+    },
+    {
+      q: "Researchers randomly assigned 17 renters to the treatment group and 77 renters to the control group. Enter the total number of renters who participated in the study.",
+      answer: "94",
+      explain: "The total is the sum of both groups: 17 + 77 = 94 renters.",
+    },
+    {
+      q: "A researcher randomly selected 52 diners to survey from a complete population of 104 diners. Enter what percentage of the population was sampled (do not include the % sign).",
+      answer: "50",
+      explain: "The percentage sampled is (sample size / population size) × 100 = (52 / 104) × 100 = 50%.",
+    },
+    {
+      q: "A study began with 217 enrolled commuters. 34 commuters dropped out before the study concluded. Enter how many commuters completed the study.",
+      answer: "183",
+      explain: "The number who completed the study is the number enrolled minus the number who dropped out: 217 - 34 = 183.",
+    },
+    {
+      q: "Researchers randomly assigned 72 volunteers to a treatment group and a control group in a ratio of 3:3 (treatment to control). Enter how many volunteers were assigned to the treatment group.",
+      answer: "36",
+      explain: "The 72 volunteers are split into 6 equal shares of 12 each. The treatment group gets 3 of those shares: 3 × 12 = 36.",
+    },
+    {
+      q: "An observational study identified 260 shoppers who had already chosen on their own whether to use a flexible scheduling option. Of these, 195 used a flexible scheduling option. Enter the percentage of the sample that used a flexible scheduling option (do not include the % sign).",
+      answer: "75",
+      explain: "The percentage is (part / whole) × 100 = (195 / 260) × 100 = 75%.",
+    },
+    {
+      q: "Researchers randomly assigned 54 patients to the treatment group and 126 patients to the control group. Enter how many more patients were in the control group than in the treatment group.",
+      answer: "72",
+      explain: "The difference between the group sizes is 126 - 54 = 72 patients.",
+    },
+    {
+      q: "A researcher randomly selected 100 commuters to survey from a complete population of 400 commuters. Enter what percentage of the population was sampled (do not include the % sign).",
+      answer: "25",
+      explain: "The percentage sampled is (sample size / population size) × 100 = (100 / 400) × 100 = 25%.",
+    },
+    {
+      q: "A study began with 151 enrolled students. 38 students dropped out before the study concluded. Enter how many students completed the study.",
+      answer: "113",
+      explain: "The number who completed the study is the number enrolled minus the number who dropped out: 151 - 38 = 113.",
+    },
+    {
+      q: "Researchers randomly assigned 72 gym members to a treatment group and a control group in a ratio of 3:3 (treatment to control). Enter how many gym members were assigned to the treatment group.",
+      answer: "36",
+      explain: "The 72 gym members are split into 6 equal shares of 12 each. The treatment group gets 3 of those shares: 3 × 12 = 36.",
+    },
+    {
+      q: "An observational study identified 100 app users who had already chosen on their own whether to use a redesigned checkout flow. Of these, 70 used a redesigned checkout flow. Enter the percentage of the sample that used a redesigned checkout flow (do not include the % sign).",
+      answer: "70",
+      explain: "The percentage is (part / whole) × 100 = (70 / 100) × 100 = 70%.",
+    },
+    {
+      q: "Researchers randomly assigned 59 renters to the treatment group and 77 renters to the control group. Enter the total number of renters who participated in the study.",
+      answer: "136",
+      explain: "The total is the sum of both groups: 59 + 77 = 136 renters.",
+    },
+    {
+      q: "A researcher randomly selected 29 diners to survey from a complete population of 290 diners. Enter what percentage of the population was sampled (do not include the % sign).",
+      answer: "10",
+      explain: "The percentage sampled is (sample size / population size) × 100 = (29 / 290) × 100 = 10%.",
+    },
+    {
+      q: "A study began with 91 enrolled commuters. 30 commuters dropped out before the study concluded. Enter how many commuters completed the study.",
+      answer: "61",
+      explain: "The number who completed the study is the number enrolled minus the number who dropped out: 91 - 30 = 61.",
+    },
+    {
+      q: "Researchers randomly assigned 35 volunteers to a treatment group and a control group in a ratio of 2:3 (treatment to control). Enter how many volunteers were assigned to the treatment group.",
+      answer: "14",
+      explain: "The 35 volunteers are split into 5 equal shares of 7 each. The treatment group gets 2 of those shares: 2 × 7 = 14.",
+    },
+    {
+      q: "An observational study identified 80 shoppers who had already chosen on their own whether to use a new onboarding process. Of these, 44 used a new onboarding process. Enter the percentage of the sample that used a new onboarding process (do not include the % sign).",
+      answer: "55",
+      explain: "The percentage is (part / whole) × 100 = (44 / 80) × 100 = 55%.",
+    },
+    {
+      q: "Researchers randomly assigned 45 patients to the treatment group and 55 patients to the control group. Enter how many more patients were in the control group than in the treatment group.",
+      answer: "10",
+      explain: "The difference between the group sizes is 55 - 45 = 10 patients.",
+    },
+    {
+      q: "A researcher randomly selected 25 commuters to survey from a complete population of 50 commuters. Enter what percentage of the population was sampled (do not include the % sign).",
+      answer: "50",
+      explain: "The percentage sampled is (sample size / population size) × 100 = (25 / 50) × 100 = 50%.",
+    },
+    {
+      q: "A study began with 234 enrolled students. 10 students dropped out before the study concluded. Enter how many students completed the study.",
+      answer: "224",
+      explain: "The number who completed the study is the number enrolled minus the number who dropped out: 234 - 10 = 224.",
+    },
+  ],
   "psatmath-areavolume": [
     {
       q: "What is the area of a rectangle with a length of 19 and a width of 16?",
@@ -17626,7 +19468,98 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "Volume = length × width × height = 5 × 7 × 2 = 70.",
-    },  ],
+    },
+    {
+      q: "What is the area of a rectangle with a length of 18 and a width of 18?",
+      answer: "324",
+      explain: "Area = length × width = 18 × 18 = 324.",
+    },
+    {
+      q: "What is the volume of a rectangular box with a length of 8, a width of 7, and a height of 6?",
+      answer: "336",
+      explain: "Volume = length × width × height = 8 × 7 × 6 = 336.",
+    },
+    {
+      q: "What is the area of a triangle with a base of 2 and a height of 14?",
+      answer: "14",
+      explain: "Area = (1/2) × base × height = (1/2) × 2 × 14 = 14.",
+    },
+    {
+      q: "If the side length of a equilateral triangle is multiplied by 2, by what factor does its area change?",
+      answer: "4",
+      explain: "Area scales with the square of a linear dimension, so multiplying the side length by 2 multiplies the area by 2² = 4.",
+    },
+    {
+      q: "What is the surface area of a rectangular box with a length of 5, a width of 3, and a height of 6?",
+      answer: "126",
+      explain: "Surface area = 2(lw + lh + wh) = 2(15 + 30 + 18) = 2(63) = 126.",
+    },
+    {
+      q: "What is the area of a rectangle with a length of 14 and a width of 16?",
+      answer: "224",
+      explain: "Area = length × width = 14 × 16 = 224.",
+    },
+    {
+      q: "What is the volume of a rectangular box with a length of 7, a width of 7, and a height of 7?",
+      answer: "343",
+      explain: "Volume = length × width × height = 7 × 7 × 7 = 343.",
+    },
+    {
+      q: "What is the area of a triangle with a base of 12 and a height of 10?",
+      answer: "60",
+      explain: "Area = (1/2) × base × height = (1/2) × 12 × 10 = 60.",
+    },
+    {
+      q: "What is the surface area of a rectangular box with a length of 2, a width of 3, and a height of 2?",
+      answer: "32",
+      explain: "Surface area = 2(lw + lh + wh) = 2(6 + 4 + 6) = 2(16) = 32.",
+    },
+    {
+      q: "What is the area of a rectangle with a length of 4 and a width of 16?",
+      answer: "64",
+      explain: "Area = length × width = 4 × 16 = 64.",
+    },
+    {
+      q: "What is the volume of a rectangular box with a length of 7, a width of 5, and a height of 8?",
+      answer: "280",
+      explain: "Volume = length × width × height = 7 × 5 × 8 = 280.",
+    },
+    {
+      q: "What is the area of a triangle with a base of 13 and a height of 4?",
+      answer: "26",
+      explain: "Area = (1/2) × base × height = (1/2) × 13 × 4 = 26.",
+    },
+    {
+      q: "What is the volume of a cone with a radius of 2 and a height of 6? (Express your answer in terms of π.)",
+      answer: "8π",
+      explain: "Volume = (1/3)πr²h = (1/3)π(2)²(6) = (1/3)π(4)(6) = 8π.",
+    },
+    {
+      q: "What is the surface area of a rectangular box with a length of 5, a width of 6, and a height of 5?",
+      answer: "170",
+      explain: "Surface area = 2(lw + lh + wh) = 2(30 + 25 + 30) = 2(85) = 170.",
+    },
+    {
+      q: "What is the area of a rectangle with a length of 9 and a width of 8?",
+      answer: "72",
+      explain: "Area = length × width = 9 × 8 = 72.",
+    },
+    {
+      q: "What is the volume of a rectangular box with a length of 6, a width of 2, and a height of 7?",
+      answer: "84",
+      explain: "Volume = length × width × height = 6 × 2 × 7 = 84.",
+    },
+    {
+      q: "What is the volume of a cylinder with a radius of 6 and a height of 8? (Express your answer in terms of π.)",
+      answer: "288π",
+      explain: "Volume = πr²h = π(6)²(8) = π(36)(8) = 288π.",
+    },
+    {
+      q: "What is the area of a triangle with a base of 10 and a height of 3?",
+      answer: "15",
+      explain: "Area = (1/2) × base × height = (1/2) × 10 × 3 = 15.",
+    },
+  ],
   "psatmath-linesangles": [
     {
       q: "In a triangle, two of the angles measure 26° and 34°. What is the measure of the third angle?",
@@ -18727,7 +20660,124 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "The exterior angle theorem states that an exterior angle equals the sum of the two remote interior angles: 49° + 50° = 99°.",
-    },  ],
+    },
+    {
+      q: "In a triangle, two of the angles measure 27° and 51°. What is the measure of the third angle?",
+      answer: "102°",
+      acceptableAnswers: ["102"],
+      explain: "The angles in a triangle always sum to 180°, so the third angle is 180° - 27° - 51° = 102°.",
+    },
+    {
+      q: "A triangle has two sides of length 4 and 8. What is the smallest possible integer length for the third side?",
+      answer: "5",
+      explain: "The triangle inequality theorem requires the third side to be strictly greater than the difference of the other two sides: |4 - 8| = 4, so the smallest possible integer length is 4 + 1 = 5.",
+    },
+    {
+      q: "In a triangle, an exterior angle is formed by extending one side. The two remote (non-adjacent) interior angles measure 26° and 39°. What is the measure of the exterior angle?",
+      answer: "65°",
+      acceptableAnswers: ["65"],
+      explain: "The exterior angle theorem states that an exterior angle equals the sum of the two remote interior angles: 26° + 39° = 65°.",
+    },
+    {
+      q: "Two angles lie along a straight line, and together they form a straight angle. One of the angles measures 71°. What is the measure of the other angle?",
+      answer: "109°",
+      acceptableAnswers: ["109"],
+      explain: "Angles that together form a straight line are supplementary, summing to 180°, so the other angle measures 180° - 71° = 109°.",
+    },
+    {
+      q: "In a triangle, two of the angles measure 36° and 26°. What is the measure of the third angle?",
+      answer: "118°",
+      acceptableAnswers: ["118"],
+      explain: "The angles in a triangle always sum to 180°, so the third angle is 180° - 36° - 26° = 118°.",
+    },
+    {
+      q: "Two parallel lines are cut by a transversal. One angle formed measures 19°. What is the measure of its alternate interior angle (on the opposite side of the transversal, between the two parallel lines)?",
+      answer: "19°",
+      acceptableAnswers: ["19"],
+      explain: "Alternate interior angles formed by a transversal across parallel lines are always congruent, so the alternate interior angle also measures 19°.",
+    },
+    {
+      q: "A triangle has two sides of length 6 and 8. What is the smallest possible integer length for the third side?",
+      answer: "3",
+      explain: "The triangle inequality theorem requires the third side to be strictly greater than the difference of the other two sides: |6 - 8| = 2, so the smallest possible integer length is 2 + 1 = 3.",
+    },
+    {
+      q: "In a triangle, an exterior angle is formed by extending one side. The two remote (non-adjacent) interior angles measure 17° and 19°. What is the measure of the exterior angle?",
+      answer: "36°",
+      acceptableAnswers: ["36"],
+      explain: "The exterior angle theorem states that an exterior angle equals the sum of the two remote interior angles: 17° + 19° = 36°.",
+    },
+    {
+      q: "Two angles lie along a straight line, and together they form a straight angle. One of the angles measures 77°. What is the measure of the other angle?",
+      answer: "103°",
+      acceptableAnswers: ["103"],
+      explain: "Angles that together form a straight line are supplementary, summing to 180°, so the other angle measures 180° - 77° = 103°.",
+    },
+    {
+      q: "In a triangle, two of the angles measure 37° and 47°. What is the measure of the third angle?",
+      answer: "96°",
+      acceptableAnswers: ["96"],
+      explain: "The angles in a triangle always sum to 180°, so the third angle is 180° - 37° - 47° = 96°.",
+    },
+    {
+      q: "Two parallel lines are cut by a transversal. One angle formed measures 50°. What is the measure of its alternate interior angle (on the opposite side of the transversal, between the two parallel lines)?",
+      answer: "50°",
+      acceptableAnswers: ["50"],
+      explain: "Alternate interior angles formed by a transversal across parallel lines are always congruent, so the alternate interior angle also measures 50°.",
+    },
+    {
+      q: "A triangle has two sides of length 5 and 3. What is the smallest possible integer length for the third side?",
+      answer: "3",
+      explain: "The triangle inequality theorem requires the third side to be strictly greater than the difference of the other two sides: |5 - 3| = 2, so the smallest possible integer length is 2 + 1 = 3.",
+    },
+    {
+      q: "In a triangle, an exterior angle is formed by extending one side. The two remote (non-adjacent) interior angles measure 35° and 32°. What is the measure of the exterior angle?",
+      answer: "67°",
+      acceptableAnswers: ["67"],
+      explain: "The exterior angle theorem states that an exterior angle equals the sum of the two remote interior angles: 35° + 32° = 67°.",
+    },
+    {
+      q: "In an isosceles triangle, the vertex angle measures 22°, and the two base angles are congruent. What is the measure of each base angle?",
+      answer: "79°",
+      acceptableAnswers: ["79"],
+      explain: "The three angles sum to 180°, so the two equal base angles together measure 180° - 22° = 158°, and each one measures (158°) / 2 = 79°.",
+    },
+    {
+      q: "In a triangle, two of the angles measure 34° and 36°. What is the measure of the third angle?",
+      answer: "110°",
+      acceptableAnswers: ["110"],
+      explain: "The angles in a triangle always sum to 180°, so the third angle is 180° - 34° - 36° = 110°.",
+    },
+    {
+      q: "Two parallel lines are cut by a transversal. One angle formed measures 40°. What is the measure of its alternate interior angle (on the opposite side of the transversal, between the two parallel lines)?",
+      answer: "40°",
+      acceptableAnswers: ["40"],
+      explain: "Alternate interior angles formed by a transversal across parallel lines are always congruent, so the alternate interior angle also measures 40°.",
+    },
+    {
+      q: "A triangle has two sides of length 8 and 5. What is the smallest possible integer length for the third side?",
+      answer: "4",
+      explain: "The triangle inequality theorem requires the third side to be strictly greater than the difference of the other two sides: |8 - 5| = 3, so the smallest possible integer length is 3 + 1 = 4.",
+    },
+    {
+      q: "In a triangle, an exterior angle is formed by extending one side. The two remote (non-adjacent) interior angles measure 17° and 23°. What is the measure of the exterior angle?",
+      answer: "40°",
+      acceptableAnswers: ["40"],
+      explain: "The exterior angle theorem states that an exterior angle equals the sum of the two remote interior angles: 17° + 23° = 40°.",
+    },
+    {
+      q: "Two angles lie along a straight line, and together they form a straight angle. One of the angles measures 52°. What is the measure of the other angle?",
+      answer: "128°",
+      acceptableAnswers: ["128"],
+      explain: "Angles that together form a straight line are supplementary, summing to 180°, so the other angle measures 180° - 52° = 128°.",
+    },
+    {
+      q: "In a triangle, two of the angles measure 42° and 28°. What is the measure of the third angle?",
+      answer: "110°",
+      acceptableAnswers: ["110"],
+      explain: "The angles in a triangle always sum to 180°, so the third angle is 180° - 42° - 28° = 110°.",
+    },
+  ],
   "psatmath-righttri": [
     {
       q: "A right triangle has legs of length 21 and 72. What is the length of the hypotenuse?",
@@ -19828,7 +21878,133 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "In a 30-60-90 triangle, the sides are in the ratio 1 : √3 : 2 (short leg : long leg : hypotenuse), so the hypotenuse is twice the short leg: 2 × 11 = 22.",
-    },  ],
+    },
+    {
+      q: "A right triangle has legs of length 11 and 60. What is the length of the hypotenuse?",
+      answer: "61",
+      explain: "By the Pythagorean theorem, c² = a² + b² = 11² + 60² = 121 + 3600 = 3721, so c = 61.",
+    },
+    {
+      q: "A right triangle has a hypotenuse of length 122 and one leg of length 22. What is the length of the other leg?",
+      answer: "120",
+      explain: "By the Pythagorean theorem, 120² = 122² - 22² = 14884 - 484 = 14400, so the missing leg = 120.",
+    },
+    {
+      q: "In right triangle ABC, the right angle is at C. Side a (opposite angle A) has length 14, side b (opposite angle B) has length 48, and the hypotenuse c has length 50. What is the tangent of angle A?",
+      answer: "7/24",
+      explain: "tan(A) = opposite / adjacent = 14/48 = 7/24.",
+    },
+    {
+      q: "A 45-45-90 right triangle has a hypotenuse of length 2√2. What is the length of each leg?",
+      answer: "2",
+      explain: "In a 45-45-90 triangle, the hypotenuse equals a leg times √2. Since the hypotenuse is 2√2, each leg has length 2.",
+    },
+    {
+      q: "A 30-60-90 right triangle has a short leg (opposite the 30° angle) of length 4. What is the length of the long leg (opposite the 60° angle)? (Express your answer in simplest radical form.)",
+      answer: "4√3",
+      explain: "In a 30-60-90 triangle, the sides are in the ratio 1 : √3 : 2, so the long leg is the short leg times √3: 4√3.",
+    },
+    {
+      q: "A right triangle has a hypotenuse of length 41 and one leg of length 40. What is the length of the other leg?",
+      answer: "9",
+      explain: "By the Pythagorean theorem, 9² = 41² - 40² = 1681 - 1600 = 81, so the missing leg = 9.",
+    },
+    {
+      q: "In right triangle ABC, the right angle is at C. Side a (opposite angle A) has length 16, side b (opposite angle B) has length 30, and the hypotenuse c has length 34. What is the cosine of angle A?",
+      answer: "15/17",
+      explain: "cos(A) = adjacent / hypotenuse = 30/34 = 15/17.",
+    },
+    {
+      q: "A 45-45-90 right triangle has legs of length 5. What is the length of the hypotenuse? (Express your answer in simplest radical form.)",
+      answer: "5√2",
+      explain: "In a 45-45-90 triangle, the hypotenuse equals a leg times √2, so the hypotenuse is 5√2.",
+    },
+    {
+      q: "A right triangle has a hypotenuse of length 74 and one leg of length 24. What is the length of the other leg?",
+      answer: "70",
+      explain: "By the Pythagorean theorem, 70² = 74² - 24² = 5476 - 576 = 4900, so the missing leg = 70.",
+    },
+    {
+      q: "In right triangle ABC, the right angle is at C. Side a (opposite angle A) has length 24, side b (opposite angle B) has length 70, and the hypotenuse c has length 74. What is the sine of angle A?",
+      answer: "12/37",
+      explain: "sin(A) = opposite / hypotenuse = 24/74 = 12/37.",
+    },
+    {
+      q: "A right triangle has legs of length 16 and 30. What is the length of the hypotenuse?",
+      answer: "34",
+      explain: "By the Pythagorean theorem, c² = a² + b² = 16² + 30² = 256 + 900 = 1156, so c = 34.",
+    },
+    {
+      q: "A right triangle has a hypotenuse of length 25 and one leg of length 24. What is the length of the other leg?",
+      answer: "7",
+      explain: "By the Pythagorean theorem, 7² = 25² - 24² = 625 - 576 = 49, so the missing leg = 7.",
+    },
+    {
+      q: "In right triangle ABC, the right angle is at C. Side a (opposite angle A) has length 20, side b (opposite angle B) has length 21, and the hypotenuse c has length 29. What is the tangent of angle A?",
+      answer: "20/21",
+      explain: "tan(A) = opposite / adjacent = 20/21.",
+    },
+    {
+      q: "A 45-45-90 right triangle has legs of length 2. What is the length of the hypotenuse? (Express your answer in simplest radical form.)",
+      answer: "2√2",
+      explain: "In a 45-45-90 triangle, the hypotenuse equals a leg times √2, so the hypotenuse is 2√2.",
+    },
+    {
+      q: "A 30-60-90 right triangle has a short leg (opposite the 30° angle) of length 6. What is the length of the long leg (opposite the 60° angle)? (Express your answer in simplest radical form.)",
+      answer: "6√3",
+      explain: "In a 30-60-90 triangle, the sides are in the ratio 1 : √3 : 2, so the long leg is the short leg times √3: 6√3.",
+    },
+    {
+      q: "A right triangle has a hypotenuse of length 61 and one leg of length 11. What is the length of the other leg?",
+      answer: "60",
+      explain: "By the Pythagorean theorem, 60² = 61² - 11² = 3721 - 121 = 3600, so the missing leg = 60.",
+    },
+    {
+      q: "In right triangle ABC, the right angle is at C. Side a (opposite angle A) has length 40, side b (opposite angle B) has length 42, and the hypotenuse c has length 58. What is the cosine of angle A?",
+      answer: "21/29",
+      explain: "cos(A) = adjacent / hypotenuse = 42/58 = 21/29.",
+    },
+    {
+      q: "A 30-60-90 right triangle has a short leg (opposite the 30° angle) of length 4. What is the length of the hypotenuse?",
+      answer: "8",
+      explain: "In a 30-60-90 triangle, the sides are in the ratio 1 : √3 : 2 (short leg : long leg : hypotenuse), so the hypotenuse is twice the short leg: 2 × 4 = 8.",
+    },
+    {
+      q: "A right triangle has legs of length 9 and 12. What is the length of the hypotenuse?",
+      answer: "15",
+      explain: "By the Pythagorean theorem, c = √(9² + 12²) = √(81 + 144) = √225 = 15.",
+    },
+    {
+      q: "A right triangle has a hypotenuse of length 15 and one leg of length 9. What is the length of the other leg?",
+      answer: "12",
+      explain: "By the Pythagorean theorem, leg = √(15² - 9²) = √(225 - 81) = √144 = 12.",
+    },
+    {
+      q: "A right triangle has a hypotenuse of length 13 and one leg of length 5. What is the length of the other leg?",
+      answer: "12",
+      explain: "By the Pythagorean theorem, leg = √(13² - 5²) = √(169 - 25) = √144 = 12.",
+    },
+    {
+      q: "A right triangle has legs of length 8 and 6. What is the length of the hypotenuse?",
+      answer: "10",
+      explain: "By the Pythagorean theorem, c = √(8² + 6²) = √(64 + 36) = √100 = 10.",
+    },
+    {
+      q: "A right triangle has a hypotenuse of length 26 and one leg of length 10. What is the length of the other leg?",
+      answer: "24",
+      explain: "By the Pythagorean theorem, leg = √(26² - 10²) = √(676 - 100) = √576 = 24.",
+    },
+    {
+      q: "A right triangle has legs of length 20 and 15. What is the length of the hypotenuse?",
+      answer: "25",
+      explain: "By the Pythagorean theorem, c = √(20² + 15²) = √(400 + 225) = √625 = 25.",
+    },
+    {
+      q: "A right triangle has a hypotenuse of length 25 and one leg of length 20. What is the length of the other leg?",
+      answer: "15",
+      explain: "By the Pythagorean theorem, leg = √(25² - 20²) = √(625 - 400) = √225 = 15.",
+    },
+  ],
   "psatmath-circles": [
     {
       q: "What is the circumference of a circle with a radius of 22? (Express your answer in terms of π.)",
@@ -20929,5 +23105,134 @@ export const psatMath = {
       ],
       answer: 1,
       explain: "Sector area = (central angle / 360) × πr² = (30/360) × π(3)² = (30/360) × 9π = 3/4π.",
-    },  ],
+    },
+    {
+      q: "What is the area of a sector with a central angle of 90° on a circle with a radius of 6? (Express your answer in terms of π.)",
+      answer: "9π",
+      explain: "Sector area = (central angle / 360) × πr² = (90/360) × π(6)² = (90/360) × 36π = 9π.",
+    },
+    {
+      q: "A circle is given by the equation (x - 0)² + (y + 1)² = 64. What is the radius of the circle?",
+      answer: "8",
+      explain: "Comparing to the standard form (x - h)² + (y - k)² = r², the right side equals r², so r² = 64, meaning r = 8.",
+    },
+    {
+      q: "In a circle, an inscribed angle measures 11°. What is the measure of the arc it intercepts?",
+      answer: "22°",
+      acceptableAnswers: ["22"],
+      explain: "An inscribed angle always measures half the arc it intercepts, so the intercepted arc measures 2 × 11° = 22°.",
+    },
+    {
+      q: "What is the length of an arc with a central angle of 270° on a circle with a radius of 4? (Express your answer in terms of π.)",
+      answer: "6π",
+      explain: "Arc length = (central angle / 360) × circumference = (270/360) × 2π(4) = (270/360) × 8π = 6π.",
+    },
+    {
+      q: "A circle is given by the equation (x + 2)² + (y + 1)² = 49. What is the radius of the circle?",
+      answer: "7",
+      explain: "Comparing to the standard form (x - h)² + (y - k)² = r², the right side equals r², so r² = 49, meaning r = 7.",
+    },
+    {
+      q: "In a circle, an inscribed angle measures 44°. What is the measure of the arc it intercepts?",
+      answer: "88°",
+      acceptableAnswers: ["88"],
+      explain: "An inscribed angle always measures half the arc it intercepts, so the intercepted arc measures 2 × 44° = 88°.",
+    },
+    {
+      q: "What is the circumference of a circle with a radius of 5? (Express your answer in terms of π.)",
+      answer: "10π",
+      explain: "Circumference = 2πr = 2π(5) = 10π.",
+    },
+    {
+      q: "What is the length of an arc with a central angle of 135° on a circle with a radius of 12? (Express your answer in terms of π.)",
+      answer: "9π",
+      explain: "Arc length = (central angle / 360) × circumference = (135/360) × 2π(12) = (135/360) × 24π = 9π.",
+    },
+    {
+      q: "A circle is given by the equation (x - 4)² + (y + 4)² = 16. What is the radius of the circle?",
+      answer: "4",
+      explain: "Comparing to the standard form (x - h)² + (y - k)² = r², the right side equals r², so r² = 16, meaning r = 4.",
+    },
+    {
+      q: "In a circle, an inscribed angle measures 31°. What is the measure of the arc it intercepts?",
+      answer: "62°",
+      acceptableAnswers: ["62"],
+      explain: "An inscribed angle always measures half the arc it intercepts, so the intercepted arc measures 2 × 31° = 62°.",
+    },
+    {
+      q: "What is the length of an arc with a central angle of 60° on a circle with a radius of 11? (Express your answer in terms of π.)",
+      answer: "11/3π",
+      explain: "Arc length = (central angle / 360) × circumference = (60/360) × 2π(11) = (60/360) × 22π = 11/3π.",
+    },
+    {
+      q: "A circle is given by the equation (x + 4)² + (y - 1)² = 9. What is the radius of the circle?",
+      answer: "3",
+      explain: "Comparing to the standard form (x - h)² + (y - k)² = r², the right side equals r², so r² = 9, meaning r = 3.",
+    },
+    {
+      q: "What is the circumference of a circle with a radius of 4? (Express your answer in terms of π.)",
+      answer: "8π",
+      explain: "Circumference = 2πr = 2π(4) = 8π.",
+    },
+    {
+      q: "What is the circumference of a circle with a radius of 21? (Express your answer in terms of π.)",
+      answer: "42π",
+      explain: "Circumference = 2πr = 2π(21) = 42π.",
+    },
+    {
+      q: "What is the circumference of a circle with a radius of 23? (Express your answer in terms of π.)",
+      answer: "46π",
+      explain: "Circumference = 2πr = 2π(23) = 46π.",
+    },
+    {
+      q: "What is the area of a circle with a radius of 23? (Express your answer in terms of π.)",
+      answer: "529π",
+      explain: "Area = πr² = π(23)² = 529π.",
+    },
+    {
+      q: "What is the area of a circle with a radius of 24? (Express your answer in terms of π.)",
+      answer: "576π",
+      explain: "Area = πr² = π(24)² = 576π.",
+    },
+    {
+      q: "What is the area of a circle with a radius of 25? (Express your answer in terms of π.)",
+      answer: "625π",
+      explain: "Area = πr² = π(25)² = 625π.",
+    },
+    {
+      q: "What is the circumference of a circle with a radius of 26? (Express your answer in terms of π.)",
+      answer: "52π",
+      explain: "Circumference = 2πr = 2π(26) = 52π.",
+    },
+    {
+      q: "What is the area of a circle with a radius of 27? (Express your answer in terms of π.)",
+      answer: "729π",
+      explain: "Area = πr² = π(27)² = 729π.",
+    },
+    {
+      q: "What is the area of a circle with a radius of 28? (Express your answer in terms of π.)",
+      answer: "784π",
+      explain: "Area = πr² = π(28)² = 784π.",
+    },
+    {
+      q: "What is the circumference of a circle with a radius of 29? (Express your answer in terms of π.)",
+      answer: "58π",
+      explain: "Circumference = 2πr = 2π(29) = 58π.",
+    },
+    {
+      q: "What is the area of a circle with a radius of 29? (Express your answer in terms of π.)",
+      answer: "841π",
+      explain: "Area = πr² = π(29)² = 841π.",
+    },
+    {
+      q: "What is the circumference of a circle with a radius of 30? (Express your answer in terms of π.)",
+      answer: "60π",
+      explain: "Circumference = 2πr = 2π(30) = 60π.",
+    },
+    {
+      q: "What is the area of a circle with a radius of 30? (Express your answer in terms of π.)",
+      answer: "900π",
+      explain: "Area = πr² = π(30)² = 900π.",
+    },
+  ],
 };

@@ -1466,6 +1466,52 @@ input[type="password"] {
   background: var(--surface-alt);
 }
 
+/* Student-produced-response ("written") questions: a text box instead of
+   the choice grid — see js/ui/writtenAnswer.js. Same correct/incorrect
+   color-plus-icon treatment as .choice-btn for the same WCAG 1.4.1
+   reason: the icon still carries the meaning if color doesn't. */
+.written-answer {
+  display: flex;
+  gap: 10px;
+  max-width: 420px;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+.written-answer-input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: var(--card);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.written-answer-input:focus {
+  outline: none;
+  border-color: var(--island-color-text, var(--purple));
+}
+
+.written-answer-input.is-correct {
+  border-color: #2fb573;
+  background: #e6fbf1;
+}
+
+.written-answer-input.is-incorrect {
+  border-color: #e1594f;
+  background: #fdeceb;
+}
+
+.written-answer-submit {
+  padding: 14px 22px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
 .hint-btn {
   display: block;
   margin: 14px auto 0;

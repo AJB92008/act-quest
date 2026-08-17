@@ -12,6 +12,7 @@ import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
+import { isWrittenQuestion, checkWrittenAnswer, renderWrittenAnswerHTML, wireWrittenAnswer, markWrittenAnswer } from "./writtenAnswer.js";
 
 const QUESTION_TIME = 20;
 const REVIEW_SIZE = 10;
@@ -83,7 +84,11 @@ export function renderWeakReview(root, navigate, { testId = "act" } = {}) {
       if (fill) fill.style.width = `${(timeLeft / QUESTION_TIME) * 100}%`;
       if (timeLeft <= 0) {
         stopTimer();
-        if (!answered) selectChoice(-1);
+        if (!answered) {
+          const q = questions[idx];
+          if (isWrittenQuestion(q)) selectWritten("");
+          else selectChoice(-1);
+        }
       }
     }, 100);
   }
@@ -170,10 +175,8 @@ export function renderWeakReview(root, navigate, { testId = "act" } = {}) {
         <div class="question-card">
           <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <p class="question-text">${q.q}</p>
-          <div class="choices" id="choices">
-            ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
-          </div>
-          ${renderHintButton()}
+          ${isWrittenQuestion(q) ? renderWrittenAnswerHTML() : `<div class="choices" id="choices">${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}</div>`}
+          ${isWrittenQuestion(q) ? "" : renderHintButton()}
           <div class="explain-panel" id="explainPanel" role="status" aria-live="polite" hidden></div>
           <button class="next-btn" id="nextBtn" hidden>${
             idx === questions.length - 1 ? "See Results" : "Next Question"
@@ -188,16 +191,20 @@ export function renderWeakReview(root, navigate, { testId = "act" } = {}) {
       finishSession();
       showResults();
     });
-    root.querySelectorAll("[data-choice]").forEach((btn) => {
-      btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
-    });
-    wireHintButton(root, q);
+    if (isWrittenQuestion(q)) {
+      wireWrittenAnswer(root, (value) => selectWritten(value));
+    } else {
+      root.querySelectorAll("[data-choice]").forEach((btn) => {
+        btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
+      });
+      wireHintButton(root, q);
+    }
     if (gameState.timerEnabled) startTimer();
 
     unbindKeys();
     unbindKeys = bindQuizKeys({
       onChoice: (i) => {
-        if (i < q.choices.length) selectChoice(i);
+        if (!isWrittenQuestion(q) && i < q.choices.length) selectChoice(i);
       },
       onNext: () => root.querySelector("#nextBtn:not([hidden])")?.click(),
     });
@@ -205,13 +212,9 @@ export function renderWeakReview(root, navigate, { testId = "act" } = {}) {
 
   function selectChoice(choiceIdx) {
     if (answered) return;
-    answered = true;
-    stopTimer();
-    removeHintButton(root);
-
     const q = questions[idx];
     const correct = choiceIdx === q.answer;
-    const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
+    finishAnswer(correct, choiceIdx, null);
 
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.disabled = true;
@@ -219,12 +222,29 @@ export function renderWeakReview(root, navigate, { testId = "act" } = {}) {
       if (i === q.answer) btn.classList.add("is-correct");
       else if (i === choiceIdx) btn.classList.add("is-incorrect");
     });
+  }
+
+  function selectWritten(userInput) {
+    if (answered) return;
+    const q = questions[idx];
+    const correct = checkWrittenAnswer(userInput, q);
+    finishAnswer(correct, null, userInput);
+    markWrittenAnswer(root, correct);
+  }
+
+  function finishAnswer(correct, choiceIdx, chosenText) {
+    answered = true;
+    stopTimer();
+    removeHintButton(root);
+
+    const q = questions[idx];
+    const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
 
     const reactor = root.querySelector("#monsterReactor");
     reactor.classList.add(correct ? "react-happy" : "react-sad");
 
     gameState.recordWeakReviewAnswer(q.skillId, correct);
-    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx);
+    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx, chosenText);
 
     if (correct) {
       correctCount++;
@@ -241,7 +261,7 @@ export function renderWeakReview(root, navigate, { testId = "act" } = {}) {
     panel.className = `explain-panel ${correct ? "is-correct-bg" : "is-incorrect-bg"}`;
     panel.innerHTML = correct
       ? `<strong>Nice, that's right!</strong><p>${q.explain}</p>`
-      : `<strong>Not quite. The correct answer: ${q.choices[q.answer]}</strong><p>${q.explain}</p>`;
+      : `<strong>Not quite. The correct answer: ${isWrittenQuestion(q) ? q.answer : q.choices[q.answer]}</strong><p>${q.explain}</p>`;
 
     const nextBtn = root.querySelector("#nextBtn");
     nextBtn.hidden = false;

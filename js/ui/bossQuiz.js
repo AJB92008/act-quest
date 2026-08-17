@@ -2,7 +2,7 @@
 // on it is mastered. A single bigger mixed-question test (not tied to any
 // one skill's path) drawing from everything you've learned on that island,
 // with a one-time bonus reward the first time you clear it.
-import { getSubject } from "../data/skills.js";
+import { getSubject } from "../data/tests.js";
 import { getBossQuizQuestions, preloadSubject } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
@@ -12,6 +12,7 @@ import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
 import { renderLoadingScreen } from "./loadingScreen.js";
+import { isWrittenQuestion, checkWrittenAnswer, renderWrittenAnswerHTML, wireWrittenAnswer, markWrittenAnswer } from "./writtenAnswer.js";
 
 const QUESTION_TIME = 20;
 const QUESTION_COUNT = 20;
@@ -60,7 +61,11 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
       if (fill) fill.style.width = `${(timeLeft / QUESTION_TIME) * 100}%`;
       if (timeLeft <= 0) {
         stopTimer();
-        if (!answered) selectChoice(-1);
+        if (!answered) {
+          const q = questions[idx];
+          if (isWrittenQuestion(q)) selectWritten("");
+          else selectChoice(-1);
+        }
       }
     }, 100);
   }
@@ -89,10 +94,8 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
         <div class="question-card">
           <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <p class="question-text">${q.q}</p>
-          <div class="choices" id="choices">
-            ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
-          </div>
-          ${renderHintButton()}
+          ${isWrittenQuestion(q) ? renderWrittenAnswerHTML() : `<div class="choices" id="choices">${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}</div>`}
+          ${isWrittenQuestion(q) ? "" : renderHintButton()}
           <div class="explain-panel" id="explainPanel" role="status" aria-live="polite" hidden></div>
           <button class="next-btn" id="nextBtn" hidden>${
             idx === questions.length - 1 ? "See Results" : "Next Question"
@@ -103,16 +106,20 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
 
     wireHud(root, goTo);
     root.querySelector("[data-quit]").addEventListener("click", () => goTo("island", { subjectId }));
-    root.querySelectorAll("[data-choice]").forEach((btn) => {
-      btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
-    });
-    wireHintButton(root, q);
+    if (isWrittenQuestion(q)) {
+      wireWrittenAnswer(root, (value) => selectWritten(value));
+    } else {
+      root.querySelectorAll("[data-choice]").forEach((btn) => {
+        btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
+      });
+      wireHintButton(root, q);
+    }
     if (gameState.timerEnabled) startTimer();
 
     unbindKeys();
     unbindKeys = bindQuizKeys({
       onChoice: (i) => {
-        if (i < q.choices.length) selectChoice(i);
+        if (!isWrittenQuestion(q) && i < q.choices.length) selectChoice(i);
       },
       onNext: () => root.querySelector("#nextBtn:not([hidden])")?.click(),
     });
@@ -120,14 +127,9 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
 
   function selectChoice(choiceIdx) {
     if (answered) return;
-    answered = true;
-    stopTimer();
-    removeHintButton(root);
-
     const q = questions[idx];
     const correct = choiceIdx === q.answer;
-    const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
-    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx);
+    finishAnswer(correct, choiceIdx, null);
 
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.disabled = true;
@@ -135,6 +137,24 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
       if (i === q.answer) btn.classList.add("is-correct");
       else if (i === choiceIdx) btn.classList.add("is-incorrect");
     });
+  }
+
+  function selectWritten(userInput) {
+    if (answered) return;
+    const q = questions[idx];
+    const correct = checkWrittenAnswer(userInput, q);
+    finishAnswer(correct, null, userInput);
+    markWrittenAnswer(root, correct);
+  }
+
+  function finishAnswer(correct, choiceIdx, chosenText) {
+    answered = true;
+    stopTimer();
+    removeHintButton(root);
+
+    const q = questions[idx];
+    const fast = gameState.timerEnabled && timeLeft > QUESTION_TIME / 2;
+    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx, chosenText);
 
     const reactor = root.querySelector("#monsterReactor");
     reactor.classList.add(correct ? "react-happy" : "react-sad");
@@ -154,7 +174,7 @@ export function renderBossQuiz(root, navigate, { subjectId }) {
     panel.className = `explain-panel ${correct ? "is-correct-bg" : "is-incorrect-bg"}`;
     panel.innerHTML = correct
       ? `<strong>Nice, that's right!</strong><p>${q.explain}</p>`
-      : `<strong>Not quite. The correct answer: ${q.choices[q.answer]}</strong><p>${q.explain}</p>`;
+      : `<strong>Not quite. The correct answer: ${isWrittenQuestion(q) ? q.answer : q.choices[q.answer]}</strong><p>${q.explain}</p>`;
 
     const nextBtn = root.querySelector("#nextBtn");
     nextBtn.hidden = false;

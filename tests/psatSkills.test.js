@@ -143,7 +143,7 @@ test("no psat-math skill id collides with any other planet's skill id", () => {
 });
 
 test("getLessonCount resolves a real value for a psat-math skill from its skill tree alone, no bank load required", () => {
-  assertEqual(getLessonCount("psatmath-linear1var"), 20);
+  assertEqual(getLessonCount("psatmath-linear1var"), 25);
 });
 
 test("a fresh save has a real skillProgress entry for every psat-math skill", () => {

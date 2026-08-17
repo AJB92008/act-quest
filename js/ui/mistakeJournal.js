@@ -4,14 +4,17 @@
 // Practice Test) — not just the current per-question accuracy stats
 // recordQuestionAnswer already tracks, but the actual longitudinal history
 // of misses over time. gameState logs the raw entry
-// ({skillId, bankIndex, chosenIndex, date}) from one single hook point
-// (recordQuestionAnswer itself); this screen is what resolves each entry
-// back into real question text/choices by loading the relevant subject's
-// bank, the same way every other question-rendering screen does.
-import { getSkill, getSubject } from "../data/skills.js";
+// ({skillId, bankIndex, chosenIndex, chosenText, date}) from one single
+// hook point (recordQuestionAnswer itself); this screen is what resolves
+// each entry back into real question text/choices by loading the relevant
+// subject's bank, the same way every other question-rendering screen
+// does. chosenText (not chosenIndex) carries what the player typed for a
+// written question — see js/ui/writtenAnswer.js.
+import { getSkill, getSubject } from "../data/tests.js";
 import { getFullBank, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
+import { isWrittenQuestion } from "./writtenAnswer.js";
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -71,7 +74,8 @@ export function renderMistakeJournal(root, navigate) {
     const filtered = all.filter((e) => {
       if (subjectFilter !== "all" && e.subjectId !== subjectFilter) return false;
       if (!searchText) return true;
-      const haystack = `${e.skillName} ${e.q.q} ${e.q.choices.join(" ")}`.toLowerCase();
+      const choicesText = isWrittenQuestion(e.q) ? "" : ` ${e.q.choices.join(" ")}`;
+      const haystack = `${e.skillName} ${e.q.q}${choicesText}`.toLowerCase();
       return haystack.includes(searchText.toLowerCase());
     });
 
@@ -85,7 +89,13 @@ export function renderMistakeJournal(root, navigate) {
     const rows = shown
       .map((e) => {
         const subject = getSubject(e.subjectId);
-        const chosenText = e.chosenIndex != null && e.chosenIndex >= 0 && e.q.choices[e.chosenIndex] ? e.q.choices[e.chosenIndex] : "(no answer selected)";
+        const written = isWrittenQuestion(e.q);
+        const answeredText = written
+          ? e.chosenText || "(no answer entered)"
+          : e.chosenIndex != null && e.chosenIndex >= 0 && e.q.choices[e.chosenIndex]
+          ? e.q.choices[e.chosenIndex]
+          : "(no answer selected)";
+        const correctText = written ? e.q.answer : e.q.choices[e.q.answer];
         return `
           <div class="dash-history-row mistake-journal-row" style="flex-direction:column;align-items:stretch;gap:6px;">
             <div class="dash-row-label">
@@ -93,8 +103,8 @@ export function renderMistakeJournal(root, navigate) {
               <span>${formatDate(e.date)}</span>
             </div>
             <p class="question-text" style="text-align:left;font-size:0.95rem;">${e.q.q}</p>
-            <p class="dash-monster-substat"><strong>You answered:</strong> ${chosenText}</p>
-            <p class="dash-monster-substat"><strong>Correct answer:</strong> ${e.q.choices[e.q.answer]}</p>
+            <p class="dash-monster-substat"><strong>You answered:</strong> ${answeredText}</p>
+            <p class="dash-monster-substat"><strong>Correct answer:</strong> ${correctText}</p>
             <p class="dash-monster-substat">${e.q.explain}</p>
             <button class="btn-secondary" data-practice-skill="${e.skillId}" data-subject-id="${e.subjectId}" style="align-self:flex-start;">Practice This Skill</button>
           </div>

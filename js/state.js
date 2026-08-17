@@ -639,7 +639,7 @@ export class GameState {
    * one specific question, not just their overall accuracy on the skill it
    * belongs to. Sparse by design — most of a skill's 100 questions will
    * never appear here if the player hasn't happened to hit them yet. */
-  recordQuestionAnswer(skillId, bankIndex, correct, chosenIndex = null) {
+  recordQuestionAnswer(skillId, bankIndex, correct, chosenIndex = null, chosenText = null) {
     const progress = this.data.skillProgress[skillId];
     if (!progress || bankIndex == null) return;
     if (!progress.questionStats) progress.questionStats = {};
@@ -663,7 +663,10 @@ export class GameState {
     // just a generous ceiling so an extremely long-lived save can't grow
     // localStorage without bound.
     if (!correct) {
-      this.data.mistakeJournal.push({ skillId, bankIndex, chosenIndex, date: Date.now() });
+      // chosenText carries what the player actually typed for a written
+      // (student-produced-response) question — chosenIndex means nothing
+      // there since there's no choice list to index into.
+      this.data.mistakeJournal.push({ skillId, bankIndex, chosenIndex, chosenText, date: Date.now() });
       if (this.data.mistakeJournal.length > MISTAKE_JOURNAL_CAP) this.data.mistakeJournal.shift();
     }
   }
@@ -676,8 +679,9 @@ export class GameState {
   }
 
   /** Every logged mistake, newest first. Raw entries only
-   * ({skillId, bankIndex, chosenIndex, date}) — resolving the actual
-   * question text/choices/explain is the UI's job (ui/mistakeJournal.js),
+   * ({skillId, bankIndex, chosenIndex, chosenText, date}) — resolving the
+   * actual question text/choices/explain is the UI's job
+   * (ui/mistakeJournal.js),
    * done by loading the relevant subject's bank the same way every other
    * screen does, so this stays a plain data accessor with no dependency on
    * question-bank content. */
