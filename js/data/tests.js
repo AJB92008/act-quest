@@ -60,25 +60,11 @@ export const TESTS = [
     color: "#8d6ae8",
     colorDark: "#5f3fc4",
     bg: "#f2eefd",
-    // psat-rw's real skill tree lives in psatSkills.js (see that file's
-    // header comment for why it mirrors sat-rw's domain breakdown
-    // skill-for-skill) and is folded in by reference here, same pattern
-    // SAT's own subjects use above. psat-math is still fully empty
-    // scaffolding — no skill tree built for it yet.
-    subjects: [
-      ...PSAT_SUBJECTS,
-      {
-        id: "psat-math",
-        name: "Math",
-        place: "Starter Slopes",
-        color: "#e6a13c",
-        colorDark: "#b87a1f",
-        bg: "#fdf2e2",
-        icon: "📏",
-        blurb: "Algebra, problem-solving, and data analysis, PSAT-style — coming soon.",
-        skills: [],
-      },
-    ],
+    // Both of PSAT's real skill trees live in psatSkills.js (see that
+    // file's header comment for why each mirrors its SAT counterpart's
+    // domain breakdown skill-for-skill) and are folded in by reference
+    // here, same pattern SAT's own subjects use above.
+    subjects: PSAT_SUBJECTS,
   },
   {
     id: "stateAssessments",

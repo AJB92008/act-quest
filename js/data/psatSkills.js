@@ -1,31 +1,44 @@
-// Skill-tree definition for the PSAT/NMSQT's Reading and Writing section —
-// same shape data/skills.js and data/satSkills.js use (see either file's
-// own header comment for the general pattern this mirrors), just for the
-// PSAT planet instead (see data/tests.js).
+// Skill-tree definitions for the PSAT/NMSQT's Reading and Writing and Math
+// sections — same shape data/skills.js and data/satSkills.js use (see
+// either file's own header comment for the general pattern this mirrors),
+// just for the PSAT planet instead (see data/tests.js).
 //
-// The digital PSAT/NMSQT's Reading and Writing section tests the exact
-// same four content domains, in the same two-module/54-question structure
-// (32 minutes per 27-question module), as the digital SAT's own R&W
-// section — College Board's own published specs define PSAT/NMSQT and SAT
-// Reading and Writing as covering identical skills and knowledge, just
-// calibrated to a slightly easier difficulty band for the 10th/11th-grade
-// PSAT/NMSQT population rather than a different set of skills entirely.
-// So rather than inventing a separate skill list that wouldn't reflect
-// what the real exam actually tests, this tree mirrors data/satSkills.js's
-// sat-rw domain breakdown skill-for-skill (same 17 skills, same 5/5/3/4
-// split across the four domains), under new psatrw- prefixed ids so every
-// skill id still stays globally unique across every planet.
+// Both sections test the exact same content domains, in the same
+// two-module structure, as their digital SAT counterparts — College
+// Board's own published specs define PSAT/NMSQT and SAT as covering
+// identical skills and knowledge per section, just calibrated to a
+// slightly easier difficulty band for the 10th/11th-grade PSAT/NMSQT
+// population rather than a different set of skills entirely. So rather
+// than inventing separate skill lists that wouldn't reflect what the real
+// exam actually tests, both trees below mirror data/satSkills.js's own
+// domain breakdowns skill-for-skill:
+//   - psat-rw: sat-rw's 17 skills, 5/5/3/4 split across its four domains,
+//     under new psatrw- prefixed ids.
+//   - psat-math: sat-math's 19 skills, 5/3/7/4 split across its four
+//     domains, under new psatmath- prefixed ids.
+// New ids keep every skill id globally unique across every planet.
 //
-// Question content lives in data/questions/psatRw.js (a full 100-question
-// bank per skill, same as sat-rw's own data/questions/satRw.js) — freshly
-// written for PSAT/NMSQT's easier difficulty band rather than reworded
-// from the SAT bank, per that file's own header comment.
+// Reading & Writing's question content lives in data/questions/psatRw.js
+// (a full 100-question bank per skill, same as sat-rw's own
+// data/questions/satRw.js) — freshly written for PSAT/NMSQT's easier
+// difficulty band rather than reworded from the SAT bank, per that file's
+// own header comment. psat-math is still infrastructure only (see
+// `contentPending: true` below) — a real skill tree exists so the World
+// Map/island/skill-path screens have something real to navigate, but no
+// lesson/question content is behind it yet, the same "tree before
+// content" stage psat-rw itself went through first.
 export const PSAT_REPORTING_CATEGORIES = {
   "psat-rw": [
     { id: "ii", name: "Information and Ideas", weight: 0.26 },
     { id: "cs", name: "Craft and Structure", weight: 0.28 },
     { id: "eoi", name: "Expression of Ideas", weight: 0.2 },
     { id: "sec", name: "Standard English Conventions", weight: 0.26 },
+  ],
+  "psat-math": [
+    { id: "algebra", name: "Algebra", weight: 0.35 },
+    { id: "advmath", name: "Advanced Math", weight: 0.35 },
+    { id: "psda", name: "Problem-Solving and Data Analysis", weight: 0.15 },
+    { id: "geotrig", name: "Geometry and Trigonometry", weight: 0.15 },
   ],
 };
 
@@ -148,6 +161,140 @@ export const PSAT_SUBJECTS = [
         name: "Verb Form Fix",
         blurb: "Choose the correct verb tense, form, and modifier placement.",
         reportingCategory: "sec",
+      },
+    ],
+  },
+  {
+    id: "psat-math",
+    name: "Math",
+    place: "Starter Slopes",
+    color: "#e6a13c",
+    colorDark: "#b87a1f",
+    bg: "#fdf2e2",
+    icon: "📏",
+    blurb: "Algebra, problem-solving, and data analysis, PSAT/NMSQT-style. Skill tree is ready; lessons and questions are still being written.",
+    contentPending: true,
+    skills: [
+      // --- Algebra (~35%) ---
+      {
+        id: "psatmath-linear1var",
+        name: "Equation Solver",
+        blurb: "Solve linear equations in one variable.",
+        reportingCategory: "algebra",
+      },
+      {
+        id: "psatmath-linearfunc",
+        name: "Line Reader",
+        blurb: "Interpret and build linear functions from tables, graphs, and words.",
+        reportingCategory: "algebra",
+      },
+      {
+        id: "psatmath-linear2var",
+        name: "Graph Plotter",
+        blurb: "Work with linear equations in two variables and their graphs.",
+        reportingCategory: "algebra",
+      },
+      {
+        id: "psatmath-systems",
+        name: "Crossing Point",
+        blurb: "Solve systems of two linear equations in two variables.",
+        reportingCategory: "algebra",
+      },
+      {
+        id: "psatmath-linineq",
+        name: "Boundary Setter",
+        blurb: "Solve and graph linear inequalities in one or two variables.",
+        reportingCategory: "algebra",
+      },
+
+      // --- Advanced Math (~35%) ---
+      {
+        id: "psatmath-nonlinearfunc",
+        name: "Curve Shaper",
+        blurb: "Analyze nonlinear functions, including quadratics and exponentials.",
+        reportingCategory: "advmath",
+      },
+      {
+        id: "psatmath-nonlineareq",
+        name: "Root Finder",
+        blurb: "Solve nonlinear equations and systems pairing a line with a curve.",
+        reportingCategory: "advmath",
+      },
+      {
+        id: "psatmath-equivexpr",
+        name: "Expression Rebuilder",
+        blurb: "Rewrite and simplify expressions into equivalent forms.",
+        reportingCategory: "advmath",
+      },
+
+      // --- Problem-Solving and Data Analysis (~15%) ---
+      {
+        id: "psatmath-ratios",
+        name: "Rate Tracker",
+        blurb: "Solve problems involving ratios, rates, proportions, and unit conversions.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "psatmath-percentages",
+        name: "Percent Play",
+        blurb: "Apply percentages, percent change, and percent error.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "psatmath-onevardata",
+        name: "Spread Sense",
+        blurb: "Describe a single data set's center, spread, and shape.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "psatmath-twovardata",
+        name: "Scatter Scout",
+        blurb: "Interpret models and scatterplots relating two variables.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "psatmath-probability",
+        name: "Odds Maker",
+        blurb: "Calculate probability and conditional probability.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "psatmath-inference",
+        name: "Sample Says",
+        blurb: "Draw conclusions from sample statistics and margin of error.",
+        reportingCategory: "psda",
+      },
+      {
+        id: "psatmath-statclaims",
+        name: "Study Skeptic",
+        blurb: "Evaluate statistical claims from observational studies and experiments.",
+        reportingCategory: "psda",
+      },
+
+      // --- Geometry and Trigonometry (~15%) ---
+      {
+        id: "psatmath-areavolume",
+        name: "Space Filler",
+        blurb: "Calculate area, surface area, and volume.",
+        reportingCategory: "geotrig",
+      },
+      {
+        id: "psatmath-linesangles",
+        name: "Angle Chase",
+        blurb: "Work with lines, angles, and triangle relationships.",
+        reportingCategory: "geotrig",
+      },
+      {
+        id: "psatmath-righttri",
+        name: "Triangle Ratios",
+        blurb: "Apply right-triangle relationships and trigonometric ratios.",
+        reportingCategory: "geotrig",
+      },
+      {
+        id: "psatmath-circles",
+        name: "Circle Logic",
+        blurb: "Solve problems involving circles: arcs, angles, and equations.",
+        reportingCategory: "geotrig",
       },
     ],
   },
