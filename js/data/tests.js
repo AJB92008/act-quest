@@ -24,6 +24,7 @@
 // follow.
 import { SUBJECTS as ACT_SUBJECTS } from "./skills.js";
 import { SAT_SUBJECTS } from "./satSkills.js";
+import { PSAT_SUBJECTS } from "./psatSkills.js";
 
 export const TESTS = [
   {
@@ -57,18 +58,13 @@ export const TESTS = [
     color: "#8d6ae8",
     colorDark: "#5f3fc4",
     bg: "#f2eefd",
+    // psat-rw's real skill tree lives in psatSkills.js (see that file's
+    // header comment for why it mirrors sat-rw's domain breakdown
+    // skill-for-skill) and is folded in by reference here, same pattern
+    // SAT's own subjects use above. psat-math is still fully empty
+    // scaffolding — no skill tree built for it yet.
     subjects: [
-      {
-        id: "psat-rw",
-        name: "Reading & Writing",
-        place: "Preface Point",
-        color: "#8d6ae8",
-        colorDark: "#5f3fc4",
-        bg: "#f2eefd",
-        icon: "📗",
-        blurb: "PSAT-style passage reading, grammar, and rhetoric — coming soon.",
-        skills: [],
-      },
+      ...PSAT_SUBJECTS,
       {
         id: "psat-math",
         name: "Math",
