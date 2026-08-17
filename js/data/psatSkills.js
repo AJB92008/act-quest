@@ -18,15 +18,11 @@
 //     domains, under new psatmath- prefixed ids.
 // New ids keep every skill id globally unique across every planet.
 //
-// Reading & Writing's question content lives in data/questions/psatRw.js
-// (a full 100-question bank per skill, same as sat-rw's own
-// data/questions/satRw.js) — freshly written for PSAT/NMSQT's easier
-// difficulty band rather than reworded from the SAT bank, per that file's
-// own header comment. psat-math is still infrastructure only (see
-// `contentPending: true` below) — a real skill tree exists so the World
-// Map/island/skill-path screens have something real to navigate, but no
-// lesson/question content is behind it yet, the same "tree before
-// content" stage psat-rw itself went through first.
+// Question content for both subjects lives in data/questions/psatRw.js and
+// data/questions/psatMath.js (a full 100-question bank per skill each,
+// same as sat-rw's and sat-math's own banks) — freshly generated for
+// PSAT/NMSQT's easier difficulty band rather than reworded/reused from the
+// SAT banks, per each of those files' own header comments.
 export const PSAT_REPORTING_CATEGORIES = {
   "psat-rw": [
     { id: "ii", name: "Information and Ideas", weight: 0.26 },
@@ -172,8 +168,7 @@ export const PSAT_SUBJECTS = [
     colorDark: "#b87a1f",
     bg: "#fdf2e2",
     icon: "📏",
-    blurb: "Algebra, problem-solving, and data analysis, PSAT/NMSQT-style. Skill tree is ready; lessons and questions are still being written.",
-    contentPending: true,
+    blurb: "Algebra, problem-solving, and data analysis, PSAT/NMSQT-style.",
     skills: [
       // --- Algebra (~35%) ---
       {

@@ -33,7 +33,7 @@ test("psat-rw is no longer contentPending and is correctly reported as playable"
   assertTrue(isSubjectPlayable(subject), "a skill tree with real content and no contentPending flag should count as playable");
 });
 
-test("the psat planet is ready overall now that psat-rw is playable (psat-math is still contentPending)", () => {
+test("the psat planet is ready overall", () => {
   assertTrue(isTestReady("psat"));
 });
 
@@ -87,7 +87,10 @@ test("a fresh save has a real skillProgress entry for every psat-rw skill", () =
   localStorage.removeItem("act-quest-save-v1");
 });
 
-// --- psat-math (infrastructure only — see psatSkills.js's header comment) ---
+// --- psat-math ---
+// Content-integrity assertions (100 questions per skill, well-formed
+// shape, etc.) live in psatMathContent.test.js instead, same split
+// satMathContent.test.js uses for sat-math's own question-bank checks.
 
 test("psat-math's skill tree is folded into the psat planet by reference", () => {
   const subject = getTestSubjects("psat").find((s) => s.id === "psat-math");
@@ -98,11 +101,11 @@ test("psat-math lists exactly 19 skills, mirroring sat-math's domain breakdown",
   assertEqual(PSAT_MATH_SKILL_IDS.length, 19);
 });
 
-test("psat-math is marked contentPending and is correctly reported as not yet playable", () => {
+test("psat-math is no longer contentPending and is correctly reported as playable", () => {
   const subject = getSubject("psat-math");
-  assertTrue(subject.contentPending, "psat-math has no question content yet — contentPending should be set");
+  assertTrue(!subject.contentPending, "psat-math now has a real question bank — contentPending should be unset");
   assertTrue(subject.skills.length > 0, "expected a real skill tree, not an empty placeholder");
-  assertTrue(!isSubjectPlayable(subject), "a skill tree with contentPending should not count as playable yet");
+  assertTrue(isSubjectPlayable(subject), "a skill tree with real content and no contentPending flag should count as playable");
 });
 
 test("every psat-math skill's reportingCategory is a real domain in PSAT_REPORTING_CATEGORIES", () => {
@@ -139,7 +142,7 @@ test("no psat-math skill id collides with any other planet's skill id", () => {
   }
 });
 
-test("getLessonCount still resolves a real value for a psat-math skill despite no question bank existing yet", () => {
+test("getLessonCount resolves a real value for a psat-math skill from its skill tree alone, no bank load required", () => {
   assertEqual(getLessonCount("psatmath-linear1var"), 20);
 });
 

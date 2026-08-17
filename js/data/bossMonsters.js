@@ -115,6 +115,24 @@ export const BOSS_MONSTERS = {
       scar: "none",
     },
   },
+  "psat-math": {
+    name: "The Slope Skink",
+    avatar: {
+      bodyColor: "#e6a13c",
+      bodyShape: "reptile",
+      limbs: 4,
+      eyeType: 1,
+      mouthType: 0,
+      skin: "scales",
+      spots: true,
+      head: "none",
+      face: "none",
+      back: "none",
+      tail: "none",
+      outfit: "none",
+      scar: "none",
+    },
+  },
   "sat-math": {
     name: "The Vector Wraith",
     avatar: {

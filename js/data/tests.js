@@ -9,13 +9,14 @@
 // so nothing about the live ACT experience changes by a single byte. Both
 // of SAT's subjects (see satSkills.js) have real content too: a full
 // 100-question bank per skill in data/questions/satRw.js (Reading &
-// Writing) and data/questions/satMath.js (Math). PSAT's Reading & Writing
-// (see psatSkills.js) now has real content the same way, in
-// data/questions/psatRw.js. Every other subject (PSAT Math, State
-// Assessments) is still infrastructure — either a real, named skill tree
-// planned out but no lesson/question content behind it yet
-// (`contentPending: true` — see isSubjectPlayable below), or still fully
-// empty (`skills: []`). Either way the World Map/island screens have
+// Writing) and data/questions/satMath.js (Math). Both of PSAT's subjects
+// (see psatSkills.js) now have real content the same way, in
+// data/questions/psatRw.js and data/questions/psatMath.js. State
+// Assessments is still fully empty scaffolding (`skills: []`) — a subject
+// can also have a real, named skill tree planned out with no
+// lesson/question content behind it yet (`contentPending: true` — see
+// isSubjectPlayable below), the transitional stage every playable subject
+// above went through first. Either way the World Map/island screens have
 // something real to render and the right "coming soon" state to show.
 //
 // Subject/skill ids across every planet have to stay globally unique
