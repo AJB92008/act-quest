@@ -1,9 +1,13 @@
 // Regression tests for the mastery -> evolution stage thresholds
 // (EVOLUTION_STAGE_THRESHOLDS in state.js): [0, 0.25, 0.5, 0.75, 1].
-// Skill count is read dynamically via allSkillIds() instead of hardcoded,
-// so this stays correct if skills are ever added/removed.
+// getMasteryPct() is deliberately cross-planet (every skill on every
+// planet counts toward monster evolution, not just ACT's), so skill count
+// here is read the same way via allSkillIds() from data/tests.js — the
+// ACT-only version from data/skills.js would under-count the denominator
+// and make these thresholds fail. Read dynamically instead of hardcoded,
+// so this stays correct if skills are ever added/removed on any planet.
 import { GameState, EVOLUTION_STAGE_NAMES } from "../js/state.js";
-import { allSkillIds } from "../js/data/skills.js";
+import { allSkillIds } from "../js/data/tests.js";
 import { test, assertEqual, assertTrue } from "./assert.js";
 
 const ids = allSkillIds();

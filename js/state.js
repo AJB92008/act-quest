@@ -455,7 +455,7 @@ export class GameState {
   /** Fraction (0-1) of all skills mastered across every subject — drives
    * monster evolution stages. */
   getMasteryPct() {
-    const ids = allSkillIds();
+    const ids = allTestSkillIds();
     if (ids.length === 0) return 0;
     let masteredCount = 0;
     for (const id of ids) {
@@ -752,9 +752,16 @@ export class GameState {
   }
 
   getOverallStats() {
+    // subjectStats is ACT-only (it drives the Dashboard's per-subject
+    // breakdown rows, which only show ACT islands today), but totalSkills/
+    // masteredCount are cross-planet — same denominator getMasteryPct()
+    // uses — so the Dashboard's "Skills Mastered" summary tile doesn't
+    // contradict the mastery % shown right next to it once a player has
+    // progress on a non-ACT planet.
     const subjectStats = SUBJECTS.map((s) => ({ subject: s, ...this.getSubjectStats(s.id) }));
-    const totalSkills = allSkillIds().length;
-    const masteredCount = subjectStats.reduce((sum, s) => sum + s.masteredCount, 0);
+    const allIds = allTestSkillIds();
+    const totalSkills = allIds.length;
+    const masteredCount = allIds.filter((id) => this.data.skillProgress[id]?.mastered).length;
     return { subjectStats, totalSkills, masteredCount, totalStars: this.data.totalStars, coins: this.data.coins };
   }
 
@@ -1064,7 +1071,7 @@ export class GameState {
    * instead of a separate override — so "jump to a mastery level" cheats
    * behave exactly like actually playing to that point would. */
   cheatSetOverallMasteryPct(pct) {
-    const ids = allSkillIds();
+    const ids = allTestSkillIds();
     const targetCount = Math.round(ids.length * Math.max(0, Math.min(1, pct)));
     ids.forEach((id, i) => this.cheatSetSkillMastered(id, i < targetCount));
   }
@@ -1078,7 +1085,7 @@ export class GameState {
    * boss states without hand-crafting a save), plus a plausible coin/star/xp
    * pile. */
   cheatSeedRandomProgress() {
-    for (const id of allSkillIds()) {
+    for (const id of allTestSkillIds()) {
       const progress = this.data.skillProgress[id];
       const totalLessons = getLessonCount(id);
       const accuracy = 0.3 + Math.random() * 0.65;
@@ -1092,7 +1099,8 @@ export class GameState {
       progress.lessonsCompleted = mastered ? totalLessons : Math.floor(Math.random() * totalLessons);
       progress.stars = attempts;
     }
-    for (const subject of SUBJECTS) {
+    for (const subject of allTestSubjects()) {
+      if (subject.skills.length === 0) continue;
       this.data.bossCleared[subject.id] = subject.skills.every((s) => this.data.skillProgress[s.id].mastered) && Math.random() < 0.5;
     }
     this.data.coins = 200 + Math.floor(Math.random() * 800);

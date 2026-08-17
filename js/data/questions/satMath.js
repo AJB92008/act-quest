@@ -9777,7 +9777,7 @@ export const satMath = {
     {
       q: "When (x - 3)(x + 4) is expanded to the form x² + bx + c, what is the value of c?",
       answer: "-12",
-      explain: "(x - 3)(x + 4) = x² + (-3+4)x + (-3)(4) = x² + 1x - 12, so c = -12.",
+      explain: "(x - 3)(x + 4) = x² + (-3+4)x + (-3)(4) = x² + x - 12, so c = -12.",
     },
     {
       q: "When (x + 3)(x + 5) is expanded to the form x² + bx + c, what is the value of b?",

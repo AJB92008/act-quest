@@ -60,6 +60,12 @@ export function checkWrittenAnswer(userInput, q) {
 // would render instead. `idSuffix` lets a screen that ever needs two
 // independent written inputs on screen at once avoid an id collision;
 // every current call site just uses the default.
+//
+// Deliberately no `inputmode="decimal"` here: some answers are negative
+// (a decimal mobile keypad usually has no minus key) and some math-math
+// skills phrase answers in terms of π, which no numeric keypad can type
+// at all — the plain-text keyboard this falls back to at least makes both
+// possible (the π itself can be copied straight out of the question text).
 export function renderWrittenAnswerHTML(idSuffix = "") {
   return `
     <div class="written-answer">
@@ -70,7 +76,6 @@ export function renderWrittenAnswerHTML(idSuffix = "") {
         placeholder="Type your answer"
         aria-label="Your answer"
         autocomplete="off"
-        inputmode="decimal"
       />
       <button class="btn-primary written-answer-submit" id="writtenAnswerSubmit${idSuffix}">Submit</button>
     </div>

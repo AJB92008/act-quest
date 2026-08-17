@@ -1130,9 +1130,9 @@ export const psatMath = {
       explain: "4(x + 6) = 20 → x + 6 = 5 → x = -1.",
     },
     {
-      q: "Solve for x: 4x - 3 = 1x - 18",
+      q: "Solve for x: 4x - 3 = x - 18",
       answer: "-5",
-      explain: "4x - 3 = 1x - 18 → 3x = -15 → x = -5.",
+      explain: "4x - 3 = x - 18 → 3x = -15 → x = -5.",
     },
     {
       q: "Solve for x: (x + 6)/1 = 3",
@@ -1145,9 +1145,9 @@ export const psatMath = {
       explain: "Let n be the number of months: 11 + 2n = 25 → 2n = 14 → n = 7.",
     },
     {
-      q: "Solve for x: 1x + 5 = 7",
+      q: "Solve for x: x + 5 = 7",
       answer: "2",
-      explain: "1x + 5 = 7 → 1x = 2 → x = 2.",
+      explain: "x + 5 = 7 → x = 2 → x = 2.",
     },
     {
       q: "Solve for x: 3(x + 6) = 9",
@@ -1195,9 +1195,9 @@ export const psatMath = {
       explain: "Let n be the number of months: 17 + 9n = 53 → 9n = 36 → n = 4.",
     },
     {
-      q: "Solve for x: 1x + 8 = 4",
+      q: "Solve for x: x + 8 = 4",
       answer: "-4",
-      explain: "1x + 8 = 4 → 1x = -4 → x = -4.",
+      explain: "x + 8 = 4 → x = -4 → x = -4.",
     },
     {
       q: "Solve for x: 1(x - 4) = -8",
@@ -1230,9 +1230,9 @@ export const psatMath = {
       explain: "3(x - 3) = -12 → x - 3 = -4 → x = -1.",
     },
     {
-      q: "Solve for x: 4x + 6 = 1x + 12",
+      q: "Solve for x: 4x + 6 = x + 12",
       answer: "2",
-      explain: "4x + 6 = 1x + 12 → 3x = 6 → x = 2.",
+      explain: "4x + 6 = x + 12 → 3x = 6 → x = 2.",
     },
     {
       q: "Solve for x: (x + 6)/1 = 0",
@@ -9716,7 +9716,7 @@ export const psatMath = {
     {
       q: "When (x + 3)(x - 2) is expanded to the form x² + bx + c, what is the value of c?",
       answer: "-6",
-      explain: "(x + 3)(x - 2) = x² + (3+-2)x + (3)(-2) = x² + 1x - 6, so c = -6.",
+      explain: "(x + 3)(x - 2) = x² + (3+-2)x + (3)(-2) = x² + x - 6, so c = -6.",
     },
     {
       q: "When (x - 3)(x - 5) is expanded to the form x² + bx + c, what is the value of b?",
@@ -9746,7 +9746,7 @@ export const psatMath = {
     {
       q: "When (x + 1)(x - 2) is expanded to the form x² + bx + c, what is the value of c?",
       answer: "-2",
-      explain: "(x + 1)(x - 2) = x² + (1+-2)x + (1)(-2) = x² - 1x - 2, so c = -2.",
+      explain: "(x + 1)(x - 2) = x² + (1+-2)x + (1)(-2) = x² - x - 2, so c = -2.",
     },
     {
       q: "When (x + 3)(x - 5) is expanded to the form x² + bx + c, what is the value of b?",

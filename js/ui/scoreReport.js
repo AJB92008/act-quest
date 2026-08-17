@@ -26,7 +26,7 @@
 //     main.js). It's a point-in-time snapshot, not a live view: whoever
 //     opens the link sees the data as of when it was copied, not this
 //     player's current progress.
-import { SUBJECTS, getSubject } from "../data/skills.js";
+import { getSubject } from "../data/skills.js";
 import { gameState, percentileForComposite, scoreFromAccuracy } from "../state.js";
 import { hudHTML, wireHud, showToast } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -423,7 +423,7 @@ function reportCardHTML(data, { shared }) {
           : ""
       }
 
-      <p class="lesson-paragraph">${data.masteredCount} / ${data.totalSkills} skills mastered across ${SUBJECTS.length} subjects.</p>
+      <p class="lesson-paragraph">${data.masteredCount} / ${data.totalSkills} skills mastered across every subject.</p>
 
       ${compositeScore != null ? ncrcPanelHTML(compositeScore) : ""}
 
