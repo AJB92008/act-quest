@@ -16,12 +16,10 @@
 // split across the four domains), under new psatrw- prefixed ids so every
 // skill id still stays globally unique across every planet.
 //
-// This is infrastructure only, the same "tree before content" stage
-// sat-rw and sat-math both went through before their question banks were
-// written: a real skill tree exists here so the World Map/island/
-// skill-path screens have something real to navigate, but no lesson/
-// question content is behind any of it yet — see data/tests.js's
-// `contentPending: true` on the psat-rw subject this feeds.
+// Question content lives in data/questions/psatRw.js (a full 100-question
+// bank per skill, same as sat-rw's own data/questions/satRw.js) — freshly
+// written for PSAT/NMSQT's easier difficulty band rather than reworded
+// from the SAT bank, per that file's own header comment.
 export const PSAT_REPORTING_CATEGORIES = {
   "psat-rw": [
     { id: "ii", name: "Information and Ideas", weight: 0.26 },
@@ -40,8 +38,7 @@ export const PSAT_SUBJECTS = [
     colorDark: "#5f3fc4",
     bg: "#f2eefd",
     icon: "📗",
-    blurb: "Passage reading, vocabulary, rhetoric, and grammar, PSAT/NMSQT-style. Skill tree is ready; lessons and questions are still being written.",
-    contentPending: true,
+    blurb: "Passage reading, vocabulary, rhetoric, and grammar, PSAT/NMSQT-style.",
     skills: [
       // --- Information and Ideas (~26%) ---
       {

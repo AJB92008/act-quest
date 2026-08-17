@@ -7,13 +7,15 @@
 // ACT is the original planet with playable content — its subjects are
 // skills.js's existing SUBJECTS, included here by reference (not copied),
 // so nothing about the live ACT experience changes by a single byte. Both
-// of SAT's subjects (see satSkills.js) now have real content too: a full
+// of SAT's subjects (see satSkills.js) have real content too: a full
 // 100-question bank per skill in data/questions/satRw.js (Reading &
-// Writing) and data/questions/satMath.js (Math). Every other subject
-// (PSAT, State Assessments) is still infrastructure — either a real,
-// named skill tree planned out but no lesson/question content behind it
-// yet (`contentPending: true` — see isSubjectPlayable below), or still
-// fully empty (`skills: []`). Either way the World Map/island screens have
+// Writing) and data/questions/satMath.js (Math). PSAT's Reading & Writing
+// (see psatSkills.js) now has real content the same way, in
+// data/questions/psatRw.js. Every other subject (PSAT Math, State
+// Assessments) is still infrastructure — either a real, named skill tree
+// planned out but no lesson/question content behind it yet
+// (`contentPending: true` — see isSubjectPlayable below), or still fully
+// empty (`skills: []`). Either way the World Map/island screens have
 // something real to render and the right "coming soon" state to show.
 //
 // Subject/skill ids across every planet have to stay globally unique

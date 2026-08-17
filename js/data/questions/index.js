@@ -119,6 +119,7 @@ const SUBJECT_LOADERS = {
   science: () => import("./science.js").then((m) => ({ questions: m.science, stimuli: m.stimuli })),
   "sat-rw": () => import("./satRw.js").then((m) => ({ questions: m.satRw })),
   "sat-math": () => import("./satMath.js").then((m) => ({ questions: m.satMath })),
+  "psat-rw": () => import("./psatRw.js").then((m) => ({ questions: m.psatRw })),
 };
 
 const loadedSubjects = {}; // subjectId -> { questions, passages?, stimuli? }

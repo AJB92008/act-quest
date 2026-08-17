@@ -1,11 +1,9 @@
-// Infrastructure-only tests for the PSAT/NMSQT Reading and Writing skill
-// tree (data/psatSkills.js) — psat-rw now has a real skill tree (see that
-// file's header comment for why it mirrors sat-rw's domain breakdown
-// skill-for-skill) but, unlike sat-rw, no lesson/question content behind
-// it yet. These tests guard the tree itself and its contentPending state,
-// not question data that doesn't exist yet — the same "tree before
-// content" stage sat-rw's own tests covered before its question bank was
-// written.
+// Tests for the PSAT/NMSQT Reading and Writing skill tree itself
+// (data/psatSkills.js) — domain weights, reportingCategory validity, and
+// id uniqueness. Content-integrity assertions for the actual question bank
+// (100 questions per skill, well-formed shape, etc.) live in
+// psatRwContent.test.js instead, same split satRwContent.test.js uses for
+// sat-rw's own question-bank checks.
 import { PSAT_REPORTING_CATEGORIES, PSAT_SUBJECTS } from "../js/data/psatSkills.js";
 import { getSubject, isSubjectPlayable, isTestReady, getTestSubjects } from "../js/data/tests.js";
 import { getLessonCount } from "../js/data/questions/index.js";
@@ -24,15 +22,15 @@ test("psat-rw lists exactly 17 skills, mirroring sat-rw's domain breakdown", () 
   assertEqual(PSAT_RW_SKILL_IDS.length, 17);
 });
 
-test("psat-rw is marked contentPending and is correctly reported as not yet playable", () => {
+test("psat-rw is no longer contentPending and is correctly reported as playable", () => {
   const subject = getSubject("psat-rw");
-  assertTrue(subject.contentPending, "psat-rw has no question content yet — contentPending should be set");
+  assertTrue(!subject.contentPending, "psat-rw now has a real question bank — contentPending should be unset");
   assertTrue(subject.skills.length > 0, "expected a real skill tree, not an empty placeholder");
-  assertTrue(!isSubjectPlayable(subject), "a skill tree with contentPending should not count as playable yet");
+  assertTrue(isSubjectPlayable(subject), "a skill tree with real content and no contentPending flag should count as playable");
 });
 
-test("the psat planet is still not ready overall (psat-rw pending, psat-math still fully empty)", () => {
-  assertTrue(!isTestReady("psat"));
+test("the psat planet is ready overall now that psat-rw is playable (psat-math is still fully empty)", () => {
+  assertTrue(isTestReady("psat"));
 });
 
 test("every psat-rw skill's reportingCategory is a real domain in PSAT_REPORTING_CATEGORIES", () => {
@@ -69,11 +67,7 @@ test("no psat-rw skill id collides with any other planet's skill id", () => {
   }
 });
 
-// Even without a question bank registered, getLessonCount still needs to
-// answer correctly for a psat-rw skill id — see index.js's KNOWN_SKILL_IDS
-// comment for why every planet's skill ids (not just ones with content) are
-// known there.
-test("getLessonCount still resolves a real value for a psat-rw skill despite no question bank existing yet", () => {
+test("getLessonCount resolves a real value for a psat-rw skill from its skill tree alone, no bank load required", () => {
   assertEqual(getLessonCount("psatrw-centralidea"), 20);
 });
 

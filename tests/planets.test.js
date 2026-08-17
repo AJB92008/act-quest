@@ -30,10 +30,10 @@ test("getTest returns undefined for an unknown planet id rather than throwing", 
   assertEqual(getTestSubjects("not-a-real-planet").length, 0);
 });
 
-test("ACT and SAT are ready now that SAT Reading & Writing has real content; PSAT/State are still empty", () => {
+test("ACT, SAT, and PSAT are ready now that each has at least one subject with real content; State Assessments is still empty", () => {
   assertTrue(isTestReady("act"));
   assertTrue(isTestReady("sat"));
-  assertTrue(!isTestReady("psat"));
+  assertTrue(isTestReady("psat"));
   assertTrue(!isTestReady("stateAssessments"));
 });
 

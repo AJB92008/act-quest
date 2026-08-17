@@ -97,6 +97,24 @@ export const BOSS_MONSTERS = {
       scar: "none",
     },
   },
+  "psat-rw": {
+    name: "The Marginalia Moth",
+    avatar: {
+      bodyColor: "#8d6ae8",
+      bodyShape: "insect",
+      limbs: 4,
+      eyeType: 2,
+      mouthType: 0,
+      skin: "fur",
+      spots: true,
+      head: "none",
+      face: "studyGlasses",
+      back: "none",
+      tail: "none",
+      outfit: "none",
+      scar: "none",
+    },
+  },
   "sat-math": {
     name: "The Vector Wraith",
     avatar: {
