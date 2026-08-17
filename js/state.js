@@ -1,7 +1,7 @@
 import { SUBJECTS } from "./data/skills.js";
 import { getLessonCount } from "./data/questions/index.js";
 import { ACHIEVEMENTS } from "./data/achievements.js";
-import { TEST_IDS, getSubject as getAnySubject, allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSkillIds } from "./data/tests.js";
+import { TEST_IDS, TESTS, getTest, getSubject as getAnySubject, allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSkillIds } from "./data/tests.js";
 
 const STORAGE_KEY = "act-quest-save-v1";
 const PASS_THRESHOLD = 0.7; // score needed to pass a mini-lesson / master a skill
@@ -65,37 +65,16 @@ export function scoreFromAccuracy(accuracy) {
   return Math.max(1, Math.min(36, Math.round(1 + accuracy * 35)));
 }
 
-// Real published composite ranges for every planet's own predicted-score
-// scale — used by getPredictedScore()'s lesson-accuracy fallback below.
-// Only ACT has a full-length Practice Test to build a real section-shaped
-// curve from (see ui/practiceTest.js's header comment on why that stays
-// ACT-only), so SAT/PSAT always fall back to this same rough linear
-// accuracy mapping scoreFromAccuracy() uses for ACT, just re-scaled onto
-// their own real min-max.
-const PREDICTED_SCORE_RANGES = {
-  act: { min: 1, max: 36 },
-  sat: { min: 400, max: 1600 },
-  psat: { min: 320, max: 1520 },
-};
-
 function scoreFromAccuracyInRange(accuracy, min, max) {
   return Math.max(min, Math.min(max, Math.round(min + accuracy * (max - min))));
 }
 
-// Approximates the *shape* of a real ACT raw-score -> scaled-score
-// conversion table: steep through the middle (a few more right answers
-// swing the scaled score noticeably) and flatter — more forgiving — near
-// the extremes, with Math/Science historically more forgiving at the very
-// top than English/Reading (missing a handful there can still land a 36,
-// missing even one or two in English/Reading more often costs a point).
-// This is *not* any single real test form's actual table — ACT scores each
-// form against its own unpublished curve, so there's no one true table to
-// copy — just a consistently-shaped, honest approximation, built once per
-// section into a real lookup table (raw score -> scaled score) rather than
-// computed on the fly.
 // Real ACT per-question time budget (section minutes / question count),
 // used only to give pacing feedback a concrete benchmark to compare
-// against — not used anywhere in scoring.
+// against — not used anywhere in scoring. ACT-only: pacing feedback is a
+// deliberately ACT-only feature (see ui/dashboard.js's pacingCardHTML),
+// since it's benchmarked against the real ACT's published per-section time
+// limits specifically, not a generic "seconds per question" budget.
 const ACT_PACE_BUDGET_SECONDS = {
   english: Math.round((45 * 60) / 75), // 36s
   math: Math.round((60 * 60) / 60), // 60s
@@ -103,31 +82,73 @@ const ACT_PACE_BUDGET_SECONDS = {
   science: Math.round((35 * 60) / 40), // 52.5s -> 53s
 };
 
-const SECTION_CURVE_PARAMS = {
-  english: { maxRaw: 75, p0: 0.5, k: 7 },
-  math: { maxRaw: 60, p0: 0.44, k: 7 },
-  reading: { maxRaw: 40, p0: 0.5, k: 7 },
-  science: { maxRaw: 40, p0: 0.44, k: 7 },
+// Approximates the *shape* of a real raw-score -> scaled-score conversion
+// table: steep through the middle (a few more right answers swing the
+// scaled score noticeably) and flatter — more forgiving — near the
+// extremes. This is *not* any single real test form's actual table — every
+// standardized test here scores each form against its own unpublished
+// curve, so there's no one true table to copy — just a consistently-shaped,
+// honest approximation, built once per section into a real lookup table
+// (raw score -> scaled score) rather than computed on the fly. `p0`/`k`
+// shape each section's own curve (see buildScoreTable); `maxRaw`, the
+// composite range, and the composite method all come from that section's
+// own planet's `practiceTest` config in data/tests.js instead of being
+// duplicated here — one source of truth for "how many questions is this
+// section" and "what does it score out of."
+const SECTION_CURVE_SHAPE = {
+  english: { p0: 0.5, k: 7 },
+  math: { p0: 0.44, k: 7 },
+  reading: { p0: 0.5, k: 7 },
+  science: { p0: 0.44, k: 7 },
+  // Math/Science (ACT) and both Math sections above are historically more
+  // forgiving at the very top than English/Reading (missing a handful
+  // there can still land the max score, missing even one or two in
+  // English/Reading more often costs a point) — the lower p0 captures that.
+  "sat-rw": { p0: 0.5, k: 6 },
+  "sat-math": { p0: 0.46, k: 6 },
+  "psat-rw": { p0: 0.5, k: 6 },
+  "psat-math": { p0: 0.46, k: 6 },
 };
 
-function buildScoreTable(maxRaw, p0, k) {
+function buildScoreTable(maxRaw, p0, k, min, max, step) {
   const logistic = (p) => 1 / (1 + Math.exp(-k * (p - p0)));
   const lo = logistic(0);
   const hi = logistic(1);
   const table = [];
   for (let raw = 0; raw <= maxRaw; raw++) {
     const norm = (logistic(raw / maxRaw) - lo) / (hi - lo);
-    table.push(Math.max(1, Math.min(36, Math.round(1 + norm * 35))));
+    const scaled = min + norm * (max - min);
+    const stepped = step > 1 ? Math.round(scaled / step) * step : Math.round(scaled);
+    table.push(Math.max(min, Math.min(max, stepped)));
   }
   return table;
 }
 
-export const ACT_SCORE_TABLES = Object.fromEntries(
-  Object.entries(SECTION_CURVE_PARAMS).map(([subjectId, { maxRaw, p0, k }]) => [subjectId, buildScoreTable(maxRaw, p0, k)])
-);
+// subjectId -> raw-correct-count-indexed scaled-score table, one entry per
+// section across every planet with a practiceTest config (see
+// data/tests.js) — not just ACT's four anymore. A "sum" composite planet
+// (SAT/PSAT) splits its composite range evenly across its sections (their
+// own real per-section ranges, e.g. SAT's 200-800, already are an even
+// split of 400-1600); an "average" planet (ACT) scores every section on
+// the full composite range, since averaging keeps the result in that same
+// range regardless of section count.
+export const ACT_SCORE_TABLES = {};
+for (const test of TESTS) {
+  const pt = test.practiceTest;
+  if (!pt) continue;
+  const { min: compositeMin, max: compositeMax } = pt.compositeRange;
+  const numSections = pt.sections.length;
+  const sectionMin = pt.compositeMethod === "sum" ? compositeMin / numSections : compositeMin;
+  const sectionMax = pt.compositeMethod === "sum" ? compositeMax / numSections : compositeMax;
+  for (const section of pt.sections) {
+    const shape = SECTION_CURVE_SHAPE[section.subjectId];
+    if (!shape) continue;
+    ACT_SCORE_TABLES[section.subjectId] = buildScoreTable(section.questionCount, shape.p0, shape.k, sectionMin, sectionMax, pt.scoreStep);
+  }
+}
 
 /** Raw correct-answer count for one full-length Practice Test section ->
- * that section's 1-36 scaled score, via ACT_SCORE_TABLES. */
+ * that section's own scaled score, via ACT_SCORE_TABLES. */
 export function scaledScoreFromRaw(subjectId, correctCount) {
   const table = ACT_SCORE_TABLES[subjectId];
   if (!table) return 1;
@@ -219,9 +240,14 @@ function defaultSave() {
     monster: {
       xp: 0,
     },
+    // One bestComposite/history per planet with a practiceTest config (see
+    // data/tests.js) — was a single flat {bestComposite, history} back when
+    // only ACT had a full-length Practice Test; see _load()'s migration of
+    // that legacy shape into practiceTests.act below.
     practiceTests: {
-      bestComposite: 0,
-      history: [],
+      act: { bestComposite: 0, history: [] },
+      sat: { bestComposite: 0, history: [] },
+      psat: { bestComposite: 0, history: [] },
     },
     essays: {
       bestScore: 0,
@@ -285,7 +311,22 @@ export class GameState {
       fresh.endless = { ...fresh.endless, ...parsed.endless };
       fresh.bossCleared = { ...fresh.bossCleared, ...parsed.bossCleared };
       fresh.monster = { ...fresh.monster, ...parsed.monster };
-      fresh.practiceTests = { ...fresh.practiceTests, ...parsed.practiceTests };
+      // A pre-multi-planet save has the legacy flat {bestComposite,
+      // history} shape (ACT was the only planet with a Practice Test) —
+      // detected by the absence of a nested `.act`, since a save already on
+      // the new shape always has one. Migrated into practiceTests.act so
+      // that player's real ACT history survives the upgrade instead of
+      // silently resetting to 0.
+      if (parsed.practiceTests && !parsed.practiceTests.act && Array.isArray(parsed.practiceTests.history)) {
+        fresh.practiceTests.act = {
+          bestComposite: typeof parsed.practiceTests.bestComposite === "number" ? parsed.practiceTests.bestComposite : 0,
+          history: parsed.practiceTests.history,
+        };
+      } else {
+        for (const testId of ["act", "sat", "psat"]) {
+          fresh.practiceTests[testId] = { ...fresh.practiceTests[testId], ...parsed.practiceTests?.[testId] };
+        }
+      }
       fresh.essays = { ...fresh.essays, ...parsed.essays };
       fresh.mistakeJournal = Array.isArray(parsed.mistakeJournal) ? parsed.mistakeJournal : fresh.mistakeJournal;
       fresh.streak = { ...fresh.streak, ...parsed.streak };
@@ -783,30 +824,31 @@ export class GameState {
   }
 
   // --- score predictor & practice tests ---
-  get practiceTestBest() {
-    return this.data.practiceTests.bestComposite;
+  getPracticeTestBest(testId = "act") {
+    return this.data.practiceTests[testId]?.bestComposite ?? 0;
   }
 
-  getPracticeTestHistory() {
-    return this.data.practiceTests.history;
+  getPracticeTestHistory(testId = "act") {
+    return this.data.practiceTests[testId]?.history ?? [];
   }
 
-  /** Rough composite estimate for the given planet (default "act", the
-   * only one so far with a real full-length Practice Test to prefer — see
-   * PREDICTED_SCORE_RANGES above). A real ACT practice test's composite is
-   * a much stronger, apples-to-apples signal than lesson accuracy, so the
-   * most recent one wins whenever one exists; every other planet, and ACT
-   * before its first practice test, falls back to that planet's own
-   * lesson accuracy (once there's enough of it to mean anything), mapped
-   * onto its own real score range. */
+  /** Rough composite estimate for the given planet (default "act"). A real
+   * practice test's composite is a much stronger, apples-to-apples signal
+   * than lesson accuracy, so the most recent one wins whenever that planet
+   * has one; otherwise falls back to that planet's own lesson accuracy
+   * (once there's enough of it to mean anything), mapped onto its real
+   * score range (see each planet's practiceTest.compositeRange in
+   * data/tests.js). A planet with no practiceTest config at all (State
+   * Assessments) has no range to map onto and no skills to have attempts
+   * on in the first place, so it always falls through to "insufficient". */
   getPredictedScore(testId = "act") {
-    if (testId === "act") {
-      const history = this.data.practiceTests.history;
-      if (history.length > 0) {
-        const latest = history[history.length - 1];
-        return { score: latest.composite, source: "practiceTest" };
-      }
+    const history = this.getPracticeTestHistory(testId);
+    if (history.length > 0) {
+      const latest = history[history.length - 1];
+      return { score: latest.composite, source: "practiceTest" };
     }
+    const range = getTest(testId)?.practiceTest?.compositeRange;
+    if (!range) return { score: null, source: "insufficient" };
     let attempts = 0;
     let correct = 0;
     for (const id of getTestSkillIds(testId)) {
@@ -815,21 +857,23 @@ export class GameState {
       correct += p.correct;
     }
     if (attempts < 20) return { score: null, source: "insufficient" };
-    const { min, max } = PREDICTED_SCORE_RANGES[testId] || PREDICTED_SCORE_RANGES.act;
-    return { score: scoreFromAccuracyInRange(correct / attempts, min, max), source: "lessons" };
+    return { score: scoreFromAccuracyInRange(correct / attempts, range.min, range.max), source: "lessons" };
   }
 
-  /** Records a finished full-length practice test. `sectionResults` is
-   * [{ subjectId, label, correctCount, totalCount, subscore }]; composite
-   * is the average of the 4 subscores, same as how the real ACT computes
-   * its composite from section scores. */
-  recordPracticeTestResult({ sectionResults, composite, starsEarned, coinsEarned }) {
+  /** Records a finished full-length practice test for the given planet
+   * (default "act"). `sectionResults` is [{ subjectId, label, correctCount,
+   * totalCount, subscore }]; `composite` is however that planet's own
+   * practiceTest.compositeMethod combines its sections' subscores (see
+   * ui/practiceTest.js), computed by the caller since only it knows which
+   * planet's rules applied. */
+  recordPracticeTestResult({ sectionResults, composite, starsEarned, coinsEarned, testId = "act" }) {
     this.data.totalStars += starsEarned;
     this.data.coins += coinsEarned;
-    const isNewBest = composite > this.data.practiceTests.bestComposite;
-    if (isNewBest) this.data.practiceTests.bestComposite = composite;
-    this.data.practiceTests.history.push({ date: Date.now(), composite, sectionResults });
-    if (this.data.practiceTests.history.length > 20) this.data.practiceTests.history.shift();
+    const record = this.data.practiceTests[testId] || (this.data.practiceTests[testId] = { bestComposite: 0, history: [] });
+    const isNewBest = composite > record.bestComposite;
+    if (isNewBest) record.bestComposite = composite;
+    record.history.push({ date: Date.now(), composite, sectionResults });
+    if (record.history.length > 20) record.history.shift();
     const levelResult = this._grantXp(starsEarned);
     this._recordDailyActivity();
     const newlyUnlocked = this._checkAchievements();

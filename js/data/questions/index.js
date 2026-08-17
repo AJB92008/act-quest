@@ -1,5 +1,4 @@
-import { SUBJECTS, REPORTING_CATEGORIES } from "../skills.js";
-import { allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSubjects, getSubject as getAnySubject } from "../tests.js";
+import { allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSubjects, getSubject as getAnySubject, REPORTING_CATEGORIES } from "../tests.js";
 import { getQuestionPatterns, PATTERN_DEFS } from "./patterns.js";
 
 // Each skill's bank is chunked into fixed-size mini-lessons — bite-sized
@@ -439,17 +438,22 @@ export function getBossQuizQuestions(subjectId, count = 20) {
 }
 
 // Builds one Practice Test section, sampled proportionally across that
-// subject's real ACT reporting categories (see REPORTING_CATEGORIES in
-// data/skills.js) rather than uniformly across every skill regardless of
+// subject's real reporting categories (see REPORTING_CATEGORIES in
+// data/tests.js, merged from every planet's own skills.js/satSkills.js/
+// psatSkills.js) rather than uniformly across every skill regardless of
 // category — the same section-length uniform-random draw getBossQuizQuestions
 // uses would, by chance, sometimes load a Reading section with mostly
 // Key Ideas & Details questions and barely any Integration of Knowledge &
-// Ideas, which a real ACT section never does. Each returned question is
+// Ideas, which a real test section never does. Each returned question is
 // tagged with `reportingCategory` (the category id) so the results screen
-// can break the section score down the same way a real ACT score report does.
-export function getPracticeTestSectionQuestions(subjectId, count) {
+// can break the section score down the same way a real score report does.
+// `testId` picks which planet's flat question pool to draw from — every
+// subjectId is unique to one planet, but getAllQuestionsFlat() itself is
+// cached per-planet (see its own comment), so the caller has to say which
+// one rather than this function guessing from subjectId alone.
+export function getPracticeTestSectionQuestions(subjectId, count, testId = "act") {
   const categories = REPORTING_CATEGORIES[subjectId];
-  const pool = getAllQuestionsFlat().filter((q) => q.subjectId === subjectId);
+  const pool = getAllQuestionsFlat(testId).filter((q) => q.subjectId === subjectId);
   if (!categories || pool.length === 0) return shuffled(pool).slice(0, count);
 
   const byCategory = {};
@@ -459,11 +463,11 @@ export function getPracticeTestSectionQuestions(subjectId, count) {
     if (byCategory[catId]) byCategory[catId].push({ ...q, reportingCategory: catId });
   });
 
-  // A category with an explicit real-ACT `weight` uses it; one without
-  // (currently just Math, whose official categories overlap in a way that
-  // doesn't translate into a clean sampling split) falls back to how much
-  // of the subject's skill tree that category actually covers.
-  const totalSkills = SUBJECTS.find((s) => s.id === subjectId).skills.length;
+  // A category with an explicit real weight uses it; one without (ACT
+  // Math, whose official categories overlap in a way that doesn't
+  // translate into a clean sampling split) falls back to how much of the
+  // subject's skill tree that category actually covers.
+  const totalSkills = getAnySubject(subjectId).skills.length;
   const weights = categories.map((c) => {
     if (c.weight != null) return c.weight;
     return byCategory[c.id].length / totalSkills || 0.01;

@@ -25,9 +25,18 @@
 // a testId thread through every screen that calls them — see the comment above those
 // functions for why that's the one hard rule extending a planet has to
 // follow.
-import { SUBJECTS as ACT_SUBJECTS } from "./skills.js";
-import { SAT_SUBJECTS } from "./satSkills.js";
-import { PSAT_SUBJECTS } from "./psatSkills.js";
+import { SUBJECTS as ACT_SUBJECTS, REPORTING_CATEGORIES as ACT_REPORTING_CATEGORIES } from "./skills.js";
+import { SAT_SUBJECTS, REPORTING_CATEGORIES as SAT_REPORTING_CATEGORIES } from "./satSkills.js";
+import { PSAT_SUBJECTS, PSAT_REPORTING_CATEGORIES } from "./psatSkills.js";
+
+// Every planet's REPORTING_CATEGORIES, merged — subjectId keys stay
+// globally unique across planets (same rule as skill ids, see file header
+// below), so this is a safe flat merge rather than needing a testId to
+// disambiguate. Used by the full-length Practice Test's proportional
+// sampling and section score-curve building (see data/questions/index.js
+// and state.js) so those stay generic over subjectId instead of each
+// needing their own per-planet branch.
+export const REPORTING_CATEGORIES = { ...ACT_REPORTING_CATEGORIES, ...SAT_REPORTING_CATEGORIES, ...PSAT_REPORTING_CATEGORIES };
 
 export const TESTS = [
   {
@@ -40,6 +49,29 @@ export const TESTS = [
     colorDark: "#4433cc",
     bg: "#f0eeff",
     subjects: ACT_SUBJECTS,
+    // Drives the full-length Practice Test screen (ui/practiceTest.js) and
+    // the section-scaled-score tables it uses (ACT_SCORE_TABLES in
+    // state.js) — one config per planet instead of a screen hardcoded to
+    // ACT's own sections. Real ACT section order, question counts, and
+    // official time limits: 215 questions, 2h55m total across the four
+    // sections, composite is the *average* of each section's own 1-36
+    // scaled score (matching how the real ACT computes it). `scoreStep: 1`
+    // because real ACT scores are whole integers, not rounded to a coarser
+    // increment. `supportsWriting` gates the screen's optional Writing
+    // section flow — the real ACT (and this app's essay.js) has one;
+    // SAT/PSAT don't.
+    practiceTest: {
+      compositeMethod: "average",
+      compositeRange: { min: 1, max: 36 },
+      scoreStep: 1,
+      supportsWriting: true,
+      sections: [
+        { subjectId: "english", questionCount: 75, timeMinutes: 45 },
+        { subjectId: "math", questionCount: 60, timeMinutes: 60 },
+        { subjectId: "reading", questionCount: 40, timeMinutes: 35 },
+        { subjectId: "science", questionCount: 40, timeMinutes: 35 },
+      ],
+    },
   },
   {
     id: "sat",
@@ -51,6 +83,22 @@ export const TESTS = [
     colorDark: "#1c6f65",
     bg: "#e8f6f4",
     subjects: SAT_SUBJECTS,
+    // Real digital SAT format: two sections, Reading & Writing (54
+    // questions/64 min) then Math (44 questions/70 min), 98 questions and
+    // 2h14m total. Composite is the *sum* of the two section scores (each
+    // 200-800), not an average — the real SAT computes it that way, unlike
+    // the ACT's four-way average above. `scoreStep: 10` because real
+    // SAT/PSAT section scores are always reported in increments of 10.
+    practiceTest: {
+      compositeMethod: "sum",
+      compositeRange: { min: 400, max: 1600 },
+      scoreStep: 10,
+      supportsWriting: false,
+      sections: [
+        { subjectId: "sat-rw", questionCount: 54, timeMinutes: 64 },
+        { subjectId: "sat-math", questionCount: 44, timeMinutes: 70 },
+      ],
+    },
   },
   {
     id: "psat",
@@ -66,6 +114,20 @@ export const TESTS = [
     // domain breakdown skill-for-skill) and are folded in by reference
     // here, same pattern SAT's own subjects use above.
     subjects: PSAT_SUBJECTS,
+    // Same digital two-section format/timing as SAT's own config above —
+    // College Board publishes PSAT/NMSQT as testing identical section
+    // structure and timing to the digital SAT, just scored on PSAT's own
+    // narrower 160-760-per-section (320-1520 composite) range.
+    practiceTest: {
+      compositeMethod: "sum",
+      compositeRange: { min: 320, max: 1520 },
+      scoreStep: 10,
+      supportsWriting: false,
+      sections: [
+        { subjectId: "psat-rw", questionCount: 54, timeMinutes: 64 },
+        { subjectId: "psat-math", questionCount: 44, timeMinutes: 70 },
+      ],
+    },
   },
   {
     id: "stateAssessments",

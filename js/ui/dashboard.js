@@ -93,12 +93,15 @@ function testTabsHTML(activeTestId) {
 }
 
 // A compact version of the top-of-screen "Predicted ACT Score" card, scoped
-// to whichever planet's tab is active. No action buttons here (Practice
-// Test/Writing/Score Report are ACT-only features — see practiceTest.js's
-// header comment) — just the number and its source, mirroring
-// getPredictedScore(testId)'s own fallback chain. Percentile is ACT-only
-// too: COMPOSITE_PERCENTILES is built against the 1-36 scale, so it isn't
-// meaningful for SAT/PSAT's much larger score ranges.
+// to whichever planet's tab is active — same getPredictedScore(testId)
+// fallback chain (a recent full-length Practice Test wins, else lesson
+// accuracy) whether that's ACT, SAT, or PSAT, all three of which now have
+// a real Practice Test (see data/tests.js's practiceTest config and
+// ui/practiceTest.js). Writing/Score Report stay ACT-only features (see
+// practiceTest.js's own header comment on why Writing doesn't apply to
+// SAT/PSAT), so only the Practice Test button appears here. Percentile is
+// still ACT-only: COMPOSITE_PERCENTILES is built against the 1-36 scale, so
+// it isn't meaningful for SAT/PSAT's much larger score ranges.
 function predictedScoreCardHTML(testId, test) {
   const predicted = gameState.getPredictedScore(testId);
   const isWide = predicted.score !== null && String(predicted.score).length > 2;
@@ -120,6 +123,7 @@ function predictedScoreCardHTML(testId, test) {
             : ""
         }
       </div>
+      ${test.practiceTest ? `<button class="btn-secondary" data-practice-test-tab="${testId}">📝 Practice Test</button>` : ""}
     </div>
   `;
 }
@@ -524,6 +528,7 @@ export function renderDashboard(root, navigate, params = {}) {
   root.querySelectorAll("[data-test-tab]").forEach((btn) => {
     btn.addEventListener("click", () => navigate("dashboard", { testId: btn.dataset.testTab }));
   });
+  root.querySelector("[data-practice-test-tab]")?.addEventListener("click", (e) => navigate("practiceTest", { testId: e.currentTarget.dataset.practiceTestTab }));
   root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
   root.querySelector("[data-essay]").addEventListener("click", () => navigate("essay"));
   root.querySelector("[data-score-report]").addEventListener("click", () => navigate("scoreReport"));

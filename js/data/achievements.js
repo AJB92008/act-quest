@@ -52,21 +52,28 @@ export const ACHIEVEMENTS = [
     icon: "📝",
     name: "Test Day",
     desc: "Complete your first full-length practice test.",
-    condition: (gs) => gs.data.practiceTests.history.length >= 1,
+    // Any planet's practice test counts — ACT, SAT, and PSAT all have one
+    // now (see data/tests.js's practiceTest configs), and this achievement
+    // is about the milestone of sitting through a full-length test at all,
+    // not which one.
+    condition: (gs) => Object.values(gs.data.practiceTests).some((pt) => pt.history.length >= 1),
   },
   {
     id: "solid-score",
     icon: "⭐",
     name: "Solid Score",
     desc: "Score a 25+ composite on a practice test.",
-    condition: (gs) => gs.data.practiceTests.bestComposite >= 25,
+    // ACT-scoped on purpose: "25+" is a 1-36 ACT composite threshold, not a
+    // generic "good score" — SAT/PSAT composites (400-1600 / 320-1520)
+    // clear it trivially and would make this achievement meaningless.
+    condition: (gs) => gs.data.practiceTests.act.bestComposite >= 25,
   },
   {
     id: "standout-score",
     icon: "🌟",
     name: "Standout Score",
     desc: "Score a 30+ composite on a practice test.",
-    condition: (gs) => gs.data.practiceTests.bestComposite >= 30,
+    condition: (gs) => gs.data.practiceTests.act.bestComposite >= 30,
   },
   {
     id: "endless-grinder",

@@ -2,6 +2,7 @@
 // tables (ACT_SCORE_TABLES / scaledScoreFromRaw in state.js), and the
 // composite -> national percentile table (percentileForComposite).
 import { ACT_SCORE_TABLES, scaledScoreFromRaw, percentileForComposite } from "../js/state.js";
+import { TESTS } from "../js/data/tests.js";
 import { test, assertEqual, assertTrue } from "./assert.js";
 
 const SECTION_MAX = { english: 75, math: 60, reading: 40, science: 40 };
@@ -45,6 +46,54 @@ test("scaledScoreFromRaw clamps out-of-range raw counts instead of throwing", ()
 test("scaledScoreFromRaw returns a safe fallback for an unknown subject", () => {
   assertEqual(scaledScoreFromRaw("not-a-real-subject", 10), 1);
 });
+
+// SAT/PSAT: same shape of table, built from each planet's own practiceTest
+// config in data/tests.js (compositeRange split evenly across its two
+// "sum"-composite sections) instead of hand-duplicated numbers here — see
+// state.js's own comment on ACT_SCORE_TABLES for why.
+for (const testId of ["sat", "psat"]) {
+  const pt = TESTS.find((t) => t.id === testId).practiceTest;
+  const { min: compositeMin, max: compositeMax } = pt.compositeRange;
+  const sectionMin = compositeMin / pt.sections.length;
+  const sectionMax = compositeMax / pt.sections.length;
+
+  for (const section of pt.sections) {
+    const { subjectId, questionCount } = section;
+
+    test(`${subjectId} score table spans raw 0..${questionCount} inclusive`, () => {
+      assertEqual(ACT_SCORE_TABLES[subjectId].length, questionCount + 1);
+    });
+
+    test(`${subjectId}: raw 0 -> scaled ${sectionMin}, raw max -> scaled ${sectionMax}`, () => {
+      assertEqual(scaledScoreFromRaw(subjectId, 0), sectionMin);
+      assertEqual(scaledScoreFromRaw(subjectId, questionCount), sectionMax);
+    });
+
+    test(`${subjectId} score table is monotonically non-decreasing`, () => {
+      const table = ACT_SCORE_TABLES[subjectId];
+      for (let i = 1; i < table.length; i++) {
+        assertTrue(table[i] >= table[i - 1], `table[${i}]=${table[i]} < table[${i - 1}]=${table[i - 1]}`);
+      }
+    });
+
+    test(`${subjectId}: every scaled score stays within ${sectionMin}-${sectionMax} and rounds to a multiple of ${pt.scoreStep}`, () => {
+      for (const scaled of ACT_SCORE_TABLES[subjectId]) {
+        assertTrue(scaled >= sectionMin && scaled <= sectionMax, `out-of-range scaled score ${scaled}`);
+        assertEqual(scaled % pt.scoreStep, 0, `${scaled} isn't a multiple of ${pt.scoreStep}`);
+      }
+    });
+  }
+
+  test(`${testId}: two max-raw sections sum to the real composite ceiling (${compositeMax})`, () => {
+    const sum = pt.sections.reduce((total, s) => total + scaledScoreFromRaw(s.subjectId, s.questionCount), 0);
+    assertEqual(sum, compositeMax);
+  });
+
+  test(`${testId}: two zero-raw sections sum to the real composite floor (${compositeMin})`, () => {
+    const sum = pt.sections.reduce((total, s) => total + scaledScoreFromRaw(s.subjectId, 0), 0);
+    assertEqual(sum, compositeMin);
+  });
+}
 
 test("percentileForComposite: composite 36 -> 100th percentile, composite 1 -> the floor", () => {
   assertEqual(percentileForComposite(36), 100);

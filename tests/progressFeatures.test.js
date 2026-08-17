@@ -98,6 +98,55 @@ test("reaching level 10 unlocks the level-10 achievement", () => {
   assertTrue(newly.some((a) => a.id === "level-10"));
 });
 
+// "Test Day" is about the milestone of finishing any full-length practice
+// test at all — completing one on SAT or PSAT (both now have their own,
+// see data/tests.js's practiceTest config) should unlock it exactly like
+// completing one on ACT always has.
+test("completing a full-length practice test on any planet unlocks Test Day", () => {
+  const gs = freshGameState();
+  // recordPracticeTestResult already runs _checkAchievements internally
+  // (see state.js) — its own returned outcome.newlyUnlocked is the real
+  // signal, same as every screen that calls it reads. A second, separate
+  // _checkAchievements() call here would find nothing new (already
+  // unlocked on the first pass), same as the
+  // "an already-unlocked achievement is never returned again" test above.
+  const outcome = gs.recordPracticeTestResult({
+    sectionResults: [{ subjectId: "sat-rw", label: "Reading & Writing", correctCount: 30, totalCount: 54, subscore: 500 }],
+    composite: 1000,
+    starsEarned: 0,
+    coinsEarned: 0,
+    testId: "sat",
+  });
+  assertTrue(outcome.newlyUnlocked.some((a) => a.id === "test-day"), "expected an SAT practice test to unlock test-day");
+});
+
+// "Solid Score"/"Standout Score" name specific 1-36 ACT composite
+// thresholds ("25+", "30+") — an SAT/PSAT composite (400-1600 / 320-1520)
+// clears those trivially and must never unlock them.
+test("a high SAT composite does not unlock the ACT-scoped Solid/Standout Score achievements", () => {
+  const gs = freshGameState();
+  const outcome = gs.recordPracticeTestResult({
+    sectionResults: [{ subjectId: "sat-rw", label: "Reading & Writing", correctCount: 54, totalCount: 54, subscore: 800 }],
+    composite: 1600,
+    starsEarned: 0,
+    coinsEarned: 0,
+    testId: "sat",
+  });
+  assertTrue(!outcome.newlyUnlocked.some((a) => a.id === "solid-score"), "a 1600 SAT composite should not unlock a 25+ ACT-composite achievement");
+  assertTrue(!outcome.newlyUnlocked.some((a) => a.id === "standout-score"), "a 1600 SAT composite should not unlock a 30+ ACT-composite achievement");
+});
+
+test("a 25+ ACT composite still unlocks Solid Score", () => {
+  const gs = freshGameState();
+  const outcome = gs.recordPracticeTestResult({
+    sectionResults: [{ subjectId: "math", label: "Math", correctCount: 45, totalCount: 60, subscore: 25 }],
+    composite: 25,
+    starsEarned: 0,
+    coinsEarned: 0,
+  });
+  assertTrue(outcome.newlyUnlocked.some((a) => a.id === "solid-score"));
+});
+
 test("recordLessonResult's returned outcome includes newlyUnlocked", () => {
   const gs = freshGameState();
   const outcome = gs.recordLessonResult("en-commas", 0, { correctCount: 5, totalCount: 5, starsEarned: 6, coinsEarned: 30 });
