@@ -2203,6 +2203,14 @@ button.drill-skill-row:hover {
   gap: 4px;
 }
 
+.dash-predictor-card--compact {
+  margin: 14px 0 18px;
+}
+
+.dash-predictor-score.is-wide {
+  font-size: 1.3rem;
+}
+
 .dash-history-card {
   background: var(--card);
   border-radius: var(--radius);

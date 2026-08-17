@@ -1,4 +1,4 @@
-import { SUBJECTS, allSkillIds } from "./data/skills.js";
+import { SUBJECTS } from "./data/skills.js";
 import { getLessonCount } from "./data/questions/index.js";
 import { ACHIEVEMENTS } from "./data/achievements.js";
 import { TEST_IDS, getSubject as getAnySubject, allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSkillIds } from "./data/tests.js";
@@ -63,6 +63,23 @@ function xpFloorForLevel(level) {
 // Test's more realistic, section-shaped conversion.
 export function scoreFromAccuracy(accuracy) {
   return Math.max(1, Math.min(36, Math.round(1 + accuracy * 35)));
+}
+
+// Real published composite ranges for every planet's own predicted-score
+// scale — used by getPredictedScore()'s lesson-accuracy fallback below.
+// Only ACT has a full-length Practice Test to build a real section-shaped
+// curve from (see ui/practiceTest.js's header comment on why that stays
+// ACT-only), so SAT/PSAT always fall back to this same rough linear
+// accuracy mapping scoreFromAccuracy() uses for ACT, just re-scaled onto
+// their own real min-max.
+const PREDICTED_SCORE_RANGES = {
+  act: { min: 1, max: 36 },
+  sat: { min: 400, max: 1600 },
+  psat: { min: 320, max: 1520 },
+};
+
+function scoreFromAccuracyInRange(accuracy, min, max) {
+  return Math.max(min, Math.min(max, Math.round(min + accuracy * (max - min))));
 }
 
 // Approximates the *shape* of a real ACT raw-score -> scaled-score
@@ -774,25 +791,32 @@ export class GameState {
     return this.data.practiceTests.history;
   }
 
-  /** Rough 1-36 composite estimate. A real practice test's composite is a
-   * much stronger, apples-to-apples signal than lesson accuracy, so the
-   * most recent one wins whenever one exists; otherwise fall back to
-   * overall lesson accuracy (once there's enough of it to mean anything). */
-  getPredictedScore() {
-    const history = this.data.practiceTests.history;
-    if (history.length > 0) {
-      const latest = history[history.length - 1];
-      return { score: latest.composite, source: "practiceTest" };
+  /** Rough composite estimate for the given planet (default "act", the
+   * only one so far with a real full-length Practice Test to prefer — see
+   * PREDICTED_SCORE_RANGES above). A real ACT practice test's composite is
+   * a much stronger, apples-to-apples signal than lesson accuracy, so the
+   * most recent one wins whenever one exists; every other planet, and ACT
+   * before its first practice test, falls back to that planet's own
+   * lesson accuracy (once there's enough of it to mean anything), mapped
+   * onto its own real score range. */
+  getPredictedScore(testId = "act") {
+    if (testId === "act") {
+      const history = this.data.practiceTests.history;
+      if (history.length > 0) {
+        const latest = history[history.length - 1];
+        return { score: latest.composite, source: "practiceTest" };
+      }
     }
     let attempts = 0;
     let correct = 0;
-    for (const id of allSkillIds()) {
+    for (const id of getTestSkillIds(testId)) {
       const p = this.data.skillProgress[id];
       attempts += p.attempts;
       correct += p.correct;
     }
     if (attempts < 20) return { score: null, source: "insufficient" };
-    return { score: scoreFromAccuracy(correct / attempts), source: "lessons" };
+    const { min, max } = PREDICTED_SCORE_RANGES[testId] || PREDICTED_SCORE_RANGES.act;
+    return { score: scoreFromAccuracyInRange(correct / attempts, min, max), source: "lessons" };
   }
 
   /** Records a finished full-length practice test. `sectionResults` is

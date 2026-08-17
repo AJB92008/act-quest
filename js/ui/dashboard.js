@@ -92,6 +92,38 @@ function testTabsHTML(activeTestId) {
   return `<div class="avatar-tabs" role="tablist" aria-label="Choose a test">${tabs}</div>`;
 }
 
+// A compact version of the top-of-screen "Predicted ACT Score" card, scoped
+// to whichever planet's tab is active. No action buttons here (Practice
+// Test/Writing/Score Report are ACT-only features — see practiceTest.js's
+// header comment) — just the number and its source, mirroring
+// getPredictedScore(testId)'s own fallback chain. Percentile is ACT-only
+// too: COMPOSITE_PERCENTILES is built against the 1-36 scale, so it isn't
+// meaningful for SAT/PSAT's much larger score ranges.
+function predictedScoreCardHTML(testId, test) {
+  const predicted = gameState.getPredictedScore(testId);
+  const isWide = predicted.score !== null && String(predicted.score).length > 2;
+  return `
+    <div class="dash-predictor-card dash-predictor-card--compact">
+      <div class="dash-predictor-score ${isWide ? "is-wide" : ""}">${predicted.score === null ? "?" : predicted.score}</div>
+      <div class="dash-predictor-info">
+        <strong>Predicted ${test.name} Score</strong>
+        <p class="dash-monster-substat">${
+          predicted.score === null
+            ? `Answer more ${test.name} lesson questions to see a rough estimate here.`
+            : predicted.source === "practiceTest"
+            ? "Based on your most recent full-length practice test."
+            : "A rough estimate from your lesson accuracy on this planet."
+        }</p>
+        ${
+          predicted.score !== null && testId === "act"
+            ? `<p class="dash-monster-substat">Approximately the ${percentileForComposite(predicted.score)}th percentile nationally.</p>`
+            : ""
+        }
+      </div>
+    </div>
+  `;
+}
+
 function subjectRowsHTML(subjectStats) {
   return subjectStats
     .map(({ subject, accuracy, masteredCount, totalSkills }) => {
@@ -477,6 +509,7 @@ export function renderDashboard(root, navigate, params = {}) {
         <h3 class="dash-history-title">📚 Skills by Test</h3>
         ${testTabsHTML(testId)}
         <p class="dash-monster-substat">${test.planetName} — ${test.tagline}${isTestReady(testId) ? "" : " 🚧 This planet's content is still being built."}</p>
+        ${isTestReady(testId) ? predictedScoreCardHTML(testId, test) : ""}
         <div class="dash-rows">${rows}</div>
       </div>
       ${masteryHeatmapHTML(testSubjects)}
