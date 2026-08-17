@@ -28,6 +28,7 @@
 import { SUBJECTS as ACT_SUBJECTS, REPORTING_CATEGORIES as ACT_REPORTING_CATEGORIES } from "./skills.js";
 import { SAT_SUBJECTS, REPORTING_CATEGORIES as SAT_REPORTING_CATEGORIES } from "./satSkills.js";
 import { PSAT_SUBJECTS, PSAT_REPORTING_CATEGORIES } from "./psatSkills.js";
+import { ALL_STATE_SUBJECTS } from "./stateTests.js";
 
 // Every planet's REPORTING_CATEGORIES, merged — subjectId keys stay
 // globally unique across planets (same rule as skill ids, see file header
@@ -133,35 +134,24 @@ export const TESTS = [
     id: "stateAssessments",
     name: "State Assessments",
     planetName: "Terravale",
-    tagline: "State end-of-course and graduation exams — a whole cluster of local worlds.",
+    tagline: "Every state mandates its own tests — pick your state to see yours.",
     icon: "🌍",
     color: "#3d8f5f",
     colorDark: "#296b44",
     bg: "#e9f6ee",
-    subjects: [
-      {
-        id: "state-ela",
-        name: "English Language Arts",
-        place: "Statute Springs",
-        color: "#3d8f5f",
-        colorDark: "#296b44",
-        bg: "#e9f6ee",
-        icon: "📖",
-        blurb: "State-standard reading and writing skills — coming soon.",
-        skills: [],
-      },
-      {
-        id: "state-math",
-        name: "Math",
-        place: "Ledger Hills",
-        color: "#4a7fc9",
-        colorDark: "#2f5a99",
-        bg: "#eaf1fb",
-        icon: "🧮",
-        blurb: "State-standard math skills — coming soon.",
-        skills: [],
-      },
-    ],
+    // Unlike every other planet, this one has no single fixed set of
+    // islands — which test is "mandated" depends on which state the
+    // player lives in (see data/stateTests.js and ui/statePicker.js).
+    // `subjects` here is every state's subjects flattened together (100
+    // entries, all still-empty `skills: []` scaffolding either way) purely
+    // so each state-specific subject/skill id is globally discoverable via
+    // getSubject()/getSkill()/allSubjects() below, the one hard rule every
+    // planet has to follow (see this file's header comment). The World
+    // Map/Dashboard screens never render this full list directly — they
+    // call getStateSubjects(gameState.homeState) to show just the
+    // player's own state's two islands, redirecting to the state picker
+    // first if homeState isn't set yet.
+    subjects: ALL_STATE_SUBJECTS,
   },
 ];
 

@@ -1890,7 +1890,8 @@ button.drill-skill-row:hover {
   color: var(--muted);
 }
 
-.study-plan-field input {
+.study-plan-field input,
+.study-plan-field select {
   font: inherit;
   font-size: 0.95rem;
   color: var(--ink);

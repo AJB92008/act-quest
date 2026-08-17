@@ -1,5 +1,6 @@
 import { getSubject, SUBJECTS } from "../data/skills.js";
 import { TESTS, TEST_IDS, getTestSubjects, isTestReady, isSubjectPlayable } from "../data/tests.js";
+import { getState, getStateSubjects } from "../data/stateTests.js";
 import { gameState, percentileForComposite } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -427,7 +428,13 @@ export function renderDashboard(root, navigate, params = {}) {
   // as every other params-driven screen in this app.
   const testId = TEST_IDS.has(params.testId) ? params.testId : "act";
   const test = TESTS.find((t) => t.id === testId);
-  const testSubjects = getTestSubjects(testId);
+  // State Assessments has no single fixed subject list — getTestSubjects
+  // would return all 50 states' islands flattened together (see tests.js's
+  // own comment on why that full list exists at all). Show just the
+  // player's own chosen state's two islands instead, same narrowing
+  // worldMap.js does; with no state chosen yet there's nothing to show
+  // here but a prompt to go pick one.
+  const testSubjects = testId === "stateAssessments" ? (gameState.homeState ? getStateSubjects(gameState.homeState) : []) : getTestSubjects(testId);
   const testSubjectStats = testSubjects.map((s) => ({ subject: s, ...gameState.getSubjectStats(s.id) }));
   const rows = subjectRowsHTML(testSubjectStats);
 
@@ -512,11 +519,18 @@ export function renderDashboard(root, navigate, params = {}) {
       <div class="dash-history-card">
         <h3 class="dash-history-title">📚 Skills by Test</h3>
         ${testTabsHTML(testId)}
-        <p class="dash-monster-substat">${test.planetName} — ${test.tagline}${isTestReady(testId) ? "" : " 🚧 This planet's content is still being built."}</p>
-        ${isTestReady(testId) ? predictedScoreCardHTML(testId, test) : ""}
-        <div class="dash-rows">${rows}</div>
+        <p class="dash-monster-substat">${
+          testId === "stateAssessments" && gameState.homeState
+            ? `${test.planetName} — ${getState(gameState.homeState)?.name}'s own mandated assessments.`
+            : `${test.planetName} — ${test.tagline}${isTestReady(testId) ? "" : " 🚧 This planet's content is still being built."}`
+        }</p>
+        ${
+          testId === "stateAssessments" && !gameState.homeState
+            ? `<button class="btn-secondary" data-choose-state>🗺️ Choose Your State</button>`
+            : `${isTestReady(testId) ? predictedScoreCardHTML(testId, test) : ""}<div class="dash-rows">${rows}</div>`
+        }
       </div>
-      ${masteryHeatmapHTML(testSubjects)}
+      ${testSubjects.length > 0 ? masteryHeatmapHTML(testSubjects) : ""}
       <div class="dash-history-card" data-cloud-card></div>
       <button class="btn-danger-quiet" data-reset>Reset All Progress</button>
     </main>
@@ -529,6 +543,7 @@ export function renderDashboard(root, navigate, params = {}) {
     btn.addEventListener("click", () => navigate("dashboard", { testId: btn.dataset.testTab }));
   });
   root.querySelector("[data-practice-test-tab]")?.addEventListener("click", (e) => navigate("practiceTest", { testId: e.currentTarget.dataset.practiceTestTab }));
+  root.querySelector("[data-choose-state]")?.addEventListener("click", () => navigate("statePicker", { returnTo: "dashboard" }));
   root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
   root.querySelector("[data-essay]").addEventListener("click", () => navigate("essay"));
   root.querySelector("[data-score-report]").addEventListener("click", () => navigate("scoreReport"));

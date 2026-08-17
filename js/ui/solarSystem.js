@@ -18,7 +18,11 @@ export function renderSolarSystem(root, navigate) {
     const { x, y } = positions[i];
     const ready = isTestReady(test.id);
     const isCurrent = test.id === gameState.currentTestId;
-    const subjectCount = test.subjects.length;
+    // State Assessments' subjects list is all 50 states' islands flattened
+    // together (see data/tests.js's own comment on why) — "100 subjects"
+    // would read as a typo next to every other planet's small, real
+    // per-subject count, so this planet gets its own label instead.
+    const subjectLabel = test.id === "stateAssessments" ? "50 states" : `${test.subjects.length} subject${test.subjects.length === 1 ? "" : "s"}`;
     return `
       <div class="map-node-wrap" style="left:${x}%;top:${y}px;">
         <button class="map-island-node planet-node ${ready ? "" : "is-coming-soon"}" data-test="${test.id}"
@@ -30,7 +34,7 @@ export function renderSolarSystem(root, navigate) {
         </button>
         <div class="map-island-label">
           <h3>${test.planetName}</h3>
-          <p class="map-island-place">${test.name} &middot; ${subjectCount} subject${subjectCount === 1 ? "" : "s"}</p>
+          <p class="map-island-place">${test.name} &middot; ${subjectLabel}</p>
           <p class="map-island-progress">${ready ? "Ready to explore" : "🚧 Coming soon"}</p>
         </div>
       </div>

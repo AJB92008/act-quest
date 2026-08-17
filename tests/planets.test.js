@@ -88,8 +88,8 @@ test("getSubject/getSkill (data/tests.js) resolve real ACT ids exactly like skil
 });
 
 test("getSubject/getSkill resolve a scaffolded (contentless) planet's subject, and correctly find no skill in it", () => {
-  const subject = getSubject("state-math");
-  assertTrue(!!subject && subject.name === "Math" && subject.skills.length === 0);
+  const subject = getSubject("state-tx-math");
+  assertTrue(!!subject && subject.name === "STAAR Math" && subject.skills.length === 0);
   assertEqual(getSkill("sat-anything-not-real"), null);
 });
 

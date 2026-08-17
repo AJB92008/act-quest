@@ -1,4 +1,5 @@
 import { getTest, getTestSubjects, isSubjectPlayable } from "../data/tests.js";
+import { getState, getStateSubjects } from "../data/stateTests.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -27,8 +28,19 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
   // ~15 call sites needed to change to keep working.
   if (testId) gameState.setCurrentTestId(testId);
   const activeTestId = testId || gameState.currentTestId;
+  // State Assessments has no single fixed test — which islands to show
+  // depends on which state the player lives in (see data/stateTests.js).
+  // Redirect to the one-time picker instead of rendering an empty/wrong
+  // map when that hasn't been chosen yet; once it has, show that state's
+  // own two islands instead of the planet's full 50-state subject list
+  // (getTestSubjects would return all 100 — see tests.js's own comment on
+  // why that flat list exists).
+  if (activeTestId === "stateAssessments" && !gameState.homeState) {
+    navigate("statePicker", { returnTo: "map" });
+    return;
+  }
   const test = getTest(activeTestId);
-  const subjects = getTestSubjects(activeTestId);
+  const subjects = activeTestId === "stateAssessments" ? getStateSubjects(gameState.homeState) : getTestSubjects(activeTestId);
   const isReady = subjects.some(isSubjectPlayable);
 
   const positions = pathPositions(subjects.length, { rowHeight: ROW_HEIGHT, leftPct: 26, rightPct: 74 });
@@ -89,14 +101,19 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
         }).join("")
       : "";
 
+  const homeStateName = activeTestId === "stateAssessments" ? getState(gameState.homeState)?.name : null;
+
   root.innerHTML = `
     ${hudHTML("map")}
     <main class="screen map-screen">
       <button class="back-btn" data-solar-system>&larr; Solar System</button>
+      ${homeStateName ? `<button class="back-btn" data-change-state>🗺️ Change State (${homeStateName})</button>` : ""}
       <h1 class="map-title">Choose an Island to Explore</h1>
       <p class="map-subtitle">${
         activeTestId === "act"
           ? "Acto is ready to study. Pick a subject to begin the path."
+          : activeTestId === "stateAssessments"
+          ? `${test.planetName} &mdash; ${homeStateName}'s own mandated assessments.`
           : `${test.planetName} (${test.name}) &mdash; pick a subject to begin the path.`
       }</p>
       ${!isReady ? `<p class="map-coming-soon-banner">🚧 ${test.name} content is still being built &mdash; pick an island below to see what's planned.</p>` : ""}
@@ -111,6 +128,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
 
   wireHud(root, navigate);
   root.querySelector("[data-solar-system]").addEventListener("click", () => navigate("solarSystem"));
+  root.querySelector("[data-change-state]")?.addEventListener("click", () => navigate("statePicker", { returnTo: "map" }));
   root.querySelectorAll("[data-subject]").forEach((node) => {
     node.addEventListener("click", () => navigate("island", { subjectId: node.dataset.subject }));
   });

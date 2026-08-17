@@ -2,6 +2,7 @@ import { SUBJECTS } from "./data/skills.js";
 import { getLessonCount } from "./data/questions/index.js";
 import { ACHIEVEMENTS } from "./data/achievements.js";
 import { TEST_IDS, TESTS, getTest, getSubject as getAnySubject, allSubjects as allTestSubjects, allSkillIds as allTestSkillIds, getTestSkillIds } from "./data/tests.js";
+import { STATE_ABBRS } from "./data/stateTests.js";
 
 const STORAGE_KEY = "act-quest-save-v1";
 const PASS_THRESHOLD = 0.7; // score needed to pass a mini-lesson / master a skill
@@ -207,6 +208,13 @@ function defaultSave() {
     // spine currently points at (see data/tests.js) — everyone starts on
     // the one planet with real content.
     currentTestId: "act",
+    // Two-letter USPS abbreviation, null until the player picks one on
+    // the State Assessments planet's one-time state picker (see
+    // ui/statePicker.js) — that's what decides which two islands
+    // (getStateSubjects in data/stateTests.js) that planet's World Map
+    // shows, since "state testing" has no single fixed test the way
+    // ACT/SAT/PSAT do.
+    homeState: null,
     avatar: {
       bodyColor: "#7fd1ae",
       bodyShape: "round",
@@ -306,6 +314,7 @@ export class GameState {
       // came from a tampered/imported save), and that id flows straight
       // into data/tests.js lookups downstream with no further checking.
       fresh.currentTestId = typeof parsed.currentTestId === "string" && TEST_IDS.has(parsed.currentTestId) ? parsed.currentTestId : fresh.currentTestId;
+      fresh.homeState = typeof parsed.homeState === "string" && STATE_ABBRS.has(parsed.homeState) ? parsed.homeState : fresh.homeState;
       fresh.onboarded = parsed.onboarded ?? fresh.onboarded;
       fresh.settings = { ...fresh.settings, ...parsed.settings };
       fresh.endless = { ...fresh.endless, ...parsed.endless };
@@ -436,6 +445,16 @@ export class GameState {
   setCurrentTestId(testId) {
     if (!TEST_IDS.has(testId)) return;
     this.data.currentTestId = testId;
+    this.save();
+  }
+
+  get homeState() {
+    return this.data.homeState;
+  }
+
+  setHomeState(abbr) {
+    if (!STATE_ABBRS.has(abbr)) return;
+    this.data.homeState = abbr;
     this.save();
   }
 
