@@ -1,4 +1,5 @@
 import { getSubject, SUBJECTS } from "../data/skills.js";
+import { TESTS, TEST_IDS, getTestSubjects, isTestReady, isSubjectPlayable } from "../data/tests.js";
 import { gameState, percentileForComposite } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -33,8 +34,16 @@ function formatHistoryDate(timestamp) {
   return new Date(timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function masteryHeatmapHTML() {
-  const rows = SUBJECTS.map((subject) => {
+function masteryHeatmapHTML(subjects) {
+  const rows = subjects.map((subject) => {
+    if (!isSubjectPlayable(subject)) {
+      return `
+        <div class="heatmap-row">
+          <span class="heatmap-row-label">${subject.icon} ${subject.name}</span>
+          <span class="dash-monster-substat">Coming soon</span>
+        </div>
+      `;
+    }
     const cells = subject.skills
       .map((skill) => {
         const p = gameState.getSkillProgress(skill.id);
@@ -63,6 +72,54 @@ function masteryHeatmapHTML() {
       </div>
     </div>
   `;
+}
+
+// Pill tabs for switching which planet's subject breakdown the rows/heatmap
+// below show — reuses avatarCreator.js's generic .avatar-tab-btn styling
+// rather than a new tab component, since it's the same "pick one of a few
+// named options" shape. State Assessments is included like any other
+// planet; its subjects just have empty skill arrays (see data/tests.js),
+// which subjectRowsHTML/masteryHeatmapHTML already render as "Coming soon"
+// via isSubjectPlayable, so no special-casing is needed here.
+function testTabsHTML(activeTestId) {
+  const tabs = TESTS.map(
+    (t) => `
+      <button class="avatar-tab-btn ${t.id === activeTestId ? "is-active" : ""}" data-test-tab="${t.id}" aria-pressed="${t.id === activeTestId}">
+        <span class="avatar-tab-icon">${t.icon}</span>${t.name}
+      </button>
+    `
+  ).join("");
+  return `<div class="avatar-tabs" role="tablist" aria-label="Choose a test">${tabs}</div>`;
+}
+
+function subjectRowsHTML(subjectStats) {
+  return subjectStats
+    .map(({ subject, accuracy, masteredCount, totalSkills }) => {
+      if (!isSubjectPlayable(subject)) {
+        return `
+          <div class="dash-row dash-row-empty">
+            <div class="dash-row-label">
+              <span>${subject.icon} ${subject.name}</span>
+              <span>Coming soon</span>
+            </div>
+            <p class="dash-monster-substat">${subject.blurb || "Content for this subject hasn't been built yet."}</p>
+          </div>
+        `;
+      }
+      const masteredPct = totalSkills > 0 ? Math.round((masteredCount / totalSkills) * 100) : 0;
+      const accuracyPct = accuracy === null ? 0 : Math.round(accuracy * 100);
+      return `
+        <div class="dash-row">
+          <div class="dash-row-label">
+            <span>${subject.icon} ${subject.name}</span>
+            <span>${masteredCount}/${totalSkills} mastered</span>
+          </div>
+          <div class="progress-bar" role="progressbar" aria-valuenow="${masteredPct}" aria-valuemin="0" aria-valuemax="100" aria-label="${subject.name} skills mastered"><div class="progress-fill" style="width:${masteredPct}%;background:${subject.color}"></div></div>
+          <div class="dash-row-accuracy">${accuracy === null ? "No attempts yet" : `${accuracyPct}% accuracy`}</div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
@@ -318,7 +375,7 @@ function wireCloudCard(root) {
   renderCloudCard();
 }
 
-export function renderDashboard(root, navigate) {
+export function renderDashboard(root, navigate, params = {}) {
   const overall = gameState.getOverallStats();
   const levelProgress = gameState.getLevelProgress();
   const evolutionStageName = gameState.getEvolutionStageName();
@@ -326,22 +383,17 @@ export function renderDashboard(root, navigate) {
   const predicted = gameState.getPredictedScore();
   const history = gameState.getPracticeTestHistory();
 
-  const rows = overall.subjectStats
-    .map(({ subject, accuracy, masteredCount, totalSkills }) => {
-      const masteredPct = totalSkills > 0 ? Math.round((masteredCount / totalSkills) * 100) : 0;
-      const accuracyPct = accuracy === null ? 0 : Math.round(accuracy * 100);
-      return `
-        <div class="dash-row">
-          <div class="dash-row-label">
-            <span>${subject.icon} ${subject.name}</span>
-            <span>${masteredCount}/${totalSkills} mastered</span>
-          </div>
-          <div class="progress-bar" role="progressbar" aria-valuenow="${masteredPct}" aria-valuemin="0" aria-valuemax="100" aria-label="${subject.name} skills mastered"><div class="progress-fill" style="width:${masteredPct}%;background:${subject.color}"></div></div>
-          <div class="dash-row-accuracy">${accuracy === null ? "No attempts yet" : `${accuracyPct}% accuracy`}</div>
-        </div>
-      `;
-    })
-    .join("");
+  // Which planet's subject breakdown (the rows + heatmap below) is showing
+  // right now — a pure view toggle local to this screen, independent of
+  // gameState.currentTestId (which is "the planet you're actively
+  // studying on" and drives Endless Mode/weak-skill defaults elsewhere).
+  // Not persisted: every visit to the dashboard starts back on ACT, same
+  // as every other params-driven screen in this app.
+  const testId = TEST_IDS.has(params.testId) ? params.testId : "act";
+  const test = TESTS.find((t) => t.id === testId);
+  const testSubjects = getTestSubjects(testId);
+  const testSubjectStats = testSubjects.map((s) => ({ subject: s, ...gameState.getSubjectStats(s.id) }));
+  const rows = subjectRowsHTML(testSubjectStats);
 
   root.innerHTML = `
     ${hudHTML("dashboard")}
@@ -421,8 +473,13 @@ export function renderDashboard(root, navigate) {
           `
           : ""
       }
-      <div class="dash-rows">${rows}</div>
-      ${masteryHeatmapHTML()}
+      <div class="dash-history-card">
+        <h3 class="dash-history-title">📚 Skills by Test</h3>
+        ${testTabsHTML(testId)}
+        <p class="dash-monster-substat">${test.planetName} — ${test.tagline}${isTestReady(testId) ? "" : " 🚧 This planet's content is still being built."}</p>
+        <div class="dash-rows">${rows}</div>
+      </div>
+      ${masteryHeatmapHTML(testSubjects)}
       <div class="dash-history-card" data-cloud-card></div>
       <button class="btn-danger-quiet" data-reset>Reset All Progress</button>
     </main>
@@ -431,6 +488,9 @@ export function renderDashboard(root, navigate) {
   wireHud(root, navigate);
   wireHeatmapTooltip(root);
   wireCloudCard(root);
+  root.querySelectorAll("[data-test-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => navigate("dashboard", { testId: btn.dataset.testTab }));
+  });
   root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
   root.querySelector("[data-essay]").addEventListener("click", () => navigate("essay"));
   root.querySelector("[data-score-report]").addEventListener("click", () => navigate("scoreReport"));

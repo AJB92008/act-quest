@@ -2489,6 +2489,17 @@ button.drill-skill-row:hover {
   font-weight: 700;
 }
 
+.dash-row-empty {
+  opacity: 0.7;
+}
+
+.dash-row-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 .practice-test-category-breakdown {
   margin: 8px 0 0;
   padding-left: 18px;
