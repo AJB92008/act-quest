@@ -26,7 +26,7 @@ export function renderStatePicker(root, navigate, { returnTo = "map" } = {}) {
   root.innerHTML = `
     ${hudHTML("map")}
     <main class="screen practice-test-screen" style="--island-color:${ACCENT_COLOR};--island-bg:${ACCENT_BG}">
-      <button class="back-btn" data-back>&larr; Solar System</button>
+      <button class="back-btn" data-back>&larr; Galaxy</button>
       <h1 class="map-title">🚀 Which planet do you want to fly to?</h1>
       <p class="map-subtitle">Every state mandates its own standardized tests — hop in and pick yours.</p>
       <div class="rocket-wrap" style="--island-color:${ACCENT_COLOR};--island-color-dark:${ACCENT_COLOR_DARK}">

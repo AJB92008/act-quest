@@ -115,7 +115,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
   root.innerHTML = `
     ${hudHTML("map")}
     <main class="screen map-screen">
-      <button class="back-btn" data-solar-system>&larr; Solar System</button>
+      <button class="back-btn" data-solar-system>&larr; Galaxy</button>
       ${homeStateName ? `<button class="back-btn" data-change-state>🗺️ Change State (${homeStateName})</button>` : ""}
       <h1 class="map-title">Choose a Planet to Explore</h1>
       <p class="map-subtitle">${
