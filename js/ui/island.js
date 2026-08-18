@@ -1,3 +1,7 @@
+// A planet's own island-picker: each skill within this subject is an
+// island (see worldMap.js's header comment for the full solar
+// system > planet > island hierarchy). Clicking an island hands off to
+// skillPath.js, which shows that island's own lesson path.
 import { getSubject, isSubjectPlayable } from "../data/tests.js";
 import { getLessonCount, preloadSubject } from "../data/questions/index.js";
 import { getBossMonster } from "../data/bossMonsters.js";
@@ -50,7 +54,7 @@ export function renderIsland(root, navigate, { subjectId }) {
         <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
           ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 59 })}</div>` : ""}
           <button class="node-circle ${stateClass}" data-skill="${skill.id}" ${playable ? "" : "disabled"}
-            aria-label="${skill.name}${playable ? `: ${progress.mastered ? "mastered" : `${progress.lessonsCompleted} of ${totalLessons} lessons complete`}` : ", lessons not written yet"}"
+            aria-label="${skill.name} island${playable ? `: ${progress.mastered ? "mastered" : `${progress.lessonsCompleted} of ${totalLessons} lessons complete`}` : ", lessons not written yet"}"
             style="--node-color:${subject.color}">
             ${badge}
           </button>
@@ -109,8 +113,8 @@ export function renderIsland(root, navigate, { subjectId }) {
           <p class="boss-encounter-subtitle">${subject.name} Boss Quiz${bossCleared ? " (Cleared!)" : ""}</p>
           <p class="boss-encounter-blurb">${
             allMastered
-              ? "20 mixed questions from everything on this island. Clear it for a big one-time bonus."
-              : `Master all ${subject.skills.length} skills on this island to unlock.`
+              ? "20 mixed questions from every island on this planet. Clear it for a big one-time bonus."
+              : `Master all ${subject.skills.length} islands on this planet to unlock.`
           }</p>
           ${allMastered ? `<button class="btn-primary" data-boss>Challenge the Boss &rarr;</button>` : ""}
         </div>
@@ -124,15 +128,15 @@ export function renderIsland(root, navigate, { subjectId }) {
     ? `
       <div class="island-coming-soon">
         <span class="island-coming-soon-icon">🚧</span>
-        <h3>${subject.name}'s skill tree is planned — lessons aren't written yet</h3>
-        <p>The ${subject.skills.length} skills below are the real plan for this island; none of them have lessons to play yet.</p>
+        <h3>${subject.name}'s islands are planned — lessons aren't written yet</h3>
+        <p>The ${subject.skills.length} islands below are the real plan for this planet; none of them have lessons to play yet.</p>
       </div>
     `
     : `
       <div class="island-coming-soon">
         <span class="island-coming-soon-icon">🚧</span>
         <h3>Lessons for ${subject.name} are still being built</h3>
-        <p>This island's skill path hasn't been written yet — check back once it has real content.</p>
+        <p>This planet's islands haven't been written yet — check back once it has real content.</p>
       </div>
     `;
 
@@ -142,6 +146,7 @@ export function renderIsland(root, navigate, { subjectId }) {
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
       <p class="island-heading-blurb">${subject.blurb}</p>
+      <p class="map-subtitle">🏝️ Choose an Island to Explore</p>
       ${referenceLinkHTML}
       ${comingSoonHTML}
       <div class="map-path-container" style="height:${totalHeight}px">

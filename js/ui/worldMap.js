@@ -7,11 +7,20 @@ import { pathPositions, pathHeight, renderPathSvg, renderDecorations } from "./p
 
 const ROW_HEIGHT = 200;
 
-// Shortcut nodes above the island path — styled like the islands themselves
-// (circular icon + colored ring + label) rather than generic list cards, so
-// they read as part of the same map instead of a bolted-on menu. Each gets
-// its own accent color, distinct from every subject island's and from each
-// other, so they stay visually distinguishable at a glance.
+// This screen is a solar system's own planet-picker: each subject/category
+// is a planet (see data/tests.js), and picking one hands off to island.js,
+// which plays the same role one level down (each skill within that
+// subject is an island). State Assessments is the one planet-picker this
+// screen never actually renders — see the testId==="stateAssessments"
+// branch below, which redirects to the rocket-themed state picker instead,
+// since that solar system's planets are the 50 states, not a fixed
+// subject list.
+//
+// Shortcut nodes above the planet path — styled like the planets
+// themselves (circular icon + colored ring + label) rather than generic
+// list cards, so they read as part of the same map instead of a bolted-on
+// menu. Each gets its own accent color, distinct from every planet's and
+// from each other, so they stay visually distinguishable at a glance.
 const SHORTCUTS = [
   { screen: "diagnostic", icon: "🧪", name: "Placement Diagnostic", blurb: "A quick cross-subject sample", color: "#2a6df5", bg: "#eaf1ff" },
   { screen: "weakReview", icon: "🎯", name: "Weak Skill Review", blurb: "Your lowest-accuracy skills", color: "#22b8a3", bg: "#e8fbf7" },
@@ -28,13 +37,13 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
   // ~15 call sites needed to change to keep working.
   if (testId) gameState.setCurrentTestId(testId);
   const activeTestId = testId || gameState.currentTestId;
-  // State Assessments has no single fixed test — which islands to show
-  // depends on which state the player lives in (see data/stateTests.js).
-  // Redirect to the one-time picker instead of rendering an empty/wrong
-  // map when that hasn't been chosen yet; once it has, show that state's
-  // own two islands instead of the planet's full 50-state subject list
-  // (getTestSubjects would return all 100 — see tests.js's own comment on
-  // why that flat list exists).
+  // State Assessments has no single fixed set of planets — which two show
+  // up depends on which state the player lives in (see
+  // data/stateTests.js). Redirect to the rocket-themed picker instead of
+  // rendering an empty/wrong map when that hasn't been chosen yet; once it
+  // has, show that state's own two planets instead of the solar system's
+  // full 50-state subject list (getTestSubjects would return all 100 —
+  // see tests.js's own comment on why that flat list exists).
   if (activeTestId === "stateAssessments" && !gameState.homeState) {
     navigate("statePicker", { returnTo: "map" });
     return;
@@ -53,7 +62,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
   let currentIndex = stats.findIndex((s) => s.masteredCount < s.totalSkills);
   if (currentIndex === -1) currentIndex = subjects.length - 1;
 
-  const islands = subjects.map((subject, i) => {
+  const planets = subjects.map((subject, i) => {
     const { x, y } = positions[i];
     const stat = stats[i];
     const pct = stat.totalSkills > 0 ? Math.round((stat.masteredCount / stat.totalSkills) * 100) : 0;
@@ -61,7 +70,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
     return `
       <div class="map-node-wrap" style="left:${x}%;top:${y}px;">
         ${isCurrent ? `<div class="map-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 69 })}</div>` : ""}
-        <button class="map-island-node" data-subject="${subject.id}" aria-label="${subject.name}: ${stat.masteredCount} of ${stat.totalSkills} skills mastered" style="--island-color:${subject.color};--island-bg:${subject.bg};--ring-pct:${pct}%">
+        <button class="map-island-node" data-subject="${subject.id}" aria-label="${subject.name} planet: ${stat.masteredCount} of ${stat.totalSkills} islands mastered" style="--island-color:${subject.color};--island-bg:${subject.bg};--ring-pct:${pct}%">
           <span class="map-island-ring"></span>
           <span class="map-island-icon" aria-hidden="true">${subject.icon}</span>
         </button>
@@ -76,11 +85,11 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
 
   // The shortcut modes (diagnostic, weak review, adaptive practice, review
   // queue, custom drill) all draw from real question content behind a
-  // planet's subjects — showing them on a planet with nothing playable yet
-  // would just be a row of buttons into empty screens, so they only appear
-  // once the planet has at least one subject with real content (isReady),
-  // same gate the World Map itself uses to decide "real path" vs.
-  // "coming soon" banner.
+  // solar system's planets — showing them on a solar system with nothing
+  // playable yet would just be a row of buttons into empty screens, so
+  // they only appear once at least one planet has real content (isReady),
+  // same gate this screen itself uses to decide "real path" vs. "coming
+  // soon" banner.
   const shortcuts =
     isReady
       ? SHORTCUTS.map((s) => {
@@ -108,20 +117,20 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
     <main class="screen map-screen">
       <button class="back-btn" data-solar-system>&larr; Solar System</button>
       ${homeStateName ? `<button class="back-btn" data-change-state>🗺️ Change State (${homeStateName})</button>` : ""}
-      <h1 class="map-title">Choose an Island to Explore</h1>
+      <h1 class="map-title">Choose a Planet to Explore</h1>
       <p class="map-subtitle">${
         activeTestId === "act"
-          ? "Acto is ready to study. Pick a subject to begin the path."
+          ? "Acto is ready to study. Pick a planet to begin the path."
           : activeTestId === "stateAssessments"
           ? `${test.planetName} &mdash; ${homeStateName}'s own mandated assessments.`
-          : `${test.planetName} (${test.name}) &mdash; pick a subject to begin the path.`
+          : `${test.planetName} (${test.name}) &mdash; pick a planet to begin the path.`
       }</p>
-      ${!isReady ? `<p class="map-coming-soon-banner">🚧 ${test.name} content is still being built &mdash; pick an island below to see what's planned.</p>` : ""}
+      ${!isReady ? `<p class="map-coming-soon-banner">🚧 ${test.name} content is still being built &mdash; pick a planet below to see what's planned.</p>` : ""}
       ${shortcuts ? `<div class="map-shortcuts-row">${shortcuts}</div>` : ""}
       <div class="map-path-container" style="height:${totalHeight}px">
         ${renderPathSvg(positions, totalHeight, { color: "#b6aeff" })}
         <div class="path-decorations">${renderDecorations(totalHeight, 1)}</div>
-        ${islands}
+        ${planets}
       </div>
     </main>
   `;
