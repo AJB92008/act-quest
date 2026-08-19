@@ -66,3 +66,30 @@ test("no bare en dash (–) appears outside the question banks (numeric ranges l
   }
   assertTrue(offenders.length === 0, `bare en dash (not part of a numeric range) found outside the question banks in: ${offenders.join(", ")}`);
 });
+
+// Matches two or more consecutive em dashes — either the literal "—"
+// character or its "&mdash;" HTML entity, in any combination back to
+// back. Unlike the bare-en-dash rule above, this one applies everywhere,
+// question banks included: a doubled/"extra long" em dash is never a
+// legitimate typographical choice anywhere in this app's real content —
+// it only ever means a copy/paste slip or a text-generation artifact
+// (e.g. "word — — word" collapsing into "word —— word", or a stray extra
+// &mdash;), so there's no content-exemption case to carve out the way a
+// real question's own prose sometimes reasonably needs for the en dash.
+const LONG_EM_DASH = /(—|&mdash;){2,}/g;
+
+function findLongEmDashes(text) {
+  return text.match(LONG_EM_DASH) || [];
+}
+
+test("no doubled/extra-long em dash (——) appears anywhere, including the question banks", async () => {
+  const jsFiles = await collectJsFiles("../js/", []);
+  const files = [...jsFiles, "../index.html", "../css/style.css"];
+  const offenders = [];
+  for (const file of files) {
+    const text = await fetchText(file);
+    const found = findLongEmDashes(text);
+    if (found.length > 0) offenders.push(`${file.replace("../", "")} (${found.length})`);
+  }
+  assertTrue(offenders.length === 0, `doubled/extra-long em dash found in: ${offenders.join(", ")}`);
+});
