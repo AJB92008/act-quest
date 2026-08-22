@@ -1,10 +1,11 @@
 // Content-integrity tests for the SAT Reading & Writing question banks
 // (data/questions/satRw.js) — these guard the actual data, not just the
-// plumbing that loads it: every one of the 17 skills has exactly 100
-// questions (20 lessons, matching ACT's standard bank size with no
-// BANK_SIZE_OVERRIDES entry needed), every question has a well-formed
-// shape, and the subject is now wired up end-to-end (preloadable,
-// lesson/boss-lesson lookups work, isSubjectPlayable is true).
+// plumbing that loads it: every one of the 17 skills has exactly 200
+// questions (the original 100, doubled — 40 lessons, via a
+// BANK_SIZE_OVERRIDES entry now that it's no longer ACT's standard 100),
+// every question has a well-formed shape, and the subject is wired up
+// end-to-end (preloadable, lesson/boss-lesson lookups work,
+// isSubjectPlayable is true).
 import { SAT_SUBJECTS } from "../js/data/satSkills.js";
 import { getSubject, isSubjectPlayable } from "../js/data/tests.js";
 import {
@@ -35,30 +36,30 @@ test("sat-rw has a BOSS_MONSTERS entry", () => {
   assertTrue(!!boss && typeof boss.name === "string" && boss.name.length > 0);
 });
 
-test("every sat-rw skill's real bank has exactly 100 questions once loaded", async () => {
+test("every sat-rw skill's real bank has exactly 200 questions once loaded", async () => {
   for (const skillId of SAT_RW_SKILL_IDS) {
     await preloadSubjectForSkill(skillId);
-    assertEqual(getFullBank(skillId).length, 100, `expected 100 questions in "${skillId}"`);
+    assertEqual(getFullBank(skillId).length, 200, `expected 200 questions in "${skillId}"`);
   }
 });
 
-test("every sat-rw skill reports 20 lessons (100 questions / 5 per lesson), no BANK_SIZE_OVERRIDES needed", () => {
+test("every sat-rw skill reports 40 lessons (200 questions / 5 per lesson), via BANK_SIZE_OVERRIDES", () => {
   for (const skillId of SAT_RW_SKILL_IDS) {
-    assertEqual(getLessonCount(skillId), 20, `expected 20 lessons for "${skillId}"`);
+    assertEqual(getLessonCount(skillId), 40, `expected 40 lessons for "${skillId}"`);
   }
 });
 
-test("every sat-rw skill's 20th lesson (index 19) is its boss lesson", () => {
+test("every sat-rw skill's 40th lesson (index 39) is its boss lesson", () => {
   for (const skillId of SAT_RW_SKILL_IDS) {
-    assertTrue(isBossLessonIndex(skillId, 19), `expected lesson index 19 to be the boss lesson for "${skillId}"`);
-    assertTrue(!isBossLessonIndex(skillId, 18), `lesson index 18 should not be the boss lesson for "${skillId}"`);
+    assertTrue(isBossLessonIndex(skillId, 39), `expected lesson index 39 to be the boss lesson for "${skillId}"`);
+    assertTrue(!isBossLessonIndex(skillId, 38), `lesson index 38 should not be the boss lesson for "${skillId}"`);
   }
 });
 
 test("a sat-rw skill's boss lesson returns 15 valid questions", async () => {
   const skillId = "satrw-boundaries";
   await preloadSubjectForSkill(skillId);
-  const boss = getLessonQuestions(skillId, 19);
+  const boss = getLessonQuestions(skillId, 39);
   assertEqual(boss.length, BOSS_LESSON_SIZE);
   const bank = getFullBank(skillId);
   for (const q of boss) {
@@ -70,7 +71,7 @@ test("a sat-rw skill's regular (non-boss) lesson returns 5 valid questions", asy
   const skillId = "satrw-evidence-data";
   await preloadSubjectForSkill(skillId);
   assertEqual(getLessonQuestions(skillId, 0).length, 5);
-  assertEqual(getLessonQuestions(skillId, 18).length, 5);
+  assertEqual(getLessonQuestions(skillId, 38).length, 5);
 });
 
 test("every question across every sat-rw skill has a well-formed shape", async () => {

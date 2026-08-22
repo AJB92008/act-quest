@@ -1,11 +1,11 @@
 // Content-integrity tests for the SAT Math question banks
 // (data/questions/satMath.js) — these guard the actual data, not just the
-// plumbing that loads it: every one of the 19 skills has its original 100
-// multiple-choice questions plus a batch of "written" (student-produced-
-// response) questions on top (see js/ui/writtenAnswer.js and
-// BANK_SIZE_OVERRIDES in questions/index.js for why the exact per-skill
-// total isn't a flat number), every question has a well-formed shape for
-// its type, and the subject is wired up end-to-end (preloadable,
+// plumbing that loads it: every one of the 19 skills has 200 multiple-
+// choice questions (the original 100, doubled) plus a batch of "written"
+// (student-produced-response) questions on top (see js/ui/writtenAnswer.js
+// and BANK_SIZE_OVERRIDES in questions/index.js for why the exact
+// per-skill total isn't a flat number), every question has a well-formed
+// shape for its type, and the subject is wired up end-to-end (preloadable,
 // lesson/boss-lesson lookups work, isSubjectPlayable is true).
 import { SAT_SUBJECTS } from "../js/data/satSkills.js";
 import { getSubject, isSubjectPlayable } from "../js/data/tests.js";
@@ -40,14 +40,14 @@ test("sat-math has a BOSS_MONSTERS entry", () => {
   assertTrue(!!boss && typeof boss.name === "string" && boss.name.length > 0);
 });
 
-test("every sat-math skill's real bank has its original 100 multiple-choice questions plus a batch of written ones (~25 each)", async () => {
+test("every sat-math skill's real bank has 200 multiple-choice questions (doubled from 100) plus a batch of written ones (~42-50 each)", async () => {
   for (const skillId of SAT_MATH_SKILL_IDS) {
     await preloadSubjectForSkill(skillId);
     const bank = getFullBank(skillId);
     const mc = bank.filter((q) => !isWrittenQuestion(q));
     const written = bank.filter((q) => isWrittenQuestion(q));
-    assertEqual(mc.length, 100, `expected 100 multiple-choice questions in "${skillId}"`);
-    assertTrue(written.length >= 17 && written.length <= 25, `expected roughly 25 written questions in "${skillId}", got ${written.length}`);
+    assertEqual(mc.length, 200, `expected 200 multiple-choice questions in "${skillId}"`);
+    assertTrue(written.length >= 42 && written.length <= 50, `expected roughly 42-50 written questions in "${skillId}", got ${written.length}`);
   }
 });
 
@@ -57,7 +57,7 @@ test("every sat-math skill's lesson count matches its real bank size (no longer 
     const bank = getFullBank(skillId);
     const expectedLessons = Math.ceil(bank.length / LESSON_SIZE);
     assertEqual(getLessonCount(skillId), expectedLessons, `expected ${expectedLessons} lessons for "${skillId}"`);
-    assertTrue(expectedLessons >= 24, `expected at least 24 lessons for "${skillId}" now that written questions were added`);
+    assertTrue(expectedLessons >= 48, `expected at least 48 lessons for "${skillId}" now that the bank was doubled`);
   }
 });
 
