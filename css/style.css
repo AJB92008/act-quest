@@ -3388,10 +3388,9 @@ button.drill-skill-row:hover {
   color: #0a0a0f;
   font-weight: 800;
   font-size: 1rem;
-  border: none;
+  text-align: center;
   border-radius: 999px;
   padding: 16px 20px;
-  cursor: pointer;
 }
 
 .tiktok-reveal {

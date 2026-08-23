@@ -12,6 +12,7 @@ import { isWrittenQuestion } from "./writtenAnswer.js";
 
 const TIKTOK_COLOR = "#25f4ee";
 const TIKTOK_BG = "#0a0a0f";
+const REVEAL_SECONDS = 10;
 
 function shuffled(arr) {
   const copy = arr.slice();
@@ -44,6 +45,15 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
   let pool = [];
   let current = null;
   let revealed = false;
+  let countdown = REVEAL_SECONDS;
+  let countdownTimer = null;
+
+  function stopCountdown() {
+    if (countdownTimer) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+    }
+  }
 
   function stopSpeaking() {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -52,9 +62,26 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
   // The single place that flips `revealed`, so speakAnswer() only ever
   // fires once per question.
   function reveal() {
+    stopCountdown();
     revealed = true;
     renderCard();
     speakAnswer(current);
+  }
+
+  // Pure timer — no tap-to-skip. Once a question is shown, it just counts
+  // down on its own and reveals itself.
+  function startCountdown() {
+    stopCountdown();
+    countdown = REVEAL_SECONDS;
+    countdownTimer = setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        reveal();
+        return;
+      }
+      const label = root.querySelector("[data-countdown]");
+      if (label) label.textContent = `⏱ Revealing in ${countdown}s…`;
+    }, 1000);
   }
 
   function renderPicker() {
@@ -142,6 +169,7 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
   }
 
   function pickNext() {
+    stopCountdown();
     stopSpeaking();
     if (pool.length === 0) {
       renderPicker();
@@ -157,7 +185,7 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
     const written = isWrittenQuestion(q);
     const passageHTML = q.passage ? `<p class="tiktok-passage">${q.passage}</p>` : "";
 
-    const revealPromptHTML = `<button class="tiktok-tap-reveal" data-reveal>👆 Tap to reveal the answer</button>`;
+    const revealPromptHTML = `<div class="tiktok-tap-reveal" data-countdown>⏱ Revealing in ${countdown}s…</div>`;
 
     let answerAreaHTML;
     if (written) {
@@ -193,18 +221,17 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
     `;
 
     root.querySelector("[data-exit]").addEventListener("click", () => {
+      stopCountdown();
       stopSpeaking();
       navigate("map");
     });
     root.querySelector("[data-settings]").addEventListener("click", () => {
+      stopCountdown();
       stopSpeaking();
       renderPicker();
     });
     root.querySelector("[data-next]").addEventListener("click", () => pickNext());
-    const revealBtn = root.querySelector("[data-reveal]");
-    if (revealBtn) {
-      revealBtn.addEventListener("click", () => reveal());
-    }
+    if (!revealed) startCountdown();
   }
 
   preloadSubject(subjectId).then(renderPicker);
