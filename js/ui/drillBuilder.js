@@ -1,9 +1,9 @@
 // Custom Drill Builder: pick a subject and exactly which skills to
 // practice, instead of working through the fixed lesson path in order.
-// Pulls straight from each selected skill's full 100-question bank
-// (shuffled, evenly split across skills) rather than the difficulty-sorted
-// lesson slices getLessonQuestions() builds — a drill is meant to be a
-// grab-bag review, not a curriculum stop.
+// Pulls every question out of each selected skill's full bank (shuffled)
+// rather than the difficulty-sorted lesson slices getLessonQuestions()
+// builds — a drill is meant to be a grab-bag review of everything in
+// those banks, not a curriculum stop or a small sample of it.
 import { getTestSubjects, getSubject } from "../data/tests.js";
 import { getFullBank, preloadSubject } from "../data/questions/index.js";
 import { gameState } from "../state.js";
@@ -20,7 +20,6 @@ import { isWrittenQuestion, checkWrittenAnswer, renderWrittenAnswerHTML, wireWri
 // which made Custom Drill blend in as just "another purple screen").
 const DRILL_COLOR = "#ff9f38";
 const DRILL_BG = "#fff4e6";
-const DRILL_SIZE = 12;
 
 function shuffled(arr) {
   const copy = arr.slice();
@@ -68,6 +67,8 @@ export function renderDrillBuilder(root, navigate, { testId = "act" } = {}) {
       })
       .join("");
 
+    const totalQuestions = [...selectedSkillIds].reduce((sum, skillId) => sum + getFullBank(skillId).length, 0);
+
     root.innerHTML = `
       ${hudHTML("map")}
       <main class="screen weak-review-screen" style="--island-color:${DRILL_COLOR};--island-bg:${DRILL_BG}">
@@ -75,11 +76,11 @@ export function renderDrillBuilder(root, navigate, { testId = "act" } = {}) {
         <div class="lesson-card">
           <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <h1 class="lesson-title">🎛️ Custom Drill</h1>
-          <p class="lesson-blurb">Pick a subject, check off exactly the skills you want, and drill a ${DRILL_SIZE}-question set pulled straight from those banks.</p>
+          <p class="lesson-blurb">Pick a subject and check off exactly the skills you want — the drill pulls every question out of those skills' full banks, shuffled.</p>
           <div class="drill-tabs">${tabs}</div>
           <div class="drill-skill-list">${skillRows}</div>
           <div class="results-actions">
-            <button class="btn-primary lesson-start-btn" data-start-drill ${selectedSkillIds.size === 0 ? "disabled" : ""}>Start Drill (${selectedSkillIds.size} skill${selectedSkillIds.size === 1 ? "" : "s"} selected) &rarr;</button>
+            <button class="btn-primary lesson-start-btn" data-start-drill ${selectedSkillIds.size === 0 ? "disabled" : ""}>Start Drill (${totalQuestions} question${totalQuestions === 1 ? "" : "s"} from ${selectedSkillIds.size} skill${selectedSkillIds.size === 1 ? "" : "s"}) &rarr;</button>
           </div>
         </div>
       </main>
@@ -115,7 +116,7 @@ export function renderDrillBuilder(root, navigate, { testId = "act" } = {}) {
               pool.push({ ...q, skillId, skillName: skill.name, subjectId, bankIndex });
             });
           }
-          questions = shuffled(pool).slice(0, DRILL_SIZE);
+          questions = shuffled(pool);
           idx = 0;
           renderQuestion();
         });
