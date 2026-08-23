@@ -27,6 +27,7 @@ import { renderEssay } from "./ui/essay.js";
 import { renderMistakeJournal } from "./ui/mistakeJournal.js";
 import { renderScoreReport, renderSharedReport } from "./ui/scoreReport.js";
 import { renderStatePicker } from "./ui/statePicker.js";
+import { renderTiktokMode } from "./ui/tiktokMode.js";
 import { ensureDevPanel } from "./ui/devPanel.js";
 import { runDevBootstrap } from "./devBootstrap.js";
 
@@ -60,6 +61,7 @@ const SCREENS = {
   mistakeJournal: (r, nav) => renderMistakeJournal(r, nav),
   scoreReport: (r, nav) => renderScoreReport(r, nav),
   statePicker: (r, nav, params) => renderStatePicker(r, nav, params),
+  tiktokMode: (r, nav, params) => renderTiktokMode(r, nav, params),
 };
 
 // Every screen swap replaces `root`'s entire innerHTML — invisible to

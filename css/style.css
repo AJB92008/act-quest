@@ -3269,3 +3269,166 @@ button.drill-skill-row:hover {
     border: 1px solid #ccc;
   }
 }
+
+/* TikTok Mode (ui/tiktokMode.js) — a dev-mode-only, recording-friendly
+   single-question card. Deliberately hardcoded to a fixed dark palette
+   instead of the app's --ink/--paper/--card theme variables: this is meant
+   to look like a clip you'd screen-record and post, so it should stay a
+   consistent black "video" background regardless of whatever light/dark
+   mode the rest of the app happens to be in. The card is capped to a
+   phone-like portrait width and centered even on a wide desktop viewport. */
+.tiktok-mode-screen {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  background: #0a0a0f;
+  padding: 0;
+}
+
+.tiktok-card {
+  width: 100%;
+  max-width: 460px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 22px 32px;
+  color: #f5f5fa;
+  background: linear-gradient(180deg, #0a0a0f 0%, #14141f 100%);
+}
+
+.tiktok-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tiktok-icon-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f5f5fa;
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  cursor: pointer;
+  flex: none;
+}
+
+.tiktok-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.tiktok-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #25f4ee;
+  text-align: center;
+  flex: 1;
+}
+
+/* Absorbs all the extra vertical space in the flex column and centers
+   the passage/question/answer block within it, instead of pinning
+   everything to the top and leaving a dead gap above the reveal button
+   for short questions (a bare one-line equation with no passage/choices,
+   for instance). The topbar and "Next Question" button stay pinned to
+   the very top/bottom of the card either way. */
+.tiktok-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+
+.tiktok-passage {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #c7c6dd;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin: 0;
+}
+
+.tiktok-question {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.tiktok-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tiktok-choice {
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.tiktok-choice.is-correct {
+  background: rgba(37, 244, 238, 0.18);
+  border-color: #25f4ee;
+  color: #25f4ee;
+}
+
+.tiktok-tap-reveal {
+  background: linear-gradient(90deg, #fe2c55, #25f4ee);
+  color: #0a0a0f;
+  font-weight: 800;
+  font-size: 1rem;
+  border: none;
+  border-radius: 999px;
+  padding: 16px 20px;
+  cursor: pointer;
+}
+
+.tiktok-reveal {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.tiktok-reveal-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fe2c55;
+}
+
+.tiktok-answer-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 4px 0 10px;
+}
+
+.tiktok-explain {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #d8d7ea;
+  margin: 0;
+}
+
+.tiktok-next-btn {
+  background: #fff;
+  color: #0a0a0f;
+  font-weight: 800;
+  font-size: 1rem;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 20px;
+  cursor: pointer;
+}

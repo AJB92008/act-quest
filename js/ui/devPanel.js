@@ -43,6 +43,28 @@ let panelEl = null;
 let navigateRef = null;
 let collapsed = false;
 
+// Secret entry point for TikTok Mode (ui/tiktokMode.js): with the panel
+// open, typing the letters T-I-K anywhere (no visible input box — same
+// "hidden gesture" spirit as the 10-clicks theme-toggle unlock in hud.js)
+// navigates straight there. Registered once at module load rather than
+// per-panel-open since the panel can be hidden/shown repeatedly without
+// ever being recreated; the handler itself checks visibility and bails
+// out of any real text field so it can't hijack typing elsewhere in the
+// app just because the panel happens to be open in the background.
+let tikBuffer = "";
+document.addEventListener("keydown", (e) => {
+  if (!panelEl || panelEl.style.display === "none") return;
+  const tag = e.target.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable) return;
+  if (e.key.length !== 1) return;
+  tikBuffer = (tikBuffer + e.key).slice(-3).toLowerCase();
+  if (tikBuffer === "tik") {
+    tikBuffer = "";
+    panelEl.style.display = "none"; // out of the way — this card is meant to be recorded clean
+    navigateRef?.("tiktokMode", {});
+  }
+});
+
 function loadPosition() {
   try {
     const raw = localStorage.getItem(POSITION_KEY);
@@ -100,6 +122,7 @@ function buildBodyHTML() {
 
   return `
     <p class="dev-mode-subtitle">Drag the header to move this panel around. Everything below edits your save directly, for testing, not gameplay.</p>
+    <p class="dev-mode-subtitle">🎬 Type <strong>TIK</strong> anywhere while this panel is open to jump into TikTok Mode — a vertical, recording-friendly single-question card for posting clips.</p>
     ${summaryHTML}
 
     <h3>Currency &amp; XP</h3>
