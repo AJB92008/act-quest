@@ -5,22 +5,40 @@
 // seconds (see hud.js). Not part of normal gameplay — every control here
 // edits the save directly, for fast manual testing rather than playing
 // through the real progression to reach a given state.
-import { SUBJECTS } from "../data/skills.js";
 import { SCIENCE_BACKGROUND } from "../data/scienceBackground.js";
 import { VOCABULARY } from "../data/vocabulary.js";
+import { STATES } from "../data/stateTests.js";
+import { TESTS, isSubjectPlayable } from "../data/tests.js";
 import { gameState, EVOLUTION_STAGE_NAMES } from "../state.js";
 import { monsterSVG } from "./monster.js";
 
 const firstBgTopic = SCIENCE_BACKGROUND.sections[0].topics[0];
 const firstVocabTopic = VOCABULARY.sections[0].topics[0];
-const firstEnglishSkillId = SUBJECTS.find((s) => s.id === "english").skills[0].id;
+const ACT_SUBJECTS = TESTS.find((t) => t.id === "act").subjects;
+const firstEnglishSkillId = ACT_SUBJECTS.find((s) => s.id === "english").skills[0].id;
+
+// Every test/planet's subjects with real content — State Assessments'
+// 100 subjects are all still `skills: []` scaffolding (see
+// data/stateTests.js), so there's nothing there to master/boss-clear or
+// jump a skill path/quiz into; that planet gets its own home-state tools
+// in the panel body below instead (see buildBodyHTML's "State
+// Assessments" section).
+const PLAYABLE_TESTS = TESTS.map((test) => ({ test, subjects: test.subjects.filter(isSubjectPlayable) })).filter(
+  ({ subjects }) => subjects.length > 0
+);
 
 const JUMPS = [
-  { label: "World Map", screen: "map" },
-  ...SUBJECTS.map((s) => ({ label: `Island: ${s.name}`, screen: "island", params: { subjectId: s.id } })),
+  { label: "Galaxy (Solar System picker)", screen: "solarSystem" },
+  ...TESTS.map((t) => ({ label: `World Map: ${t.name}`, screen: "map", params: { testId: t.id } })),
+  { label: "State Picker", screen: "statePicker", params: { returnTo: "map" } },
+  ...PLAYABLE_TESTS.flatMap(({ test, subjects }) =>
+    subjects.map((s) => ({ label: `Island: ${test.name} ${s.name}`, screen: "island", params: { subjectId: s.id } }))
+  ),
   { label: "Skill Path (English #1)", screen: "skillPath", params: { skillId: firstEnglishSkillId, subjectId: "english" } },
   { label: "Quiz (English #1, Lesson 1)", screen: "quiz", params: { skillId: firstEnglishSkillId, subjectId: "english", lessonIndex: 0 } },
-  ...SUBJECTS.map((s) => ({ label: `Boss Quiz: ${s.name}`, screen: "bossQuiz", params: { subjectId: s.id } })),
+  ...PLAYABLE_TESTS.flatMap(({ test, subjects }) =>
+    subjects.map((s) => ({ label: `Boss Quiz: ${test.name} ${s.name}`, screen: "bossQuiz", params: { subjectId: s.id } }))
+  ),
   { label: "Weak Skill Review", screen: "weakReview" },
   { label: "Shop", screen: "shop" },
   { label: "Progress Dashboard", screen: "dashboard" },
@@ -34,7 +52,7 @@ const JUMPS = [
   { label: "Vocabulary Builder", screen: "vocabulary" },
   { label: "Vocab Quiz", screen: "vocabQuiz", params: { topicId: firstVocabTopic.id, topicTitle: firstVocabTopic.title } },
   { label: "Endless Mode", screen: "endless" },
-  { label: "Practice Test", screen: "practiceTest" },
+  ...TESTS.filter((t) => t.practiceTest).map((t) => ({ label: `Practice Test: ${t.name}`, screen: "practiceTest", params: { testId: t.id } })),
 ];
 
 const POSITION_KEY = "act-quest-dev-panel-pos";
@@ -93,30 +111,59 @@ function buildBodyHTML() {
   const levelProgress = gameState.getLevelProgress();
   const stage = gameState.getEvolutionStage();
   const masteryPct = Math.round(gameState.getMasteryPct() * 100);
-  const predicted = gameState.getPredictedScore();
+
+  // One predicted score per test, not just ACT's — State Assessments has
+  // no practiceTest config/skills at all, so getPredictedScore always
+  // reports it as "insufficient" (see that method's own comment); shown
+  // as "—" rather than "?" so it doesn't look like a bug.
+  const predictedHTML = TESTS.map((t) => {
+    const predicted = gameState.getPredictedScore(t.id);
+    return `<span>${t.name}: ${predicted.score ?? "—"}</span>`;
+  }).join("");
 
   const summaryHTML = `
     <div class="dev-summary">
       <span>Level ${levelProgress.level} (${gameState.xp} xp)</span>
       <span>${EVOLUTION_STAGE_NAMES[stage]} form (${masteryPct}% mastery)</span>
-      <span>Predicted score: ${predicted.score ?? "?"}</span>
+      ${predictedHTML}
       <span>🪙 ${gameState.coins} &nbsp; ⭐ ${gameState.totalStars}</span>
     </div>
   `;
 
-  const masterySubjectRows = SUBJECTS.map(
-    (s) => `
-      <button class="dev-btn" data-master-subject="${s.id}">Master ${s.name}</button>
-      <button class="dev-btn dev-btn-quiet" data-unmaster-subject="${s.id}">Reset ${s.name}</button>
+  const masterySubjectRows = PLAYABLE_TESTS.map(
+    ({ test, subjects }) => `
+      <div class="dev-subgroup-label">${test.name}</div>
+      <div class="dev-cheat-row">
+        ${subjects
+          .map(
+            (s) => `
+              <button class="dev-btn" data-master-subject="${s.id}">Master ${s.name}</button>
+              <button class="dev-btn dev-btn-quiet" data-unmaster-subject="${s.id}">Reset ${s.name}</button>
+            `
+          )
+          .join("")}
+      </div>
     `
   ).join("");
 
-  const bossRows = SUBJECTS.map(
-    (s) => `
-      <button class="dev-btn" data-boss-clear="${s.id}">Clear ${s.name} Boss</button>
-      <button class="dev-btn dev-btn-quiet" data-boss-unclear="${s.id}">Unclear ${s.name} Boss</button>
+  const bossRows = PLAYABLE_TESTS.map(
+    ({ test, subjects }) => `
+      <div class="dev-subgroup-label">${test.name}</div>
+      <div class="dev-cheat-row">
+        ${subjects
+          .map(
+            (s) => `
+              <button class="dev-btn" data-boss-clear="${s.id}">Clear ${s.name} Boss</button>
+              <button class="dev-btn dev-btn-quiet" data-boss-unclear="${s.id}">Unclear ${s.name} Boss</button>
+            `
+          )
+          .join("")}
+      </div>
     `
   ).join("");
+
+  const homeState = gameState.homeState;
+  const stateOptions = STATES.map((s) => `<option value="${s.abbr}" ${s.abbr === homeState ? "selected" : ""}>${s.name}</option>`).join("");
 
   const jumpButtons = JUMPS.map((j, i) => `<button class="dev-btn" data-jump="${i}">${j.label}</button>`).join("");
 
@@ -145,10 +192,19 @@ function buildBodyHTML() {
     </div>
 
     <h3>Master / Reset a Subject's Skills</h3>
-    <div class="dev-cheat-row">${masterySubjectRows}</div>
+    ${masterySubjectRows}
 
     <h3>Boss Quizzes</h3>
-    <div class="dev-cheat-row">${bossRows}</div>
+    ${bossRows}
+
+    <h3>State Assessments</h3>
+    <p class="dev-mode-subtitle">That planet's 100 subjects (50 states &times; ELA/Math) are all still content-free scaffolding — nothing there to master yet, so the only useful cheat is jumping straight past the state picker.</p>
+    <div class="dev-cheat-row">
+      <select id="devHomeStateSelect" class="dev-btn">${stateOptions}</select>
+      <button class="dev-btn" data-set-home-state>Set Home State</button>
+      <button class="dev-btn dev-btn-quiet" data-clear-home-state>Clear Home State</button>
+    </div>
+    <p class="dev-mode-subtitle">Current: ${homeState ? `<strong>${homeState}</strong>` : "none set (World Map redirects to the state picker)"}</p>
 
     <h3>Screen Jumper</h3>
     <div class="dev-cheat-row">${jumpButtons}</div>
@@ -232,6 +288,16 @@ function wireBody(body) {
       gameState.cheatSetBossCleared(btn.dataset.bossUnclear, false);
       render();
     });
+  });
+
+  body.querySelector("[data-set-home-state]").addEventListener("click", () => {
+    const abbr = body.querySelector("#devHomeStateSelect").value;
+    gameState.setHomeState(abbr);
+    render();
+  });
+  body.querySelector("[data-clear-home-state]").addEventListener("click", () => {
+    gameState.cheatClearHomeState();
+    render();
   });
 
   body.querySelectorAll("[data-jump]").forEach((btn) => {

@@ -458,6 +458,14 @@ export class GameState {
     this.save();
   }
 
+  /** Dev-panel-only counterpart to setHomeState — clears it back to
+   * unset so the State Assessments planet's "no home state yet" redirect
+   * to the state picker can be re-tested without a full progress reset. */
+  cheatClearHomeState() {
+    this.data.homeState = null;
+    this.save();
+  }
+
   // --- currency ---
   get coins() {
     return this.data.coins;
@@ -1148,7 +1156,11 @@ export class GameState {
   }
 
   cheatSetSubjectMastered(subjectId, mastered) {
-    const subject = SUBJECTS.find((s) => s.id === subjectId);
+    // getAnySubject (data/tests.js's getSubject) rather than the bare
+    // SUBJECTS import above, which is ACT's skill tree only — this needs
+    // to resolve SAT/PSAT/State Assessments subject ids too, not just
+    // silently no-op on them.
+    const subject = getAnySubject(subjectId);
     if (!subject) return;
     subject.skills.forEach((skill) => this.cheatSetSkillMastered(skill.id, mastered));
   }
