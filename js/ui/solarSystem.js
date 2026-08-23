@@ -53,7 +53,7 @@ export function renderSolarSystem(root, navigate) {
       <p class="map-subtitle">Every standardized test is its own solar system, full of planets to explore. Pick one to start.</p>
       <div class="map-path-container" style="height:${totalHeight}px">
         ${renderPathSvg(positions, totalHeight, { color: "#b6aeff" })}
-        <div class="path-decorations">${renderDecorations(totalHeight, 2)}</div>
+        <div class="path-decorations">${renderDecorations(totalHeight, 2, ["✨", "🌟", "💫", "🪐", "☄️", "🌙"])}</div>
         ${planets}
       </div>
     </main>

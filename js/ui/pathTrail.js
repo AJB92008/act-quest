@@ -43,8 +43,7 @@ export function renderPathSvg(positions, totalHeight, { color = "#6a5cff" } = {}
 
 // A handful of decorative background blobs (clouds/rocks/foliage) scattered
 // behind the path, purely for visual texture on the "colorful map" feel.
-export function renderDecorations(totalHeight, seed = 0) {
-  const shapes = ["☁️", "🌿", "🪨", "✨", "🌊"];
+export function renderDecorations(totalHeight, seed = 0, shapes = ["☁️", "🌿", "🪨", "✨", "🌊"]) {
   const count = Math.max(3, Math.round(totalHeight / 220));
   let out = "";
   for (let i = 0; i < count; i++) {

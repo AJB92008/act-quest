@@ -577,6 +577,88 @@ input[type="password"] {
 }
 
 /* ---------- solar system (planet picker) ---------- */
+/* This screen is a literal galaxy full of solar systems, so it always
+   reads as a night sky — a fixed dark backdrop with a scattered,
+   multi-layered starfield and soft nebula glows — regardless of the
+   light/dark theme toggle (hence the selector pair below repeating the
+   same rule at both specificities: it has to outrank .map-screen's own
+   light AND :root[data-theme="dark"] .map-screen backgrounds). The star
+   layers are several small radial-gradient dots each tiled at a
+   different background-size, so despite each one repeating, the
+   combined result doesn't read as an obvious grid. */
+.solar-system-screen,
+:root[data-theme="dark"] .solar-system-screen {
+  position: relative;
+  overflow: hidden;
+  background-color: #05050f;
+  background-image:
+    radial-gradient(circle at 18% 15%, rgba(122, 96, 255, 0.35), transparent 55%),
+    radial-gradient(circle at 82% 70%, rgba(255, 110, 196, 0.16), transparent 50%),
+    radial-gradient(circle at 55% 90%, rgba(80, 170, 255, 0.18), transparent 50%);
+  isolation: isolate;
+}
+
+.solar-system-screen::before,
+.solar-system-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+  background-image:
+    radial-gradient(1.6px 1.6px at 10% 20%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 60% 45%, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 85% 15%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 30% 80%, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 70% 90%, #fff, transparent);
+  background-size: 180px 180px, 240px 240px, 300px 300px, 210px 210px, 260px 260px;
+  animation: twinkle 5s ease-in-out infinite alternate;
+}
+
+.solar-system-screen::after {
+  background-image:
+    radial-gradient(1px 1px at 25% 55%, #fff, transparent),
+    radial-gradient(1px 1px at 45% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 95% 50%, #fff, transparent),
+    radial-gradient(1px 1px at 15% 95%, #fff, transparent),
+    radial-gradient(1px 1px at 65% 65%, #fff, transparent);
+  background-size: 150px 150px, 190px 190px, 230px 230px, 170px 170px, 220px 220px;
+  opacity: 0.5;
+  animation-duration: 7s;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes twinkle {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+.solar-system-screen > * {
+  position: relative;
+  z-index: 1;
+}
+
+.solar-system-screen .map-title,
+.solar-system-screen .map-island-label h3 {
+  color: #f4f2ff;
+}
+
+.solar-system-screen .map-subtitle,
+.solar-system-screen .map-island-place,
+.solar-system-screen .map-island-progress {
+  color: #b8b4d9;
+}
+
+.solar-system-screen .map-island-node {
+  box-shadow: 0 0 22px 2px var(--island-color, rgba(255, 255, 255, 0.35)), var(--shadow);
+}
+
+.solar-system-screen .path-decoration {
+  opacity: 0.75;
+  filter: none;
+}
+
 .planet-node.is-coming-soon {
   opacity: 0.55;
   filter: saturate(0.6);
