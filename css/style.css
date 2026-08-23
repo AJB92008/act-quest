@@ -54,10 +54,6 @@
   background: var(--card);
 }
 
-:root[data-theme="dark"] .island-screen {
-  background: linear-gradient(180deg, var(--surface-alt) 0%, transparent 220px);
-}
-
 :root[data-theme="dark"] .hud-stat {
   background: #3a3320;
   color: #ffe6ad;
@@ -451,14 +447,34 @@ input[type="password"] {
   margin-bottom: 24px;
 }
 
+/* Full-bleed, same treatment as the Galaxy (solar-system) screen — breaks
+   out of .screen's normal 980px centered-card layout so this test's own
+   "planet surface" fills the whole browser window instead of sitting in a
+   box in the middle of the page. Tinted per test via --test-color/-bg
+   (set inline in worldMap.js from data/tests.js), so ACT/SAT/PSAT/State
+   Assessments each get their own hue on the same soft dual-glow shape —
+   unlike the Galaxy, this respects the light/dark toggle rather than
+   forcing night-sky dark, since a "planet surface" isn't inherently a
+   night scene the way outer space is. */
 .map-screen {
-  background: radial-gradient(circle at 20% 0%, #eef1ff 0%, transparent 60%), var(--paper);
-  border-radius: var(--radius);
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  min-height: calc(100vh - 88px);
+  border-radius: 0;
+  box-sizing: border-box;
   padding-bottom: 40px;
+  background:
+    radial-gradient(circle at 18% 8%, var(--glow-strong, rgba(122, 96, 255, 0.3)), transparent 50%),
+    radial-gradient(circle at 85% 78%, var(--glow-soft, rgba(122, 96, 255, 0.15)), transparent 45%),
+    var(--test-bg, var(--paper));
 }
 
 :root[data-theme="dark"] .map-screen {
-  background: radial-gradient(circle at 20% 0%, #2a2a45 0%, transparent 60%), var(--paper);
+  background:
+    radial-gradient(circle at 18% 8%, var(--glow-strong, rgba(122, 96, 255, 0.35)), transparent 50%),
+    radial-gradient(circle at 85% 78%, var(--glow-soft, rgba(122, 96, 255, 0.18)), transparent 45%),
+    linear-gradient(180deg, #17162a 0%, #100f1c 100%);
 }
 
 /* Shared winding-path container: an SVG connector line + scattered
@@ -492,6 +508,139 @@ input[type="password"] {
   opacity: 0.35;
   transform: translate(-50%, -50%);
   filter: saturate(0.9);
+}
+
+/* ---------- map blob shapes (planet / island / area) ---------- */
+/* A literal spatial metaphor across all three map-style screens, not just
+   a colored backdrop: the Galaxy's solar systems are planets (see
+   solarSystem.js); each solar system's own World Map (worldMap.js) now
+   renders as one round planet with each subject sitting on it as its own
+   island; that subject's Island screen (island.js) renders as one big
+   landmass subdivided into a differently-shaded patch per skill (an
+   "area"); and a skill's Lesson Path (skillPath.js) zooms into just one
+   of those areas, with each lesson a small spot within it. Four
+   asymmetric border-radius values give an organic, non-circular "island"
+   silhouette from a plain div — no image assets or hand-authored SVG
+   paths needed — cycled across nodes purely for visual variety so
+   neighboring islands/areas don't look like identical copies. */
+.map-blob-shape-1 { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; }
+.map-blob-shape-2 { border-radius: 58% 42% 38% 62% / 55% 62% 38% 45%; }
+.map-blob-shape-3 { border-radius: 50% 50% 35% 65% / 60% 40% 60% 40%; }
+.map-blob-shape-4 { border-radius: 65% 35% 55% 45% / 40% 55% 45% 60%; }
+
+/* The World Map's planet: a true sphere (not a wobbly blob — a planet
+   reads as round), shaded with a highlight toward the upper-left and a
+   darker rim, entirely from --test-color/--glow-soft/--glow-strong (set
+   inline in worldMap.js from data/tests.js) so each test's planet keeps
+   its own hue. Sized relative to its own path-container rather than the
+   viewport, and capped so it never swallows a short (2-subject) path. */
+.map-planet-circle {
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: min(80%, 640px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 26%, var(--test-bg, #fff) 0%, var(--glow-soft, rgba(122, 96, 255, 0.25)) 45%, var(--glow-strong, rgba(122, 96, 255, 0.4)) 100%);
+  box-shadow: 0 30px 70px rgba(20, 10, 50, 0.15);
+}
+
+:root[data-theme="dark"] .map-planet-circle {
+  background: radial-gradient(circle at 32% 26%, var(--glow-soft, rgba(122, 96, 255, 0.3)) 0%, var(--test-color, var(--purple)) 60%, #05050f 100%);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+}
+
+/* Centers a .node-area-blob on just the button, not the taller
+   .map-node-wrap/.path-node-wrap column it sits in (which also includes
+   the label below) — without this, the blob's 50%/50% centering resolves
+   against the whole wrap's height and drifts down into the label text
+   instead of sitting behind the button. */
+.node-anchor {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* One island/area patch, sitting behind a single node's circular button —
+   painted first (plain DOM order, no z-index needed) so the button, its
+   ring, and its label all land on top. A light ring keeps it visible even
+   when a subject's color happens to be close to its planet's/island's own
+   base hue (e.g. ACT and Math share almost the same purple). --blob-color
+   comes from whichever per-subject/-test color var that screen already
+   sets inline (--island-color for island.js/skillPath.js's skill/lesson
+   nodes, --island-color again per-subject for worldMap.js's own nodes). */
+.node-area-blob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--blob-color, var(--island-color, var(--purple)));
+  opacity: 0.85;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12), 0 0 0 3px rgba(255, 255, 255, 0.4);
+  /* Purely decorative — being position:absolute, it would otherwise paint
+     (and hit-test) above the button next to it in DOM order despite that
+     button being visually on top, since a positioned element always
+     stacks above a non-positioned in-flow one regardless of source order.
+     Without this the button underneath became unclickable. */
+  pointer-events: none;
+}
+
+:root[data-theme="dark"] .node-area-blob {
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(255, 255, 255, 0.14);
+}
+
+.node-area-blob-lg {
+  width: 152px;
+  height: 138px;
+}
+
+.node-area-blob-md {
+  width: 118px;
+  height: 106px;
+}
+
+/* island.js's single big landmass — one large blob spanning most of the
+   path-container's width and height, in the subject's own color at
+   reduced opacity, so the smaller per-skill .node-area-blob patches (a
+   different shade — see island.js) read as distinct zones *within* it
+   rather than as separate floating shapes. */
+.island-landmass {
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 4%;
+  transform: translateX(-50%);
+  width: min(94%, 780px);
+  height: 92%;
+  background: var(--island-color, var(--purple));
+  opacity: 0.16;
+}
+
+:root[data-theme="dark"] .island-landmass {
+  opacity: 0.28;
+}
+
+/* skillPath.js's single dominant area shape — the same visual language as
+   one of island.js's smaller per-skill patches, just the main shape here
+   instead of a supporting one, since this screen is "zoomed into" one
+   specific area of the island. */
+.skillpath-area {
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 2%;
+  transform: translateX(-50%);
+  width: min(92%, 620px);
+  height: 94%;
+  background: var(--island-color, var(--purple));
+  opacity: 0.2;
+}
+
+:root[data-theme="dark"] .skillpath-area {
+  opacity: 0.32;
 }
 
 .map-node-wrap {
@@ -558,6 +707,23 @@ input[type="password"] {
   color: var(--island-color-text, var(--ink));
   font-size: 1.1rem;
   margin-bottom: 1px;
+}
+
+/* A solid label chip behind a real planet-node's name/place/progress text
+   (not the shortcut cards above the path, which use .map-shortcut instead
+   of .map-node-wrap and already sit on the plain page background) — a
+   heading colored via --island-color-text can otherwise go near-invisible
+   against the new planet-circle/island-blob backdrops whenever a
+   subject's hue happens to be close to its planet's own (e.g. Math's
+   purple on ACT's equally-purple planet). --island-color-text itself
+   doesn't actually vary per node (see its single color-mix() definition
+   on :root), so a text-shadow halo alone isn't reliable enough here;
+   a guaranteed-neutral chip is. */
+.map-node-wrap .map-island-label {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 6px 12px 8px;
+  box-shadow: var(--shadow);
 }
 
 .map-island-place {
@@ -790,9 +956,24 @@ input[type="password"] {
 }
 
 /* ---------- island / path ---------- */
-.island-screen {
-  background: linear-gradient(180deg, var(--island-bg, #fff) 0%, transparent 220px);
-  border-radius: var(--radius);
+/* Full-bleed like the Galaxy and World Map screens — an island (island.js,
+   a subject's skill picker) and its lesson path (skillPath.js, one skill's
+   lesson picker) both get a topic-themed background instead of the plain
+   card layout, so they need the same breakout from .screen's normal
+   980px-centered constraint. The actual background comes from whichever
+   .topic-* pattern class island.js/skillPath.js add alongside this one
+   (see getSubjectTheme() in ui/subjectTheme.js) — this rule only owns the
+   sizing, not the look, since that varies by subject. */
+.island-screen,
+.skillpath-screen {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  min-height: calc(100vh - 88px);
+  border-radius: 0;
+  box-sizing: border-box;
+  position: relative;
+  padding-bottom: 40px;
 }
 
 .island-heading {
@@ -802,6 +983,91 @@ input[type="password"] {
 .island-heading-blurb {
   color: var(--muted);
   margin-bottom: 30px;
+}
+
+/* ---------- subject topic backgrounds ---------- */
+/* Four patterns, one per getSubjectTheme() `kind`, each built from plain
+   layered CSS gradients (no images) so they stay crisp at any size and
+   theme (light/dark) automatically via --island-bg/--glow-strong/
+   --glow-soft (a subject's own hue at two opacities, see glowVars() in
+   ui/pathTrail.js). Multiple subjects can share a kind (every math-like
+   subject is "mountain") and still look distinct from each other, since
+   the hue itself is per-subject, not per-kind.
+
+   forest (English · Wordwood Isle): soft, irregular canopy-light blobs.
+   mountain (Math-likes · Numeria Peaks/Function Fields/Starter Slopes):
+     a faint grid (an "it's math" signal on its own) plus a zigzag
+     mountain-range silhouette along the bottom edge.
+   wave (Reading-likes · Athenaeum Reef/Lexicon Shoals/Preface Point):
+     diagonal ripple bands, like light through shallow water.
+   lab (Science · Lab Archipelago): a dot-grid, reading as graph-paper /
+     petri-dish / molecular structure. */
+.topic-forest {
+  background:
+    radial-gradient(circle at 10% 12%, var(--glow-strong), transparent 42%),
+    radial-gradient(circle at 90% 22%, var(--glow-soft), transparent 38%),
+    radial-gradient(circle at 25% 90%, var(--glow-soft), transparent 40%),
+    radial-gradient(circle at 75% 96%, var(--glow-strong), transparent 36%),
+    var(--island-bg, #fff);
+}
+
+:root[data-theme="dark"] .topic-forest {
+  background:
+    radial-gradient(circle at 10% 12%, var(--glow-strong), transparent 42%),
+    radial-gradient(circle at 90% 22%, var(--glow-soft), transparent 38%),
+    radial-gradient(circle at 25% 90%, var(--glow-soft), transparent 40%),
+    radial-gradient(circle at 75% 96%, var(--glow-strong), transparent 36%),
+    linear-gradient(180deg, #101a10 0%, #0b120c 100%);
+}
+
+.topic-mountain {
+  background:
+    repeating-linear-gradient(90deg, var(--glow-soft) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(0deg, var(--glow-soft) 0 1px, transparent 1px 56px),
+    linear-gradient(170deg, transparent 60%, var(--glow-strong) 100%),
+    linear-gradient(10deg, transparent 60%, var(--glow-strong) 100%),
+    var(--island-bg, #fff);
+}
+
+:root[data-theme="dark"] .topic-mountain {
+  background:
+    repeating-linear-gradient(90deg, var(--glow-soft) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(0deg, var(--glow-soft) 0 1px, transparent 1px 56px),
+    linear-gradient(170deg, transparent 60%, var(--glow-strong) 100%),
+    linear-gradient(10deg, transparent 60%, var(--glow-strong) 100%),
+    linear-gradient(180deg, #14131f 0%, #0e0d17 100%);
+}
+
+.topic-wave {
+  background:
+    repeating-linear-gradient(112deg, var(--glow-soft) 0 3px, transparent 3px 70px),
+    repeating-linear-gradient(112deg, var(--glow-strong) 0 2px, transparent 2px 130px),
+    var(--island-bg, #fff);
+}
+
+:root[data-theme="dark"] .topic-wave {
+  background:
+    repeating-linear-gradient(112deg, var(--glow-soft) 0 3px, transparent 3px 70px),
+    repeating-linear-gradient(112deg, var(--glow-strong) 0 2px, transparent 2px 130px),
+    linear-gradient(180deg, #0d1a1c 0%, #091214 100%);
+}
+
+.topic-lab {
+  background:
+    radial-gradient(var(--glow-strong) 1.6px, transparent 1.8px),
+    radial-gradient(var(--glow-soft) 1.1px, transparent 1.3px),
+    var(--island-bg, #fff);
+  background-size: 48px 48px, 30px 30px, 100% 100%;
+  background-position: 0 0, 16px 16px, 0 0;
+}
+
+:root[data-theme="dark"] .topic-lab {
+  background:
+    radial-gradient(var(--glow-strong) 1.6px, transparent 1.8px),
+    radial-gradient(var(--glow-soft) 1.1px, transparent 1.3px),
+    linear-gradient(180deg, #10131e 0%, #0b0d16 100%);
+  background-size: 48px 48px, 30px 30px, 100% 100%;
+  background-position: 0 0, 16px 16px, 0 0;
 }
 
 .background-lesson-card {

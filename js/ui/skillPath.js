@@ -5,7 +5,8 @@ import { LESSONS } from "../data/lessons.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
-import { pathPositions, pathHeight, renderPathSvg, renderDecorations } from "./pathTrail.js";
+import { pathPositions, pathHeight, renderPathSvg, renderDecorations, glowVars } from "./pathTrail.js";
+import { getSubjectTheme } from "./subjectTheme.js";
 
 const ROW_HEIGHT = 128;
 
@@ -42,9 +43,11 @@ export function renderSkillPath(root, navigate, { skillId, subjectId }) {
     `;
   }).join("");
 
+  const theme = getSubjectTheme(subject.id);
+
   root.innerHTML = `
     ${hudHTML("map")}
-    <main class="screen skillpath-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
+    <main class="screen skillpath-screen topic-${theme.kind}" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
       <button class="back-btn" data-back>&larr; Back to Island</button>
       <div class="lesson-card">
         <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 98 })}</div>
@@ -61,8 +64,9 @@ export function renderSkillPath(root, navigate, { skillId, subjectId }) {
       </div>
       <p class="skillpath-hint">${progress.mastered ? "🏅 Skill mastered! Revisit any lesson to practice." : "Clear each lesson to unlock the next."}</p>
       <div class="map-path-container skillpath-path" style="height:${totalHeight}px">
+        <div class="skillpath-area map-blob-shape-3" style="--island-color:${subject.color}"></div>
         ${renderPathSvg(positions, totalHeight, { color: subject.color })}
-        <div class="path-decorations">${renderDecorations(totalHeight, skillId.length)}</div>
+        <div class="path-decorations">${renderDecorations(totalHeight, skillId.length, theme.decorations)}</div>
         ${nodes}
       </div>
     </main>

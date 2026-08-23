@@ -8,7 +8,8 @@ import { getBossMonster } from "../data/bossMonsters.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
-import { pathPositions, pathHeight, renderPathSvg, renderDecorations } from "./pathTrail.js";
+import { pathPositions, pathHeight, renderPathSvg, renderDecorations, glowVars } from "./pathTrail.js";
+import { getSubjectTheme } from "./subjectTheme.js";
 
 const ROW_HEIGHT = 148;
 
@@ -53,11 +54,14 @@ export function renderIsland(root, navigate, { subjectId }) {
       return `
         <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
           ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 59 })}</div>` : ""}
-          <button class="node-circle ${stateClass}" data-skill="${skill.id}" ${playable ? "" : "disabled"}
-            aria-label="${skill.name} island${playable ? `: ${progress.mastered ? "mastered" : `${progress.lessonsCompleted} of ${totalLessons} lessons complete`}` : ", lessons not written yet"}"
-            style="--node-color:${subject.color}">
-            ${badge}
-          </button>
+          <div class="node-anchor">
+            <span class="node-area-blob node-area-blob-md map-blob-shape-${(i % 4) + 1}" style="--blob-color:${subject.bg}"></span>
+            <button class="node-circle ${stateClass}" data-skill="${skill.id}" ${playable ? "" : "disabled"}
+              aria-label="${skill.name} island${playable ? `: ${progress.mastered ? "mastered" : `${progress.lessonsCompleted} of ${totalLessons} lessons complete`}` : ", lessons not written yet"}"
+              style="--node-color:${subject.color}">
+              ${badge}
+            </button>
+          </div>
           <div class="node-label">
             <h4>${skill.name}</h4>
             <p>${skill.blurb}</p>
@@ -140,9 +144,11 @@ export function renderIsland(root, navigate, { subjectId }) {
       </div>
     `;
 
+  const theme = getSubjectTheme(subjectId);
+
   root.innerHTML = `
     ${hudHTML("map")}
-    <main class="screen island-screen" style="--island-color:${subject.color};--island-bg:${subject.bg}">
+    <main class="screen island-screen topic-${theme.kind}" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
       <p class="island-heading-blurb">${subject.blurb}</p>
@@ -150,8 +156,9 @@ export function renderIsland(root, navigate, { subjectId }) {
       ${referenceLinkHTML}
       ${comingSoonHTML}
       <div class="map-path-container" style="height:${totalHeight}px">
+        <div class="island-landmass map-blob-shape-2" style="--island-color:${subject.color}"></div>
         ${renderPathSvg(positions, totalHeight, { color: subject.color })}
-        <div class="path-decorations">${renderDecorations(totalHeight, subjectId.length)}</div>
+        <div class="path-decorations">${renderDecorations(totalHeight, subjectId.length, theme.decorations)}</div>
         ${nodes}
       </div>
       ${bossEncounterHTML}

@@ -41,6 +41,17 @@ export function renderPathSvg(positions, totalHeight, { color = "#6a5cff" } = {}
   `;
 }
 
+// Two translucent variants of a hex accent color (via an 8-digit hex
+// alpha suffix, widely supported and far simpler than color-mix()/rgba()
+// math here), for the topic-themed full-viewport backgrounds on
+// worldMap.js/island.js/skillPath.js — a strong one for the nearer glow,
+// a soft one for the fainter/farther one. Returned as a ready-to-splice
+// inline-style fragment so callers can drop it straight into their
+// existing `style="--island-color:...;${glowVars(color)}"` template.
+export function glowVars(hex) {
+  return `--glow-strong:${hex}59;--glow-soft:${hex}26;`;
+}
+
 // A handful of decorative background blobs (clouds/rocks/foliage) scattered
 // behind the path, purely for visual texture on the "colorful map" feel.
 export function renderDecorations(totalHeight, seed = 0, shapes = ["☁️", "🌿", "🪨", "✨", "🌊"]) {

@@ -3,9 +3,22 @@ import { getState, getStateSubjects } from "../data/stateTests.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
-import { pathPositions, pathHeight, renderPathSvg, renderDecorations } from "./pathTrail.js";
+import { pathPositions, pathHeight, renderPathSvg, renderDecorations, glowVars } from "./pathTrail.js";
 
 const ROW_HEIGHT = 200;
+
+// Decorations specific to each solar system's own theme (see each test's
+// icon/tagline in data/tests.js) — replaces pathTrail.js's generic
+// cloud/leaf/rock/sparkle/wave scatter so a planet-picker page itself
+// looks like "this test's home turf," not just a recolored copy of every
+// other one. Falls back to a neutral scatter for any test id not listed
+// (there is currently no such case in practice).
+const TEST_DECORATIONS = {
+  act: ["🪐", "✨", "💫"],
+  sat: ["🌕", "⭐", "🌙"],
+  psat: ["🌗", "✨", "🌘"],
+  stateAssessments: ["🌍", "🗺️", "✨"],
+};
 
 // This screen is a solar system's own planet-picker: each subject/category
 // is a planet (see data/tests.js), and picking one hands off to island.js,
@@ -70,10 +83,13 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
     return `
       <div class="map-node-wrap" style="left:${x}%;top:${y}px;">
         ${isCurrent ? `<div class="map-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 69 })}</div>` : ""}
-        <button class="map-island-node" data-subject="${subject.id}" aria-label="${subject.name} planet: ${stat.masteredCount} of ${stat.totalSkills} islands mastered" style="--island-color:${subject.color};--island-bg:${subject.bg};--ring-pct:${pct}%">
-          <span class="map-island-ring"></span>
-          <span class="map-island-icon" aria-hidden="true">${subject.icon}</span>
-        </button>
+        <div class="node-anchor">
+          <span class="node-area-blob node-area-blob-lg map-blob-shape-${(i % 4) + 1}" style="--blob-color:${subject.color}"></span>
+          <button class="map-island-node" data-subject="${subject.id}" aria-label="${subject.name} planet: ${stat.masteredCount} of ${stat.totalSkills} islands mastered" style="--island-color:${subject.color};--island-bg:${subject.bg};--ring-pct:${pct}%">
+            <span class="map-island-ring"></span>
+            <span class="map-island-icon" aria-hidden="true">${subject.icon}</span>
+          </button>
+        </div>
         <div class="map-island-label">
           <h3>${subject.name}</h3>
           <p class="map-island-place">${subject.place}</p>
@@ -114,7 +130,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
 
   root.innerHTML = `
     ${hudHTML("map")}
-    <main class="screen map-screen">
+    <main class="screen map-screen" style="--test-color:${test.color};--test-bg:${test.bg};${glowVars(test.color)}">
       <button class="back-btn" data-solar-system>&larr; Galaxy</button>
       ${homeStateName ? `<button class="back-btn" data-change-state>🗺️ Change State (${homeStateName})</button>` : ""}
       <h1 class="map-title">Choose a Planet to Explore</h1>
@@ -128,8 +144,9 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
       ${!isReady ? `<p class="map-coming-soon-banner">🚧 ${test.name} content is still being built &mdash; pick a planet below to see what's planned.</p>` : ""}
       ${shortcuts ? `<div class="map-shortcuts-row">${shortcuts}</div>` : ""}
       <div class="map-path-container" style="height:${totalHeight}px">
-        ${renderPathSvg(positions, totalHeight, { color: "#b6aeff" })}
-        <div class="path-decorations">${renderDecorations(totalHeight, 1)}</div>
+        <div class="map-planet-circle"></div>
+        ${renderPathSvg(positions, totalHeight, { color: test.color })}
+        <div class="path-decorations">${renderDecorations(totalHeight, 1, TEST_DECORATIONS[activeTestId] || TEST_DECORATIONS.act)}</div>
         ${planets}
       </div>
     </main>
