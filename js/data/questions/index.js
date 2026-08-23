@@ -706,8 +706,8 @@ export function getDiagnosticQuestions(count = 24, testId = "act") {
 // escalating toward "Final Five"-tier questions this specific player has
 // already shown they've got solid, or stay stuck serving up "Comma Sense"
 // questions they've personally always missed.
-export function getEndlessQuestion(previousQuestion, difficultyLevel = 0, { getQuestionStat } = {}) {
-  const flat = getAllQuestionsFlat();
+export function getEndlessQuestion(previousQuestion, difficultyLevel = 0, { getQuestionStat, testId = "act" } = {}) {
+  const flat = getAllQuestionsFlat(testId);
   if (flat.length === 0) return null;
   const target = 0.1 + Math.max(0, Math.min(1, difficultyLevel)) * 0.8;
   const spread = 0.35;

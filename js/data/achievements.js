@@ -80,7 +80,7 @@ export const ACHIEVEMENTS = [
     icon: "🔁",
     name: "Endless Grinder",
     desc: "Answer 25 in a row correctly in Endless Mode.",
-    condition: (gs) => gs.data.endless.bestRun >= 25,
+    condition: (gs) => Math.max(gs.data.endless.bestRun.act, gs.data.endless.bestRun.sat, gs.data.endless.bestRun.psat) >= 25,
   },
   {
     id: "level-10",

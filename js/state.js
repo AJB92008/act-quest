@@ -241,9 +241,14 @@ function defaultSave() {
       darkMode: false,
       devModeUnlocked: false,
     },
+    // One best run per test (act/sat/psat — the three question-bank-backed
+    // tests Endless Mode can pull from; State Assessments has no content to
+    // draw questions from) — timerEnabled stays a single shared preference
+    // since it's a UI setting, not a per-test score. See _load()'s migration
+    // of a pre-multi-test save's flat `bestRun` number into `bestRun.act`.
     endless: {
-      bestRun: 0,
       timerEnabled: true,
+      bestRun: { act: 0, sat: 0, psat: 0 },
     },
     monster: {
       xp: 0,
@@ -317,7 +322,17 @@ export class GameState {
       fresh.homeState = typeof parsed.homeState === "string" && STATE_ABBRS.has(parsed.homeState) ? parsed.homeState : fresh.homeState;
       fresh.onboarded = parsed.onboarded ?? fresh.onboarded;
       fresh.settings = { ...fresh.settings, ...parsed.settings };
-      fresh.endless = { ...fresh.endless, ...parsed.endless };
+      fresh.endless.timerEnabled = parsed.endless?.timerEnabled ?? fresh.endless.timerEnabled;
+      // A pre-multi-test save has the legacy flat `bestRun` number (Endless
+      // Mode was ACT-only) — migrated into bestRun.act so that player's real
+      // best survives the upgrade instead of silently resetting to 0.
+      if (typeof parsed.endless?.bestRun === "number") {
+        fresh.endless.bestRun.act = parsed.endless.bestRun;
+      } else {
+        for (const testId of ["act", "sat", "psat"]) {
+          fresh.endless.bestRun[testId] = parsed.endless?.bestRun?.[testId] ?? fresh.endless.bestRun[testId];
+        }
+      }
       fresh.bossCleared = { ...fresh.bossCleared, ...parsed.bossCleared };
       fresh.monster = { ...fresh.monster, ...parsed.monster };
       // A pre-multi-planet save has the legacy flat {bestComposite,
@@ -576,8 +591,8 @@ export class GameState {
   }
 
   // --- endless mode ---
-  get endlessBest() {
-    return this.data.endless.bestRun;
+  getEndlessBest(testId = "act") {
+    return this.data.endless.bestRun[testId] ?? 0;
   }
 
   // Endless Mode has its own timer preference, separate from regular
@@ -593,11 +608,11 @@ export class GameState {
   }
 
   /** Record the outcome of a finished Endless Mode run. */
-  recordEndlessRun({ correctCount, starsEarned, coinsEarned }) {
+  recordEndlessRun({ correctCount, starsEarned, coinsEarned, testId = "act" }) {
     this.data.totalStars += starsEarned;
     this.data.coins += coinsEarned;
-    const isNewBest = correctCount > this.data.endless.bestRun;
-    if (isNewBest) this.data.endless.bestRun = correctCount;
+    const isNewBest = correctCount > (this.data.endless.bestRun[testId] ?? 0);
+    if (isNewBest) this.data.endless.bestRun[testId] = correctCount;
     const levelResult = this._grantXp(starsEarned);
     this._recordDailyActivity();
     const newlyUnlocked = this._checkAchievements();

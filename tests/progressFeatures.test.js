@@ -268,3 +268,61 @@ test("importSave backfills fields missing from an older exported save", () => {
   assertTrue(gs2.data.srs !== undefined, "missing fields should be backfilled with defaults, not left absent");
   assertEqual(gs2.data.srs.totalReviews, 0);
 });
+
+// --- endless mode, scoped per test (ACT/SAT/PSAT) ---
+
+test("a fresh save has a zero endless-mode best run for every test", () => {
+  const gs = freshGameState();
+  assertEqual(gs.getEndlessBest("act"), 0);
+  assertEqual(gs.getEndlessBest("sat"), 0);
+  assertEqual(gs.getEndlessBest("psat"), 0);
+});
+
+test("recordEndlessRun defaults to testId 'act' when none is given", () => {
+  const gs = freshGameState();
+  gs.recordEndlessRun({ correctCount: 10, starsEarned: 10, coinsEarned: 40 });
+  assertEqual(gs.getEndlessBest("act"), 10);
+  assertEqual(gs.getEndlessBest("sat"), 0);
+});
+
+test("an ACT endless run's best score doesn't pollute SAT's or PSAT's", () => {
+  const gs = freshGameState();
+  gs.recordEndlessRun({ correctCount: 15, starsEarned: 15, coinsEarned: 60, testId: "act" });
+  gs.recordEndlessRun({ correctCount: 8, starsEarned: 8, coinsEarned: 32, testId: "sat" });
+  assertEqual(gs.getEndlessBest("act"), 15);
+  assertEqual(gs.getEndlessBest("sat"), 8);
+  assertEqual(gs.getEndlessBest("psat"), 0);
+});
+
+test("recordEndlessRun only reports isNewBest when that specific test's record is actually beaten", () => {
+  const gs = freshGameState();
+  const first = gs.recordEndlessRun({ correctCount: 12, starsEarned: 12, coinsEarned: 48, testId: "psat" });
+  assertTrue(first.isNewBest);
+  const worse = gs.recordEndlessRun({ correctCount: 5, starsEarned: 5, coinsEarned: 20, testId: "psat" });
+  assertTrue(!worse.isNewBest);
+  assertEqual(gs.getEndlessBest("psat"), 12, "a worse run shouldn't overwrite the existing best");
+});
+
+// Endless Mode used to be ACT-only, so a pre-multi-test save has the
+// legacy flat `endless.bestRun` number instead of the per-test object —
+// that real best has to survive the upgrade into bestRun.act rather than
+// silently resetting to 0.
+test("a legacy flat endless.bestRun number migrates into bestRun.act", () => {
+  localStorage.removeItem("act-quest-save-v1");
+  const legacy = { version: 1, endless: { bestRun: 18, timerEnabled: false } };
+  localStorage.setItem("act-quest-save-v1", JSON.stringify(legacy));
+  const gs = new GameState();
+  assertEqual(gs.getEndlessBest("act"), 18);
+  assertEqual(gs.getEndlessBest("sat"), 0);
+  assertEqual(gs.endlessTimerEnabled, false);
+  localStorage.removeItem("act-quest-save-v1");
+});
+
+test("the endless-grinder achievement unlocks from a 25+ run on any test, not just ACT", () => {
+  const gs = freshGameState();
+  // recordEndlessRun already runs _checkAchievements internally — its own
+  // returned newlyUnlocked is the real signal, same as
+  // recordPracticeTestResult's equivalent test above.
+  const { newlyUnlocked } = gs.recordEndlessRun({ correctCount: 26, starsEarned: 26, coinsEarned: 100, testId: "sat" });
+  assertTrue(newlyUnlocked.some((a) => a.id === "endless-grinder"), "a SAT-mode run of 25+ should unlock the same achievement an ACT run would");
+});

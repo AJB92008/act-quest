@@ -51,7 +51,7 @@ const JUMPS = [
   },
   { label: "Vocabulary Builder", screen: "vocabulary" },
   { label: "Vocab Quiz", screen: "vocabQuiz", params: { topicId: firstVocabTopic.id, topicTitle: firstVocabTopic.title } },
-  { label: "Endless Mode", screen: "endless" },
+  ...PLAYABLE_TESTS.map(({ test }) => ({ label: `Endless Mode: ${test.name}`, screen: "endless", params: { testId: test.id } })),
   ...TESTS.filter((t) => t.practiceTest).map((t) => ({ label: `Practice Test: ${t.name}`, screen: "practiceTest", params: { testId: t.id } })),
 ];
 

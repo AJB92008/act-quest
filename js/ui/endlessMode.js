@@ -1,11 +1,12 @@
 // Endless Mode: a continuous, mixed-subject stream of questions pulled
-// from every skill across all four islands (English/Math/Reading/Science),
+// from every skill across every subject of whichever test you pick (ACT,
+// SAT, or PSAT — State Assessments has no question content to draw from),
 // styled after "Teach Your Monster to Read"'s endless/high-score modes. The
 // run keeps going, one question after another and gradually harder as it
 // goes, until three wrong (or timed-out) answers end it; how many you
 // answered correctly is your score, and the best score you've ever reached
-// is saved permanently.
-import { getSubject } from "../data/skills.js";
+// on that test is saved permanently.
+import { getSubject, getTestSubjects, isSubjectPlayable, TESTS } from "../data/tests.js";
 import { getEndlessQuestion, preloadAllSubjects } from "../data/questions/index.js";
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
@@ -14,6 +15,7 @@ import { renderQuestionStimulus } from "./stimulusPanels.js";
 import { bindQuizKeys } from "./keyboardNav.js";
 import { renderHintButton, wireHintButton, removeHintButton } from "./hint.js";
 import { renderProgressBanners } from "./progressBanner.js";
+import { isWrittenQuestion, checkWrittenAnswer, renderWrittenAnswerHTML, wireWrittenAnswer, markWrittenAnswer } from "./writtenAnswer.js";
 
 const QUESTION_TIME = 20; // seconds budgeted per question, when timed
 const MAX_LIVES = 3;
@@ -34,11 +36,19 @@ function difficultyLabel(level) {
   return "🔥 Peak Difficulty";
 }
 
-export function renderEndlessMode(root, navigate) {
-  // Endless Mode draws from all four subjects at once, so there's no
-  // meaningful per-subject lazy load here — just kick everything off as
-  // soon as the player opens this screen, well before they hit "Start Run".
+// Every test Endless Mode can actually pull questions from — State
+// Assessments is excluded since its subjects are all still content-free
+// scaffolding (see data/stateTests.js).
+const ENDLESS_TESTS = TESTS.filter((t) => getTestSubjects(t.id).some(isSubjectPlayable));
+
+export function renderEndlessMode(root, navigate, { testId = "act" } = {}) {
+  // Endless Mode draws from every subject of whichever test is selected,
+  // and the player can flip between tests before starting a run, so there's
+  // no meaningful per-subject/per-test lazy load here — just kick
+  // everything off as soon as the player opens this screen, well before
+  // they hit "Start Run".
   const dataReady = preloadAllSubjects();
+  let currentTestId = ENDLESS_TESTS.some((t) => t.id === testId) ? testId : "act";
   let lives = MAX_LIVES;
   let correctCount = 0;
   let combo = 0;
@@ -70,9 +80,19 @@ export function renderEndlessMode(root, navigate) {
       if (fill) fill.style.width = `${(timeLeft / QUESTION_TIME) * 100}%`;
       if (timeLeft <= 0) {
         stopTimer();
-        if (!answered) selectChoice(-1);
+        if (!answered) handleTimeout();
       }
     }, 100);
+  }
+
+  // A written (student-produced-response) question has no choice buttons
+  // to mark up, so it can't go through selectChoice(-1) the way a
+  // multiple-choice timeout does — an empty submission already reads as
+  // wrong via checkWrittenAnswer, so routing it through the normal
+  // selectWritten() path gets the same "timed out" outcome for free.
+  function handleTimeout() {
+    if (isWrittenQuestion(currentQuestion)) selectWritten("");
+    else selectChoice(-1);
   }
 
   // Banks whatever stars/coins/best-score progress the run has earned so
@@ -83,7 +103,7 @@ export function renderEndlessMode(root, navigate) {
     stopTimer();
     if (runEnded) return;
     runEnded = true;
-    const { isNewBest, ...rest } = gameState.recordEndlessRun({ correctCount, starsEarned, coinsEarned });
+    const { isNewBest, ...rest } = gameState.recordEndlessRun({ correctCount, starsEarned, coinsEarned, testId: currentTestId });
     lastRunNewBest = isNewBest;
     levelResult = rest;
   }
@@ -99,6 +119,10 @@ export function renderEndlessMode(root, navigate) {
   }
 
   function renderIntro() {
+    const testTabs = ENDLESS_TESTS.map(
+      (t) => `<button class="btn-secondary ${t.id === currentTestId ? "is-active" : ""}" data-test-tab="${t.id}">${t.icon} ${t.name}</button>`
+    ).join("");
+
     root.innerHTML = `
       ${hudHTML("endless")}
       <main class="screen endless-screen" style="--island-color:${ENDLESS_COLOR};--island-bg:${ENDLESS_BG}">
@@ -106,11 +130,12 @@ export function renderEndlessMode(root, navigate) {
         <div class="lesson-card">
           <div class="lesson-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <h1 class="lesson-title">🔁 Endless Mode</h1>
-          <p class="lesson-blurb">Mixed questions from every subject, one after another, getting harder the longer you last.</p>
-          <p class="lesson-paragraph">Every question can come from any skill on any island, starting easy and ramping up in difficulty as you go. You get ${MAX_LIVES} lives (❤️❤️❤️): a wrong or timed-out answer costs one, and the run ends when you're out. Answer in a row for a combo bonus on stars and coins.</p>
-          <p class="lesson-paragraph">Your score is how many questions you get right in a single run. Your best run ever is saved below.</p>
+          <p class="lesson-blurb">Mixed questions from every subject of one test, one after another, getting harder the longer you last.</p>
+          <div class="drill-tabs">${testTabs}</div>
+          <p class="lesson-paragraph">Every question can come from any skill on any island of the test you picked above, starting easy and ramping up in difficulty as you go. You get ${MAX_LIVES} lives (❤️❤️❤️): a wrong or timed-out answer costs one, and the run ends when you're out. Answer in a row for a combo bonus on stars and coins.</p>
+          <p class="lesson-paragraph">Your score is how many questions you get right in a single run. Your best run ever on this test is saved below.</p>
           <div class="endless-best-tile">
-            <span class="endless-best-num">${gameState.endlessBest}</span>
+            <span class="endless-best-num">${gameState.getEndlessBest(currentTestId)}</span>
             <span>Best Run</span>
           </div>
           <div class="lesson-timer-setting">
@@ -127,6 +152,12 @@ export function renderEndlessMode(root, navigate) {
 
     wireHud(root, navigateAway);
     root.querySelector("[data-back]").addEventListener("click", () => navigate("map"));
+    root.querySelectorAll("[data-test-tab]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentTestId = btn.dataset.testTab;
+        renderIntro();
+      });
+    });
     root.querySelector("#timerToggle").addEventListener("change", (e) => {
       gameState.setEndlessTimerEnabled(e.target.checked);
     });
@@ -155,6 +186,7 @@ export function renderEndlessMode(root, navigate) {
     previousQuestion = currentQuestion;
     currentQuestion = getEndlessQuestion(previousQuestion, difficultyLevel, {
       getQuestionStat: (skillId, bankIndex) => gameState.getQuestionStat(skillId, bankIndex),
+      testId: currentTestId,
     });
     questionsSeen++;
     const q = currentQuestion;
@@ -179,10 +211,8 @@ export function renderEndlessMode(root, navigate) {
         <div class="question-card">
           <div class="monster-reactor" id="monsterReactor">${monsterSVG(gameState.getDisplayAvatar(), { size: 110 })}</div>
           <p class="question-text">${q.q}</p>
-          <div class="choices" id="choices">
-            ${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}
-          </div>
-          ${renderHintButton()}
+          ${isWrittenQuestion(q) ? renderWrittenAnswerHTML() : `<div class="choices" id="choices">${q.choices.map((c, i) => `<button class="choice-btn" data-choice="${i}">${c}</button>`).join("")}</div>`}
+          ${isWrittenQuestion(q) ? "" : renderHintButton()}
           <div class="explain-panel" id="explainPanel" role="status" aria-live="polite" hidden></div>
           <button class="next-btn" id="nextBtn" hidden></button>
         </div>
@@ -195,16 +225,20 @@ export function renderEndlessMode(root, navigate) {
       endRun();
       renderResults();
     });
-    root.querySelectorAll("[data-choice]").forEach((btn) => {
-      btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
-    });
-    wireHintButton(root, q);
+    if (isWrittenQuestion(q)) {
+      wireWrittenAnswer(root, (value) => selectWritten(value));
+    } else {
+      root.querySelectorAll("[data-choice]").forEach((btn) => {
+        btn.addEventListener("click", () => selectChoice(Number(btn.dataset.choice)));
+      });
+      wireHintButton(root, q);
+    }
     if (timed) startTimer();
 
     unbindKeys();
     unbindKeys = bindQuizKeys({
       onChoice: (i) => {
-        if (i < q.choices.length) selectChoice(i);
+        if (!isWrittenQuestion(q) && i < q.choices.length) selectChoice(i);
       },
       onNext: () => root.querySelector("#nextBtn:not([hidden])")?.click(),
     });
@@ -212,14 +246,9 @@ export function renderEndlessMode(root, navigate) {
 
   function selectChoice(choiceIdx) {
     if (answered) return;
-    answered = true;
-    stopTimer();
-    removeHintButton(root);
-
     const q = currentQuestion;
     const correct = choiceIdx === q.answer;
-    const timed = gameState.endlessTimerEnabled;
-    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx);
+    finishAnswer(correct, choiceIdx, null);
 
     root.querySelectorAll("[data-choice]").forEach((btn) => {
       btn.disabled = true;
@@ -227,6 +256,24 @@ export function renderEndlessMode(root, navigate) {
       if (i === q.answer) btn.classList.add("is-correct");
       else if (i === choiceIdx) btn.classList.add("is-incorrect");
     });
+  }
+
+  function selectWritten(userInput) {
+    if (answered) return;
+    const q = currentQuestion;
+    const correct = checkWrittenAnswer(userInput, q);
+    finishAnswer(correct, null, userInput);
+    markWrittenAnswer(root, correct);
+  }
+
+  function finishAnswer(correct, choiceIdx, chosenText) {
+    answered = true;
+    stopTimer();
+    removeHintButton(root);
+
+    const q = currentQuestion;
+    const timed = gameState.endlessTimerEnabled;
+    gameState.recordQuestionAnswer(q.skillId, q.bankIndex, correct, choiceIdx, chosenText);
 
     const reactor = root.querySelector("#monsterReactor");
     reactor.classList.add(correct ? "react-happy" : "react-sad");
@@ -249,7 +296,7 @@ export function renderEndlessMode(root, navigate) {
     panel.className = `explain-panel ${correct ? "is-correct-bg" : "is-incorrect-bg"}`;
     panel.innerHTML = correct
       ? `<strong>Nice, that's right!</strong><p>${q.explain}</p>`
-      : `<strong>Not quite. The correct answer: ${q.choices[q.answer]}</strong><p>${q.explain}</p>`;
+      : `<strong>Not quite. The correct answer: ${isWrittenQuestion(q) ? q.answer : q.choices[q.answer]}</strong><p>${q.explain}</p>`;
 
     const outOfLives = lives <= 0;
     const nextBtn = root.querySelector("#nextBtn");
@@ -282,7 +329,7 @@ export function renderEndlessMode(root, navigate) {
           ${
             lastRunNewBest
               ? `<p class="results-flag">🏆 New personal best!</p>`
-              : `<p class="results-flag results-flag-muted">Best run: ${gameState.endlessBest} correct</p>`
+              : `<p class="results-flag results-flag-muted">Best run: ${gameState.getEndlessBest(currentTestId)} correct</p>`
           }
           ${renderProgressBanners(levelResult)}
           <div class="results-stats">
@@ -301,7 +348,7 @@ export function renderEndlessMode(root, navigate) {
     `;
 
     wireHud(root, navigateAway);
-    root.querySelector("[data-retry]").addEventListener("click", () => renderEndlessMode(root, navigate));
+    root.querySelector("[data-retry]").addEventListener("click", () => renderEndlessMode(root, navigate, { testId: currentTestId }));
     root.querySelector("[data-map]").addEventListener("click", () => navigate("map"));
   }
 
