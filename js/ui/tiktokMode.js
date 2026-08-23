@@ -63,17 +63,17 @@ function speak(text) {
   window.speechSynthesis.speak(utter);
 }
 
-// Read the correct answer out loud (Web Speech API — built into every
-// modern browser, no backend/library needed) so a recording captures a
-// spoken reveal instead of relying on the person filming to read it
-// themselves. Silently does nothing on a browser without speech support
-// rather than erroring — this is a nice-to-have for the recording, not
-// something the screen depends on.
+// Read the correct answer and why it's correct out loud (Web Speech API —
+// built into every modern browser, no backend/library needed) so a
+// recording captures a spoken reveal instead of relying on the person
+// filming to read it themselves. Silently does nothing on a browser
+// without speech support rather than erroring — this is a nice-to-have
+// for the recording, not something the screen depends on.
 function speakAnswer(q) {
-  const text = isWrittenQuestion(q)
+  const answerPart = isWrittenQuestion(q)
     ? `The correct answer is ${q.answer}.`
-    : `The correct answer is ${String.fromCharCode(65 + q.answer)}: ${q.choices[q.answer]}`;
-  speak(text);
+    : `The correct answer is ${String.fromCharCode(65 + q.answer)}: ${q.choices[q.answer]}`.replace(/[.!?]$/, "") + ".";
+  speak(`${answerPart} ${q.explain}`);
 }
 
 // Voices load asynchronously in some browsers (notably Chrome on first
