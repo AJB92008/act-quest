@@ -590,6 +590,17 @@ input[type="password"] {
 :root[data-theme="dark"] .solar-system-screen {
   position: relative;
   overflow: hidden;
+  /* Breaks out of .screen's normal 980px centered-card constraint so the
+     starfield fills the full browser width, and stretches to at least a
+     full viewport tall (minus the sticky HUD above it) rather than only
+     as tall as its content — this is meant to read as "outer space
+     behind the picker," not another card floating on the page. */
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  min-height: calc(100vh - 88px);
+  border-radius: 0;
+  box-sizing: border-box;
   background-color: #05050f;
   background-image:
     radial-gradient(circle at 18% 15%, rgba(122, 96, 255, 0.35), transparent 55%),
