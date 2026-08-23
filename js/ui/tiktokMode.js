@@ -13,6 +13,7 @@ import { isWrittenQuestion } from "./writtenAnswer.js";
 const TIKTOK_COLOR = "#25f4ee";
 const TIKTOK_BG = "#0a0a0f";
 const REVEAL_SECONDS = 10;
+const VOICE_STORAGE_KEY = "act-quest-tiktok-voice";
 
 function shuffled(arr) {
   const copy = arr.slice();
@@ -23,6 +24,45 @@ function shuffled(arr) {
   return copy;
 }
 
+function loadPreferredVoiceURI() {
+  try {
+    return localStorage.getItem(VOICE_STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function savePreferredVoiceURI(uri) {
+  try {
+    localStorage.setItem(VOICE_STORAGE_KEY, uri);
+  } catch {
+    // ignore
+  }
+}
+
+function availableVoices() {
+  return "speechSynthesis" in window ? window.speechSynthesis.getVoices() : [];
+}
+
+// Applies the saved voice preference (by voiceURI, since a
+// SpeechSynthesisVoice object itself can't be persisted to localStorage)
+// if it's still present in the browser's current voice list — falls back
+// to the browser default voice otherwise, which is always a safe no-op.
+function applyPreferredVoice(utterance) {
+  const uri = loadPreferredVoiceURI();
+  if (!uri) return;
+  const voice = availableVoices().find((v) => v.voiceURI === uri);
+  if (voice) utterance.voice = voice;
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  applyPreferredVoice(utter);
+  window.speechSynthesis.speak(utter);
+}
+
 // Read the correct answer out loud (Web Speech API — built into every
 // modern browser, no backend/library needed) so a recording captures a
 // spoken reveal instead of relying on the person filming to read it
@@ -30,12 +70,31 @@ function shuffled(arr) {
 // rather than erroring — this is a nice-to-have for the recording, not
 // something the screen depends on.
 function speakAnswer(q) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
   const text = isWrittenQuestion(q)
     ? `The correct answer is ${q.answer}.`
     : `The correct answer is ${String.fromCharCode(65 + q.answer)}: ${q.choices[q.answer]}`;
-  window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+  speak(text);
+}
+
+// Voices load asynchronously in some browsers (notably Chrome on first
+// page load) — getVoices() can return an empty array until this fires.
+// Re-populates the picker's <select> in place if it's currently on
+// screen, rather than forcing a full re-render that would lose whatever
+// else the player was doing.
+function populateVoiceSelect(select) {
+  const voices = availableVoices();
+  const current = select.value || loadPreferredVoiceURI();
+  select.innerHTML =
+    `<option value="">Default voice</option>` +
+    voices.map((v) => `<option value="${v.voiceURI}">${v.name} (${v.lang})</option>`).join("");
+  if (current && voices.some((v) => v.voiceURI === current)) select.value = current;
+}
+
+if ("speechSynthesis" in window) {
+  window.speechSynthesis.addEventListener("voiceschanged", () => {
+    const select = document.querySelector("[data-voice-select]");
+    if (select) populateVoiceSelect(select);
+  });
 }
 
 export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
@@ -116,6 +175,13 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
           <div class="drill-tabs">${testTabs}</div>
           <div class="drill-tabs">${subjectTabs}</div>
           <div class="drill-skill-list">${skillRows || "<p>This subject has no skills yet.</p>"}</div>
+          <div class="study-plan-form">
+            <label class="study-plan-field">
+              🔊 Answer voice
+              <select data-voice-select></select>
+            </label>
+            <button type="button" class="btn-secondary" data-voice-preview>▶️ Preview</button>
+          </div>
           <div class="results-actions">
             <button class="btn-primary lesson-start-btn" data-start-tiktok ${selectedSkillIds.size === 0 ? "disabled" : ""}>Start (${selectedSkillIds.size} skill${selectedSkillIds.size === 1 ? "" : "s"} selected) &rarr;</button>
           </div>
@@ -123,7 +189,18 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
       </main>
     `;
 
-    root.querySelector("[data-exit]").addEventListener("click", () => navigate("map"));
+    root.querySelector("[data-exit]").addEventListener("click", () => {
+      stopSpeaking();
+      navigate("map");
+    });
+
+    const voiceSelect = root.querySelector("[data-voice-select]");
+    populateVoiceSelect(voiceSelect);
+    voiceSelect.addEventListener("change", () => savePreferredVoiceURI(voiceSelect.value));
+    root.querySelector("[data-voice-preview]").addEventListener("click", () => {
+      savePreferredVoiceURI(voiceSelect.value);
+      speak("The correct answer is B: this is what that voice sounds like.");
+    });
 
     root.querySelectorAll("[data-test-tab]").forEach((btn) => {
       btn.addEventListener("click", () => {
