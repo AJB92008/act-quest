@@ -169,7 +169,6 @@ function buildBodyHTML() {
 
   return `
     <p class="dev-mode-subtitle">Drag the header to move this panel around. Everything below edits your save directly, for testing, not gameplay.</p>
-    <p class="dev-mode-subtitle">🎬 Type <strong>TIK</strong> anywhere while this panel is open to jump into TikTok Mode — a vertical, recording-friendly single-question card for posting clips.</p>
     ${summaryHTML}
 
     <h3>Currency &amp; XP</h3>
