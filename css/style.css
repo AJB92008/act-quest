@@ -1264,6 +1264,15 @@ input[type="password"] {
   font-size: 1.5rem;
 }
 
+/* A skill's own boss *lesson* (skillPathHub.js) has no monster art of its
+   own the way a subject's boss encounter does (islandHub.js) — just a
+   crown filling the same dark circle, sized to read at a glance from
+   across the map. */
+.hub-boss-emoji {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
 .hub-boss-name {
   background: #241a15;
   color: #f2e6da;
