@@ -10,6 +10,7 @@ import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { pathPositions, pathHeight, renderPathSvg, renderDecorations, glowVars } from "./pathTrail.js";
 import { getSubjectTheme } from "./subjectTheme.js";
+import { renderEnglishHubIsland } from "./islandHubArt.js";
 
 const ROW_HEIGHT = 148;
 
@@ -145,19 +146,31 @@ export function renderIsland(root, navigate, { subjectId }) {
     `;
 
   const theme = getSubjectTheme(subjectId);
+  // English is this planet's "hub" island — see islandHubArt.js's own
+  // header comment for the full brief this was built from. It gets a
+  // bespoke illustrated landmark instead of the generic topic-* pattern
+  // background every other island still uses, floating on the same calm
+  // ocean the World Map already established for ACT (.ocean-scene) rather
+  // than the leafy topic-forest tint, since the design brief specifically
+  // wants this island's own warm palette to stand out *against* the
+  // surrounding water/sky.
+  const isHubIsland = subjectId === "english";
+  const sceneClass = isHubIsland ? "ocean-scene" : `topic-${theme.kind}`;
+  const decorations = isHubIsland ? ["〰️", "〰️"] : theme.decorations;
 
   root.innerHTML = `
     ${hudHTML("map")}
-    <main class="screen island-screen topic-${theme.kind}" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
+    <main class="screen island-screen ${sceneClass}" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
       <p class="island-heading-blurb">${subject.blurb}</p>
       <p class="map-subtitle">🏝️ Choose an Island to Explore</p>
+      ${isHubIsland ? renderEnglishHubIsland() : ""}
       ${referenceLinkHTML}
       ${comingSoonHTML}
       <div class="map-path-container" style="height:${totalHeight}px">
         ${renderPathSvg(positions, totalHeight, { color: subject.color })}
-        <div class="path-decorations">${renderDecorations(totalHeight, subjectId.length, theme.decorations)}</div>
+        <div class="path-decorations">${renderDecorations(totalHeight, subjectId.length, decorations)}</div>
         ${nodes}
       </div>
       ${bossEncounterHTML}
