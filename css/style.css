@@ -1278,6 +1278,32 @@ input[type="password"] {
   color: #f2e6da;
 }
 
+/* Idiom Instinct's own zoomed-in lesson-path illustration (skillPathHub.js)
+   — a small, contained scene (not full-bleed like the island hub it sits
+   inside), aspect-ratio-locked to its own SVG viewBox so the hand-drawn
+   hills/coastline and every lesson marker positioned by plain left/top
+   percentages stay aligned at any screen size, same trick as the hub's
+   own scene used before it grew into a full walkable world. */
+.lesson-terrain-scene {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto 24px;
+  filter: drop-shadow(0 14px 26px rgba(30, 45, 40, 0.22));
+}
+
+:root[data-theme="dark"] .lesson-terrain-scene {
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.45)) brightness(0.86) contrast(1.05) saturate(1.05);
+}
+
+.lesson-terrain-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
 /* Looks exactly like the plain decorative emoji it replaced (see
    computeGoatPos/decorationPos in islandHub.js) — no border, background,
    or pointer cursor to give away that it's a real button and not just
