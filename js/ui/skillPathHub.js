@@ -24,7 +24,24 @@
 // hushed swamp variant with one still pool and a fully unbroken trail
 // line (a period is one definitive stop), and Case Closed gets a sandy
 // beach with swamp water along one edge and a washed-up suitcase (a
-// literal "case"). Add a new skill here (plus one line in skillPath.js's
+// literal "case"). The hillside zone: Who's There? gets a heavily
+// mountain-weighted scene (a small plains strip only at the very
+// bottom) with one deliberate low pass in the range, guarded by a
+// watchtower; Match Makers gets an all-mountain valley lined with
+// matching peak PAIRS, each pair sharing the same height and the same
+// colored pennant; Clear Antecedent gets an all-mountain scene where
+// the exact same landmark peak recurs, identical, with signposts
+// pointing back to it every time; Time Traveler gets an all-mountain
+// scene whose cliff strata visibly age from weathered to vivid down its
+// length (the mountain showing its own past, present, and future);
+// Number Match gets coastal mountains with sea stacks rising from the
+// water in deliberately countable groups of one, two, and three;
+// Apples to Apples gets coastal mountains mirrored to the other side,
+// with matching pairs of twin sea arches and a few literal apple trees;
+// and Sound-Alike Showdown flips the coastal balance entirely — open
+// water dominates, with matching cliffs (and mountain peaks cresting
+// above them) on both the left and right edges, sound-wave arcs echoing
+// between them. Add a new skill here (plus one line in skillPath.js's
 // dispatch) rather than writing a whole new file — that's the point of
 // the shared engine.
 import { renderLessonTerrainPath } from "./lessonTerrain.js";
@@ -42,6 +59,13 @@ import { birdsongTheme } from "./lessonThemes/birdsong.js";
 import { windsweptTheme } from "./lessonThemes/windswept.js";
 import { stillwaterTheme } from "./lessonThemes/stillwater.js";
 import { shorelineTheme } from "./lessonThemes/shoreline.js";
+import { sentryPassTheme } from "./lessonThemes/sentryPass.js";
+import { matchedPeaksTheme } from "./lessonThemes/matchedPeaks.js";
+import { clearPeakTheme } from "./lessonThemes/clearPeak.js";
+import { strataPeaksTheme } from "./lessonThemes/strataPeaks.js";
+import { seaStacksTheme } from "./lessonThemes/seaStacks.js";
+import { twinCliffsTheme } from "./lessonThemes/twinCliffs.js";
+import { echoBayTheme } from "./lessonThemes/echoBay.js";
 
 export const LESSON_THEMES = {
   "en-idioms": plainsTheme,
@@ -58,6 +82,13 @@ export const LESSON_THEMES = {
   "en-dashes": windsweptTheme,
   "en-endpunct": stillwaterTheme,
   "en-subobjpronouns": shorelineTheme,
+  "en-thatwho": sentryPassTheme,
+  "en-pronounagreement": matchedPeaksTheme,
+  "en-ambiguous": clearPeakTheme,
+  "en-verbtense": strataPeaksTheme,
+  "en-svagreement": seaStacksTheme,
+  "en-comparisons": twinCliffsTheme,
+  "en-wordchoice": echoBayTheme,
 };
 
 export function renderThemedLessonPath(root, navigate, params) {

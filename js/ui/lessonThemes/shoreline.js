@@ -138,13 +138,29 @@ function renderReedsAtShore(totalHeight) {
 
 function computeDriftwood(positions, totalHeight) {
   const mid = (BAND.min + BAND.max) / 2;
-  return [0.3, 0.72].map((f) => {
+  const count = Math.max(3, Math.round(totalHeight / 420));
+  return Array.from({ length: count }, (_, i) => {
+    const f = (i + 0.5) / count;
     const hy = f * totalHeight;
     const nearest = nearestPosition(positions, hy);
     const side = nearest.x < mid ? 1 : -1;
     const x = clamp(mid + side * (BAND.max - BAND.min) * 0.3, BAND.min + 30, BAND.max - 30);
     return { x, y: hy };
   });
+}
+
+// Small pebbles and grains scattered across the whole beach, independent
+// of the trail — ambient texture so the sand is never one flat fill.
+function renderSandTexture(totalHeight) {
+  const count = Math.max(40, Math.round(totalHeight / 30));
+  return Array.from({ length: count }, (_, i) => {
+    const hx = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+    const hy = Math.abs(Math.sin(i * 78.233 + 4.1) * 12543.789) % 1;
+    const x = clamp(BAND.min + hx * (BAND.max - BAND.min), BAND.min + 5, BAND.max - 5);
+    const y = hy * totalHeight;
+    const r = 1.5 + (i % 3);
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="#c9b47e" opacity="0.4" />`;
+  }).join("");
 }
 
 function renderDriftwood({ x, y }) {
@@ -161,11 +177,11 @@ function renderSuitcase(positions) {
   return `<text x="${x}" y="${y}" font-size="34" text-anchor="middle">🧳</text>`;
 }
 
-const DECOR_EMOJI = ["🐚", "🦀", "🐚", "⭐"];
+const DECOR_EMOJI = ["🐚", "🦀", "⭐", "🐚", "🌾"];
 
 function renderDecorations(positions) {
   return positions
-    .filter((_, i) => i % 3 === 2)
+    .filter((_, i) => i % 2 === 0)
     .map((p, i) => {
       const side = p.x < (BAND.min + BAND.max) / 2 ? 1 : -1;
       const dx = clamp(p.x + side * 60, BAND.min + 15, BAND.max - 10);
@@ -191,6 +207,7 @@ function renderScene(positions, totalHeight, bossName) {
       aria-label="A close-up corner of Wordwood Isle: a sandy beach where a swamp meets the shore, a suitcase washed up in the sand, and a trail connecting every Case Closed lesson up to ${bossName}'s own clearing">
       ${renderWaterDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#dfd0a0" />
+      <g>${renderSandTexture(totalHeight)}</g>
       ${water}
       <g>${ripples}</g>
       <g>${edgeFoam}</g>
