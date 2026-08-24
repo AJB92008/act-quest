@@ -118,11 +118,15 @@ function renderTerrainSvg(positions, totalHeight, bossName) {
 
   // A wavy strip of water hugging the left edge — width oscillates down
   // the page so its border reads as a real, irregular shoreline rather
-  // than a straight-edged panel.
-  const steps = 14;
+  // than a straight-edged panel. Enough steps (scaled to the page's own
+  // height, not a fixed count) and two overlapping sine frequencies so
+  // the curve keeps visibly bending throughout — a single slow sine
+  // sampled too coarsely flattens out for long stretches near its own
+  // peaks and troughs, which is exactly what read as "a straight line."
+  const steps = Math.max(24, Math.round(totalHeight / 70));
   const shoreline = Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
-    const w = 66 + 30 * Math.sin(i * 0.85);
+    const w = 70 + 26 * Math.sin(i * 0.55) + 14 * Math.sin(i * 1.3 + 0.6);
     return `${w},${y}`;
   }).join(" L");
 
