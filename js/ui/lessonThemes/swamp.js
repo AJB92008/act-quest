@@ -6,34 +6,9 @@
 // of every other theme's dotted dirt path — a visual pun on the skill
 // itself: staying purposeful (a clear boardwalk laid straight through
 // the murk) even when the surroundings are unclear.
-import { COL_W, clamp, nearestPosition } from "../lessonTerrain.js";
+import { COL_W, clamp, nearestPosition, blobPoints, closedBlobPath } from "../lessonTerrain.js";
 
 const BAND = { min: 55, max: COL_W - 55 };
-
-// A closed, irregular blob (smooth quadratic loop through points at
-// varying radius around a center) — used for both the bogs and the
-// cypress canopies, so nothing in this scene is a perfect circle/ellipse
-// the way other themes' hills and ponds are.
-function blobPoints(cx, cy, baseR, n, seed) {
-  const pts = [];
-  for (let i = 0; i < n; i++) {
-    const angle = (i / n) * Math.PI * 2;
-    const r = baseR * (0.72 + 0.32 * Math.sin(angle * 2.3 + seed) + 0.14 * Math.sin(angle * 4.7 + seed * 1.7));
-    pts.push({ x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r * 0.72 });
-  }
-  return pts;
-}
-
-function closedBlobPath(pts) {
-  const segs = pts
-    .map((a, i) => {
-      const b = pts[(i + 1) % pts.length];
-      return `Q ${a.x} ${a.y} ${(a.x + b.x) / 2} ${(a.y + b.y) / 2}`;
-    })
-    .join(" ");
-  const start = { x: (pts[pts.length - 1].x + pts[0].x) / 2, y: (pts[pts.length - 1].y + pts[0].y) / 2 };
-  return `M ${start.x} ${start.y} ${segs} Z`;
-}
 
 // A boardwalk, not a dirt path — a thick wood-brown stroke with a
 // lighter offset stroke layered on top so the dash segments read as

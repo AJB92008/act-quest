@@ -111,6 +111,31 @@ export function nearestPosition(positions, y) {
   return nearest;
 }
 
+// A closed, irregular blob (smooth quadratic loop through points at
+// varying radius around a center) — first built for swamp.js's bogs and
+// cypress canopies, reusable by any theme that wants a shape that isn't
+// a perfect circle/ellipse (a pond, a boulder, a cloud).
+export function blobPoints(cx, cy, baseR, n, seed) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * Math.PI * 2;
+    const r = baseR * (0.72 + 0.32 * Math.sin(angle * 2.3 + seed) + 0.14 * Math.sin(angle * 4.7 + seed * 1.7));
+    pts.push({ x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r * 0.72 });
+  }
+  return pts;
+}
+
+export function closedBlobPath(pts) {
+  const segs = pts
+    .map((a, i) => {
+      const b = pts[(i + 1) % pts.length];
+      return `Q ${a.x} ${a.y} ${(a.x + b.x) / 2} ${(a.y + b.y) / 2}`;
+    })
+    .join(" ");
+  const start = { x: (pts[pts.length - 1].x + pts[0].x) / 2, y: (pts[pts.length - 1].y + pts[0].y) / 2 };
+  return `M ${start.x} ${start.y} ${segs} Z`;
+}
+
 function renderLessonMarker({ x, y }, index, totalHeight, skillId, subject) {
   const progress = gameState.getSkillProgress(skillId);
   const unlocked = gameState.isLessonUnlocked(skillId, index);
