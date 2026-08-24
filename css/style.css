@@ -602,47 +602,6 @@ input[type="password"] {
   height: 106px;
 }
 
-/* island.js's single big landmass — one large blob spanning most of the
-   path-container's width and height, in the subject's own color at
-   reduced opacity, so the smaller per-skill .node-area-blob patches (a
-   different shade — see island.js) read as distinct zones *within* it
-   rather than as separate floating shapes. */
-.island-landmass {
-  position: absolute;
-  z-index: 0;
-  left: 50%;
-  top: 4%;
-  transform: translateX(-50%);
-  width: min(94%, 780px);
-  height: 92%;
-  background: var(--island-color, var(--purple));
-  opacity: 0.16;
-}
-
-:root[data-theme="dark"] .island-landmass {
-  opacity: 0.28;
-}
-
-/* skillPath.js's single dominant area shape — the same visual language as
-   one of island.js's smaller per-skill patches, just the main shape here
-   instead of a supporting one, since this screen is "zoomed into" one
-   specific area of the island. */
-.skillpath-area {
-  position: absolute;
-  z-index: 0;
-  left: 50%;
-  top: 2%;
-  transform: translateX(-50%);
-  width: min(92%, 620px);
-  height: 94%;
-  background: var(--island-color, var(--purple));
-  opacity: 0.2;
-}
-
-:root[data-theme="dark"] .skillpath-area {
-  opacity: 0.32;
-}
-
 .map-node-wrap {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -1024,8 +983,9 @@ input[type="password"] {
   background:
     repeating-linear-gradient(90deg, var(--glow-soft) 0 1px, transparent 1px 56px),
     repeating-linear-gradient(0deg, var(--glow-soft) 0 1px, transparent 1px 56px),
-    linear-gradient(170deg, transparent 60%, var(--glow-strong) 100%),
-    linear-gradient(10deg, transparent 60%, var(--glow-strong) 100%),
+    radial-gradient(circle at 18% 88%, var(--glow-strong), transparent 40%),
+    radial-gradient(circle at 82% 88%, var(--glow-strong), transparent 40%),
+    radial-gradient(circle at 50% 96%, var(--glow-soft), transparent 45%),
     var(--island-bg, #fff);
 }
 
@@ -1033,8 +993,9 @@ input[type="password"] {
   background:
     repeating-linear-gradient(90deg, var(--glow-soft) 0 1px, transparent 1px 56px),
     repeating-linear-gradient(0deg, var(--glow-soft) 0 1px, transparent 1px 56px),
-    linear-gradient(170deg, transparent 60%, var(--glow-strong) 100%),
-    linear-gradient(10deg, transparent 60%, var(--glow-strong) 100%),
+    radial-gradient(circle at 18% 88%, var(--glow-strong), transparent 40%),
+    radial-gradient(circle at 82% 88%, var(--glow-strong), transparent 40%),
+    radial-gradient(circle at 50% 96%, var(--glow-soft), transparent 45%),
     linear-gradient(180deg, #14131f 0%, #0e0d17 100%);
 }
 

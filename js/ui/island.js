@@ -156,7 +156,6 @@ export function renderIsland(root, navigate, { subjectId }) {
       ${referenceLinkHTML}
       ${comingSoonHTML}
       <div class="map-path-container" style="height:${totalHeight}px">
-        <div class="island-landmass map-blob-shape-2" style="--island-color:${subject.color}"></div>
         ${renderPathSvg(positions, totalHeight, { color: subject.color })}
         <div class="path-decorations">${renderDecorations(totalHeight, subjectId.length, theme.decorations)}</div>
         ${nodes}

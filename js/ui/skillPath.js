@@ -64,7 +64,6 @@ export function renderSkillPath(root, navigate, { skillId, subjectId }) {
       </div>
       <p class="skillpath-hint">${progress.mastered ? "🏅 Skill mastered! Revisit any lesson to practice." : "Clear each lesson to unlock the next."}</p>
       <div class="map-path-container skillpath-path" style="height:${totalHeight}px">
-        <div class="skillpath-area map-blob-shape-3" style="--island-color:${subject.color}"></div>
         ${renderPathSvg(positions, totalHeight, { color: subject.color })}
         <div class="path-decorations">${renderDecorations(totalHeight, skillId.length, theme.decorations)}</div>
         ${nodes}
