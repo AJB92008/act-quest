@@ -1036,26 +1036,131 @@ input[type="password"] {
   margin-bottom: 30px;
 }
 
-/* English's hub-island illustration (see ui/islandHubArt.js) — centered,
-   capped so it doesn't dominate a very wide viewport, drop shadow to lift
-   it slightly off the ocean behind it. Dark mode is one filter rather
-   than a whole second palette, since it's a single self-contained image;
-   a plain brightness cut alone flattens/muddies the warm tones, so
-   contrast+saturate compensate for that. */
-.island-hub-art {
-  max-width: 640px;
-  margin: 0 auto 20px;
-  filter: drop-shadow(0 14px 26px rgba(30, 45, 40, 0.25));
-}
-
-.island-hub-art svg {
-  display: block;
+/* English's hub island (see ui/islandHub.js) — a big, walkable scene
+   rather than a static illustration. The container is locked to the
+   same width:height ratio as islandHub.js's own DESIGN_W/DESIGN_H, so
+   every child positioned with a plain left/top percentage (the skill
+   markers, the landmark, the avatar) lines up with the background SVG's
+   own internal coordinates at any screen size, with no JS resize/scale
+   math needed anywhere. Sized much larger than the old static
+   illustration ("very big" per the brief) but still capped so it
+   doesn't overrun an ultra-wide viewport. */
+/* The visible "camera" window: fixed to the screen, clips the much-bigger
+   .hub-world beneath it with overflow:hidden. .hub-world itself is sized
+   in literal pixels (WORLD_W x WORLD_H from islandHub.js) and translated
+   every animation frame to keep the avatar centered — see wireMovement()
+   there. Because 1 world unit is 1 CSS px, every child positioned with a
+   plain left/top in px (skill markers, the landmark, the avatar) lines up
+   with the background SVG's own internal coordinates with no scale math
+   anywhere; a smaller screen just shows a smaller slice of the same big
+   island rather than a shrunk copy of it. */
+.hub-viewport {
+  position: relative;
+  overflow: hidden;
   width: 100%;
-  height: auto;
+  height: min(74vh, 860px);
+  min-height: 480px;
+  margin: 0 0 24px;
+  border-radius: 22px;
+  filter: drop-shadow(0 18px 32px rgba(30, 45, 40, 0.25));
 }
 
-:root[data-theme="dark"] .island-hub-art {
-  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.45)) brightness(0.82) contrast(1.05) saturate(1.05);
+:root[data-theme="dark"] .hub-viewport {
+  filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.5)) brightness(0.84) contrast(1.05) saturate(1.05);
+}
+
+.hub-world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.hub-scene-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* One shared anchor per marker (the landmark included): positioned in
+   world px via left/top, centered on that point via transform, and
+   stacking its button above an always-visible label underneath — a
+   column layout rather than the label being a separately-positioned
+   overlay, so the two can never drift apart. */
+.hub-marker-wrap {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.hub-landmark,
+.hub-skill-marker {
+  border: none;
+  cursor: pointer;
+}
+
+.hub-landmark {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: #efe4cf;
+  box-shadow: 0 0 0 4px #a9987a, 0 8px 18px rgba(0, 0, 0, 0.25);
+  display: grid;
+  place-items: center;
+  transition: transform 0.15s ease;
+}
+
+.hub-landmark:hover,
+.hub-landmark:focus-visible {
+  transform: scale(1.07);
+}
+
+.hub-landmark-icon {
+  font-size: 2.1rem;
+}
+
+.hub-skill-marker {
+  padding: 0;
+  transition: transform 0.15s ease;
+}
+
+.hub-skill-marker:hover,
+.hub-skill-marker:focus-visible {
+  transform: scale(1.12);
+}
+
+/* Always visible now, not hover-only — with the island spread out over a
+   world several times the viewport's size, only a handful of markers are
+   ever on screen at once, so there's real room to read every name
+   without the ring-of-labels ever feeling cluttered. */
+.hub-skill-name {
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--card);
+  color: var(--ink);
+  padding: 3px 9px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.hub-landmark-name {
+  font-size: 0.8rem;
+  padding: 4px 11px;
+}
+
+.hub-avatar {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -60%);
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
 }
 
 /* ---------- subject topic backgrounds ---------- */
