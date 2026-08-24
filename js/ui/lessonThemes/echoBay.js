@@ -13,11 +13,15 @@ import { COL_W, clamp, bandPath, renderTrailPath } from "../lessonTerrain.js";
 const BAND = { min: 150, max: COL_W - 150 };
 
 function computeCliffEdge(totalHeight, phase) {
-  const steps = Math.max(24, Math.round(totalHeight / 85));
+  const steps = Math.max(40, Math.round(totalHeight / 42));
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
-    const wobble = 34 * Math.sin(i * 0.4 + phase) + 18 * Math.sin(i * 1.1 + phase * 1.7);
-    return { y, depth: clamp(85 + wobble, 55, 130) };
+    const wobble =
+      58 * Math.sin(i * 0.38 + phase) +
+      36 * Math.sin(i * 1.0 + phase * 1.6) +
+      22 * Math.sin(i * 2.2 + phase * 0.7) +
+      12 * Math.sin(i * 4.9 + phase * 2.1);
+    return { y, depth: clamp(90 + wobble, 25, 145) };
   });
 }
 

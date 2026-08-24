@@ -14,11 +14,15 @@ const BAND = { min: 80, max: COL_W - 80 };
 const LANDMARK_X = COL_W / 2;
 
 function computeWallEdge(totalHeight, phase) {
-  const steps = Math.max(30, Math.round(totalHeight / 60));
+  const steps = Math.max(40, Math.round(totalHeight / 42));
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
-    const wobble = 22 * Math.sin(i * 0.46 + phase) + 12 * Math.sin(i * 1.2 + phase * 1.5);
-    return { y, depth: clamp(46 + wobble, 24, 74) };
+    const wobble =
+      38 * Math.sin(i * 0.4 + phase) +
+      24 * Math.sin(i * 1.05 + phase * 1.5) +
+      16 * Math.sin(i * 2.3 + phase * 0.7) +
+      9 * Math.sin(i * 5.1 + phase * 2.2);
+    return { y, depth: clamp(46 + wobble, 10, 76) };
   });
 }
 

@@ -1,37 +1,54 @@
 // Who's There?'s own theme (see lessonTerrain.js for the shared engine
-// every lesson-path theme renders through) — mostly rocky mountain with
-// only a small strip of plains at the very bottom (unlike Comma Sense's
-// roughly even mountain/plains split, this one is heavily mountain-
-// weighted). The signature device is a literal pass: the range isn't an
-// unbroken ridge like Comma Sense's, it has one deliberate low gap (a
-// saddle) with a little watchtower standing guard right in the notch —
-// the mountain itself asking "who's there?" of anyone crossing through.
+// every lesson-path theme renders through) — mountain zones and plains
+// zones alternate all the way down the whole scene (not a single
+// mountain block giving way to one plains strip at the end, the way
+// Comma Sense does it): you cross a jagged range, drop into a plains
+// clearing, then climb into another range, over and over. Every range
+// has one deliberate low gap (a saddle) with a little watchtower
+// standing guard right in the notch — the mountain itself asking "who's
+// there?" of anyone crossing through, again and again.
 import { COL_W, clamp, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 60, max: COL_W - 60 };
-const SPLIT_FRACTION = 0.78;
+const ZONE_H = 480;
 
-// A jagged range with one peak pulled way down into a saddle — the pass
-// the trail (and the watchtower) sit in.
-function computeRange(splitY) {
+function computeZones(totalHeight) {
+  const zones = [];
+  let y = 0;
+  let i = 0;
+  while (y < totalHeight) {
+    const h = Math.min(ZONE_H, totalHeight - y);
+    zones.push({ y, h, type: i % 2 === 0 ? "mountain" : "plains" });
+    y += h;
+    i++;
+  }
+  return zones;
+}
+
+// A jagged range confined to one zone, with one peak pulled way down
+// into a saddle — the pass the watchtower sits in.
+function computeRange(zoneTop, zoneBottom) {
   const peaks = 5;
   const passIndex = 2;
   const step = COL_W / peaks;
-  const pts = [{ x: -20, y: splitY }];
+  const pts = [{ x: -20, y: zoneBottom }];
   for (let i = 0; i < peaks; i++) {
     const peakX = step * i + step * 0.5;
     const isPass = i === passIndex;
-    const peakY = isPass ? splitY - 55 : clamp(splitY - (130 + (i % 3) * 55), 25, splitY - 45);
+    const zoneH = zoneBottom - zoneTop;
+    const peakY = isPass
+      ? zoneBottom - zoneH * 0.35
+      : clamp(zoneBottom - zoneH * (0.55 + (i % 3) * 0.14), zoneTop + 15, zoneBottom - zoneH * 0.3);
     pts.push({ x: peakX, y: peakY });
-    pts.push({ x: step * (i + 1), y: splitY - 25 - (i % 2) * 18 });
+    pts.push({ x: step * (i + 1), y: zoneBottom - zoneH * (0.18 + (i % 2) * 0.1) });
   }
-  pts.push({ x: COL_W + 20, y: splitY });
-  return { pts, passX: step * passIndex + step * 0.5, passY: splitY - 55 };
+  pts.push({ x: COL_W + 20, y: zoneBottom });
+  return { pts, passX: step * passIndex + step * 0.5, passY: zoneBottom - (zoneBottom - zoneTop) * 0.35 };
 }
 
-function renderRange(pts, splitY) {
+function renderRange(pts, zoneBottom) {
   const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
-  const fillPath = `${line} L${COL_W + 20},${splitY} L-20,${splitY} Z`;
+  const fillPath = `${line} L${COL_W + 20},${zoneBottom} L-20,${zoneBottom} Z`;
   const snowCaps = pts
     .filter((_, i) => i % 2 === 1)
     .map((p) => `<path d="M${p.x - 15},${p.y + 20} L${p.x},${p.y} L${p.x + 15},${p.y + 20} L${p.x + 7},${p.y + 15} L${p.x},${p.y + 22} L${p.x - 7},${p.y + 15} Z" fill="#eef2ea" opacity="0.85" />`)
@@ -55,10 +72,10 @@ function renderWatchtower(x, y) {
   `;
 }
 
-function computeFoothillRocks(splitY) {
+function computeFoothillRocks(zoneBottom) {
   return [0.16, 0.4, 0.62, 0.88].map((f, i) => ({
     x: f * COL_W,
-    y: splitY - 5 - (i % 2) * 9,
+    y: zoneBottom - 5 - (i % 2) * 9,
     r: 18 + (i % 3) * 6,
   }));
 }
@@ -70,36 +87,43 @@ function renderFoothillRock({ x, y, r }) {
 const MOUNTAIN_EMOJI = ["🐐", "🦅"];
 const PLAIN_EMOJI = ["🌼", "🦋"];
 
-function renderDecorations(positions, splitY) {
+function renderDecorations(positions, zones) {
   return positions
     .filter((_, i) => i % 2 === 1)
     .map((p, i) => {
+      const zone = zones.find((z) => p.y >= z.y && p.y < z.y + z.h) || zones[zones.length - 1];
       const side = p.x < (BAND.min + BAND.max) / 2 ? 1 : -1;
       const dx = clamp(p.x + side * 58, BAND.min + 15, BAND.max - 10);
-      const emoji = p.y > splitY ? PLAIN_EMOJI[i % PLAIN_EMOJI.length] : MOUNTAIN_EMOJI[i % MOUNTAIN_EMOJI.length];
+      const emoji = zone.type === "plains" ? PLAIN_EMOJI[i % PLAIN_EMOJI.length] : MOUNTAIN_EMOJI[i % MOUNTAIN_EMOJI.length];
       return `<text x="${dx}" y="${p.y - 12}" font-size="23" text-anchor="middle">${emoji}</text>`;
     })
     .join("");
 }
 
 function renderScene(positions, totalHeight, bossName) {
-  const splitY = totalHeight * SPLIT_FRACTION;
-  const range = computeRange(splitY);
-  const foothillRocks = computeFoothillRocks(splitY).map(renderFoothillRock).join("");
+  const zones = computeZones(totalHeight);
+  const grounds = zones
+    .map((z) => `<rect x="0" y="${z.y}" width="${COL_W}" height="${z.h}" fill="${z.type === "mountain" ? "#ab9f86" : "#c3dd8f"}" />`)
+    .join("");
+  const mountains = zones
+    .filter((z) => z.type === "mountain")
+    .map((z) => {
+      const range = computeRange(z.y, z.y + z.h);
+      const foothillRocks = computeFoothillRocks(z.y + z.h).map(renderFoothillRock).join("");
+      return `${renderRange(range.pts, z.y + z.h)}<g>${foothillRocks}</g>${renderWatchtower(range.passX, range.passY)}`;
+    })
+    .join("");
   const last = positions[positions.length - 1];
   const bossClearing = `<circle cx="${last.x}" cy="${last.y}" r="86" fill="#efe4cf" stroke="#c9a668" stroke-width="4" />`;
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: a rocky mountain range with one watchtower-guarded pass, giving way to a small strip of plains, connecting every Who's There? lesson up to ${bossName}'s own clearing">
-      <rect x="0" y="0" width="${COL_W}" height="${splitY + 40}" fill="#ab9f86" />
-      <rect x="0" y="${splitY}" width="${COL_W}" height="${totalHeight - splitY}" fill="#c3dd8f" />
-      ${renderRange(range.pts, splitY)}
-      <g>${foothillRocks}</g>
-      ${renderWatchtower(range.passX, range.passY)}
+      aria-label="A close-up corner of Wordwood Isle: watchtower-guarded mountain passes alternating with plains clearings all the way down, connecting every Who's There? lesson up to ${bossName}'s own clearing">
+      ${grounds}
+      ${mountains}
       ${bossClearing}
       <path d="${renderTrailPath(positions)}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />
-      <g>${renderDecorations(positions, splitY)}</g>
+      <g>${renderDecorations(positions, zones)}</g>
     </svg>
   `;
 }

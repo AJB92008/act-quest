@@ -8,21 +8,25 @@
 // skill itself: putting two like things side by side for a fair
 // comparison. A few apple trees dotted along the clifftop are the
 // literal nod to the skill's own name.
-import { COL_W, clamp, bandPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
+import { COL_W, clamp, jaggedBandPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 40, max: COL_W - 220 };
 const WATER_OUTER = COL_W + 40;
 
 function computeShore(totalHeight) {
-  const steps = Math.max(26, Math.round(totalHeight / 80));
-  const mid = COL_W - 140;
+  const steps = Math.max(36, Math.round(totalHeight / 48));
+  const mid = COL_W - 150;
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
     const edgeFalloff = clamp(Math.min(y / 130, (totalHeight - y) / 130), 0, 1);
-    const envelope = 0.4 + 0.6 * edgeFalloff;
-    const wobble = 42 * Math.sin(i * 0.38 + 0.9) + 22 * Math.sin(i * 1.05 + 1.6) + 11 * Math.sin(i * 2.3 + 0.3);
+    const envelope = 0.35 + 0.65 * edgeFalloff;
+    const wobble =
+      58 * Math.sin(i * 0.34 + 0.9) +
+      34 * Math.sin(i * 0.9 + 1.6) +
+      20 * Math.sin(i * 2.0 + 0.3) +
+      11 * Math.sin(i * 4.4 + 1.4);
     const edge = mid + envelope * wobble;
-    return { y, left: clamp(edge, COL_W - 210, WATER_OUTER - 20), right: WATER_OUTER };
+    return { y, left: clamp(edge, COL_W - 195, WATER_OUTER - 15), right: WATER_OUTER };
   });
 }
 
@@ -38,7 +42,7 @@ function renderWaterDefs() {
 }
 
 function renderWater(shore) {
-  const band = bandPath(
+  const band = jaggedBandPath(
     shore.map((s) => ({ x: s.left, y: s.y })),
     shore.map((s) => ({ x: s.right, y: s.y }))
   );

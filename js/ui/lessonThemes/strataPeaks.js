@@ -22,11 +22,15 @@ function bandsFor(t) {
 }
 
 function computeWallEdge(totalHeight, phase) {
-  const steps = Math.max(30, Math.round(totalHeight / 55));
+  const steps = Math.max(45, Math.round(totalHeight / 40));
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
-    const wobble = 24 * Math.sin(i * 0.44 + phase) + 13 * Math.sin(i * 1.15 + phase * 1.5);
-    return { y, depth: clamp(56 + wobble, 30, 88) };
+    const wobble =
+      42 * Math.sin(i * 0.4 + phase) +
+      26 * Math.sin(i * 1.05 + phase * 1.5) +
+      17 * Math.sin(i * 2.3 + phase * 0.7) +
+      10 * Math.sin(i * 5.2 + phase * 2.1);
+    return { y, depth: clamp(56 + wobble, 12, 84) };
   });
 }
 

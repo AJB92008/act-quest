@@ -14,13 +14,19 @@ const PAIR_COLORS = ["#b3453f", "#c9a668", "#4f7a8c", "#7a9c5a"];
 
 // A jagged wall edge — how far the rock intrudes from its own edge of
 // the canvas at each height, sampled and connected with straight
-// segments for a rocky (not smoothly wavy) silhouette.
+// segments for a rocky (not smoothly wavy) silhouette. Wide swings plus
+// a sharp, chaotic high-frequency term so it reads as broken rock, not
+// a gentle wave with a bit of noise on it.
 function computeWallEdge(totalHeight, phase) {
-  const steps = Math.max(30, Math.round(totalHeight / 60));
+  const steps = Math.max(40, Math.round(totalHeight / 42));
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
-    const wobble = 26 * Math.sin(i * 0.5 + phase) + 14 * Math.sin(i * 1.3 + phase * 1.6) + 7 * Math.sin(i * 2.9 + phase * 0.6);
-    return { y, depth: clamp(58 + wobble, 30, 92) };
+    const wobble =
+      46 * Math.sin(i * 0.42 + phase) +
+      30 * Math.sin(i * 1.1 + phase * 1.6) +
+      20 * Math.sin(i * 2.4 + phase * 0.6) +
+      12 * Math.sin(i * 5.3 + phase * 2.1);
+    return { y, depth: clamp(62 + wobble, 14, 95) };
   });
 }
 

@@ -7,21 +7,25 @@
 // groups — one alone, then a pair, then a cluster of three — a visual
 // pun on the skill itself: matching a subject's number, singular or
 // plural, to its verb.
-import { COL_W, clamp, bandPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
+import { COL_W, clamp, jaggedBandPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
 
-const WATER_BAND = { min: -40, max: 190 };
+const WATER_BAND = { min: -40, max: 205 };
 const BAND = { min: 220, max: COL_W - 40 };
 
 function computeShore(totalHeight) {
-  const steps = Math.max(26, Math.round(totalHeight / 80));
-  const mid = 85;
+  const steps = Math.max(36, Math.round(totalHeight / 48));
+  const mid = 95;
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
     const edgeFalloff = clamp(Math.min(y / 130, (totalHeight - y) / 130), 0, 1);
-    const envelope = 0.4 + 0.6 * edgeFalloff;
-    const wobble = 45 * Math.sin(i * 0.4 + 0.5) + 24 * Math.sin(i * 1.1 + 2.0) + 12 * Math.sin(i * 2.4 + 0.9);
+    const envelope = 0.35 + 0.65 * edgeFalloff;
+    const wobble =
+      60 * Math.sin(i * 0.36 + 0.5) +
+      36 * Math.sin(i * 0.95 + 2.0) +
+      22 * Math.sin(i * 2.1 + 0.9) +
+      12 * Math.sin(i * 4.6 + 1.7);
     const edge = mid + envelope * wobble;
-    return { y, left: WATER_BAND.min, right: clamp(edge, 20, WATER_BAND.max) };
+    return { y, left: WATER_BAND.min, right: clamp(edge, 15, WATER_BAND.max) };
   });
 }
 
@@ -37,7 +41,7 @@ function renderWaterDefs() {
 }
 
 function renderWater(shore) {
-  const band = bandPath(
+  const band = jaggedBandPath(
     shore.map((s) => ({ x: s.left, y: s.y })),
     shore.map((s) => ({ x: s.right, y: s.y }))
   );

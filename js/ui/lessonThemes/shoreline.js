@@ -7,34 +7,36 @@
 // frog, lily pads) — so it never reads as a flat color block. A little
 // suitcase washed up in the sand is the pun on the skill's own name (a
 // "case," closed).
-import { COL_W, clamp, bandPath, nearestPosition, renderTrailPath, blobPoints, closedBlobPath } from "../lessonTerrain.js";
+import { COL_W, clamp, jaggedBandPath, nearestPosition, renderTrailPath, blobPoints, closedBlobPath } from "../lessonTerrain.js";
 
-const WATER_BAND = { min: -40, max: 208 };
+const WATER_BAND = { min: -40, max: 216 };
 const BAND = { min: 235, max: COL_W - 40 };
 
 // The water's shore edge is a real coastline, not a straight-sided
-// canal: four overlapping wave frequencies (a broad regional bay, a
-// couple of medium bays/points visible within a single screen's worth
-// of scroll, and fine jagged jitter on top) so it reads as irregular at
-// every zoom level, not just once over the whole scroll. A falloff tied
-// to a fixed pixel distance from the very top/bottom of the frame (not
-// scaled to the skill's total height) pulls the water narrower right at
-// the frame's edges, so even a long scene still tapers visibly there
-// instead of just getting clipped by the viewport.
+// canal: five overlapping wave frequencies with wide swings (a broad
+// regional bay down to sharp, jagged jitter), stitched from straight
+// segments rather than smoothed curves so it reads as a genuinely
+// broken, rocky shoreline instead of a gentle wave — so it reads as
+// irregular at every zoom level, not just once over the whole scroll. A
+// falloff tied to a fixed pixel distance from the very top/bottom of
+// the frame (not scaled to the skill's total height) pulls the water
+// narrower right at the frame's edges, so even a long scene still
+// tapers visibly there instead of just getting clipped by the viewport.
 function computeShore(totalHeight) {
-  const steps = Math.max(28, Math.round(totalHeight / 70));
-  const mid = 95;
+  const steps = Math.max(40, Math.round(totalHeight / 45));
+  const mid = 100;
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
     const edgeFalloff = clamp(Math.min(y / 140, (totalHeight - y) / 140), 0, 1);
-    const envelope = 0.35 + 0.65 * edgeFalloff;
+    const envelope = 0.3 + 0.7 * edgeFalloff;
     const wobble =
-      50 * Math.sin(i * 0.32 + 0.6) +
-      34 * Math.sin(i * 0.85 + 2.1) +
-      18 * Math.sin(i * 1.9 + 0.4) +
-      8 * Math.sin(i * 4.1 + 1.2);
+      68 * Math.sin(i * 0.28 + 0.6) +
+      44 * Math.sin(i * 0.72 + 2.1) +
+      28 * Math.sin(i * 1.6 + 0.4) +
+      16 * Math.sin(i * 3.4 + 1.2) +
+      9 * Math.sin(i * 7.1 + 2.5);
     const edge = mid + envelope * wobble;
-    return { y, left: WATER_BAND.min, right: clamp(edge, 20, WATER_BAND.max) };
+    return { y, left: WATER_BAND.min, right: clamp(edge, 15, WATER_BAND.max) };
   });
 }
 
@@ -58,7 +60,7 @@ function renderWaterDefs() {
 }
 
 function renderWater(totalHeight, shore) {
-  const band = bandPath(
+  const band = jaggedBandPath(
     shore.map((s) => ({ x: s.left, y: s.y })),
     shore.map((s) => ({ x: s.right, y: s.y }))
   );

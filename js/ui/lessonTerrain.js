@@ -55,6 +55,21 @@ export function bandPath(leftPts, rightPts) {
   return `M${top.x},${top.y} ${edgeSegments(rightPts)} L${bottomLeft.x},${bottomLeft.y} ${edgeSegments([...leftPts].reverse())} Z`;
 }
 
+// Same shape as bandPath, but stitched from straight segments instead of
+// smoothed quadratic curves — for an edge that's meant to read as a
+// rugged, broken coastline/rock line rather than a gentle wave (a
+// smoothed curve tends to round sharp direction changes back down into
+// something that still reads as "basically straight" from a distance).
+export function jaggedBandPath(leftPts, rightPts) {
+  const rightLine = rightPts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+  const leftLine = [...leftPts]
+    .reverse()
+    .map((p) => `L${p.x},${p.y}`)
+    .join(" ");
+  const bottomLeft = leftPts[leftPts.length - 1];
+  return `${rightLine} L${bottomLeft.x},${bottomLeft.y} ${leftLine} Z`;
+}
+
 // One continuous wandering trail through the given band — a slow sine
 // wave (the wide swings a path takes around an obstacle) plus a touch of
 // faster wobble so it never reads as a mechanical zigzag. `band` is
