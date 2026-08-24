@@ -457,6 +457,8 @@ input[type="password"] {
    forcing night-sky dark, since a "planet surface" isn't inherently a
    night scene the way outer space is. */
 .map-screen {
+  position: relative;
+  overflow: hidden;
   max-width: none;
   width: 100%;
   margin: 0;
@@ -550,6 +552,82 @@ input[type="password"] {
 :root[data-theme="dark"] .map-planet-circle {
   background: radial-gradient(circle at 32% 26%, var(--glow-soft, rgba(122, 96, 255, 0.3)) 0%, var(--test-color, var(--purple)) 60%, #05050f 100%);
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+}
+
+/* ACT's World Map: a wide, calm ocean instead of the round planet-sphere
+   every other test still uses (see the isOceanScene branch in
+   worldMap.js) — a fixed, desaturated blue-teal palette rather than
+   --test-color, since "muted ocean water" is a specific look, not just
+   ACT's own brand purple recolored. Lighter toward the center, darker
+   toward the screen edges, to draw the eye inward the way a real wide
+   seascape photo would vignette. The wavy line texture is a small tiled
+   inline SVG (two soft sine-wave strokes) rather than an emoji/decoration
+   scatter, since real ripples read as fine linework, not shapes. */
+.ocean-scene {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #cfe3e6 0%, #6f9fae 48%, #2c4a5c 100%);
+}
+
+.ocean-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-repeat: repeat;
+  background-size: 420px 130px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='130' viewBox='0 0 420 130'%3E%3Cpath d='M0 40 Q52.5 20 105 40 T210 40 T315 40 T420 40' stroke='rgba(255,255,255,0.35)' stroke-width='2' fill='none'/%3E%3Cpath d='M0 90 Q52.5 68 105 90 T210 90 T315 90 T420 90' stroke='rgba(255,255,255,0.2)' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="dark"] .ocean-scene {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #315a67 0%, #1b3540 48%, #081419 100%);
+}
+
+:root[data-theme="dark"] .ocean-scene::before {
+  opacity: 0.35;
+}
+
+.ocean-scene > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Small, faint background scenery (a distant ship's sail, a couple of
+   birds) — fixed near the top of the screen rather than scattered down
+   the whole path, so they read as horizon-line detail glimpsed once, not
+   as repeating decoration. Kept very low-opacity and few in number on
+   purpose: the brief here is a clean, mature scene an ACT-studying teen
+   wouldn't find twee, not a busy illustration. */
+.ocean-ambient {
+  position: absolute;
+  z-index: 1;
+  opacity: 0.32;
+  pointer-events: none;
+  filter: saturate(0.7);
+}
+
+/* The back link and subtitle normally use --muted, a mid-gray tuned for
+   contrast against the plain --paper/--card backgrounds — too close in
+   lightness to the ocean's own medium-toned blue-teal to read well
+   (particularly the header area, which the vignette deliberately darkens
+   toward). A dedicated dark/light pair here, rather than reusing --muted,
+   since this scene's contrast needs are its own. */
+.ocean-scene .back-btn,
+.ocean-scene .map-subtitle {
+  color: rgba(15, 30, 38, 0.72);
+}
+
+.ocean-scene .back-btn:hover {
+  color: rgba(15, 30, 38, 0.95);
+}
+
+:root[data-theme="dark"] .ocean-scene .back-btn,
+:root[data-theme="dark"] .ocean-scene .map-subtitle {
+  color: rgba(226, 238, 242, 0.75);
+}
+
+:root[data-theme="dark"] .ocean-scene .back-btn:hover {
+  color: rgba(226, 238, 242, 0.95);
 }
 
 /* Centers a .node-area-blob on just the button, not the taller
@@ -682,6 +760,18 @@ input[type="password"] {
   background: var(--card);
   border-radius: 14px;
   padding: 6px 12px 8px;
+  box-shadow: var(--shadow);
+}
+
+/* The shortcut row (Diagnostic/Weak Review/etc.) has no card background
+   of its own, unlike a real planet node's chip above — fine against the
+   plain page background every other test's World Map still uses, but the
+   same low-contrast risk as .back-btn/.map-subtitle above against the
+   ocean scene's own medium-toned water. */
+.ocean-scene .map-shortcut .map-island-label {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 5px 10px 7px;
   box-shadow: var(--shadow);
 }
 

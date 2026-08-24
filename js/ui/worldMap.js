@@ -14,7 +14,11 @@ const ROW_HEIGHT = 200;
 // other one. Falls back to a neutral scatter for any test id not listed
 // (there is currently no such case in practice).
 const TEST_DECORATIONS = {
-  act: ["🪐", "✨", "💫"],
+  // A couple of small, calm wave marks — sparse and low-key on purpose,
+  // since ACT's own ocean-scene background (see .ocean-scene in
+  // style.css) already carries the "water" idea; this is just a light
+  // touch, not the main event.
+  act: ["〰️", "〰️"],
   sat: ["🌕", "⭐", "🌙"],
   psat: ["🌗", "✨", "🌘"],
   stateAssessments: ["🌍", "🗺️", "✨"],
@@ -128,11 +132,31 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
 
   const homeStateName = activeTestId === "stateAssessments" ? getState(gameState.homeState)?.name : null;
 
+  // ACT's World Map is a dedicated ocean scene rather than the round
+  // planet-sphere every other test still uses — see .ocean-scene in
+  // style.css. A few faint, fixed-position ambient details (a distant
+  // ship sail, a couple of birds) sit near the top of the screen "on the
+  // horizon," not tied to the path's own length, so they read as
+  // background scenery rather than more path decorations.
+  const isOceanScene = activeTestId === "act";
+  // Fixed pixel offsets, not percentages — these need to sit in the open
+  // sky beside the heading near the top of the screen regardless of how
+  // tall the rest of the page ends up (which varies with subject count),
+  // not drift based on total scrollable height.
+  const ambientSceneHTML = isOceanScene
+    ? `
+      <span class="ocean-ambient" style="left:78%;top:130px;font-size:34px;" aria-hidden="true">⛵</span>
+      <span class="ocean-ambient" style="left:60%;top:70px;font-size:15px;" aria-hidden="true">🕊️</span>
+      <span class="ocean-ambient" style="left:65%;top:95px;font-size:12px;" aria-hidden="true">🕊️</span>
+    `
+    : "";
+
   root.innerHTML = `
     ${hudHTML("map")}
-    <main class="screen map-screen" style="--test-color:${test.color};--test-bg:${test.bg};${glowVars(test.color)}">
+    <main class="screen map-screen ${isOceanScene ? "ocean-scene" : ""}" style="--test-color:${test.color};--test-bg:${test.bg};${glowVars(test.color)}">
       <button class="back-btn" data-solar-system>&larr; Galaxy</button>
       ${homeStateName ? `<button class="back-btn" data-change-state>🗺️ Change State (${homeStateName})</button>` : ""}
+      ${ambientSceneHTML}
       <h1 class="map-title">Choose a Planet to Explore</h1>
       <p class="map-subtitle">${
         activeTestId === "act"
@@ -144,7 +168,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
       ${!isReady ? `<p class="map-coming-soon-banner">🚧 ${test.name} content is still being built &mdash; pick a planet below to see what's planned.</p>` : ""}
       ${shortcuts ? `<div class="map-shortcuts-row">${shortcuts}</div>` : ""}
       <div class="map-path-container" style="height:${totalHeight}px">
-        <div class="map-planet-circle"></div>
+        ${isOceanScene ? "" : `<div class="map-planet-circle"></div>`}
         ${renderPathSvg(positions, totalHeight, { color: test.color })}
         <div class="path-decorations">${renderDecorations(totalHeight, 1, TEST_DECORATIONS[activeTestId] || TEST_DECORATIONS.act)}</div>
         ${planets}
