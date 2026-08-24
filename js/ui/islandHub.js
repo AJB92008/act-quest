@@ -35,6 +35,16 @@ const LANDMARK_CLEARING_R = 130;
 const SKILL_TRIGGER_RADIUS = 58;
 const LANDMARK_TRIGGER_RADIUS = 150;
 const AVATAR_SPEED = 6.2; // world px per animation frame
+// The boss lair sits by itself at the bottom-middle of the island, below
+// every zone, reached by its own dark path rather than one of the tan
+// trail forks — a deliberately different, more ominous route than the
+// ones leading to an everyday skill.
+const BOSS_POS = { x: CENTER.x, y: WORLD_H - WALK_MARGIN - 10 };
+const BOSS_TRIGGER_RADIUS = 95;
+// How long the player can go without pressing a movement key before the
+// WASD hint reappears — starts counting on mount, and again every time
+// movement stops.
+const IDLE_HINT_MS = 5000;
 
 // One big island, four differently-themed regions blended into it rather
 // than four separate islets — keeps the whole thing walkable as a single
@@ -131,14 +141,22 @@ function renderSceneSvg(layout) {
   const landRx = WORLD_W / 2 - WALK_MARGIN + 60;
   const landRy = WORLD_H / 2 - WALK_MARGIN + 60;
 
+  // The one dark, deliberately plain path to the boss lair — no zigzag,
+  // no dock stub, a different color and dash than every skill trail so it
+  // reads as "somewhere more serious" the moment you look at the map.
+  const bossPath = `<path d="M${CENTER.x},${CENTER.y} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#3b2a22" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.8" />`;
+  const bossLair = `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="118" fill="#2c211c" opacity="0.22" />`;
+
   return `
     <svg viewBox="0 0 ${WORLD_W} ${WORLD_H}" xmlns="http://www.w3.org/2000/svg" class="hub-scene-svg" role="img"
-      aria-label="Wordwood Isle, a big island with a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock, each with its own trail of grammar skills">
+      aria-label="Wordwood Isle, a big island with a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock, each with its own trail of grammar skills, plus a dark path south to the boss lair">
       <rect x="${CENTER.x - landRx}" y="${CENTER.y - landRy + 26}" width="${landRx * 2}" height="${landRy * 2}" rx="340" fill="rgba(20,45,55,0.16)" />
       <rect x="${CENTER.x - landRx}" y="${CENTER.y - landRy}" width="${landRx * 2}" height="${landRy * 2}" rx="340" fill="#e3c98f" stroke="#c9a668" stroke-width="6" />
       <g>${regionShapes}</g>
       <circle cx="${CENTER.x}" cy="${CENTER.y}" r="${LANDMARK_CLEARING_R}" fill="#efe4cf" stroke="#c9a668" stroke-width="4" />
+      ${bossLair}
       <g>${trails}</g>
+      ${bossPath}
       <g>${docks}</g>
       <g>${decorations}</g>
     </svg>
@@ -161,6 +179,21 @@ function renderSkillMarker({ skill, x, y }, subject) {
   `;
 }
 
+function renderBossMarker(boss, bossStateClass, subject) {
+  const locked = bossStateClass === "is-locked";
+  const cleared = bossStateClass === "is-cleared";
+  return `
+    <div class="hub-marker-wrap" style="left:${BOSS_POS.x}px;top:${BOSS_POS.y}px;">
+      <button class="hub-boss-marker ${bossStateClass}" data-boss ${locked ? "disabled" : ""}
+        aria-label="${boss.name}, ${subject.name} Boss Quiz${cleared ? " (cleared)" : locked ? `: locked until every skill on this island is mastered` : ""}">
+        ${monsterSVG(boss.avatar, { size: 74 })}
+        ${cleared ? `<span class="hub-boss-crown">👑</span>` : locked ? `<span class="hub-boss-lock">🔒</span>` : ""}
+      </button>
+      <span class="hub-skill-name hub-boss-name">${locked ? "🔒 " : ""}${boss.name}</span>
+    </div>
+  `;
+}
+
 // Continuous WASD (+ arrow key) movement plus a following camera: a
 // single document-level keydown/keyup pair tracks which directions are
 // currently held, and a requestAnimationFrame loop moves the avatar
@@ -171,7 +204,19 @@ function renderSkillMarker({ skill, x, y }, subject) {
 // the world's own edges never pull inward past the viewport's edges),
 // which is what makes a world several times the viewport's size feel
 // like open ground instead of a scrollbar-bound page.
-function wireMovement({ avatarEl, worldEl, viewportEl, layout, landmarkPos, onArriveSkill, onArriveLandmark }) {
+function wireMovement({
+  avatarEl,
+  worldEl,
+  viewportEl,
+  hintEl,
+  layout,
+  landmarkPos,
+  bossPos,
+  bossUnlocked,
+  onArriveSkill,
+  onArriveLandmark,
+  onArriveBoss,
+}) {
   let x = CENTER.x;
   let y = CENTER.y + LANDMARK_CLEARING_R + 55;
   const held = { w: false, a: false, s: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
@@ -179,8 +224,21 @@ function wireMovement({ avatarEl, worldEl, viewportEl, layout, landmarkPos, onAr
   let rafId = null;
   let lastTriggeredSkillId = null;
   let landmarkTriggered = false;
+  let bossTriggered = false;
   let viewportW = 0;
   let viewportH = 0;
+  let idleTimer = null;
+  let wasMoving = false;
+
+  function scheduleHint() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => hintEl.classList.add("is-visible"), IDLE_HINT_MS);
+  }
+  function hideHint() {
+    clearTimeout(idleTimer);
+    hintEl.classList.remove("is-visible");
+  }
+  scheduleHint();
 
   function measureViewport() {
     const rect = viewportEl.getBoundingClientRect();
@@ -225,6 +283,15 @@ function wireMovement({ avatarEl, worldEl, viewportEl, layout, landmarkPos, onAr
     }
     landmarkTriggered = false;
 
+    if (bossUnlocked && Math.hypot(x - bossPos.x, y - bossPos.y) <= BOSS_TRIGGER_RADIUS) {
+      if (!bossTriggered) {
+        bossTriggered = true;
+        onArriveBoss();
+      }
+      return;
+    }
+    bossTriggered = false;
+
     const arrived = layout.find((p) => Math.hypot(x - p.x, y - p.y) <= SKILL_TRIGGER_RADIUS);
     if (arrived) {
       if (lastTriggeredSkillId !== arrived.skill.id) {
@@ -245,6 +312,10 @@ function wireMovement({ avatarEl, worldEl, viewportEl, layout, landmarkPos, onAr
     if (held.a || held.arrowleft) dx -= 1;
     if (held.d || held.arrowright) dx += 1;
     if (dx || dy) {
+      if (!wasMoving) {
+        wasMoving = true;
+        hideHint();
+      }
       const len = Math.hypot(dx, dy) || 1;
       const nx = x + (dx / len) * AVATAR_SPEED;
       const ny = y + (dy / len) * AVATAR_SPEED;
@@ -258,6 +329,9 @@ function wireMovement({ avatarEl, worldEl, viewportEl, layout, landmarkPos, onAr
       }
       place();
       checkArrivals();
+    } else if (wasMoving) {
+      wasMoving = false;
+      scheduleHint();
     }
     rafId = requestAnimationFrame(tick);
   }
@@ -267,6 +341,7 @@ function wireMovement({ avatarEl, worldEl, viewportEl, layout, landmarkPos, onAr
     if (stopped) return;
     stopped = true;
     if (rafId) cancelAnimationFrame(rafId);
+    clearTimeout(idleTimer);
     document.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("keyup", onKeyUp);
     window.removeEventListener("resize", measureViewport);
@@ -281,32 +356,13 @@ export function renderEnglishHub(root, navigate, subject) {
   const bossCleared = gameState.isBossCleared(subject.id);
   const boss = getBossMonster(subject.id, gameState.level);
   const bossStateClass = bossCleared ? "is-cleared" : allMastered ? "is-unlocked" : "is-locked";
-  const bossEncounterHTML = `
-    <div class="boss-encounter ${bossStateClass}" style="--island-color:${subject.color}">
-      <div class="boss-encounter-monster">
-        ${monsterSVG(boss.avatar, { size: 160 })}
-        ${bossCleared ? `<span class="boss-encounter-crown">👑</span>` : ""}
-      </div>
-      <div class="boss-encounter-info">
-        <h3>${allMastered ? "" : "🔒 "}${boss.name}</h3>
-        <p class="boss-encounter-subtitle">${subject.name} Boss Quiz${bossCleared ? " (Cleared!)" : ""}</p>
-        <p class="boss-encounter-blurb">${
-          allMastered
-            ? "20 mixed questions from every island on this planet. Clear it for a big one-time bonus."
-            : `Master all ${subject.skills.length} islands on this planet to unlock.`
-        }</p>
-        ${allMastered ? `<button class="btn-primary" data-boss>Challenge the Boss &rarr;</button>` : ""}
-      </div>
-    </div>
-  `;
 
   root.innerHTML = `
     ${hudHTML("map")}
     <main class="screen island-screen ocean-scene" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
-      <p class="island-heading-blurb">${subject.blurb}</p>
-      <p class="map-subtitle">🧭 Walk your monster with WASD through the meadow, hillside, grove, and dock — every trail leads to a skill</p>
+      <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD through the meadow, hillside, grove, and dock — every trail leads to a skill</p>
       <div class="hub-viewport" id="hubViewport">
         <div class="hub-world" id="hubWorld" style="width:${WORLD_W}px;height:${WORLD_H}px;">
           ${renderSceneSvg(layout)}
@@ -317,10 +373,10 @@ export function renderEnglishHub(root, navigate, subject) {
             <span class="hub-skill-name hub-landmark-name">Vocabulary Builder</span>
           </div>
           ${layout.map((p) => renderSkillMarker(p, subject)).join("")}
+          ${renderBossMarker(boss, bossStateClass, subject)}
           <div class="hub-avatar" id="hubAvatar" aria-hidden="true">${monsterSVG(gameState.getDisplayAvatar(), { size: 46 })}</div>
         </div>
       </div>
-      ${bossEncounterHTML}
     </main>
   `;
 
@@ -342,9 +398,13 @@ export function renderEnglishHub(root, navigate, subject) {
     avatarEl: root.querySelector("#hubAvatar"),
     worldEl: root.querySelector("#hubWorld"),
     viewportEl: root.querySelector("#hubViewport"),
+    hintEl: root.querySelector("#hubHint"),
     layout,
     landmarkPos,
+    bossPos: BOSS_POS,
+    bossUnlocked: allMastered,
     onArriveSkill: (skillId) => goTo("skillPath", { skillId, subjectId: subject.id }),
     onArriveLandmark: () => goTo("vocabulary", {}),
+    onArriveBoss: () => goTo("bossQuiz", { subjectId: subject.id }),
   });
 }

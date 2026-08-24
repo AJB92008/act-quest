@@ -1163,6 +1163,65 @@ input[type="password"] {
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
 }
 
+/* Reserves its own line of space at all times (no layout shift when it
+   appears) but stays invisible until wireMovement() adds .is-visible —
+   after 5s with no WASD input, on mount and again every time the player
+   stops walking. */
+.hub-hint {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.hub-hint.is-visible {
+  opacity: 1;
+}
+
+/* The boss lair marker: bigger and darker than a regular skill marker,
+   sitting on its own dark clearing at the bottom of the island (see
+   BOSS_POS/renderSceneSvg in islandHub.js). Locked is desaturated and
+   inert; unlocked gets a warning-red ring; cleared gets a gold one. */
+.hub-boss-marker {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: #241a15;
+  box-shadow: 0 0 0 4px #6b1f1f, 0 10px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.hub-boss-marker:hover:not(:disabled),
+.hub-boss-marker:focus-visible {
+  transform: scale(1.08);
+}
+
+.hub-boss-marker.is-locked {
+  cursor: not-allowed;
+  filter: grayscale(1) brightness(0.75);
+  box-shadow: 0 0 0 4px #4a4a4a, 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+.hub-boss-marker.is-cleared {
+  box-shadow: 0 0 0 4px #ffd25f, 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+.hub-boss-crown,
+.hub-boss-lock {
+  position: absolute;
+  top: -14px;
+  right: -8px;
+  font-size: 1.5rem;
+}
+
+.hub-boss-name {
+  background: #241a15;
+  color: #f2e6da;
+}
+
 /* ---------- subject topic backgrounds ---------- */
 /* Four patterns, one per getSubjectTheme() `kind`, each built from plain
    layered CSS gradients (no images) so they stay crisp at any size and
