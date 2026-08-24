@@ -7,18 +7,19 @@ import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { pathPositions, pathHeight, renderPathSvg, renderDecorations, glowVars } from "./pathTrail.js";
 import { getSubjectTheme } from "./subjectTheme.js";
-import { renderIdiomHub } from "./skillPathHub.js";
+import { LESSON_THEMES, renderThemedLessonPath } from "./skillPathHub.js";
 
 const ROW_HEIGHT = 128;
 
 export function renderSkillPath(root, navigate, { skillId, subjectId }) {
-  // Idiom Instinct is a bespoke, fully walkable "hub" lesson path (see
-  // skillPathHub.js's own header comment) instead of the winding list
-  // below — a big enough departure from every other skill's lesson path
-  // that it gets its own render path entirely, rather than threading
-  // conditionals through this whole function.
-  if (skillId === "en-idioms") {
-    renderIdiomHub(root, navigate, { skillId, subjectId });
+  // A few skills get a bespoke zoomed-in terrain scene (see
+  // lessonTerrain.js's own header comment) instead of the winding list
+  // below — a big enough departure from the rest that it gets its own
+  // render path entirely, rather than threading conditionals through
+  // this whole function. LESSON_THEMES (skillPathHub.js) is the list of
+  // which skills currently have one.
+  if (skillId in LESSON_THEMES) {
+    renderThemedLessonPath(root, navigate, { skillId, subjectId });
     return;
   }
 

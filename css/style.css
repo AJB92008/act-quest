@@ -1278,30 +1278,25 @@ input[type="password"] {
   color: #f2e6da;
 }
 
-/* Idiom Instinct's own zoomed-in lesson-path illustration (skillPathHub.js).
-   The ground itself — this full-bleed strip, colored to match the SVG
-   terrain's own fill — runs edge to edge behind both the hint line and
-   the scene, so the map reads as one continuous piece of ground the hint
+/* Every skill with its own zoomed-in lesson-path illustration
+   (lessonTerrain.js) sets --lesson-map-bg/--lesson-map-hint-color inline
+   to match its own theme (see skillPathHub.js's LESSON_THEMES) — Idiom
+   Instinct's plains green and Phrase Finder's jungle green need
+   different hint-text contrast, for instance. The ground itself — this
+   full-bleed strip — runs edge to edge behind both the hint line and the
+   scene, so the map reads as one continuous piece of ground the hint
    sits on rather than a bordered card dropped onto an unrelated page
    background with color showing on either side of it. */
 .lesson-map-area {
   width: 100%;
-  background: #c3dd8f;
+  background: var(--lesson-map-bg, #c3dd8f);
   padding: 22px 0 40px;
   margin: 0 0 24px;
 }
 
-:root[data-theme="dark"] .lesson-map-area {
-  background: #3a4a2a;
-}
-
 .lesson-map-hint {
-  color: rgba(25, 40, 10, 0.75);
+  color: var(--lesson-map-hint-color, rgba(25, 40, 10, 0.75));
   margin: 0 0 18px;
-}
-
-:root[data-theme="dark"] .lesson-map-hint {
-  color: rgba(240, 250, 224, 0.82);
 }
 
 /* Aspect-ratio-locked to its own SVG viewBox so the hand-drawn hills/
