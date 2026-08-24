@@ -55,8 +55,21 @@ function renderWaterDefs() {
         <stop offset="0%" stop-color="#333d27" />
         <stop offset="100%" stop-color="#61754c" />
       </linearGradient>
+      <linearGradient id="caseClosedEdgeFade" x1="0" y1="0" x2="70" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#dfd0a0" stop-opacity="1" />
+        <stop offset="100%" stop-color="#dfd0a0" stop-opacity="0" />
+      </linearGradient>
     </defs>
   `;
+}
+
+// A vignette painted on top of the water, right at the frame's own left
+// edge — fades from the sand's own color (opaque) down to fully
+// transparent, so the water dissolves into the beach before the frame
+// boundary instead of the flat fill just stopping there in a hard cut.
+// Drawn under the foam scallops so those stay crisp.
+function renderWaterEdgeFade(totalHeight) {
+  return `<rect x="0" y="0" width="70" height="${totalHeight}" fill="url(#caseClosedEdgeFade)" />`;
 }
 
 function renderWater(totalHeight, shore) {
@@ -212,6 +225,7 @@ function renderScene(positions, totalHeight, bossName) {
       <g>${renderSandTexture(totalHeight)}</g>
       ${water}
       <g>${ripples}</g>
+      ${renderWaterEdgeFade(totalHeight)}
       <g>${edgeFoam}</g>
       <g>${waterLife}</g>
       ${sandPoints}

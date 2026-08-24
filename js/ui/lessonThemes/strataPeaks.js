@@ -52,6 +52,39 @@ function renderStrataWall(edge, side, totalHeight) {
   return slices.join("");
 }
 
+// The wall's outer edge (away from the trail, off past the frame) is a
+// flat-colored slice running the full height of the canvas — even
+// off-canvas, the visible sliver right at x=0/x=COL_W is a hard,
+// dead-straight cut, since a solid fill just stops wherever the viewBox
+// does. Each slice here has its own strata color, so rather than a
+// separate gradient per color, a single vignette overlay fades from the
+// ground's own color (opaque, right at the true edge) to fully
+// transparent — painted on top of whichever strata color happens to sit
+// there, so the wall dissolves into the ground before the frame
+// boundary regardless of which era's palette it's in. The jagged inner
+// (trail-facing) edge is untouched.
+function renderOuterFadeDefs() {
+  return `
+    <defs>
+      <linearGradient id="strataPeaksLeftFade" x1="0" y1="0" x2="70" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#948a7a" stop-opacity="1" />
+        <stop offset="100%" stop-color="#948a7a" stop-opacity="0" />
+      </linearGradient>
+      <linearGradient id="strataPeaksRightFade" x1="${COL_W}" y1="0" x2="${COL_W - 70}" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#948a7a" stop-opacity="1" />
+        <stop offset="100%" stop-color="#948a7a" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+  `;
+}
+
+function renderOuterFadeOverlays(totalHeight) {
+  return `
+    <rect x="0" y="0" width="70" height="${totalHeight}" fill="url(#strataPeaksLeftFade)" />
+    <rect x="${COL_W - 70}" y="0" width="70" height="${totalHeight}" fill="url(#strataPeaksRightFade)" />
+  `;
+}
+
 function edgeDepthAt(edge, y) {
   let nearest = edge[0];
   let best = Infinity;
@@ -126,10 +159,12 @@ function renderScene(positions, totalHeight, bossName) {
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
       aria-label="A close-up corner of Wordwood Isle: a mountain valley whose flanking rock strata visibly age from weathered to vivid down its length, connecting every Time Traveler lesson up to ${bossName}'s own clearing">
+      ${renderOuterFadeDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#948a7a" />
       <g>${scree}</g>
       ${walls}
       ${wallOutlines}
+      ${renderOuterFadeOverlays(totalHeight)}
       ${accents}
       ${bossClearing}
       <path d="${renderTrailPath(positions)}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />

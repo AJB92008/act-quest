@@ -26,11 +26,34 @@ function computeWallEdge(totalHeight, phase) {
   });
 }
 
+// The wall's outer edge (away from the trail, off past the frame) is a
+// flat color running the full height of the canvas — even off-canvas,
+// the visible sliver of it right at x=0/x=COL_W is a hard, dead-straight
+// cut, since a solid fill just stops wherever the viewBox does. A fade
+// to transparent right at that edge lets the rock dissolve into the
+// ground before it ever reaches the frame boundary, instead of getting
+// clipped there. The jagged inner (trail-facing) edge is untouched.
+function renderWallFadeDefs() {
+  return `
+    <defs>
+      <linearGradient id="clearPeakLeftFade" x1="0" y1="0" x2="60" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#a89c82" stop-opacity="0" />
+        <stop offset="100%" stop-color="#a89c82" stop-opacity="1" />
+      </linearGradient>
+      <linearGradient id="clearPeakRightFade" x1="${COL_W}" y1="0" x2="${COL_W - 60}" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#a89c82" stop-opacity="0" />
+        <stop offset="100%" stop-color="#a89c82" stop-opacity="1" />
+      </linearGradient>
+    </defs>
+  `;
+}
+
 function renderWall(edge, side) {
   const pts = edge.map((e) => ({ x: side === "left" ? e.depth : COL_W - e.depth, y: e.y }));
   const outerX = side === "left" ? -40 : COL_W + 40;
   const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
   const fillPath = `${line} L${outerX},${edge[edge.length - 1].y} L${outerX},0 Z`;
+  const fill = side === "left" ? "url(#clearPeakLeftFade)" : "url(#clearPeakRightFade)";
   const snowTips = edge
     .filter((_, i) => i % 6 === 3)
     .map((e) => {
@@ -38,7 +61,7 @@ function renderWall(edge, side) {
       return `<path d="M${x - 10},${e.y + 8} L${x},${e.y - 6} L${x + 10},${e.y + 8} Z" fill="#eef2ea" opacity="0.75" />`;
     })
     .join("");
-  return `<path d="${fillPath}" fill="#a89c82" stroke="#7a7260" stroke-width="2" opacity="0.95" />${snowTips}`;
+  return `<path d="${fillPath}" fill="${fill}" stroke="#7a7260" stroke-width="2" opacity="0.95" />${snowTips}`;
 }
 
 // The one landmark peak — same shape, same color, every time it shows
@@ -107,6 +130,7 @@ function renderScene(positions, totalHeight, bossName) {
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
       aria-label="A close-up corner of Wordwood Isle: a clear mountain valley between two rock walls, where the same landmark peak keeps reappearing dead ahead with signposts pointing back to it, connecting every Clear Antecedent lesson up to ${bossName}'s own clearing">
+      ${renderWallFadeDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#b4a98e" />
       ${walls}
       ${landmarks}

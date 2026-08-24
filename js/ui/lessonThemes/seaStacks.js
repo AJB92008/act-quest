@@ -36,8 +36,25 @@ function renderWaterDefs() {
         <stop offset="0%" stop-color="#2e4e5c" />
         <stop offset="100%" stop-color="#5f95a8" />
       </linearGradient>
+      <linearGradient id="seaStacksEdgeFade" x1="0" y1="0" x2="70" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#9e9280" stop-opacity="1" />
+        <stop offset="100%" stop-color="#9e9280" stop-opacity="0" />
+      </linearGradient>
     </defs>
   `;
+}
+
+// The water's outer edge (away from the cliffs, off past the frame) is
+// a flat fill running the full height of the canvas — even off-canvas,
+// the visible sliver right at x=0 is a hard, dead-straight cut, since a
+// solid fill just stops wherever the viewBox does. A vignette overlay,
+// painted on top of the water right at that edge, fades from the
+// ground's own color (opaque) down to fully transparent, so the water
+// dissolves into the ground before the frame boundary instead of
+// getting clipped there. The wavy shore (cliff-facing) edge is
+// untouched.
+function renderWaterEdgeFade(totalHeight) {
+  return `<rect x="0" y="0" width="70" height="${totalHeight}" fill="url(#seaStacksEdgeFade)" />`;
 }
 
 function renderWater(shore) {
@@ -164,6 +181,7 @@ function renderScene(positions, totalHeight, bossName) {
       ${renderWaterDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#9e9280" />
       ${water}
+      ${renderWaterEdgeFade(totalHeight)}
       ${stacks}
       <g>${reeds}</g>
       <g>${scree}</g>

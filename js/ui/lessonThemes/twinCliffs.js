@@ -37,8 +37,21 @@ function renderWaterDefs() {
         <stop offset="0%" stop-color="#2c4a56" />
         <stop offset="100%" stop-color="#5a8a9c" />
       </linearGradient>
+      <linearGradient id="twinCliffsEdgeFade" x1="${COL_W}" y1="0" x2="${COL_W - 70}" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#a89b82" stop-opacity="1" />
+        <stop offset="100%" stop-color="#a89b82" stop-opacity="0" />
+      </linearGradient>
     </defs>
   `;
+}
+
+// A vignette painted on top of the water, right at the frame's own
+// right edge — fades from the cliff-top's own ground color (opaque)
+// down to fully transparent, so the water dissolves into the ground
+// before the frame boundary instead of the flat fill just stopping
+// there in a hard cut. The wavy shore (cliff-facing) edge is untouched.
+function renderWaterEdgeFade(totalHeight) {
+  return `<rect x="${COL_W - 70}" y="0" width="70" height="${totalHeight}" fill="url(#twinCliffsEdgeFade)" />`;
 }
 
 function renderWater(shore) {
@@ -180,6 +193,7 @@ function renderScene(positions, totalHeight, bossName) {
       ${renderWaterDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#a89b82" />
       ${water}
+      ${renderWaterEdgeFade(totalHeight)}
       ${arches}
       <g>${scree}</g>
       ${ridges}
