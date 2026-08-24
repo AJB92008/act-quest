@@ -331,21 +331,6 @@ input[type="password"] {
   white-space: nowrap;
 }
 
-.hud-theme-toggle {
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: 999px;
-  width: 34px;
-  height: 34px;
-  font-size: 1rem;
-  line-height: 1;
-  flex: 0 0 auto;
-}
-
-.hud-theme-toggle:hover {
-  background: var(--surface-alt);
-}
-
 /* ---------- buttons ---------- */
 .btn-primary,
 .btn-secondary,
@@ -1282,6 +1267,22 @@ input[type="password"] {
 .hub-boss-name {
   background: #241a15;
   color: #f2e6da;
+}
+
+/* Looks exactly like the plain decorative emoji it replaced (see
+   computeGoatPos/decorationPos in islandHub.js) — no border, background,
+   or pointer cursor to give away that it's a real button and not just
+   another rock/mountain glyph scattered around the hillside. */
+.hub-goat-btn {
+  position: absolute;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 36px;
+  line-height: 1;
+  cursor: default;
 }
 
 /* ---------- subject topic backgrounds ---------- */

@@ -238,7 +238,6 @@ function defaultSave() {
     onboarded: false,
     settings: {
       timerEnabled: true,
-      darkMode: false,
       devModeUnlocked: false,
     },
     // One best run per test (act/sat/psat — the three question-bank-backed
@@ -501,15 +500,6 @@ export class GameState {
 
   setTimerEnabled(enabled) {
     this.data.settings.timerEnabled = enabled;
-    this.save();
-  }
-
-  get darkMode() {
-    return this.data.settings.darkMode;
-  }
-
-  setDarkMode(enabled) {
-    this.data.settings.darkMode = enabled;
     this.save();
   }
 

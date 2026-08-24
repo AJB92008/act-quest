@@ -18,11 +18,23 @@
 // edge of the screen and have the player's monster actually travel
 // there, rather than everything needing to fit in view at once.
 import { gameState } from "../state.js";
-import { hudHTML, wireHud } from "./hud.js";
+import { hudHTML, wireHud, showToast } from "./hud.js";
+import { showDevPanel, toggleDevPanel } from "./devPanel.js";
 import { monsterSVG } from "./monster.js";
 import { getBossMonster } from "../data/bossMonsters.js";
 import { getLessonCount } from "../data/questions/index.js";
 import { glowVars } from "./pathTrail.js";
+
+// Dev mode's unlock gesture used to be 10 rapid clicks on the (now
+// removed) dark-mode toggle; with that gone, the Rocky Hillside's own
+// goat decoration (see computeGoatPos) is the new one — same 10-clicks-
+// within-5s mechanic, just moved somewhere only exists on this screen.
+const DEV_MODE_CLICKS = 10;
+const DEV_MODE_WINDOW_MS = 5000;
+// Module-level (not per-render) so rapid clicks keep counting across the
+// innerHTML rebuild every navigate() triggers — same reasoning hud.js's
+// old toggle-click tracking used.
+let goatClickTimestamps = [];
 
 const WORLD_W = 2200;
 const WORLD_H = 1600;
@@ -92,14 +104,43 @@ function isInsideWorld(x, y) {
   return x >= WALK_MARGIN && x <= WORLD_W - WALK_MARGIN && y >= WALK_MARGIN && y <= WORLD_H - WALK_MARGIN;
 }
 
+// Same placement math the SVG decorations loop below uses, factored out
+// so the (secretly clickable) goat can be positioned identically to how
+// it would've rendered as a plain decoration, with nothing to give away
+// that it's any different from the rocks/mountain next to it.
+function decorationPos(avgX, avgY, index, total) {
+  const angle = (index / total) * Math.PI * 2 + 0.4;
+  const r = 130 + index * 40;
+  return { x: avgX + Math.cos(angle) * r, y: avgY + Math.sin(angle) * r * 0.65 };
+}
+
+function zoneCenter(points) {
+  const avgX = points.reduce((s, p) => s + p.x, 0) / points.length;
+  const avgY = points.reduce((s, p) => s + p.y, 0) / points.length;
+  return { avgX, avgY };
+}
+
+// The Rocky Hillside sits toward the world's top-right (see ZONES' own
+// `dir`), and its goat is the dev-mode unlock: 10 clicks within 5s, same
+// mechanic the old theme toggle used before dark mode was removed. Found
+// by position (zone id + the emoji itself) rather than a hardcoded index,
+// so reordering ZONES' decoration lists later can't silently move it.
+function computeGoatPos(layout) {
+  const hillside = ZONES.find((z) => z.id === "hillside");
+  const points = layout.filter((p) => p.zone === hillside);
+  if (!points.length) return null;
+  const { avgX, avgY } = zoneCenter(points);
+  const index = hillside.decorations.indexOf("🐐");
+  return decorationPos(avgX, avgY, index, hillside.decorations.length);
+}
+
 function renderSceneSvg(layout) {
   const zoneGroups = ZONES.map((zone) => ({ zone, points: layout.filter((p) => p.zone === zone) }));
 
   const regionShapes = zoneGroups
     .map(({ zone, points }) => {
       if (!points.length) return "";
-      const avgX = points.reduce((s, p) => s + p.x, 0) / points.length;
-      const avgY = points.reduce((s, p) => s + p.y, 0) / points.length;
+      const { avgX, avgY } = zoneCenter(points);
       const angle = (Math.atan2(zone.dir.y, zone.dir.x) * 180) / Math.PI;
       const spread = 210 + points.length * 95;
       return `<ellipse cx="${avgX}" cy="${avgY}" rx="${spread}" ry="${spread * 0.6}" fill="${zone.fill}" opacity="0.55" transform="rotate(${angle} ${avgX} ${avgY})" />`;
@@ -124,14 +165,13 @@ function renderSceneSvg(layout) {
   const decorations = zoneGroups
     .map(({ zone, points }) => {
       if (!points.length) return "";
-      const avgX = points.reduce((s, p) => s + p.x, 0) / points.length;
-      const avgY = points.reduce((s, p) => s + p.y, 0) / points.length;
+      const { avgX, avgY } = zoneCenter(points);
       return zone.decorations
         .map((emoji, i) => {
-          const angle = (i / zone.decorations.length) * Math.PI * 2 + 0.4;
-          const r = 130 + i * 40;
-          const dx = avgX + Math.cos(angle) * r;
-          const dy = avgY + Math.sin(angle) * r * 0.65;
+          // The hillside goat is rendered separately, as a clickable HTML
+          // overlay button at this exact same spot — see computeGoatPos.
+          if (zone.id === "hillside" && emoji === "🐐") return "";
+          const { x: dx, y: dy } = decorationPos(avgX, avgY, i, zone.decorations.length);
           return `<text x="${dx}" y="${dy}" font-size="36" text-anchor="middle">${emoji}</text>`;
         })
         .join("");
@@ -356,6 +396,7 @@ function wireMovement({
 export function renderEnglishHub(root, navigate, subject) {
   const layout = computeSkillLayout(subject.skills);
   const landmarkPos = { x: CENTER.x, y: CENTER.y };
+  const goatPos = computeGoatPos(layout);
 
   const allMastered = subject.skills.every((skill) => gameState.isMastered(skill.id));
   const bossCleared = gameState.isBossCleared(subject.id);
@@ -380,6 +421,11 @@ export function renderEnglishHub(root, navigate, subject) {
           </div>
           ${layout.map((p) => renderSkillMarker(p, subject)).join("")}
           ${renderBossMarker(boss, bossStateClass, subject)}
+          ${
+            goatPos
+              ? `<button class="hub-goat-btn" id="hubGoatBtn" type="button" style="left:${goatPos.x}px;top:${goatPos.y}px" aria-label="A goat">🐐</button>`
+              : ""
+          }
           <div class="hub-avatar" id="hubAvatar" aria-hidden="true">${monsterSVG(gameState.getDisplayAvatar(), { size: 46 })}</div>
         </div>
       </div>
@@ -399,6 +445,21 @@ export function renderEnglishHub(root, navigate, subject) {
   });
   root.querySelector("[data-landmark]").addEventListener("click", () => goTo("vocabulary", {}));
   root.querySelector("[data-boss]")?.addEventListener("click", () => goTo("bossQuiz", { subjectId: subject.id }));
+
+  root.querySelector("#hubGoatBtn")?.addEventListener("click", () => {
+    const now = Date.now();
+    goatClickTimestamps.push(now);
+    goatClickTimestamps = goatClickTimestamps.filter((t) => now - t <= DEV_MODE_WINDOW_MS);
+    if (goatClickTimestamps.length < DEV_MODE_CLICKS) return;
+    goatClickTimestamps = [];
+    if (!gameState.devModeUnlocked) {
+      gameState.setDevModeUnlocked(true);
+      showToast("🛠️ Developer Mode unlocked!");
+      showDevPanel(goTo);
+    } else {
+      toggleDevPanel(goTo);
+    }
+  });
 
   // The Fullscreen API only ever fullscreens one specific element and
   // everything inside it — targeting #hubViewport (not the whole screen)

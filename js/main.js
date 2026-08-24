@@ -103,8 +103,6 @@ function navigate(screen, params = {}) {
   announceRouteChange();
 }
 
-document.documentElement.dataset.theme = gameState.darkMode ? "dark" : "light";
-
 // A `?report=<encoded>` link (see ui/scoreReport.js's "Copy Share Link")
 // is a self-contained, read-only view of *someone else's* score snapshot
 // — it needs no save data, no auth, no cloud sync, and must work even for
