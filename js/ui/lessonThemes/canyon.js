@@ -1,11 +1,13 @@
 // Fix the Fracture's own theme (see lessonTerrain.js for the shared
-// engine every lesson-path theme renders through) — a dusty, rocky
-// canyon with a literal jagged crack running through the ground (a
-// visual pun on the skill itself: sentence *fragments*, a fracture in
-// the ground you cross via a couple of rickety plank bridges). No river
-// — the crack is drawn as a stroked zigzag line, not a filled band, and
-// its angular straight segments (not smooth curves) are deliberately the
-// opposite of plains.js's river or jungle.js's soft canopy blobs.
+// engine every lesson-path theme renders through) — a jungle ravine: a
+// literal jagged crack splitting the jungle floor (a visual pun on the
+// skill itself: sentence *fragments*, a fracture in the ground you cross
+// via a couple of rickety rope-and-plank bridges), with mossy rocks and
+// jungle growth crowding right up to its edges. No river — the crack is
+// drawn as a stroked zigzag line, not a filled band, and its angular
+// straight segments (not smooth curves) are deliberately the opposite of
+// plains.js's river or jungle.js's soft canopy blobs — jungle-adjacent
+// in palette and wildlife, but its own distinct composition.
 import { COL_W, clamp, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 210, max: COL_W - 40 };
@@ -29,9 +31,10 @@ function renderCrackPath(points) {
   return points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
 }
 
-// A couple of simple wood-plank bridges laid straight across the crack,
+// A couple of rope-and-plank bridges laid straight across the crack,
 // roughly a third and two-thirds of the way down — the crack is
-// "fixed"/crossed rather than just decorative.
+// "fixed"/crossed rather than just decorative. The vine handrail arc is
+// what pushes these from "generic wood bridge" to "jungle crossing."
 function renderBridges(points, totalHeight) {
   const targets = [0.32, 0.68].map((f) => f * totalHeight);
   return targets
@@ -47,8 +50,10 @@ function renderBridges(points, totalHeight) {
       }
       const w = 74;
       return `
-        <rect x="${nearest.x - w / 2}" y="${nearest.y - 9}" width="${w}" height="18" rx="3" fill="#8a6a44" />
-        <rect x="${nearest.x - w / 2}" y="${nearest.y - 9}" width="${w}" height="5" fill="#a9865c" />
+        <path d="M${nearest.x - w / 2},${nearest.y - 9} Q${nearest.x},${nearest.y - 24} ${nearest.x + w / 2},${nearest.y - 9}"
+          stroke="#4a6b2e" stroke-width="3" fill="none" opacity="0.85" />
+        <rect x="${nearest.x - w / 2}" y="${nearest.y - 9}" width="${w}" height="18" rx="3" fill="#7a5c38" />
+        <rect x="${nearest.x - w / 2}" y="${nearest.y - 9}" width="${w}" height="5" fill="#9c7c4e" />
       `;
     })
     .join("");
@@ -65,16 +70,37 @@ function computeRocks(positions, totalHeight) {
   });
 }
 
+// Moss-tinted rather than dry desert stone — greener fill/stroke than a
+// bare rock would use, plus a little tuft of growth on top.
 function renderRock({ x, y, r }) {
   return `
-    <ellipse cx="${x}" cy="${y + r * 0.5}" rx="${r * 0.9}" ry="${r * 0.3}" fill="rgba(30,22,12,0.2)" />
+    <ellipse cx="${x}" cy="${y + r * 0.5}" rx="${r * 0.9}" ry="${r * 0.3}" fill="rgba(15,25,8,0.22)" />
     <path d="M${x - r},${y + r * 0.3} L${x - r * 0.5},${y - r * 0.6} L${x + r * 0.15},${y - r} L${x + r * 0.7},${y - r * 0.35} L${x + r},${y + r * 0.35} L${x + r * 0.4},${y + r * 0.55} Z"
-      fill="#9c8266" stroke="#7a6249" stroke-width="2" />
+      fill="#8a9668" stroke="#5f6b46" stroke-width="2" />
+    <text x="${x + r * 0.1}" y="${y - r * 0.6}" font-size="16" text-anchor="middle">🌿</text>
   `;
 }
 
-const DECOR_EMOJI = ["🪨", "🦎", "🌵", "🍂"];
-const AMBIENT_EMOJI = ["🪨", "🌾"];
+// A little cluster of jungle growth (two overlapping leafy blobs on a
+// short stem) sitting right at the crack's own edge, so the fracture
+// reads as cutting through real jungle floor rather than bare rock.
+function computeCrackVines(crackPoints) {
+  return [0.22, 0.5, 0.78].map((f) => {
+    const idx = Math.round(f * (crackPoints.length - 1));
+    const p = crackPoints[idx];
+    return { x: clamp(p.x + 34, 30, BAND.min - 20), y: p.y };
+  });
+}
+
+function renderCrackVine({ x, y }) {
+  return `
+    <circle cx="${x - 8}" cy="${y}" r="16" fill="#3f6b2c" />
+    <circle cx="${x + 9}" cy="${y - 4}" r="18" fill="#527a38" />
+  `;
+}
+
+const DECOR_EMOJI = ["🐸", "🐍", "🌿", "🍂", "🦋"];
+const AMBIENT_EMOJI = ["🍃", "🌿"];
 
 function renderDecorations(positions) {
   return positions
@@ -100,20 +126,22 @@ function renderAmbient(totalHeight) {
 function renderScene(positions, totalHeight, bossName) {
   const crackPoints = computeCrack(totalHeight);
   const rocks = computeRocks(positions, totalHeight).map(renderRock).join("");
+  const crackVines = computeCrackVines(crackPoints).map(renderCrackVine).join("");
   const last = positions[positions.length - 1];
-  const bossClearing = `<circle cx="${last.x}" cy="${last.y}" r="86" fill="#c9bfa0" stroke="#8a7355" stroke-width="4" />`;
+  const bossClearing = `<circle cx="${last.x}" cy="${last.y}" r="86" fill="#c3cba0" stroke="#6f8552" stroke-width="4" />`;
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: a dusty rocky canyon with a jagged fracture in the ground crossed by plank bridges, and a trail connecting every Fix the Fracture lesson up to ${bossName}'s own clearing">
-      <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#b9a37e" />
+      aria-label="A close-up corner of Wordwood Isle: a jungle ravine with a jagged fracture in the ground crossed by rope-and-plank bridges, mossy rocks, and jungle growth, with a trail connecting every Fix the Fracture lesson up to ${bossName}'s own clearing">
+      <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#5d7a3f" />
       <g>${renderAmbient(totalHeight)}</g>
       <g>${rocks}</g>
       ${bossClearing}
+      <g>${crackVines}</g>
       <path d="${renderCrackPath(crackPoints)}" stroke="#3a2a1c" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85" />
       <path d="${renderCrackPath(crackPoints)}" stroke="#5c4530" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7" />
       <g>${renderBridges(crackPoints, totalHeight)}</g>
-      <path d="${renderTrailPath(positions)}" stroke="#8a6a44" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />
+      <path d="${renderTrailPath(positions)}" stroke="#7a5c38" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />
       <g>${renderDecorations(positions)}</g>
     </svg>
   `;
@@ -121,7 +149,7 @@ function renderScene(positions, totalHeight, bossName) {
 
 export const canyonTheme = {
   trailBand: BAND,
-  mapBg: "#b9a37e",
-  hintColor: "rgba(35, 25, 10, 0.78)",
+  mapBg: "#5d7a3f",
+  hintColor: "rgba(240, 248, 225, 0.85)",
   renderScene,
 };

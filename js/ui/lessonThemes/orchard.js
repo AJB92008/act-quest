@@ -1,41 +1,49 @@
 // In Formation's own theme (see lessonTerrain.js for the shared engine
-// every lesson-path theme renders through) — a tidy orchard planted in
-// strict, evenly-spaced rows: a visual pun on the skill itself (parallel
-// structure — everything here is deliberately, uniformly "in formation,"
-// unlike every other theme's organic, randomly-staggered scenery). No
-// river, no rocks, no wildlife clutter — just neat rows of identical
-// trees the trail winds between.
+// every lesson-path theme renders through) — an orchard planted in
+// parallel rows: a visual pun on the skill itself (parallel structure).
+// Each row stays a straight, level line (that's the pun — everything's
+// "in formation" row to row), but the trees *within* a row are spaced
+// and sized organically rather than snapped to a rigid column grid, so
+// it reads as a real planted orchard rather than graph paper. No river,
+// no rocks, no wildlife clutter — just rows of trees the trail winds
+// between.
 import { COL_W, clamp, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 60, max: COL_W - 60 };
-const ROW_COLS = 4;
 const TREE_R = 30;
 
-// A strict grid, not staggered or randomized — every tree the same size,
-// evenly spaced in both directions, reading as literal rows/columns.
-function computeGrid(totalHeight) {
+// Rows stay level (same y across a row — that's the "parallel" pun), but
+// how many trees are in a row, how far apart they sit, and how big each
+// one is all vary — no two rows are laid out quite the same way.
+function computeRows(totalHeight) {
   const rowSpacing = 170;
   const rows = Math.max(3, Math.round(totalHeight / rowSpacing));
-  const colGap = (BAND.max - BAND.min) / (ROW_COLS - 1);
   const trees = [];
   for (let r = 0; r < rows; r++) {
-    const y = 90 + r * (totalHeight - 160) / Math.max(rows - 1, 1);
-    for (let c = 0; c < ROW_COLS; c++) {
-      trees.push({ x: BAND.min + c * colGap, y });
+    const rowY = 90 + (r * (totalHeight - 160)) / Math.max(rows - 1, 1);
+    const count = 3 + (r % 3);
+    let x = BAND.min + 15 + ((r * 29) % 45);
+    for (let c = 0; c < count; c++) {
+      if (x > BAND.max - 15) break;
+      const yJitter = ((r * 5 + c * 3) % 9) - 4;
+      const treeR = TREE_R * (0.8 + ((r * 4 + c * 2) % 5) * 0.09);
+      trees.push({ x, y: rowY + yJitter, r: treeR, rowY });
+      x += 82 + ((r * 11 + c * 17) % 6) * 15;
     }
   }
   return trees;
 }
 
-// One plain, uniform canopy circle on a short trunk — deliberately
-// simple and identical every time, not staggered blobs like jungle.js's
-// trees, since the whole point here is uniformity.
-function renderTree({ x, y }) {
+// One plain, uniform-*shaped* canopy circle on a short trunk (still not
+// staggered blobs like jungle.js's trees, since the species stays the
+// same tree throughout) but sized per-tree now rather than one fixed
+// TREE_R for every single one.
+function renderTree({ x, y, r }) {
   return `
-    <rect x="${x - 3}" y="${y + 6}" width="6" height="20" fill="#6b5233" rx="2" />
-    <ellipse cx="${x}" cy="${y + 24}" rx="${TREE_R * 0.55}" ry="8" fill="rgba(20,35,10,0.16)" />
-    <circle cx="${x}" cy="${y}" r="${TREE_R}" fill="#6b9c4d" />
-    <circle cx="${x - 8}" cy="${y - 6}" r="${TREE_R * 0.55}" fill="#7fb35e" opacity="0.7" />
+    <rect x="${x - 3}" y="${y + r * 0.2}" width="6" height="${r * 0.68}" fill="#6b5233" rx="2" />
+    <ellipse cx="${x}" cy="${y + r * 0.82}" rx="${r * 0.55}" ry="8" fill="rgba(20,35,10,0.16)" />
+    <circle cx="${x}" cy="${y}" r="${r}" fill="#6b9c4d" />
+    <circle cx="${x - r * 0.27}" cy="${y - r * 0.2}" r="${r * 0.55}" fill="#7fb35e" opacity="0.7" />
   `;
 }
 
@@ -43,12 +51,14 @@ const ROW_FLOWER_EMOJI = ["🌷", "🌻"];
 const AMBIENT_EMOJI = ["🦋", "🌿"];
 
 // A single tidy flower planted between each pair of trees in a row, not
-// scattered — keeps the "orderly" feel even in the small details.
+// scattered — keeps the "orderly, one row at a time" feel even in the
+// small details, grouped by each tree's own row line (not its jittered
+// y) so the grouping stays exact.
 function renderFlowerRows(trees) {
   const byRow = new Map();
   trees.forEach((t) => {
-    if (!byRow.has(t.y)) byRow.set(t.y, []);
-    byRow.get(t.y).push(t.x);
+    if (!byRow.has(t.rowY)) byRow.set(t.rowY, []);
+    byRow.get(t.rowY).push(t.x);
   });
   const marks = [];
   let i = 0;
@@ -75,7 +85,7 @@ function renderAmbient(positions) {
 }
 
 function renderScene(positions, totalHeight, bossName) {
-  const trees = computeGrid(totalHeight);
+  const trees = computeRows(totalHeight);
   const treesHTML = trees.map(renderTree).join("");
   const flowerRows = renderFlowerRows(trees);
   const last = positions[positions.length - 1];
@@ -83,7 +93,7 @@ function renderScene(positions, totalHeight, bossName) {
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: a tidy orchard planted in even rows, and a trail winding between them connecting every In Formation lesson up to ${bossName}'s own clearing">
+      aria-label="A close-up corner of Wordwood Isle: an orchard planted in parallel rows, and a trail winding between them connecting every In Formation lesson up to ${bossName}'s own clearing">
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#8fae6a" />
       <g>${treesHTML}</g>
       <g>${flowerRows}</g>
