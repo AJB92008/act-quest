@@ -173,13 +173,29 @@ function renderDecorations(positions) {
     .join("");
 }
 
+// A little ambient grass/wildflower/wheat texture — this island's own
+// Wordwood Isle map shows Idiom Instinct sitting in the green meadow
+// zone, so its own zoomed-in ground reads as open plains rather than the
+// sandy/tan look every version before this one used. Placed independent
+// of the lesson stops (unlike the idiom decorations above), scattered
+// loosely down the land band.
+const PLAINS_EMOJI = ["🌾", "🌿", "🌼"];
+function renderPlainsTexture(totalHeight) {
+  const count = Math.max(6, Math.round(totalHeight / 260));
+  return Array.from({ length: count }, (_, i) => {
+    const y = 60 + ((totalHeight - 100) / (count - 1 || 1)) * i;
+    const x = clamp(LAND_BAND.min + 25 + ((i * 73) % (LAND_BAND.max - LAND_BAND.min - 50)), LAND_BAND.min + 10, LAND_BAND.max - 10);
+    return `<text x="${x}" y="${y}" font-size="22" opacity="0.8" text-anchor="middle">${PLAINS_EMOJI[i % PLAINS_EMOJI.length]}</text>`;
+  }).join("");
+}
+
 function renderTerrainSvg(positions, totalHeight, bossName) {
   const hills = computeHills(positions, totalHeight)
     .map(
       ({ x, y, r }) => `
-        <ellipse cx="${x}" cy="${y + 16}" rx="${r}" ry="${r * 0.58}" fill="rgba(20,45,30,0.14)" />
-        <ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 0.62}" fill="#9fbf78" />
-        <ellipse cx="${x - r * 0.25}" cy="${y - r * 0.12}" rx="${r * 0.55}" ry="${r * 0.32}" fill="#b3d18c" opacity="0.7" />
+        <ellipse cx="${x}" cy="${y + 16}" rx="${r}" ry="${r * 0.58}" fill="rgba(20,45,30,0.16)" />
+        <ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 0.62}" fill="#8db35f" />
+        <ellipse cx="${x - r * 0.25}" cy="${y - r * 0.12}" rx="${r * 0.55}" ry="${r * 0.32}" fill="#a3c777" opacity="0.75" />
       `
     )
     .join("");
@@ -188,8 +204,9 @@ function renderTerrainSvg(positions, totalHeight, bossName) {
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: a winding river down one side, grassy hills, and a trail connecting every Idiom Instinct lesson up to ${bossName}'s own clearing">
-      <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#e3c98f" />
+      aria-label="A close-up corner of Wordwood Isle: open grassy plains with a winding river down one side, gentle hills, and a trail connecting every Idiom Instinct lesson up to ${bossName}'s own clearing">
+      <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#c3dd8f" />
+      <g>${renderPlainsTexture(totalHeight)}</g>
       <path d="${renderRiver(totalHeight)}" fill="#7fa8b8" opacity="0.75" />
       <g>${hills}</g>
       ${bossClearing}

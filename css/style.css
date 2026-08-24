@@ -1286,22 +1286,22 @@ input[type="password"] {
    background with color showing on either side of it. */
 .lesson-map-area {
   width: 100%;
-  background: #e3c98f;
+  background: #c3dd8f;
   padding: 22px 0 40px;
   margin: 0 0 24px;
 }
 
 :root[data-theme="dark"] .lesson-map-area {
-  background: #4a3f2a;
+  background: #3a4a2a;
 }
 
 .lesson-map-hint {
-  color: rgba(40, 30, 15, 0.75);
+  color: rgba(25, 40, 10, 0.75);
   margin: 0 0 18px;
 }
 
 :root[data-theme="dark"] .lesson-map-hint {
-  color: rgba(255, 244, 224, 0.82);
+  color: rgba(240, 250, 224, 0.82);
 }
 
 /* Aspect-ratio-locked to its own SVG viewBox so the hand-drawn hills/
