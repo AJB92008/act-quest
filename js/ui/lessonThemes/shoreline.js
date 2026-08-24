@@ -1,7 +1,10 @@
 // Case Closed's own theme (see lessonTerrain.js for the shared engine
 // every lesson-path theme renders through) — a sandy beach where a swamp
 // meets the shore: mostly open sand (the trail's own band), with a strip
-// of murky swamp water and reeds confined along one edge. A little
+// of murky swamp water and reeds confined along one edge. The water
+// itself carries real detail — a depth gradient, ripple texture, foam
+// scallops rolling in at its outer edge, and a bit of life (fish, a
+// frog, lily pads) — so it never reads as a flat color block. A little
 // suitcase washed up in the sand is the pun on the skill's own name (a
 // "case," closed).
 import { COL_W, clamp, bandPath, nearestPosition, renderTrailPath, blobPoints, closedBlobPath } from "../lessonTerrain.js";
@@ -35,17 +38,75 @@ function computeShore(totalHeight) {
   });
 }
 
-function renderWater(totalHeight) {
-  const shore = computeShore(totalHeight);
+// The outer edge of the water (away from the sand) sits at a constant
+// x, off past the left of the frame — by design, so it reads as open
+// water continuing beyond what's visible. But a flat color run up
+// against a straight clip line still looks like a wall, not a coast, so
+// this edge gets its own treatment: a run of foam scallops (little wave
+// crests rolling in from off-frame) right at the boundary, on top of a
+// depth gradient and ripple texture across the whole body of water so
+// nowhere in it reads as a flat, undetailed fill.
+function renderWaterDefs() {
+  return `
+    <defs>
+      <linearGradient id="caseClosedWaterDepth" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#333d27" />
+        <stop offset="100%" stop-color="#61754c" />
+      </linearGradient>
+    </defs>
+  `;
+}
+
+function renderWater(totalHeight, shore) {
   const band = bandPath(
     shore.map((s) => ({ x: s.left, y: s.y })),
     shore.map((s) => ({ x: s.right, y: s.y }))
   );
   const foamLine = shore.map((s, i) => `${i === 0 ? "M" : "L"}${s.right},${s.y}`).join(" ");
   return `
-    <path d="${band}" fill="#4f5d3f" opacity="0.85" />
+    <path d="${band}" fill="url(#caseClosedWaterDepth)" opacity="0.88" />
     <path d="${foamLine}" stroke="#e8dfb8" stroke-width="3" fill="none" opacity="0.4" stroke-linecap="round" />
   `;
+}
+
+// Ripple lines scattered across the water's own surface, each one only
+// as wide as the water is at that row, so the texture always stays
+// inside the shore boundary.
+function renderRipples(shore) {
+  return shore
+    .filter((_, i) => i % 4 === 2)
+    .map((s, i) => {
+      const w = s.right + 30;
+      if (w < 40) return "";
+      const y = s.y + (i % 2 === 0 ? -8 : 8);
+      return `<path d="M-20,${y} Q${w * 0.28},${y - 7} ${w * 0.55},${y} Q${w * 0.78},${y + 7} ${w},${y}" stroke="#9fb083" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round" />`;
+    })
+    .join("");
+}
+
+// A repeating scallop right at the frame's own edge — small wave crests
+// rolling in from off-screen, so the outer boundary of the water reads
+// as a wave line instead of a flat clipped cut.
+function renderEdgeFoam(totalHeight) {
+  const count = Math.max(12, Math.round(totalHeight / 100));
+  return Array.from({ length: count }, (_, i) => {
+    const y = ((totalHeight / count) * i) + (totalHeight / count) * 0.5;
+    return `<path d="M-25,${y - 16} Q14,${y - 14} 12,${y} Q14,${y + 14} -25,${y + 16}" fill="none" stroke="#dfe8c8" stroke-width="2.5" opacity="0.4" stroke-linecap="round" />`;
+  }).join("");
+}
+
+const WATER_LIFE = ["🐟", "🐸", "🪷"];
+
+// Fish, a frog, and a lily pad or two, floating out on the water itself
+// rather than clustered at the shore like the reeds/driftwood.
+function renderWaterLife(shore) {
+  return shore
+    .filter((_, i) => i % 7 === 3 && shore[i].right > 55)
+    .map((s, i) => {
+      const x = clamp(s.right * 0.42, 15, s.right - 20);
+      return `<text x="${x}" y="${s.y}" font-size="20" text-anchor="middle" opacity="0.9">${WATER_LIFE[i % WATER_LIFE.length]}</text>`;
+    })
+    .join("");
 }
 
 // A couple of sandy points poking into the water — breaks up the shore
@@ -114,7 +175,11 @@ function renderDecorations(positions) {
 }
 
 function renderScene(positions, totalHeight, bossName) {
-  const water = renderWater(totalHeight);
+  const shore = computeShore(totalHeight);
+  const water = renderWater(totalHeight, shore);
+  const ripples = renderRipples(shore);
+  const edgeFoam = renderEdgeFoam(totalHeight);
+  const waterLife = renderWaterLife(shore);
   const sandPoints = renderSandPoints(totalHeight);
   const reeds = renderReedsAtShore(totalHeight);
   const driftwood = computeDriftwood(positions, totalHeight).map(renderDriftwood).join("");
@@ -124,8 +189,12 @@ function renderScene(positions, totalHeight, bossName) {
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
       aria-label="A close-up corner of Wordwood Isle: a sandy beach where a swamp meets the shore, a suitcase washed up in the sand, and a trail connecting every Case Closed lesson up to ${bossName}'s own clearing">
+      ${renderWaterDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#dfd0a0" />
       ${water}
+      <g>${ripples}</g>
+      <g>${edgeFoam}</g>
+      <g>${waterLife}</g>
       ${sandPoints}
       <g>${reeds}</g>
       <g>${driftwood}</g>
