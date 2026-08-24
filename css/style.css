@@ -1054,19 +1054,81 @@ input[type="password"] {
    with the background SVG's own internal coordinates with no scale math
    anywhere; a smaller screen just shows a smaller slice of the same big
    island rather than a shrunk copy of it. */
+/* English's hub screen additionally becomes a flex column (see
+   .hub-island-screen below) so the viewport can claim exactly whatever
+   vertical space the heading/hint above it don't need — "as much space
+   as possible" — rather than a fixed vh guess that leaves a gap on tall
+   screens or gets cramped on short ones. Its own background matches
+   .ocean-scene's gradient (light/dark variants below) rather than
+   relying on the parent showing through, since the Fullscreen API
+   renders only this element and its descendants — the parent .screen,
+   HUD, and heading all disappear from view while it's fullscreened. */
 .hub-viewport {
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: min(74vh, 860px);
-  min-height: 480px;
-  margin: 0 0 24px;
   border-radius: 22px;
   filter: drop-shadow(0 18px 32px rgba(30, 45, 40, 0.25));
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #cfe3e6 0%, #6f9fae 48%, #2c4a5c 100%);
 }
 
 :root[data-theme="dark"] .hub-viewport {
   filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.5)) brightness(0.84) contrast(1.05) saturate(1.05);
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #315a67 0%, #1b3540 48%, #081419 100%);
+}
+
+.hub-viewport:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+}
+
+.hub-island-screen {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Flex's default align-items:stretch would otherwise force .back-btn to
+   the container's full width — harmless for the block-level heading/hint
+   text next to it, but a <button> centers its label by default, so a
+   full-width one visibly re-centers "← Back to Map" instead of anchoring
+   it to the left like every other screen's back button. */
+.hub-island-screen .back-btn {
+  align-self: flex-start;
+}
+
+.hub-island-screen .hub-viewport {
+  flex: 1 1 auto;
+  min-height: 420px;
+  margin: 0;
+}
+
+/* A small always-present corner control — visible both in the normal
+   view and, since it's a descendant of .hub-viewport, still visible once
+   that element is the fullscreen root (everything outside it, including
+   the heading and HUD, disappears from view then). */
+.hub-fullscreen-btn {
+  position: absolute;
+  z-index: 4;
+  top: 14px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  background: rgba(20, 30, 35, 0.45);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s ease;
+}
+
+.hub-fullscreen-btn:hover,
+.hub-fullscreen-btn:focus-visible {
+  background: rgba(20, 30, 35, 0.65);
 }
 
 .hub-world {

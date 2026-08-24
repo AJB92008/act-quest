@@ -247,6 +247,10 @@ function wireMovement({
   }
   measureViewport();
   window.addEventListener("resize", measureViewport);
+  // Toggling fullscreen changes the viewport's size immediately, before
+  // any "resize" event necessarily fires — re-measure right away so the
+  // camera doesn't keep clamping to the old (much smaller) dimensions.
+  document.addEventListener("fullscreenchange", measureViewport);
 
   function place() {
     avatarEl.style.left = `${x}px`;
@@ -345,6 +349,7 @@ function wireMovement({
     document.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("keyup", onKeyUp);
     window.removeEventListener("resize", measureViewport);
+    document.removeEventListener("fullscreenchange", measureViewport);
   };
 }
 
@@ -359,11 +364,12 @@ export function renderEnglishHub(root, navigate, subject) {
 
   root.innerHTML = `
     ${hudHTML("map")}
-    <main class="screen island-screen ocean-scene" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
+    <main class="screen island-screen hub-island-screen ocean-scene" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
       <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD through the meadow, hillside, grove, and dock — every trail leads to a skill</p>
       <div class="hub-viewport" id="hubViewport">
+        <button class="hub-fullscreen-btn" id="hubFullscreenBtn" type="button" aria-label="Enter fullscreen">⛶</button>
         <div class="hub-world" id="hubWorld" style="width:${WORLD_W}px;height:${WORLD_H}px;">
           ${renderSceneSvg(layout)}
           <div class="hub-marker-wrap" style="left:${landmarkPos.x}px;top:${landmarkPos.y}px;">
@@ -394,10 +400,35 @@ export function renderEnglishHub(root, navigate, subject) {
   root.querySelector("[data-landmark]").addEventListener("click", () => goTo("vocabulary", {}));
   root.querySelector("[data-boss]")?.addEventListener("click", () => goTo("bossQuiz", { subjectId: subject.id }));
 
-  stop = wireMovement({
+  // The Fullscreen API only ever fullscreens one specific element and
+  // everything inside it — targeting #hubViewport (not the whole screen)
+  // means the map itself fills the entire display while still working
+  // like a normal DOM subtree (WASD, clicks, the camera transform all
+  // keep working exactly as before, just at full monitor size).
+  const viewportEl = root.querySelector("#hubViewport");
+  const fullscreenBtn = root.querySelector("#hubFullscreenBtn");
+  const isFullscreen = () => document.fullscreenElement === viewportEl;
+  const updateFullscreenBtn = () => {
+    fullscreenBtn.textContent = isFullscreen() ? "✕" : "⛶";
+    fullscreenBtn.setAttribute("aria-label", isFullscreen() ? "Exit fullscreen" : "Enter fullscreen");
+  };
+  document.addEventListener("fullscreenchange", updateFullscreenBtn);
+  fullscreenBtn.addEventListener("click", () => {
+    // Browsers (and some embedding contexts) can refuse a fullscreen
+    // request for reasons outside this page's control — swallow the
+    // rejection rather than leaving an unhandled promise error in the
+    // console; the button just silently stays in its current state.
+    if (isFullscreen()) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      viewportEl.requestFullscreen?.().catch(() => {});
+    }
+  });
+
+  const stopMovement = wireMovement({
     avatarEl: root.querySelector("#hubAvatar"),
     worldEl: root.querySelector("#hubWorld"),
-    viewportEl: root.querySelector("#hubViewport"),
+    viewportEl,
     hintEl: root.querySelector("#hubHint"),
     layout,
     landmarkPos,
@@ -407,4 +438,9 @@ export function renderEnglishHub(root, navigate, subject) {
     onArriveLandmark: () => goTo("vocabulary", {}),
     onArriveBoss: () => goTo("bossQuiz", { subjectId: subject.id }),
   });
+  stop = () => {
+    stopMovement();
+    document.removeEventListener("fullscreenchange", updateFullscreenBtn);
+    if (isFullscreen()) document.exitFullscreen();
+  };
 }
