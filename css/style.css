@@ -1278,22 +1278,43 @@ input[type="password"] {
   color: #f2e6da;
 }
 
-/* Idiom Instinct's own zoomed-in lesson-path illustration (skillPathHub.js)
-   — a small, contained scene (not full-bleed like the island hub it sits
-   inside), aspect-ratio-locked to its own SVG viewBox so the hand-drawn
-   hills/coastline and every lesson marker positioned by plain left/top
+/* Idiom Instinct's own zoomed-in lesson-path illustration (skillPathHub.js).
+   The ground itself — this full-bleed strip, colored to match the SVG
+   terrain's own fill — runs edge to edge behind both the hint line and
+   the scene, so the map reads as one continuous piece of ground the hint
+   sits on rather than a bordered card dropped onto an unrelated page
+   background with color showing on either side of it. */
+.lesson-map-area {
+  width: 100%;
+  background: #e3c98f;
+  padding: 22px 0 40px;
+  margin: 0 0 24px;
+}
+
+:root[data-theme="dark"] .lesson-map-area {
+  background: #4a3f2a;
+}
+
+.lesson-map-hint {
+  color: rgba(40, 30, 15, 0.75);
+  margin: 0 0 18px;
+}
+
+:root[data-theme="dark"] .lesson-map-hint {
+  color: rgba(255, 244, 224, 0.82);
+}
+
+/* Aspect-ratio-locked to its own SVG viewBox so the hand-drawn hills/
+   coastline and every lesson marker positioned by plain left/top
    percentages stay aligned at any screen size, same trick as the hub's
-   own scene used before it grew into a full walkable world. */
+   own scene used before it grew into a full walkable world. No card
+   framing of its own (no shadow/border) — it's meant to blend straight
+   into .lesson-map-area's ground color around it, not float above it. */
 .lesson-terrain-scene {
   position: relative;
   width: 100%;
   max-width: 680px;
-  margin: 0 auto 24px;
-  filter: drop-shadow(0 14px 26px rgba(30, 45, 40, 0.22));
-}
-
-:root[data-theme="dark"] .lesson-terrain-scene {
-  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.45)) brightness(0.86) contrast(1.05) saturate(1.05);
+  margin: 0 auto;
 }
 
 .lesson-terrain-svg {

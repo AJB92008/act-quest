@@ -212,11 +212,13 @@ export function renderIdiomHub(root, navigate, { skillId, subjectId }) {
           <p class="lesson-timer-hint">Turn off if you'd rather take your time on each question.</p>
         </div>
       </div>
-      <p class="skillpath-hint">${progress.mastered ? "🏅 Skill mastered! Revisit any lesson to practice." : "Clear each lesson to unlock the next."}</p>
-      <div class="lesson-terrain-scene" style="aspect-ratio:${COL_W}/${totalHeight}">
-        ${renderTerrainSvg(positions, totalHeight, bossName)}
-        ${nodesHTML}
-        ${bossHTML}
+      <div class="lesson-map-area">
+        <p class="skillpath-hint lesson-map-hint">${progress.mastered ? "🏅 Skill mastered! Revisit any lesson to practice." : "Clear each lesson to unlock the next."}</p>
+        <div class="lesson-terrain-scene" style="aspect-ratio:${COL_W}/${totalHeight}">
+          ${renderTerrainSvg(positions, totalHeight, bossName)}
+          ${nodesHTML}
+          ${bossHTML}
+        </div>
       </div>
     </main>
   `;
