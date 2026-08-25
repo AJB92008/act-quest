@@ -22,19 +22,33 @@ function computeTrees(positions, totalHeight) {
     const dist = 95 + (i % 3) * 42;
     const tx = clamp(nearest.x + side * dist, BAND.min + 25, BAND.max - 25);
     const r = 34 + (i % 4) * 9;
-    return { x: tx, y: hy, r };
+    const palette = i % CANOPY_PALETTES.length;
+    const jitter = ((i * 5) % 7) / 6 - 0.5;
+    return { x: tx, y: hy, r, palette, jitter };
   });
 }
 
+// A different canopy palette per tree (not always the same three
+// greens) plus a little per-tree jitter on where the three canopy
+// circles sit, so a scatter of trees doesn't read as one shape
+// rescaled over and over.
+const CANOPY_PALETTES = [
+  ["#2f5626", "#3a6b2e", "#4a7a3a"],
+  ["#264a30", "#356a3c", "#4a8a4a"],
+  ["#3a5620", "#4a6b28", "#5a7a38"],
+  ["#2a4a3a", "#3a6a4a", "#4a7a5a"],
+];
+
 // Three overlapping canopy blobs staggered around a short trunk — reads
 // as an actual clump of trees rather than one smooth mound.
-function renderTree({ x, y, r }) {
+function renderTree({ x, y, r, palette, jitter }) {
+  const [c1, c2, c3] = CANOPY_PALETTES[palette];
   return `
     <rect x="${x - 4}" y="${y + r * 0.25}" width="8" height="${r * 0.85}" fill="#5a3d22" rx="3" />
     <ellipse cx="${x}" cy="${y + r * 0.35}" rx="${r * 0.6}" ry="${r * 0.26}" fill="rgba(6,16,4,0.28)" />
-    <circle cx="${x - r * 0.4}" cy="${y}" r="${r * 0.55}" fill="#2f5626" />
-    <circle cx="${x + r * 0.42}" cy="${y - r * 0.08}" r="${r * 0.6}" fill="#3a6b2e" />
-    <circle cx="${x}" cy="${y - r * 0.48}" r="${r * 0.62}" fill="#4a7a3a" />
+    <circle cx="${x - r * (0.35 + jitter * 0.1)}" cy="${y + jitter * 6}" r="${r * 0.55}" fill="${c1}" />
+    <circle cx="${x + r * (0.38 + jitter * 0.08)}" cy="${y - r * 0.08 - jitter * 5}" r="${r * 0.6}" fill="${c2}" />
+    <circle cx="${x - jitter * 8}" cy="${y - r * 0.48}" r="${r * 0.62}" fill="${c3}" />
   `;
 }
 

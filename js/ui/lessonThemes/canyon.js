@@ -66,18 +66,37 @@ function computeRocks(positions, totalHeight) {
     const nearest = nearestPosition(positions, hy);
     const side = nearest.x < mid ? 1 : -1;
     const rx = clamp(mid + side * (BAND.max - BAND.min) * 0.3, BAND.min + 40, BAND.max - 20);
-    return { x: rx, y: hy, r: 34 + (i % 2) * 14 };
+    return { x: rx, y: hy, r: 30 + (i % 3) * 16, seed: i * 3.1, shade: i % ROCK_SHADES.length };
   });
 }
 
-// Moss-tinted rather than dry desert stone — greener fill/stroke than a
-// bare rock would use, plus a little tuft of growth on top.
-function renderRock({ x, y, r }) {
+// Moss-tinted rather than dry desert stone — a few different moss shades
+// instead of always the same one, and each vertex nudged by a per-rock
+// seed so the silhouette itself varies, not just the overall size.
+const ROCK_SHADES = [
+  ["#8a9668", "#5f6b46"],
+  ["#7c8a5c", "#54603c"],
+  ["#96a074", "#68724e"],
+];
+
+function renderRock({ x, y, r, seed, shade }) {
+  const [fill, stroke] = ROCK_SHADES[shade];
+  const j = (n) => (Math.sin(seed * 7.7 + n * 3.3) * 0.5) * r * 0.18;
+  const pts = [
+    { x: x - r + j(1), y: y + r * 0.3 + j(2) },
+    { x: x - r * 0.5 + j(3), y: y - r * 0.6 + j(4) },
+    { x: x + r * 0.15 + j(5), y: y - r + j(6) },
+    { x: x + r * 0.7 + j(7), y: y - r * 0.35 + j(8) },
+    { x: x + r + j(9), y: y + r * 0.35 + j(10) },
+    { x: x + r * 0.4 + j(11), y: y + r * 0.55 + j(12) },
+  ];
+  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ") + " Z";
+  const mossX = x + r * 0.1 + j(13) * 0.5;
+  const mossY = y - r * 0.6;
   return `
     <ellipse cx="${x}" cy="${y + r * 0.5}" rx="${r * 0.9}" ry="${r * 0.3}" fill="rgba(15,25,8,0.22)" />
-    <path d="M${x - r},${y + r * 0.3} L${x - r * 0.5},${y - r * 0.6} L${x + r * 0.15},${y - r} L${x + r * 0.7},${y - r * 0.35} L${x + r},${y + r * 0.35} L${x + r * 0.4},${y + r * 0.55} Z"
-      fill="#8a9668" stroke="#5f6b46" stroke-width="2" />
-    <text x="${x + r * 0.1}" y="${y - r * 0.6}" font-size="16" text-anchor="middle">🌿</text>
+    <path d="${path}" fill="${fill}" stroke="${stroke}" stroke-width="2" />
+    <text x="${mossX}" y="${mossY}" font-size="16" text-anchor="middle">🌿</text>
   `;
 }
 

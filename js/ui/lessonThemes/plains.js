@@ -39,6 +39,28 @@ function renderRiver(totalHeight) {
   );
 }
 
+// A sandy bank line tracing both edges of the water, plus a few reed
+// clumps poking up right at the waterline — without this the river read
+// as a flat color panel dropped onto the grass with no transition where
+// water actually meets land.
+function renderRiverBanks(totalHeight) {
+  const banks = computeRiver(totalHeight);
+  const leftLine = banks.map((b, i) => `${i === 0 ? "M" : "L"}${b.left},${b.y}`).join(" ");
+  const rightLine = banks.map((b, i) => `${i === 0 ? "M" : "L"}${b.right},${b.y}`).join(" ");
+  const reeds = banks
+    .filter((_, i) => i % 4 === 2)
+    .map((b) => {
+      const x = b.right + 7;
+      return `<path d="M${x},${b.y} Q${x + 3},${b.y - 14} ${x},${b.y - 22}" stroke="#6b7a45" stroke-width="2" fill="none" opacity="0.75" />`;
+    })
+    .join("");
+  return `
+    <path d="${leftLine}" stroke="#c9b47e" stroke-width="4" fill="none" opacity="0.55" />
+    <path d="${rightLine}" stroke="#c9b47e" stroke-width="4" fill="none" opacity="0.55" />
+    ${reeds}
+  `;
+}
+
 // A couple of soft hill mounds within the land band, each placed on the
 // opposite side of the trail from wherever the trail happens to be at
 // that height — so the trail always reads as skirting around the near
@@ -78,15 +100,27 @@ function renderAmbient(totalHeight) {
   }).join("");
 }
 
+// Each hill picks from a small set of shade pairs (not always the same
+// green-on-green) and its highlight blob sits at a jittered offset, so
+// three hills at different sizes don't all read as one shape rescaled.
+const HILL_SHADES = [
+  ["#8db35f", "#a3c777"],
+  ["#7ba055", "#93bb6d"],
+  ["#96b869", "#abcb80"],
+];
+
 function renderScene(positions, totalHeight, bossName) {
   const hills = computeHills(positions, totalHeight)
-    .map(
-      ({ x, y, r }) => `
+    .map(({ x, y, r }, i) => {
+      const [base, highlight] = HILL_SHADES[i % HILL_SHADES.length];
+      const hlx = x + (i % 2 === 0 ? -1 : 1) * r * 0.25;
+      const hly = y - r * (0.1 + (i % 3) * 0.05);
+      return `
         <ellipse cx="${x}" cy="${y + 16}" rx="${r}" ry="${r * 0.58}" fill="rgba(20,45,30,0.16)" />
-        <ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 0.62}" fill="#8db35f" />
-        <ellipse cx="${x - r * 0.25}" cy="${y - r * 0.12}" rx="${r * 0.55}" ry="${r * 0.32}" fill="#a3c777" opacity="0.75" />
-      `
-    )
+        <ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 0.62}" fill="${base}" />
+        <ellipse cx="${hlx}" cy="${hly}" rx="${r * (0.45 + (i % 2) * 0.15)}" ry="${r * 0.3}" fill="${highlight}" opacity="0.75" />
+      `;
+    })
     .join("");
   const last = positions[positions.length - 1];
   const bossClearing = `<circle cx="${last.x}" cy="${last.y}" r="86" fill="#efe4cf" stroke="#c9a668" stroke-width="4" />`;
@@ -97,6 +131,7 @@ function renderScene(positions, totalHeight, bossName) {
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#c3dd8f" />
       <g>${renderAmbient(totalHeight)}</g>
       <path d="${renderRiver(totalHeight)}" fill="#7fa8b8" opacity="0.75" />
+      ${renderRiverBanks(totalHeight)}
       <g>${hills}</g>
       ${bossClearing}
       <path d="${renderTrailPath(positions)}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />

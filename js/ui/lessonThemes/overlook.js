@@ -28,11 +28,25 @@ function renderSignpost(x, y) {
   `;
 }
 
+// Sparse landmarks recurring every 600-700px, alternating tree and
+// signpost rather than crowding both in together — a long scroll still
+// stays uncluttered (the whole point of the pun), but doesn't go
+// hundreds of pixels at a stretch with literally nothing in it either.
+function computeLandmarks(totalHeight) {
+  const spacing = 650;
+  const count = Math.max(2, Math.round(totalHeight / spacing));
+  return Array.from({ length: count }, (_, i) => {
+    const y = ((i + 0.5) / count) * totalHeight;
+    const side = i % 2 === 0 ? 1 : -1;
+    const x = COL_W / 2 + side * 90;
+    return { y, x, isTree: i % 2 === 0 };
+  });
+}
+
 function renderScene(positions, totalHeight, bossName) {
-  const treeY = totalHeight * 0.34;
-  const treeX = COL_W / 2 + 90;
-  const signY = totalHeight * 0.62;
-  const signX = COL_W / 2 - 95;
+  const landmarks = computeLandmarks(totalHeight)
+    .map((l) => (l.isTree ? renderLandmarkTree(l.x, l.y) : renderSignpost(l.x, l.y)))
+    .join("");
   const last = positions[positions.length - 1];
   const bossClearing = `
     <circle cx="${last.x}" cy="${last.y}" r="86" fill="#eef5df" stroke="#9fc47a" stroke-width="4" />
@@ -41,10 +55,9 @@ function renderScene(positions, totalHeight, bossName) {
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: a wide, open, unobstructed clearing with a single landmark tree and a signpost, and a direct trail connecting every Stay on Topic lesson up to ${bossName}'s own clearing">
+      aria-label="A close-up corner of Wordwood Isle: a wide, open, unobstructed clearing with a sparse landmark tree and signpost recurring down its length, and a direct trail connecting every Stay on Topic lesson up to ${bossName}'s own clearing">
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#9fc47a" />
-      ${renderLandmarkTree(treeX, treeY)}
-      ${renderSignpost(signX, signY)}
+      ${landmarks}
       ${bossClearing}
       <path d="${renderTrailPath(positions)}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />
     </svg>

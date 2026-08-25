@@ -50,21 +50,28 @@ function renderDecorations(positions) {
 // A few larger thorny bramble clumps (three overlapping dark-green
 // blobs with small thorn marks) sitting just off the trail — clutter
 // with real visual weight, not just small emoji.
+const THICKET_PALETTES = [
+  ["#3a4a20", "#465a26", "#526530"],
+  ["#403a1e", "#524a26", "#645a30"],
+  ["#2c4022", "#3c5430", "#4c6838"],
+];
+
 function computeThickets(positions, totalHeight) {
   return [0.18, 0.42, 0.66, 0.88].map((f, i) => {
     const hy = f * totalHeight;
     const side = i % 2 === 0 ? 1 : -1;
     const x = clamp((BAND.min + BAND.max) / 2 + side * (BAND.max - BAND.min) * 0.36, BAND.min + 40, BAND.max - 40);
-    return { x, y: hy, r: 46 + (i % 2) * 12 };
+    return { x, y: hy, r: 40 + (i % 3) * 12, palette: i % THICKET_PALETTES.length };
   });
 }
 
-function renderThicket({ x, y, r }) {
+function renderThicket({ x, y, r, palette }) {
+  const [c1, c2, c3] = THICKET_PALETTES[palette];
   return `
     <ellipse cx="${x}" cy="${y + r * 0.3}" rx="${r * 0.8}" ry="${r * 0.3}" fill="rgba(10,15,5,0.25)" />
-    <circle cx="${x - r * 0.3}" cy="${y}" r="${r * 0.5}" fill="#3a4a20" />
-    <circle cx="${x + r * 0.32}" cy="${y - r * 0.05}" r="${r * 0.55}" fill="#465a26" />
-    <circle cx="${x}" cy="${y - r * 0.35}" r="${r * 0.5}" fill="#526530" />
+    <circle cx="${x - r * 0.3}" cy="${y}" r="${r * 0.5}" fill="${c1}" />
+    <circle cx="${x + r * 0.32}" cy="${y - r * 0.05}" r="${r * 0.55}" fill="${c2}" />
+    <circle cx="${x}" cy="${y - r * 0.35}" r="${r * 0.5}" fill="${c3}" />
     <text x="${x - r * 0.1}" y="${y - r * 0.05}" font-size="18" text-anchor="middle">🥀</text>
   `;
 }

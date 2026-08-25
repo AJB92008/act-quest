@@ -27,7 +27,8 @@ function computeRows(totalHeight) {
       if (x > BAND.max - 15) break;
       const yJitter = ((r * 5 + c * 3) % 9) - 4;
       const treeR = TREE_R * (0.8 + ((r * 4 + c * 2) % 5) * 0.09);
-      trees.push({ x, y: rowY + yJitter, r: treeR, rowY });
+      const shade = (r * 3 + c) % CANOPY_SHADES.length;
+      trees.push({ x, y: rowY + yJitter, r: treeR, rowY, shade });
       x += 82 + ((r * 11 + c * 17) % 6) * 15;
     }
   }
@@ -36,13 +37,18 @@ function computeRows(totalHeight) {
 
 // One plain, uniform-*shaped* canopy circle on a short trunk (still not
 // staggered blobs like jungle.js's trees, since the species stays the
-// same tree throughout) but sized per-tree now rather than one fixed
-// TREE_R for every single one.
-function renderTree({ x, y, r }) {
+// same tree throughout, and the whole point is a uniform crop) but
+// sized per-tree now rather than one fixed TREE_R for every single one,
+// plus a touch of natural canopy-color variation (some trees a bit
+// riper/yellower than others) so the row doesn't look like one clip-art
+// tree stamped over and over.
+const CANOPY_SHADES = ["#6b9c4d", "#76a352", "#7ea347", "#649457"];
+
+function renderTree({ x, y, r, shade }) {
   return `
     <rect x="${x - 3}" y="${y + r * 0.2}" width="6" height="${r * 0.68}" fill="#6b5233" rx="2" />
     <ellipse cx="${x}" cy="${y + r * 0.82}" rx="${r * 0.55}" ry="8" fill="rgba(20,35,10,0.16)" />
-    <circle cx="${x}" cy="${y}" r="${r}" fill="#6b9c4d" />
+    <circle cx="${x}" cy="${y}" r="${r}" fill="${CANOPY_SHADES[shade]}" />
     <circle cx="${x - r * 0.27}" cy="${y - r * 0.2}" r="${r * 0.55}" fill="#7fb35e" opacity="0.7" />
   `;
 }
