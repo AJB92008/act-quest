@@ -83,6 +83,39 @@ function pseudoRandom(seed) {
   return x - Math.floor(x);
 }
 
+function pointInPolygon(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x;
+    const yi = poly[i].y;
+    const xj = poly[j].x;
+    const yj = poly[j].y;
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+// The avatar's own walkable region is exactly "on one of the rendered
+// islands" — sampled straight off the live SVG's own sand-colored
+// shoreline paths (renderIsland's outer ring) after they're already in
+// the DOM, rather than recomputing the same seed/pad math a second time
+// from scratch. Sampling the actual rendered path (not just its raw
+// control points) means this can never drift out of sync with what's
+// actually drawn — if the art changes, the walkable region changes with
+// it automatically. getTotalLength/getPointAtLength are pure path
+// geometry, so this works immediately, before the SVG has ever painted.
+function buildIslandPolygons(root) {
+  const sandPaths = root.querySelectorAll(`.hub-scene-svg path[fill="${SAND}"]`);
+  const samplesPerIsland = 48;
+  return Array.from(sandPaths).map((path) => {
+    const len = path.getTotalLength();
+    return Array.from({ length: samplesPerIsland }, (_, i) => {
+      const p = path.getPointAtLength((i / samplesPerIsland) * len);
+      return { x: p.x, y: p.y };
+    });
+  });
+}
+
 // Splits the walkable width into one column per zone, sized by how many
 // of that zone's skills it actually holds (a 6-skill zone gets a wider
 // column than a 3-skill one), so box size is a deliberate reflection of
@@ -594,12 +627,16 @@ export function renderMathHub(root, navigate, subject) {
 
   const unwireFullscreen = wireFullscreenToggle(root.querySelector("#hubViewport"), root.querySelector("#hubFullscreenBtn"));
 
+  const islandPolygons = buildIslandPolygons(root);
+  const isWalkable = (px, py) => islandPolygons.some((poly) => pointInPolygon(px, py, poly));
+
   const stopMovement = wireMovement({
     avatarEl: root.querySelector("#hubAvatar"),
     worldEl: root.querySelector("#hubWorld"),
     viewportEl: root.querySelector("#hubViewport"),
     hintEl: root.querySelector("#hubHint"),
     spawn: { x: CENTER.x, y: CENTER.y },
+    isWalkable,
     targets: [
       { x: BOSS_POS.x, y: BOSS_POS.y, radius: BOSS_TRIGGER_RADIUS, gate: () => allMastered, onArrive: () => goTo("bossQuiz", { subjectId: subject.id }) },
       ...layout.map((p) => ({

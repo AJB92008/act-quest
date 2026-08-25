@@ -196,7 +196,14 @@ export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecorati
 // optional `gate()` returns true, or has no gate) wins for that frame.
 // A locked lesson/skill just omits `onArrive` from firing by returning
 // false from its own `gate`, exactly like its button being disabled.
-export function wireMovement({ avatarEl, worldEl, viewportEl, hintEl, spawn, targets }) {
+// `isWalkable(x, y)` (optional) overrides what counts as legal ground —
+// for a hub whose land isn't the full walkable rectangle (Numeria
+// Peaks' own separate islands, see mathHub.js's own point-in-polygon
+// check against its actual rendered shoreline), so the avatar can walk
+// right up to an island's own edge but not out into open water instead
+// of just the world's outer margin — defaults to the plain rectangle
+// check when omitted, so every existing caller is unaffected.
+export function wireMovement({ avatarEl, worldEl, viewportEl, hintEl, spawn, targets, isWalkable = isInsideWorld }) {
   let x = spawn.x;
   let y = spawn.y;
   const held = { w: false, a: false, s: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
@@ -285,12 +292,12 @@ export function wireMovement({ avatarEl, worldEl, viewportEl, hintEl, spawn, tar
       const len = Math.hypot(dx, dy) || 1;
       const nx = x + (dx / len) * AVATAR_SPEED;
       const ny = y + (dy / len) * AVATAR_SPEED;
-      if (isInsideWorld(nx, ny)) {
+      if (isWalkable(nx, ny)) {
         x = nx;
         y = ny;
-      } else if (isInsideWorld(nx, y)) {
+      } else if (isWalkable(nx, y)) {
         x = nx;
-      } else if (isInsideWorld(x, ny)) {
+      } else if (isWalkable(x, ny)) {
         y = ny;
       }
       place();
