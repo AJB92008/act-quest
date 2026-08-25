@@ -92,10 +92,14 @@ export function computeZoneLayout(items, zones) {
 // its own SVG markup for each zone's tinted region, for a hub whose zones
 // shouldn't overlap the way Wordwood Isle's four soft translucent
 // ellipses deliberately do (see mathHub.js's own non-overlapping, solid-
-// fill regions) — defaults to that same ellipse blend when omitted. Both
-// default to their exact prior behavior, so every existing caller renders
-// unchanged.
-export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecoration, landmass, regionShapes } = {}) {
+// fill regions) — defaults to that same ellipse blend when omitted;
+// `trails` (optional) is a callback taking `zoneGroups` and returning its
+// own trail markup, for a hub whose zones aren't arranged as spokes
+// radiating from CENTER (Wordwood Isle's own layout) and so shouldn't
+// draw every trail starting from that one shared point — defaults to
+// that same center-radiating line when omitted. All three default to
+// their exact prior behavior, so every existing caller renders unchanged.
+export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecoration, landmass, regionShapes, trails } = {}) {
   const zones = [...new Set(layout.map((p) => p.zone))];
   const zoneGroups = zones.map((zone) => ({ zone, points: layout.filter((p) => p.zone === zone) }));
 
@@ -111,13 +115,15 @@ export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecorati
         })
         .join("");
 
-  const trails = zoneGroups
-    .map(({ points }) => {
-      if (!points.length) return "";
-      const d = [`M${CENTER.x},${CENTER.y}`, ...points.map((p) => `L${p.x},${p.y}`)].join(" ");
-      return `<path d="${d}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />`;
-    })
-    .join("");
+  const trailsMarkup = trails
+    ? trails(zoneGroups)
+    : zoneGroups
+        .map(({ points }) => {
+          if (!points.length) return "";
+          const d = [`M${CENTER.x},${CENTER.y}`, ...points.map((p) => `L${p.x},${p.y}`)].join(" ");
+          return `<path d="${d}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />`;
+        })
+        .join("");
 
   const docks = layout
     .map(({ x, y, dockX, dockY }) => `<line x1="${x}" y1="${y}" x2="${dockX}" y2="${dockY}" stroke="#a9987a" stroke-width="8" stroke-linecap="round" />`)
@@ -166,7 +172,7 @@ export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecorati
       <g>${regionShapesMarkup}</g>
       ${clearing}
       ${bossLair}
-      <g>${trails}</g>
+      <g>${trailsMarkup}</g>
       ${bossPath}
       <g>${docks}</g>
       <g>${decorations}</g>

@@ -5,169 +5,284 @@
 // two subjects' zones, palette, and landmass are unrelated). Same
 // underlying "big walkable world" engine from hubWorld.js (world/camera
 // geometry, movement, fullscreen toggle) — this file owns only what's
-// specific to Math: a single elongated mountain-ridge landmass instead
-// of Wordwood Isle's rounded coastline, and four zones grouped by actual
-// math topic (algebra, geometry, functions, number & stats) rather than
-// English's positional quadrants, so each zone's terrain flavor matches
-// what's actually studied there. No center landmark (Math has no
-// Vocabulary-Builder equivalent) and no goat/dev-mode easter egg — that
-// unlock lives on Wordwood Isle only; once unlocked there it stays
-// unlocked everywhere, so there's nothing to duplicate here.
+// specific to Math: an archipelago of separate mountainous islands in
+// open water instead of Wordwood Isle's one rounded coastline, and four
+// zones grouped by actual math topic (algebra, geometry, functions,
+// number & stats) rather than English's positional quadrants, so each
+// zone's terrain flavor matches what's actually studied there.
+//
+// Unlike Wordwood Isle (and this file's own first two drafts), Math's
+// zones do NOT use hubWorld.js's computeZoneLayout — that function
+// radiates every zone's markers out from one shared CENTER point, which
+// is a natural fit for four quadrants fanning out around a round island,
+// but for a spread-out set of islands it produces zones whose actual
+// marker spread varies with skill count and direction in ways a single
+// generic "cap the region near its centroid" rule can't reliably contain
+// (some markers ended up outside their own zone's supposed region).
+// Instead, this file tiles the walkable width into four explicit,
+// non-overlapping rectangular *territories* (widths proportional to each
+// zone's own skill count) purely to decide node placement — each zone's
+// nodes sit on a simple grid inside its own territory's inset bounds, so
+// every node is guaranteed to sit inside its own zone by construction.
+// The *visible* island shapes are then drawn separately (renderIsland),
+// tightly around each zone's actual node cluster rather than around the
+// full territory column, which is what leaves open water between
+// neighboring islands without moving a single node. The boss gets its
+// own island in a reserved band below the four topic ranges, so it's
+// part of the same layout rather than a leftover marker in open space.
+//
+// No center landmark (Math has no Vocabulary-Builder equivalent) and no
+// goat/dev-mode easter egg — that unlock lives on Wordwood Isle only;
+// once unlocked there it stays unlocked everywhere, so there's nothing
+// to duplicate here.
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { getBossMonster } from "../data/bossMonsters.js";
 import { getLessonCount } from "../data/questions/index.js";
 import { glowVars } from "./pathTrail.js";
-import {
-  CENTER,
-  BOSS_POS,
-  BOSS_TRIGGER_RADIUS,
-  WORLD_W,
-  WORLD_H,
-  WALK_MARGIN,
-  computeZoneLayout,
-  zoneCenter,
-  renderWorldSvg,
-  wireMovement,
-  wireFullscreenToggle,
-} from "./hubWorld.js";
+import { CENTER, BOSS_POS, BOSS_TRIGGER_RADIUS, WORLD_W, WORLD_H, WALK_MARGIN, renderWorldSvg, wireMovement, wireFullscreenToggle } from "./hubWorld.js";
+import { closedBlobPath } from "./lessonTerrain.js";
 
 const SKILL_TRIGGER_RADIUS = 58;
 
-// Four zones spread mostly left-to-right along the ridge's own long axis
-// (not English's four diagonal NW/NE/SW/SE quadrants, which suit a
-// roughly round/square blob, not an elongated one) — Algebra anchors the
-// far-left end, Number & Stats the far-right, with Geometry and
-// Functions zigzagging up and down between them. `categories` (not a
-// single `reportingCategory`) is what lets Number & Stats fold together
-// two of skills.js's own reporting categories (numquant + stats) into
-// one zone, so it isn't a lonely single-skill region next to three much
-// bigger ones.
+// A cohesive family of muted rock tones (all pulled toward the same
+// lavender-gray the landmass itself uses) instead of four unrelated
+// bright hues — reads as different strata of one mountain range rather
+// than four clashing UI colors dropped on a purple background.
+// `decorations: []` (not omitted) — hubWorld.js's own default decoration
+// pass reads `zone.decorations` unconditionally, even though it never
+// gets called here (this file's own renderMathRegions never renders it,
+// so there's no icon clutter), so the field still needs to exist as an
+// empty array rather than being left off entirely.
 const ZONES = [
-  { id: "algebra", name: "Ironroot Algebra", dir: { x: -1, y: -0.15 }, categories: ["algebra"], fill: "#c98a6b", decorations: ["🧮", "⚖️", "➕"] },
-  { id: "geometry", name: "Shalefoot Geometry", dir: { x: -0.55, y: 0.3 }, categories: ["geometry"], fill: "#6ea88f", decorations: ["📐", "🔺", "⭕"] },
-  { id: "functions", name: "Skyline Functions", dir: { x: 0.55, y: -0.3 }, categories: ["functions"], fill: "#7f8fd8", decorations: ["📈", "🌀", "➰"] },
-  { id: "numstats", name: "Goldtally Flats", dir: { x: 1, y: 0.15 }, categories: ["numquant", "stats"], fill: "#d9b25c", decorations: ["🎲", "📊", "#️⃣"] },
+  { id: "algebra", name: "Ironroot Algebra", categories: ["algebra"], fill: "#a8785f", decorations: [] },
+  { id: "geometry", name: "Shalefoot Geometry", categories: ["geometry"], fill: "#7d93a8", decorations: [] },
+  { id: "functions", name: "Skyline Functions", categories: ["functions"], fill: "#8b7fc4", decorations: [] },
+  { id: "numstats", name: "Goldtally Flats", categories: ["numquant", "stats"], fill: "#b99a5c", decorations: [] },
 ];
+const BOSS_FILL = "#4a4358";
 
-// computeZoneLayout (hubWorld.js) chunks its `items` array positionally —
-// item i lands in whichever zone `Math.floor(i / perZone)` picks out —
-// so handing it all 18 Math skills at once in reportingCategory order
-// would NOT reliably land each skill in its own topic's zone (a category
-// boundary rarely falls on an exact perZone multiple). Calling it once
-// per zone with that zone's own skill subset and a single-zone array
-// sidesteps this: `perZone` becomes that subset's own length, so every
-// item in the call lands at zoneIndex 0 — genuinely topic-grouped
-// positioning with zero changes to the shared engine.
-function buildLayout(subject) {
-  return ZONES.flatMap((zone) => {
-    const skills = subject.skills.filter((s) => zone.categories.includes(s.reportingCategory));
-    return computeZoneLayout(skills, [zone]);
-  });
-}
+// The four topic territories tile the top band of the walkable width;
+// the boss gets its own reserved band below them, offset enough to leave
+// a visible gap between the two bands. These bounds only ever drive
+// *node placement* (computeTerritories/gridPositions below) — the
+// visible island shapes are drawn separately, tightly around each
+// zone's actual node cluster rather than these full columns, which is
+// what leaves open water between islands even though node positions
+// never change (see renderMathRegions).
+const TOP_BAND = { y0: WALK_MARGIN, y1: 1120 };
+const BOSS_BAND = { y0: 1170, y1: WORLD_H - WALK_MARGIN };
+// Half-gutter trimmed off each side of a territory that touches a
+// neighbor, so two adjacent zones' own node grids never crowd flush
+// against each other even before the island art adds its own spacing.
+const GUTTER = 44;
 
-// Numeria Peaks' own landmass, in two full-bleed layers that together
-// cover the *entire* WORLD_W x WORLD_H canvas edge to edge — a hazy sky
-// tone above, solid rock below — with a jagged mountain-crest line as
-// the boundary between them. Unlike Wordwood Isle's rounded-rect
-// coastline (sized to comfortably contain the walkable area, with a thin
-// margin of plain background outside it that the camera can still pan
-// into at the world's extreme corners), covering the whole canvas here
-// means there is no seam the camera can ever pan past — no gap where
-// the plain .ridge-scene page background would show through, and no
-// stray "torn edge" floating over open space. The crest is now purely a
-// decorative skyline sitting well inside that solid fill, not the
-// landmass's own outer boundary, so it always reads as mountains against
-// sky rather than a broken clip.
 function pseudoRandom(seed) {
   const x = Math.sin(seed * 12.9898 + 3.7) * 43758.5453;
   return x - Math.floor(x);
 }
 
-function ridgeCrestPoints() {
-  const peakCount = 11;
-  const baseline = WORLD_H * 0.22;
-  return Array.from({ length: peakCount + 1 }, (_, i) => {
-    const x = (i / peakCount) * WORLD_W;
-    const isPeak = i % 2 === 0;
-    const jitter = pseudoRandom(i);
-    const y = isPeak ? baseline - 45 - jitter * 50 : baseline + jitter * 30;
-    return { x, y };
+// Splits the walkable width into one column per zone, sized by how many
+// of that zone's skills it actually holds (a 6-skill zone gets a wider
+// column than a 3-skill one), so box size is a deliberate reflection of
+// content instead of an emergent side effect of marker math.
+function computeTerritories(subject) {
+  const zoneSkills = ZONES.map((zone) => subject.skills.filter((s) => zone.categories.includes(s.reportingCategory)));
+  const total = zoneSkills.reduce((sum, s) => sum + s.length, 0);
+  const fullWidth = WORLD_W - WALK_MARGIN * 2;
+  let cursor = WALK_MARGIN;
+  return ZONES.map((zone, i) => {
+    const isFirst = i === 0;
+    const isLast = i === ZONES.length - 1;
+    const rawX0 = cursor;
+    const rawX1 = isLast ? WORLD_W - WALK_MARGIN : cursor + (zoneSkills[i].length / total) * fullWidth;
+    cursor = rawX1;
+    return {
+      zone,
+      skills: zoneSkills[i],
+      x0: isFirst ? rawX0 : rawX0 + GUTTER / 2,
+      x1: isLast ? rawX1 : rawX1 - GUTTER / 2,
+      y0: TOP_BAND.y0,
+      y1: TOP_BAND.y1,
+    };
   });
 }
 
+// A simple row-major grid *inside* a territory's own inset bounds — every
+// node's (x, y) is a convex combination of that territory's own inner
+// corners, so containment holds by construction rather than needing a
+// separate "does this fit" check afterward. Column count adapts to the
+// territory's own width (roughly one column per 220px) so a narrow
+// territory gets a tall single column instead of cramming into 3 wide
+// ones, and a wide one spreads out instead of stacking unnecessarily.
+function gridPositions(territory) {
+  const { skills, zone, x0, y0, x1, y1 } = territory;
+  const n = skills.length;
+  const width = x1 - x0;
+  const height = y1 - y0;
+  const cols = Math.max(1, Math.min(n, Math.round(width / 220)));
+  const rows = Math.ceil(n / cols);
+  const insetX = Math.min(115, width * 0.22);
+  const insetY = Math.min(115, height * 0.22);
+  const innerX0 = x0 + insetX;
+  const innerX1 = x1 - insetX;
+  const innerY0 = y0 + insetY;
+  const innerY1 = y1 - insetY;
+  const positions = [];
+  let idx = 0;
+  for (let row = 0; row < rows; row++) {
+    const itemsInRow = Math.min(cols, n - idx);
+    const y = rows > 1 ? innerY0 + (row / (rows - 1)) * (innerY1 - innerY0) : (innerY0 + innerY1) / 2;
+    for (let c = 0; c < itemsInRow; c++) {
+      const x = itemsInRow > 1 ? innerX0 + (c / (itemsInRow - 1)) * (innerX1 - innerX0) : (innerX0 + innerX1) / 2;
+      positions.push({ item: skills[idx], zone, x, y, dockX: x, dockY: y + 34 });
+      idx++;
+    }
+  }
+  return positions;
+}
+
+function buildLayout(territories) {
+  return territories.flatMap(gridPositions);
+}
+
+// A full-bleed ocean, edge to edge across all of WORLD_W x WORLD_H, so
+// there is no seam anywhere the camera's own clamped panning could ever
+// expose (see hubWorld.js's wireMovement: the camera never shows past
+// the world's edges in the first place, so covering exactly those edges
+// guarantees zero gap, at any viewport size). The four topic islands
+// (plus the boss's own) sit on top of this, so it reads as water behind
+// and between them rather than a flat page-background color.
 function renderMathLandmass() {
-  const crest = ridgeCrestPoints();
-  const crestLine = crest.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const rockShape = `${crestLine} L${WORLD_W},${WORLD_H} L0,${WORLD_H} Z`;
-  const shadowLine = crest.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${(p.y + 40).toFixed(1)}`).join(" ");
   return `
-    <rect x="0" y="0" width="${WORLD_W}" height="${WORLD_H}" fill="#ddd6ee" />
-    <path d="${rockShape}" fill="#b8aed6" stroke="#7a6ba0" stroke-width="6" stroke-linejoin="round" />
-    <path d="${shadowLine}" stroke="#7a6ba0" stroke-width="3" fill="none" opacity="0.45" stroke-dasharray="2 10" />
+    <defs>
+      <radialGradient id="mathOcean" cx="50%" cy="38%" r="75%">
+        <stop offset="0%" stop-color="#cfe6ea" />
+        <stop offset="55%" stop-color="#5f8fa8" />
+        <stop offset="100%" stop-color="#28405c" />
+      </radialGradient>
+      <pattern id="mathOceanRipple" width="420" height="130" patternUnits="userSpaceOnUse">
+        <path d="M0 40 Q105 20 210 40 T420 40" stroke="rgba(255,255,255,0.28)" stroke-width="2" fill="none" />
+        <path d="M0 90 Q105 68 210 90 T420 90" stroke="rgba(255,255,255,0.16)" stroke-width="2" fill="none" />
+      </pattern>
+    </defs>
+    <rect x="0" y="0" width="${WORLD_W}" height="${WORLD_H}" fill="url(#mathOcean)" />
+    <rect x="0" y="0" width="${WORLD_W}" height="${WORLD_H}" fill="url(#mathOceanRipple)" opacity="0.5" />
   `;
 }
 
-// Each zone's own region is a solid, non-overlapping rounded box — no
-// translucent blending, no ambiguity about which topic a marker near an
-// edge belongs to. The box starts as a tight fit around that zone's own
-// markers (plus a fixed pad), then gets clamped to at most 42% of the
-// distance to its *nearest* neighboring zone's own centroid on every
-// side — since two boxes each capped to <=42% of the distance between
-// their centers can never sum past that distance, this guarantees zero
-// overlap between any pair of zones regardless of how their four
-// centroids happen to fall, with no special-casing per zone.
-function computeZoneBoxes(zoneGroups) {
-  const centroids = zoneGroups.map(({ points }) => (points.length ? zoneCenter(points) : null));
-  const PAD = 85;
-  return zoneGroups.map(({ zone, points }, i) => {
-    if (!points.length) return null;
-    const { avgX, avgY } = centroids[i];
-    let minDist = Infinity;
-    centroids.forEach((c, j) => {
-      if (j === i || !c) return;
-      minDist = Math.min(minDist, Math.hypot(c.avgX - avgX, c.avgY - avgY));
-    });
-    const cap = minDist * 0.42;
-    const xs = points.map((p) => p.x);
-    const ys = points.map((p) => p.y);
-    const x0 = Math.max(Math.min(...xs) - PAD, avgX - cap);
-    const x1 = Math.min(Math.max(...xs) + PAD, avgX + cap);
-    const y0 = Math.max(Math.min(...ys) - PAD, avgY - cap);
-    const y1 = Math.min(Math.max(...ys) + PAD, avgY + cap);
-    return { zone, points, x0, y0, x1, y1 };
+const SAND = "#ecdfb8";
+
+// An organic outline around a rectangle: at each of `n` angles around the
+// rect's own center, the base radius is however far that angle's ray
+// reaches the rect's edge *plus* `pad`, then bulges further outward by a
+// random 0-30% (seeded, so it's fixed per island, not re-randomized every
+// render) — never inward. That one-directional bulge is what guarantees
+// the padded rectangle stays fully enclosed no matter how the jitter
+// lands, while still tracing an uneven, rounded, "hand-drawn landmass"
+// silhouette instead of a crisp box — closedBlobPath (lessonTerrain.js)
+// then threads a smooth curve through those points instead of straight
+// segments between them.
+function organicIslandPoints(bbox, pad, seed, n = 16) {
+  const cx = (bbox.x0 + bbox.x1) / 2;
+  const cy = (bbox.y0 + bbox.y1) / 2;
+  const halfW = (bbox.x1 - bbox.x0) / 2 + pad;
+  const halfH = (bbox.y1 - bbox.y0) / 2 + pad;
+  return Array.from({ length: n }, (_, i) => {
+    const angle = (i / n) * Math.PI * 2;
+    const ex = Math.cos(angle) * halfW;
+    const ey = Math.sin(angle) * halfH;
+    const bulge = 1 + pseudoRandom(seed * 31 + i) * 0.3;
+    return { x: cx + ex * bulge, y: cy + ey * bulge };
   });
 }
 
-// Decoration icons scattered inside their own zone's own box (never
-// beyond it), so each one reads as belonging to that topic's region
-// instead of floating unattached in open space between zones.
-function renderZoneDecorations(box) {
-  const { zone, x0, y0, x1, y1 } = box;
-  const w = x1 - x0;
-  const h = y1 - y0;
-  return zone.decorations
-    .map((emoji, i) => {
-      const fx = (i + 1) / (zone.decorations.length + 1);
-      const jitterY = pseudoRandom(i + zone.id.length) * 0.5 + 0.22;
-      const x = x0 + fx * w;
-      const y = y0 + jitterY * h;
-      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="34" text-anchor="middle">${emoji}</text>`;
-    })
-    .join("");
+// A small range of 2-3 jagged peaks sitting inside an island's own upper
+// area — Numeria Peaks' mountain motif, shrunk down to "one small range
+// per island" instead of one ridge spanning the whole former landmass,
+// so it stays part of each island's own terrain instead of a world-scale
+// backdrop hidden behind a flat color panel. Alternating light/dark
+// slope faces (rising toward a peak = lit, falling = shadowed) give it
+// real dimension instead of reading as a flat 2D silhouette.
+function renderMiniMountains(bbox, seed) {
+  const w = bbox.x1 - bbox.x0;
+  const baseY = bbox.y0 + (bbox.y1 - bbox.y0) * 0.22;
+  const peakCount = 2 + (seed % 2);
+  const pts = Array.from({ length: peakCount * 2 + 1 }, (_, i) => {
+    const x = bbox.x0 + w * 0.2 + (i / (peakCount * 2)) * w * 0.6;
+    const isPeak = i % 2 === 1;
+    const jitter = pseudoRandom(seed * 53 + i);
+    const y = isPeak ? baseY - 46 - jitter * 34 : baseY + jitter * 10;
+    return { x, y };
+  });
+  let faces = "";
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    const shade = b.y < a.y ? "rgba(255,255,255,0.24)" : "rgba(20,15,35,0.22)";
+    faces += `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)} L${b.x.toFixed(1)},${(b.y + 60).toFixed(1)} L${a.x.toFixed(1)},${(a.y + 60).toFixed(1)} Z" fill="${shade}" />`;
+  }
+  const top = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const base = `L${pts[pts.length - 1].x.toFixed(1)},${(baseY + 60).toFixed(1)} L${pts[0].x.toFixed(1)},${(baseY + 60).toFixed(1)} Z`;
+  return `<path d="${top} ${base}" fill="#8b81a8" />${faces}`;
 }
 
+// One island: a lighter sand ring (the shoreline) under the zone's own
+// solid-colored interior, both traced through the same seeded angles so
+// the ring's width stays fairly even all the way around, plus a small
+// mountain range sitting on top of the interior fill.
+function renderIsland(bbox, fill, seed) {
+  // 95/150 (not, say, 58/105): an ellipse built from a rectangle's own
+  // half-width/half-height doesn't actually reach that rectangle's own
+  // *corners* (a corner sits farther from center than either semi-axis
+  // alone) — a grid's corner-most nodes sit exactly at the tight bbox's
+  // corners, so the inner pad has to clear that diagonal gap, not just
+  // the bbox's own straight half-extents, or a corner node ends up
+  // painted onto the sand ring instead of its own zone's color.
+  const outerPts = organicIslandPoints(bbox, 150, seed);
+  const innerPts = organicIslandPoints(bbox, 95, seed);
+  return `
+    <path d="${closedBlobPath(outerPts)}" fill="${SAND}" />
+    <path d="${closedBlobPath(innerPts)}" fill="${fill}" />
+    ${renderMiniMountains(bbox, seed)}
+  `;
+}
+
+// Each island is drawn tightly around that zone's *actual* placed nodes
+// (hubWorld.js's own `zoneGroups`, not this file's wider territory
+// columns from computeTerritories) — node positions are already inset
+// well inside their territory's own bounds (see gridPositions' insetX/
+// insetY), so an island sized to just the nodes plus a shoreline naturally
+// leaves open water between neighboring islands, without moving a single
+// node to make room for it.
 function renderMathRegions(zoneGroups) {
-  const boxes = computeZoneBoxes(zoneGroups).filter(Boolean);
-  return boxes
-    .map(
-      (box) => `
-        <rect x="${box.x0.toFixed(1)}" y="${box.y0.toFixed(1)}" width="${(box.x1 - box.x0).toFixed(1)}" height="${(box.y1 - box.y0).toFixed(1)}"
-          rx="46" fill="${box.zone.fill}" opacity="0.92" stroke="rgba(20, 15, 35, 0.35)" stroke-width="4" />
-        ${renderZoneDecorations(box)}
-      `
-    )
+  const islands = zoneGroups
+    .map(({ zone, points }, i) => {
+      if (!points.length) return "";
+      const xs = points.map((p) => p.x);
+      const ys = points.map((p) => p.y);
+      const bbox = { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+      return renderIsland(bbox, zone.fill, i + 1);
+    })
+    .join("");
+  const bossBbox = { x0: BOSS_POS.x - 220, x1: BOSS_POS.x + 220, y0: BOSS_POS.y - 180, y1: BOSS_POS.y + 140 };
+  return islands + renderIsland(bossBbox, BOSS_FILL, 99);
+}
+
+// Each zone's own nodes get connected in the same order they were placed
+// (row by row through that zone's own grid) — a path winding through
+// just that zone's own lessons, not one radiating from the world's
+// shared CENTER (which would cut across other zones' own territories
+// here, unlike Wordwood Isle's round island where every zone fans out
+// from that same center anyway).
+function renderMathTrails(zoneGroups) {
+  return zoneGroups
+    .map(({ points }) => {
+      if (points.length < 2) return "";
+      const d = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+      return `<path d="${d}" stroke="#5c4a3a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />`;
+    })
     .join("");
 }
 
@@ -203,7 +318,8 @@ function renderBossMarker(boss, bossStateClass, subject) {
 }
 
 export function renderMathHub(root, navigate, subject) {
-  const layout = buildLayout(subject);
+  const territories = computeTerritories(subject);
+  const layout = buildLayout(territories);
 
   const allMastered = subject.skills.every((skill) => gameState.isMastered(skill.id));
   const bossCleared = gameState.isBossCleared(subject.id);
@@ -212,10 +328,10 @@ export function renderMathHub(root, navigate, subject) {
 
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
-      "Numeria Peaks, a long jagged mountain ridge with four separate, solid-colored regions — algebra, geometry, functions, and number & stats — each with its own trail of math skills, plus a dark path south to the boss lair",
+      "Numeria Peaks, an archipelago of separate mountainous islands floating in open water — algebra, geometry, functions, and number & stats — each with its own trail of math skills, plus a dark path south to the boss's own island",
     landmass: renderMathLandmass,
     regionShapes: renderMathRegions,
-    skipDecoration: () => true,
+    trails: renderMathTrails,
   });
 
   root.innerHTML = `
@@ -223,7 +339,7 @@ export function renderMathHub(root, navigate, subject) {
     <main class="screen island-screen hub-island-screen ridge-scene" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
-      <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD along the ridge — every trail leads to a skill</p>
+      <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD across the islands — every trail leads to a skill</p>
       <div class="hub-viewport" id="hubViewport">
         <button class="hub-fullscreen-btn" id="hubFullscreenBtn" type="button" aria-label="Enter fullscreen">⛶</button>
         <div class="hub-world" id="hubWorld" style="width:${WORLD_W}px;height:${WORLD_H}px;">

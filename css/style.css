@@ -618,15 +618,19 @@ input[type="password"] {
 }
 
 /* Numeria Peaks (ACT Math's own hub, mathHub.js) — the same "wide
-   painted scene behind a walkable hub" idea as .ocean-scene above, just
-   a hazy purple-gray mountain sky instead of open water, tying back to
-   Math's own #6a5cff brand purple rather than reusing English's blue. */
+   painted scene behind a walkable hub" idea as .ocean-scene above.
+   mathHub.js's own SVG paints open water full-bleed behind its
+   archipelago of islands, so this outer gradient (only ever visible
+   past the map's own max-width on an unusually wide screen, or for an
+   instant before that SVG paints) is tuned to the same blue-teal ocean
+   family rather than English's own exact colors, so the two edges never
+   visibly clash. */
 .ridge-scene {
-  background: radial-gradient(ellipse 90% 75% at 50% 38%, #ddd6ee 0%, #9086b8 48%, #453a6b 100%);
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #c9e2e6 0%, #5f8fa8 48%, #28405c 100%);
 }
 
 :root[data-theme="dark"] .ridge-scene {
-  background: radial-gradient(ellipse 90% 75% at 50% 38%, #372f52 0%, #251f3d 48%, #0d0a17 100%);
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #2c4652 0%, #182c38 48%, #060d13 100%);
 }
 
 .ridge-scene > * {
@@ -637,21 +641,21 @@ input[type="password"] {
 .ridge-scene .back-btn,
 .ridge-scene .map-subtitle,
 .ridge-scene .island-heading-blurb {
-  color: rgba(30, 22, 48, 0.72);
+  color: rgba(15, 32, 40, 0.72);
 }
 
 .ridge-scene .back-btn:hover {
-  color: rgba(30, 22, 48, 0.95);
+  color: rgba(15, 32, 40, 0.95);
 }
 
 :root[data-theme="dark"] .ridge-scene .back-btn,
 :root[data-theme="dark"] .ridge-scene .map-subtitle,
 :root[data-theme="dark"] .ridge-scene .island-heading-blurb {
-  color: rgba(230, 226, 242, 0.75);
+  color: rgba(222, 236, 240, 0.75);
 }
 
 :root[data-theme="dark"] .ridge-scene .back-btn:hover {
-  color: rgba(230, 226, 242, 0.95);
+  color: rgba(222, 236, 240, 0.95);
 }
 
 /* Centers a .node-area-blob on just the button, not the taller
@@ -1085,10 +1089,23 @@ input[type="password"] {
    relying on the parent showing through, since the Fullscreen API
    renders only this element and its descendants — the parent .screen,
    HUD, and heading all disappear from view while it's fullscreened. */
+/* max-width matches hubWorld.js's own WORLD_W (2200px) exactly. .hub-world
+   inside is a fixed WORLD_W-px-wide div that the camera pans by
+   translate() — wireMovement's own clamp keeps it from ever panning past
+   the world's true edges, so as long as this viewport is no *wider* than
+   the world itself, .hub-world always fully covers it and this element's
+   own background (below) never actually shows. Without the cap, a
+   browser window wider than 2200px stretches this viewport past
+   .hub-world's fixed width, exposing a bare strip of this element's own
+   background past the map's own right edge — margin:auto re-centers the
+   capped box so that strip (if any) splits evenly instead of landing
+   entirely on one side. */
 .hub-viewport {
   position: relative;
   overflow: hidden;
   width: 100%;
+  max-width: 2200px;
+  margin: 0 auto;
   border-radius: 22px;
   filter: drop-shadow(0 18px 32px rgba(30, 45, 40, 0.25));
   background: radial-gradient(ellipse 90% 75% at 50% 38%, #cfe3e6 0%, #6f9fae 48%, #2c4a5c 100%);
@@ -1122,7 +1139,7 @@ input[type="password"] {
 .hub-island-screen .hub-viewport {
   flex: 1 1 auto;
   min-height: 420px;
-  margin: 0;
+  margin: 0 auto;
 }
 
 /* A small always-present corner control — visible both in the normal
