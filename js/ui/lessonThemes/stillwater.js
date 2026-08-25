@@ -26,19 +26,13 @@ function renderStillPool(cx, cy, r) {
 // dawn mist that keeps the pale palette feeling atmospheric rather than
 // flat or washed out.
 function renderMist(totalHeight) {
-  const spots = [
-    { fx: 0.2, fy: 0.08, r: 130 },
-    { fx: 0.75, fy: 0.22, r: 100 },
-    { fx: 0.35, fy: 0.55, r: 150 },
-    { fx: 0.82, fy: 0.78, r: 110 },
-    { fx: 0.15, fy: 0.92, r: 120 },
-  ];
-  return spots
-    .map(
-      (s) =>
-        `<ellipse cx="${s.fx * COL_W}" cy="${s.fy * totalHeight}" rx="${s.r}" ry="${s.r * 0.45}" fill="#f3f6f0" opacity="0.28" />`
-    )
-    .join("");
+  const count = Math.max(5, Math.round(totalHeight / 480));
+  return Array.from({ length: count }, (_, i) => {
+    const fy = (i + 0.5) / count;
+    const fx = i % 2 === 0 ? 0.2 + (i % 3) * 0.05 : 0.75 - (i % 3) * 0.05;
+    const r = 100 + (i % 3) * 25;
+    return `<ellipse cx="${fx * COL_W}" cy="${fy * totalHeight}" rx="${r}" ry="${r * 0.45}" fill="#f3f6f0" opacity="0.28" />`;
+  }).join("");
 }
 
 // A soft dawn glow low in the sky at the top of the scene.
@@ -70,7 +64,9 @@ function renderBareTree(x, y, r) {
 
 function computeBareTrees(positions, totalHeight) {
   const mid = (BAND.min + BAND.max) / 2;
-  return [0.12, 0.5, 0.88].map((f, i) => {
+  const count = Math.max(3, Math.round(totalHeight / 500));
+  const fractions = Array.from({ length: count }, (_, i) => (i + 0.5) / count);
+  return fractions.map((f, i) => {
     const hy = f * totalHeight;
     const nearest = nearestPosition(positions, hy);
     const side = nearest.x < mid ? 1 : -1;
@@ -87,6 +83,20 @@ function renderReeds(x, y) {
   }).join("");
 }
 
+// A few reed clumps scattered independently of the one central pool, so
+// a long scroll isn't just three trees and nothing else for most of its
+// length.
+function computeReedClumps(positions, totalHeight) {
+  const mid = (BAND.min + BAND.max) / 2;
+  const count = Math.max(3, Math.round(totalHeight / 480));
+  return Array.from({ length: count }, (_, i) => {
+    const hy = ((i + 0.5) / count) * totalHeight;
+    const nearest = nearestPosition(positions, hy);
+    const side = i % 2 === 0 ? 1 : -1;
+    return { x: clamp(nearest.x + side * 70, BAND.min + 15, BAND.max - 15), y: hy };
+  });
+}
+
 // Unbroken, no dash pattern at all — the "full stop" pun. A deeper,
 // muted tone so it still reads clearly against the pale ground.
 function renderSolidTrail(positions) {
@@ -99,6 +109,9 @@ function renderScene(positions, totalHeight, bossName) {
   const trees = computeBareTrees(positions, totalHeight)
     .map((t) => renderBareTree(t.x, t.y, t.r))
     .join("");
+  const reeds = computeReedClumps(positions, totalHeight)
+    .map((r) => renderReeds(r.x, r.y))
+    .join("");
   const last = positions[positions.length - 1];
   const bossClearing = `<circle cx="${last.x}" cy="${last.y}" r="80" fill="#e9eee7" stroke="#8fa39c" stroke-width="4" />`;
 
@@ -109,8 +122,7 @@ function renderScene(positions, totalHeight, bossName) {
       ${renderDawnGlow()}
       ${renderStillPool(poolX, poolY, 150)}
       <g>${trees}</g>
-      ${renderReeds(poolX - 170, poolY + 90)}
-      ${renderReeds(poolX + 160, poolY - 60)}
+      <g>${reeds}</g>
       ${renderMist(totalHeight)}
       ${bossClearing}
       ${renderSolidTrail(positions)}

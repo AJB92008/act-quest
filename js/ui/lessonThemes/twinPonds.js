@@ -11,7 +11,9 @@ const BAND = { min: 60, max: COL_W - 60 };
 
 function computeTwinHills(positions, totalHeight) {
   const mid = (BAND.min + BAND.max) / 2;
-  return [0.28, 0.66].flatMap((f, i) => {
+  const count = Math.max(2, Math.round(totalHeight / 700));
+  const fractions = Array.from({ length: count }, (_, i) => (i + 0.5) / count);
+  return fractions.flatMap((f, i) => {
     const hy = f * totalHeight;
     const nearest = nearestPosition(positions, hy);
     const side = nearest.x < mid ? 1 : -1;
@@ -34,14 +36,17 @@ function renderHill({ x, y, r }) {
 
 function computeTwinPonds(positions, totalHeight) {
   const mid = (BAND.min + BAND.max) / 2;
-  const hy = 0.46 * totalHeight;
-  const nearest = nearestPosition(positions, hy);
-  const side = nearest.x < mid ? 1 : -1;
-  const baseX = mid + side * (BAND.max - BAND.min) * 0.32;
-  return [
-    { x: clamp(baseX - 46, BAND.min + 30, BAND.max - 30), y: hy },
-    { x: clamp(baseX + 46, BAND.min + 30, BAND.max - 30), y: hy + 18 },
-  ];
+  const count = Math.max(1, Math.round(totalHeight / 900));
+  return Array.from({ length: count }, (_, i) => (i + 0.5) / count).flatMap((f) => {
+    const hy = f * totalHeight;
+    const nearest = nearestPosition(positions, hy);
+    const side = nearest.x < mid ? 1 : -1;
+    const baseX = mid + side * (BAND.max - BAND.min) * 0.32;
+    return [
+      { x: clamp(baseX - 46, BAND.min + 30, BAND.max - 30), y: hy },
+      { x: clamp(baseX + 46, BAND.min + 30, BAND.max - 30), y: hy + 18 },
+    ];
+  });
 }
 
 function renderPond({ x, y }) {

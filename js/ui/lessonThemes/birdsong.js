@@ -18,7 +18,9 @@ function renderBellTower(x, y) {
 
 function computeHills(positions, totalHeight) {
   const mid = (BAND.min + BAND.max) / 2;
-  return [0.24, 0.7].map((f, i) => {
+  const count = Math.max(2, Math.round(totalHeight / 650));
+  const fractions = Array.from({ length: count }, (_, i) => (i + 0.5) / count);
+  return fractions.map((f, i) => {
     const hy = f * totalHeight;
     const nearest = nearestPosition(positions, hy);
     const side = nearest.x < mid ? 1 : -1;

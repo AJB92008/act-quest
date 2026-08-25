@@ -40,16 +40,41 @@ function renderRange(pts, splitY) {
   `;
 }
 
+const ROCK_SHADES = [
+  ["#9c9280", "#7a7260"],
+  ["#8e8570", "#6c6450"],
+  ["#a89e88", "#867c66"],
+];
+
 function computeFoothillRocks(splitY) {
   return [0.18, 0.42, 0.68, 0.86].map((f, i) => ({
     x: f * COL_W,
     y: splitY - 6 - (i % 2) * 10,
-    r: 20 + (i % 3) * 6,
+    r: 16 + (i % 3) * 8,
+    seed: i * 2.9,
+    shade: i % ROCK_SHADES.length,
   }));
 }
 
-function renderFoothillRock({ x, y, r }) {
-  return `<path d="M${x - r},${y} L${x - r * 0.4},${y - r} L${x + r * 0.5},${y - r * 0.7} L${x + r},${y} Z" fill="#9c9280" stroke="#7a7260" stroke-width="2" />`;
+function renderFoothillRock({ x, y, r, seed, shade }) {
+  const [fill, stroke] = ROCK_SHADES[shade];
+  const j = (n) => Math.sin(seed * 6.1 + n * 2.7) * r * 0.15;
+  return `<path d="M${x - r + j(1)},${y + j(2)} L${x - r * 0.4 + j(3)},${y - r + j(4)} L${x + r * 0.5 + j(5)},${y - r * 0.7 + j(6)} L${x + r + j(7)},${y + j(8)} Z" fill="${fill}" stroke="${stroke}" stroke-width="2" />`;
+}
+
+// Goats and eagles scattered through the ENTIRE mountain zone (not just
+// near the split line) — otherwise a longer skill's mountain portion,
+// which can run much taller than the range silhouette itself, would be
+// mostly flat empty rock.
+const MOUNTAIN_EMOJI = ["🐐", "🦅"];
+
+function renderMountainWildlife(splitY) {
+  const count = Math.max(4, Math.round(splitY / 260));
+  return Array.from({ length: count }, (_, i) => {
+    const y = ((i + 0.5) / count) * (splitY - 40) + 20;
+    const x = ((i * 137) % (COL_W - 100)) + 50;
+    return `<text x="${x}" y="${y}" font-size="22" text-anchor="middle" opacity="0.9">${MOUNTAIN_EMOJI[i % MOUNTAIN_EMOJI.length]}</text>`;
+  }).join("");
 }
 
 const PLAIN_EMOJI = ["🌼", "🦋", "🌿"];
@@ -79,6 +104,7 @@ function renderScene(positions, totalHeight, bossName) {
       <rect x="0" y="${splitY}" width="${COL_W}" height="${totalHeight - splitY}" fill="#c3dd8f" />
       ${renderRange(rangePts, splitY)}
       <g>${foothillRocks}</g>
+      <g>${renderMountainWildlife(splitY)}</g>
       ${bossClearing}
       <path d="${renderTrailPath(positions)}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />
       <g>${renderPlainDecorations(positions, splitY)}</g>
