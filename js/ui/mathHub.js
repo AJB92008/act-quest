@@ -209,45 +209,67 @@ const SAND = "#ecdfb8";
 
 // An organic outline around a rectangle: at each of `n` angles around the
 // rect's own center, the base radius is however far that angle's ray
-// reaches the rect's edge *plus* `pad`, then bulges further outward by a
-// random 0-30% (seeded, so it's fixed per island, not re-randomized every
-// render) — never inward. That one-directional bulge is what guarantees
-// the padded rectangle stays fully enclosed no matter how the jitter
-// lands, while still tracing an uneven, rounded, "hand-drawn landmass"
-// silhouette instead of a crisp box — closedBlobPath (lessonTerrain.js)
-// then threads a smooth curve through those points instead of straight
+// *actually* reaches the rect's own edge (not an ellipse's approximation
+// of it — an ellipse inscribed at halfW/halfH pinches in well short of
+// the rect's own corners on a diagonal ray, which is exactly the "corner
+// node ends up outside the shoreline" failure mode this rewrite closes)
+// — *plus* `pad`, then bulges the pad portion further outward by a
+// random 0-30% (seeded, so it's fixed per island, not re-randomized
+// every render) — never inward. Since the base term always exactly
+// touches the rect's boundary (pad=0 would trace the rect itself, corners
+// included) and pad only ever adds to that, the padded rect stays fully
+// enclosed no matter how small pad gets or how the jitter lands, while
+// still tracing an uneven, rounded, "hand-drawn landmass" silhouette
+// instead of a crisp box — closedBlobPath (lessonTerrain.js) then
+// threads a smooth curve through those points instead of straight
 // segments between them.
 //
 // `pad` is either one number (same padding on every side) or a
-// `{left,right,top,bottom}` object — each of the 16 angles picks its
-// pad from whichever side its own direction points toward, switching
-// exactly at the axis crossings where that side's contribution to the
-// point's position is already ~0, so the outline stays visually
-// continuous. The per-side form is what lets renderMathRegions shrink
-// only the side of an island that actually faces a close neighbor,
-// instead of shrinking the whole island just to keep one edge clear.
-// The bulge multiplies only the *pad* portion of each ray, not the tight
-// box's own half-extent — so a point's max distance beyond the tight
-// bbox edge is a predictable `pad * 1.3`, never `(halfExtent + pad) *
-// 1.3`. That predictability is what renderMathRegions' safeShorePad
-// relies on: without it, a big zone (large halfWBase) bulging by 30% on
-// its *own* extent alone could eat well into a neighbor's gutter even
-// with pad clamped to near zero, since the bulge would still be scaling
-// a large base number, not just the small pad.
-function organicIslandPoints(bbox, pad, seed, n = 16) {
+// `{left,right,top,bottom}` object — each of the 16 angles picks its pad
+// from whichever edge its own ray actually exits through (left/right for
+// a ray that hits a vertical edge, top/bottom for one that hits a
+// horizontal edge), which is also exactly where the two switch
+// continuously: right at the rect's own corner, where both edges are
+// the same distance away. The per-side form is what lets
+// renderMathRegions shrink only the side of an island that actually
+// faces a close neighbor, instead of shrinking the whole island just to
+// keep one edge clear. The bulge multiplies only the *pad* portion of
+// each ray, not the rect-edge distance itself — so a point's max
+// distance beyond the rect's own edge is a predictable `pad * 1.3`,
+// never more. That predictability is what renderMathRegions'
+// safeShorePad relies on to guarantee a minimum gap to a neighbor.
+function organicIslandPoints(bbox, pad, seed, n = 48) {
   const cx = (bbox.x0 + bbox.x1) / 2;
   const cy = (bbox.y0 + bbox.y1) / 2;
   const p = typeof pad === "number" ? { left: pad, right: pad, top: pad, bottom: pad } : pad;
-  const halfWBase = (bbox.x1 - bbox.x0) / 2;
-  const halfHBase = (bbox.y1 - bbox.y0) / 2;
+  // Floored, not raw: a single-column (or single-row) zone's tight bbox
+  // is exactly zero wide (or tall) — with a true zero, `tx` (below)
+  // collapses to ~0 at every angle except the one sample that lands
+  // exactly on the vertical, producing one huge spike surrounded by
+  // near-zero neighbors that the spline through all 48 points can't
+  // hug (it rounds the isolated spike back down toward its short
+  // neighbors, undershooting the node that spike was supposed to
+  // cover). Flooring keeps neighboring angles' radii close enough to
+  // the spike's that the curve stays smooth and actually encloses it;
+  // 50px is arbitrary but far below any real multi-node zone's own
+  // half-extent, so normal zones are unaffected.
+  const halfW = Math.max(50, (bbox.x1 - bbox.x0) / 2);
+  const halfH = Math.max(50, (bbox.y1 - bbox.y0) / 2);
   return Array.from({ length: n }, (_, i) => {
     const angle = (i / n) * Math.PI * 2;
     const dirX = Math.cos(angle);
     const dirY = Math.sin(angle);
-    const padX = dirX >= 0 ? p.right : p.left;
-    const padY = dirY >= 0 ? p.bottom : p.top;
+    // Distance from center to the rect's own edge along this ray: the
+    // smaller of "distance to a vertical edge" and "distance to a
+    // horizontal edge" — whichever the ray actually reaches first.
+    const tx = dirX !== 0 ? halfW / Math.abs(dirX) : Infinity;
+    const ty = dirY !== 0 ? halfH / Math.abs(dirY) : Infinity;
+    const hitsVerticalEdge = tx <= ty;
+    const rectR = hitsVerticalEdge ? tx : ty;
+    const padSide = hitsVerticalEdge ? (dirX >= 0 ? p.right : p.left) : dirY >= 0 ? p.bottom : p.top;
     const bulge = 1 + pseudoRandom(seed * 31 + i) * 0.3;
-    return { x: cx + dirX * halfWBase + dirX * padX * bulge, y: cy + dirY * halfHBase + dirY * padY * bulge };
+    const r = rectR + padSide * bulge;
+    return { x: cx + dirX * r, y: cy + dirY * r };
   });
 }
 
@@ -594,6 +616,33 @@ function safeShorePad(gap) {
   return Math.max(MIN_SHORE_PAD, Math.min(DEFAULT_SHORE_PAD, (gap / 2 - WATER_GUTTER) / MAX_BULGE));
 }
 
+// A narrow strip of the exact same sand as every shoreline, connecting
+// two islands straight across their own water gap — just a filled quad,
+// no organic outline of its own. Same SAND fill as every shoreline means
+// buildIslandPolygons (renderMathHub) picks these up automatically as
+// more walkable ground, with zero changes needed to the walkability code
+// itself: once islands stopped overlapping (see safeShorePad above),
+// walking could no longer cross between them at all, since a topic
+// zone's own click-to-navigate marker still works from anywhere but
+// walking there in-character couldn't — these causeways are what
+// restore on-foot travel while keeping "the monster can't walk into
+// open water" literally true everywhere else.
+function renderCauseway(ax, ay, bx, by, width = 56) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = (-dy / len) * (width / 2);
+  const ny = (dx / len) * (width / 2);
+  const d = [
+    `M${(ax + nx).toFixed(1)},${(ay + ny).toFixed(1)}`,
+    `L${(bx + nx).toFixed(1)},${(by + ny).toFixed(1)}`,
+    `L${(bx - nx).toFixed(1)},${(by - ny).toFixed(1)}`,
+    `L${(ax - nx).toFixed(1)},${(ay - ny).toFixed(1)}`,
+    "Z",
+  ].join(" ");
+  return `<path d="${d}" fill="${SAND}" />`;
+}
+
 // Each island is drawn tightly around that zone's *actual* placed nodes
 // (hubWorld.js's own `zoneGroups`, not this file's wider territory
 // columns from computeTerritories) — node positions are already inset
@@ -624,6 +673,26 @@ function renderMathRegions(zoneGroups) {
   });
   const bossPadTop = safeShorePad(Math.min(...boxes.filter(Boolean).map((b) => bossBbox.y0 - b.y1)));
 
+  // One causeway per adjacent topic-island pair, plus one down to
+  // whichever topic island sits horizontally closest to the boss's own
+  // island — every topic zone shares the same tight-bbox vertical center
+  // (they all grid their nodes inside the same TOP_BAND, regardless of
+  // row count), so `box.x1, box.cy` sits exactly at that island's own
+  // widest point, guaranteeing the causeway starts on solid ground
+  // rather than clipping past its shoreline.
+  const presentBoxes = boxes.filter(Boolean);
+  const causewaysMarkup = [
+    ...presentBoxes.slice(0, -1).map((box, i) => renderCauseway(box.x1, box.cy, presentBoxes[i + 1].x0, presentBoxes[i + 1].cy)),
+    ...(presentBoxes.length
+      ? [
+          (() => {
+            const nearest = presentBoxes.reduce((best, b) => (Math.abs(b.cx - BOSS_POS.x) < Math.abs(best.cx - BOSS_POS.x) ? b : best));
+            return renderCauseway(nearest.cx, nearest.y1, BOSS_POS.x, bossBbox.y0);
+          })(),
+        ]
+      : []),
+  ].join("");
+
   const water = renderWaterScenery(boxes.filter(Boolean));
   const islands = zoneGroups
     .map(({ zone }, i) => {
@@ -638,7 +707,7 @@ function renderMathRegions(zoneGroups) {
   const bossIsland =
     renderIsland(bossBbox, BOSS_FILL, 99, { left: DEFAULT_SHORE_PAD, right: DEFAULT_SHORE_PAD, top: bossPadTop, bottom: DEFAULT_SHORE_PAD }) +
     renderWatchtower(bossBbox.x0 + 55, (bossBbox.y0 + bossBbox.y1) / 2 + 20);
-  return water + islands + bossIsland;
+  return water + causewaysMarkup + islands + bossIsland;
 }
 
 // Each zone's own nodes get connected in the same order they were placed
