@@ -41,9 +41,19 @@
 // and Sound-Alike Showdown flips the coastal balance entirely — open
 // water dominates, with matching cliffs (and mountain peaks cresting
 // above them) on both the left and right edges, sound-wave arcs echoing
-// between them. Add a new skill here (plus one line in skillPath.js's
-// dispatch) rather than writing a whole new file — that's the point of
-// the shared engine.
+// between them. The dock zone: Bridge Builder gets sandy plains crossed
+// again and again by dry gullies spanned with built plank bridges
+// (transitions between ideas, one deliberate crossing at a time); Big
+// Picture Builder gets a sandy mountain valley with built overlook
+// platforms recurring up both walls (seeing the whole structure at
+// once); Trim the Fat gets a stark, bleached desert with pruned cacti
+// and almost nothing else (concision — everything unnecessary cut
+// away); and Tone Tuner gets a dune desert whose light and dune color
+// shift once from warm sunrise gold to cool dusk purple down its whole
+// length, with a tuning dial recurring along the trail (matching tone
+// consistently, retuned deliberately rather than at random). Add a new
+// skill here (plus one line in skillPath.js's dispatch) rather than
+// writing a whole new file — that's the point of the shared engine.
 import { renderLessonTerrainPath } from "./lessonTerrain.js";
 import { plainsTheme } from "./lessonThemes/plains.js";
 import { jungleTheme } from "./lessonThemes/jungle.js";
@@ -66,6 +76,10 @@ import { strataPeaksTheme } from "./lessonThemes/strataPeaks.js";
 import { seaStacksTheme } from "./lessonThemes/seaStacks.js";
 import { twinCliffsTheme } from "./lessonThemes/twinCliffs.js";
 import { echoBayTheme } from "./lessonThemes/echoBay.js";
+import { causewayTheme } from "./lessonThemes/causeway.js";
+import { vistaPeakTheme } from "./lessonThemes/vistaPeak.js";
+import { barrensTheme } from "./lessonThemes/barrens.js";
+import { duneShiftTheme } from "./lessonThemes/duneShift.js";
 
 export const LESSON_THEMES = {
   "en-idioms": plainsTheme,
@@ -89,6 +103,10 @@ export const LESSON_THEMES = {
   "en-svagreement": seaStacksTheme,
   "en-comparisons": twinCliffsTheme,
   "en-wordchoice": echoBayTheme,
+  "en-transitions": causewayTheme,
+  "en-macrologic": vistaPeakTheme,
+  "en-concision": barrensTheme,
+  "en-tone": duneShiftTheme,
 };
 
 export function renderThemedLessonPath(root, navigate, params) {
