@@ -11,6 +11,7 @@ import { monsterSVG } from "./monster.js";
 import { pathPositions, pathHeight, renderPathSvg, renderDecorations, glowVars } from "./pathTrail.js";
 import { getSubjectTheme } from "./subjectTheme.js";
 import { renderEnglishHub } from "./islandHub.js";
+import { renderMathHub } from "./mathHub.js";
 
 const ROW_HEIGHT = 148;
 
@@ -31,6 +32,15 @@ export function renderIsland(root, navigate, { subjectId }) {
   // than threading isHubIsland conditionals through this whole function.
   if (subjectId === "english") {
     renderEnglishHub(root, navigate, subject);
+    return;
+  }
+
+  // ACT Math gets the same walkable-hub treatment as English (see
+  // mathHub.js's own header comment), just with a distinct elongated
+  // ridge shape and zones grouped by math topic instead of English's
+  // positional quadrants.
+  if (subjectId === "math") {
+    renderMathHub(root, navigate, subject);
     return;
   }
 

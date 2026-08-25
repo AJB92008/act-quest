@@ -617,6 +617,43 @@ input[type="password"] {
   color: rgba(226, 238, 242, 0.95);
 }
 
+/* Numeria Peaks (ACT Math's own hub, mathHub.js) — the same "wide
+   painted scene behind a walkable hub" idea as .ocean-scene above, just
+   a hazy purple-gray mountain sky instead of open water, tying back to
+   Math's own #6a5cff brand purple rather than reusing English's blue. */
+.ridge-scene {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #ddd6ee 0%, #9086b8 48%, #453a6b 100%);
+}
+
+:root[data-theme="dark"] .ridge-scene {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #372f52 0%, #251f3d 48%, #0d0a17 100%);
+}
+
+.ridge-scene > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ridge-scene .back-btn,
+.ridge-scene .map-subtitle,
+.ridge-scene .island-heading-blurb {
+  color: rgba(30, 22, 48, 0.72);
+}
+
+.ridge-scene .back-btn:hover {
+  color: rgba(30, 22, 48, 0.95);
+}
+
+:root[data-theme="dark"] .ridge-scene .back-btn,
+:root[data-theme="dark"] .ridge-scene .map-subtitle,
+:root[data-theme="dark"] .ridge-scene .island-heading-blurb {
+  color: rgba(230, 226, 242, 0.75);
+}
+
+:root[data-theme="dark"] .ridge-scene .back-btn:hover {
+  color: rgba(230, 226, 242, 0.95);
+}
+
 /* Centers a .node-area-blob on just the button, not the taller
    .map-node-wrap/.path-node-wrap column it sits in (which also includes
    the label below) — without this, the blob's 50%/50% centering resolves

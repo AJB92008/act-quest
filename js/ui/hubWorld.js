@@ -83,20 +83,33 @@ export function computeZoneLayout(items, zones) {
 // screen that also has its own landmark sitting there (Wordwood Isle's
 // Vocabulary Builder); `skipDecoration(zone, emoji)` (optional) omits one
 // decoration from the SVG because the caller is rendering it separately
-// as a real clickable element instead (Wordwood Isle's goat).
-export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecoration } = {}) {
+// as a real clickable element instead (Wordwood Isle's goat); `landmass`
+// (optional) is a zero-arg callback returning the SVG markup for the
+// island's own shape/shadow, for a hub whose land shouldn't look like
+// Wordwood Isle's own rounded-rect coastline (see mathHub.js's jagged
+// ridge) — defaults to that same rounded-rect when omitted; `regionShapes`
+// (optional) is a callback taking the computed `zoneGroups` and returning
+// its own SVG markup for each zone's tinted region, for a hub whose zones
+// shouldn't overlap the way Wordwood Isle's four soft translucent
+// ellipses deliberately do (see mathHub.js's own non-overlapping, solid-
+// fill regions) — defaults to that same ellipse blend when omitted. Both
+// default to their exact prior behavior, so every existing caller renders
+// unchanged.
+export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecoration, landmass, regionShapes } = {}) {
   const zones = [...new Set(layout.map((p) => p.zone))];
   const zoneGroups = zones.map((zone) => ({ zone, points: layout.filter((p) => p.zone === zone) }));
 
-  const regionShapes = zoneGroups
-    .map(({ zone, points }) => {
-      if (!points.length) return "";
-      const { avgX, avgY } = zoneCenter(points);
-      const angle = (Math.atan2(zone.dir.y, zone.dir.x) * 180) / Math.PI;
-      const spread = 210 + points.length * 95;
-      return `<ellipse cx="${avgX}" cy="${avgY}" rx="${spread}" ry="${spread * 0.6}" fill="${zone.fill}" opacity="0.55" transform="rotate(${angle} ${avgX} ${avgY})" />`;
-    })
-    .join("");
+  const regionShapesMarkup = regionShapes
+    ? regionShapes(zoneGroups)
+    : zoneGroups
+        .map(({ zone, points }) => {
+          if (!points.length) return "";
+          const { avgX, avgY } = zoneCenter(points);
+          const angle = (Math.atan2(zone.dir.y, zone.dir.x) * 180) / Math.PI;
+          const spread = 210 + points.length * 95;
+          return `<ellipse cx="${avgX}" cy="${avgY}" rx="${spread}" ry="${spread * 0.6}" fill="${zone.fill}" opacity="0.55" transform="rotate(${angle} ${avgX} ${avgY})" />`;
+        })
+        .join("");
 
   const trails = zoneGroups
     .map(({ points }) => {
@@ -127,8 +140,16 @@ export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecorati
     })
     .join("");
 
-  const landRx = WORLD_W / 2 - WALK_MARGIN + 60;
-  const landRy = WORLD_H / 2 - WALK_MARGIN + 60;
+  const landmassMarkup = landmass
+    ? landmass()
+    : (() => {
+        const landRx = WORLD_W / 2 - WALK_MARGIN + 60;
+        const landRy = WORLD_H / 2 - WALK_MARGIN + 60;
+        return `
+          <rect x="${CENTER.x - landRx}" y="${CENTER.y - landRy + 26}" width="${landRx * 2}" height="${landRy * 2}" rx="340" fill="rgba(20,45,55,0.16)" />
+          <rect x="${CENTER.x - landRx}" y="${CENTER.y - landRy}" width="${landRx * 2}" height="${landRy * 2}" rx="340" fill="#e3c98f" stroke="#c9a668" stroke-width="6" />
+        `;
+      })();
 
   // The one dark, deliberately plain path to the boss spot — no zigzag,
   // no dock stub, a different color and dash than every other trail so
@@ -141,9 +162,8 @@ export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecorati
 
   return `
     <svg viewBox="0 0 ${WORLD_W} ${WORLD_H}" xmlns="http://www.w3.org/2000/svg" class="hub-scene-svg" role="img" aria-label="${ariaLabel}">
-      <rect x="${CENTER.x - landRx}" y="${CENTER.y - landRy + 26}" width="${landRx * 2}" height="${landRy * 2}" rx="340" fill="rgba(20,45,55,0.16)" />
-      <rect x="${CENTER.x - landRx}" y="${CENTER.y - landRy}" width="${landRx * 2}" height="${landRy * 2}" rx="340" fill="#e3c98f" stroke="#c9a668" stroke-width="6" />
-      <g>${regionShapes}</g>
+      ${landmassMarkup}
+      <g>${regionShapesMarkup}</g>
       ${clearing}
       ${bossLair}
       <g>${trails}</g>
