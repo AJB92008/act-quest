@@ -252,7 +252,15 @@ function organicIslandPoints(bbox, pad, seed, n = 48) {
   // cover). Flooring keeps neighboring angles' radii close enough to
   // the spike's that the curve stays smooth and actually encloses it;
   // 50px is arbitrary but far below any real multi-node zone's own
-  // half-extent, so normal zones are unaffected.
+  // half-extent, so normal zones are unaffected. Coupling to flag if a
+  // zone ever gets narrow enough to hit this floor for real:
+  // renderMathRegions' safeShorePad sizes each side's pad off the *raw*
+  // box.x0/x1/y0/y1 gap to a neighbor, not off this floored half-extent
+  // — so a zone whose true half-extent is well under 50px would render
+  // wider than safeShorePad accounted for, reopening the overlap this
+  // whole file exists to prevent. Harmless today (verified 0 overlap
+  // with real data), but if that ever changes, the fix is to run gap
+  // math off `Math.max(50, ...)` too, not just this radius formula.
   const halfW = Math.max(50, (bbox.x1 - bbox.x0) / 2);
   const halfH = Math.max(50, (bbox.y1 - bbox.y0) / 2);
   return Array.from({ length: n }, (_, i) => {
