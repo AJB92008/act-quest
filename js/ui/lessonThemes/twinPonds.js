@@ -79,9 +79,13 @@ function renderScene(positions, totalHeight, bossName) {
   const hills = computeTwinHills(positions, totalHeight).map(renderHill).join("");
   const ponds = computeTwinPonds(positions, totalHeight).map(renderPond).join("");
   const last = positions[positions.length - 1];
+  // The primary clearing stays centered exactly on the boss marker
+  // (same convention every other theme uses) — a smaller "twin echo"
+  // ring peeking out from behind carries the pun instead of offsetting
+  // the marker's own clearing away from where the marker actually sits.
   const bossClearing = `
-    <circle cx="${last.x - 24}" cy="${last.y}" r="58" fill="#efe4cf" stroke="#c9a668" stroke-width="4" />
-    <circle cx="${last.x + 24}" cy="${last.y}" r="58" fill="#efe4cf" stroke="#c9a668" stroke-width="4" opacity="0.9" />
+    <circle cx="${last.x + 22}" cy="${last.y + 4}" r="40" fill="#efe4cf" stroke="#c9a668" stroke-width="3" opacity="0.55" />
+    <circle cx="${last.x}" cy="${last.y}" r="58" fill="#efe4cf" stroke="#c9a668" stroke-width="4" />
   `;
 
   return `
