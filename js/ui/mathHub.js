@@ -307,44 +307,152 @@ function renderWaterScenery(islandBoxes) {
   return out;
 }
 
-// One signature, hand-drawn landmark per topic island — a visual pun on
-// what that topic actually studies, sitting just below that island's own
-// bottom row of nodes (real open room there: the island's own shoreline
-// extends well past the tight node bbox — see renderIsland's own pad).
-function renderCairn(x, y) {
+// Each topic island now gets its own full biome instead of one single
+// landmark — a denser scatter of several *varied* hand-drawn pieces (a
+// couple of different shapes/colors per biome, each individually seeded
+// so no two instances match exactly) rather than one repeated icon,
+// following the same "no identical repeats" bar the rest of this app's
+// terrain art already holds itself to. `ringPositions` scatters that
+// many points in the open ring between an island's own tight node bbox
+// and its shoreline (see renderIsland's own pad) — outside the bbox at
+// every angle, so decorations never land on top of a node or its label.
+function ringPositions(bbox, count, seedBase, minPad = 55, maxPad = 90) {
+  const cx = (bbox.x0 + bbox.x1) / 2;
+  const cy = (bbox.y0 + bbox.y1) / 2;
+  const halfW = (bbox.x1 - bbox.x0) / 2;
+  const halfH = (bbox.y1 - bbox.y0) / 2;
+  return Array.from({ length: count }, (_, i) => {
+    const angle = (i / count) * Math.PI * 2 + (pseudoRandom(seedBase * 17 + i) - 0.5) * 0.9;
+    const pad = minPad + pseudoRandom(seedBase * 23 + i) * (maxPad - minPad);
+    return {
+      x: cx + Math.cos(angle) * (halfW + pad),
+      y: cy + Math.sin(angle) * (halfH + pad),
+      seed: seedBase * 31 + i + 1,
+    };
+  });
+}
+
+// Ironroot Algebra — a proper mountain area: several extra peak clusters
+// beyond the one every island already gets from renderMiniMountains,
+// scattered around the shoreline instead of confined to one range, plus
+// loose scree. Snow caps are seeded per-cluster (not every peak), and
+// height/width both vary, so no two clusters read as the same stamp.
+function renderPeakCluster(x, y, seed) {
+  const h = 32 + pseudoRandom(seed) * 24;
+  const w = 18 + pseudoRandom(seed + 1) * 12;
+  const snow = pseudoRandom(seed + 2) > 0.45;
   return `
-    <ellipse cx="${x}" cy="${y + 24}" rx="19" ry="6" fill="rgba(20,15,35,0.2)" />
-    <ellipse cx="${x}" cy="${y + 15}" rx="17" ry="9" fill="#8a6a52" stroke="#5c4632" stroke-width="1.5" />
-    <ellipse cx="${x + 2}" cy="${y}" rx="12" ry="7" fill="#9c7c62" stroke="#5c4632" stroke-width="1.5" />
-    <ellipse cx="${x - 1}" cy="${y - 13}" rx="8" ry="5" fill="#ac8c70" stroke="#5c4632" stroke-width="1.5" />
+    <ellipse cx="${x}" cy="${y + 3}" rx="${(w * 1.15).toFixed(1)}" ry="${(w * 0.3).toFixed(1)}" fill="rgba(20,15,35,0.18)" />
+    <path d="M${(x - w).toFixed(1)},${y} L${x},${(y - h).toFixed(1)} L${(x + w).toFixed(1)},${y} Z" fill="#8b81a8" />
+    <path d="M${(x - w * 0.5).toFixed(1)},${(y - h * 0.55).toFixed(1)} L${x},${(y - h).toFixed(1)} L${(x + w * 0.5).toFixed(1)},${(y - h * 0.55).toFixed(1)} L${(x + w * 0.28).toFixed(1)},${(y - h * 0.38).toFixed(1)} L${x},${(y - h * 0.72).toFixed(1)} L${(x - w * 0.28).toFixed(1)},${(y - h * 0.38).toFixed(1)} Z"
+      fill="${snow ? "#f0ecf8" : "#6f6690"}" opacity="${snow ? 0.9 : 0.5}" />
   `;
 }
 
-function renderCrystalCluster(x, y) {
+function renderScree(x, y, seed) {
+  const r = 5 + (seed % 3) * 2;
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="#7a7192" opacity="0.65" />`;
+}
+
+// Shalefoot Geometry — a village: a well as the one centerpiece, then
+// several houses with varied roof colors and a couple of body widths.
+function renderHouse(x, y, seed) {
+  const roof = ["#c94a3f", "#8a6a44", "#5a7a8f"][seed % 3];
+  const w = 22 + (seed % 3) * 4;
+  const h = 16;
   return `
-    <ellipse cx="${x}" cy="${y + 18}" rx="23" ry="7" fill="rgba(20,15,35,0.2)" />
-    <path d="M${x - 4},${y + 16} L${x - 14},${y - 4} L${x - 2},${y - 26} L${x + 9},${y - 6} Z" fill="#9fd6cf" stroke="#5a9a90" stroke-width="1.5" opacity="0.92" />
-    <path d="M${x + 8},${y + 16} L${x + 1},${y - 2} L${x + 13},${y - 18} L${x + 19},${y + 2} Z" fill="#c7ece5" stroke="#5a9a90" stroke-width="1.5" opacity="0.92" />
+    <ellipse cx="${x}" cy="${(y + h * 0.6).toFixed(1)}" rx="${(w * 0.7).toFixed(1)}" ry="5" fill="rgba(20,15,35,0.18)" />
+    <rect x="${(x - w / 2).toFixed(1)}" y="${(y - h * 0.1).toFixed(1)}" width="${w}" height="${h}" fill="#e8dcc0" stroke="#8a7a5c" stroke-width="1.5" />
+    <path d="M${(x - w / 2 - 4).toFixed(1)},${(y - h * 0.1).toFixed(1)} L${x},${(y - h * 0.9).toFixed(1)} L${(x + w / 2 + 4).toFixed(1)},${(y - h * 0.1).toFixed(1)} Z" fill="${roof}" stroke="#3a2a20" stroke-width="1.2" />
+    <rect x="${(x - 4).toFixed(1)}" y="${(y + h * 0.3).toFixed(1)}" width="8" height="${(h * 0.6).toFixed(1)}" fill="#4a3a2a" />
   `;
 }
 
-function renderStoneArch(x, y) {
+function renderWell(x, y) {
   return `
-    <ellipse cx="${x}" cy="${y + 20}" rx="29" ry="7" fill="rgba(20,15,35,0.2)" />
-    <path d="M${x - 23},${y + 18} Q${x - 23},${y - 25} ${x},${y - 29} Q${x + 23},${y - 25} ${x + 23},${y + 18}
-      L${x + 13},${y + 18} Q${x + 13},${y - 15} ${x},${y - 13} Q${x - 13},${y - 15} ${x - 13},${y + 18} Z"
-      fill="#a89ccb" stroke="#6b5f8f" stroke-width="1.5" />
+    <ellipse cx="${x}" cy="${y + 10}" rx="14" ry="5" fill="rgba(20,15,35,0.18)" />
+    <ellipse cx="${x}" cy="${y + 4}" rx="12" ry="6" fill="#8a8a8a" stroke="#5a5a5a" stroke-width="1.5" />
+    <ellipse cx="${x}" cy="${y + 2}" rx="8" ry="4" fill="#3a5a6a" />
+    <line x1="${x - 11}" y1="${y - 2}" x2="${x - 11}" y2="${y - 16}" stroke="#5c4632" stroke-width="2" />
+    <line x1="${x + 11}" y1="${y - 2}" x2="${x + 11}" y2="${y - 16}" stroke="#5c4632" stroke-width="2" />
+    <line x1="${x - 11}" y1="${y - 16}" x2="${x + 11}" y2="${y - 16}" stroke="#5c4632" stroke-width="2" />
   `;
 }
 
-function renderCoinPile(x, y) {
+// Skyline Functions — an enchanted forest: purple-canopied trees in a
+// couple of shapes (round and conical) and a small palette of purple
+// shades, each with one small glowing mote to sell "enchanted" rather
+// than just "purple."
+function renderPurpleTree(x, y, seed) {
+  const h = 32 + pseudoRandom(seed) * 22;
+  const canopy = ["#b39ddb", "#9575cd", "#7e57c2"][seed % 3];
+  const round = seed % 2 === 0;
+  const glowSide = seed % 2 === 0 ? 1 : -1;
   return `
-    <ellipse cx="${x}" cy="${y + 15}" rx="25" ry="8" fill="rgba(20,15,35,0.2)" />
-    <ellipse cx="${x - 10}" cy="${y + 9}" rx="10" ry="5" fill="#e8c96a" stroke="#a8823c" stroke-width="1.5" />
-    <ellipse cx="${x + 4}" cy="${y + 5}" rx="10" ry="5" fill="#f0d67e" stroke="#a8823c" stroke-width="1.5" />
-    <ellipse cx="${x - 3}" cy="${y - 3}" rx="10" ry="5" fill="#e8c96a" stroke="#a8823c" stroke-width="1.5" />
-    <ellipse cx="${x + 8}" cy="${y - 7}" rx="8" ry="4.5" fill="#f0d67e" stroke="#a8823c" stroke-width="1.5" />
+    <ellipse cx="${x}" cy="${(y + 4).toFixed(1)}" rx="${(h * 0.3).toFixed(1)}" ry="${(h * 0.1).toFixed(1)}" fill="rgba(20,15,35,0.18)" />
+    <rect x="${x - 3}" y="${(y - h * 0.5).toFixed(1)}" width="6" height="${(h * 0.5).toFixed(1)}" fill="#4a3a5c" />
+    ${
+      round
+        ? `<circle cx="${x}" cy="${(y - h * 0.65).toFixed(1)}" r="${(h * 0.32).toFixed(1)}" fill="${canopy}" opacity="0.92" />`
+        : `<path d="M${(x - h * 0.28).toFixed(1)},${(y - h * 0.45).toFixed(1)} L${x},${(y - h * 1.05).toFixed(1)} L${(x + h * 0.28).toFixed(1)},${(y - h * 0.45).toFixed(1)} Z" fill="${canopy}" opacity="0.92" />`
+    }
+    <circle cx="${x + glowSide * 6}" cy="${(y - h * 0.7).toFixed(1)}" r="2.5" fill="#ffe9ff" opacity="0.85" />
   `;
+}
+
+// Goldtally Flats — a desert: two cactus shapes (a saguaro with arms,
+// a round barrel cactus), plus a bare rock or two and a faint dune
+// ripple in the sand underfoot.
+function renderSaguaro(x, y, seed) {
+  const h = 28 + pseudoRandom(seed) * 18;
+  const flip = seed % 2 === 0 ? 1 : -1;
+  return `
+    <ellipse cx="${x}" cy="${y + 4}" rx="11" ry="4" fill="rgba(60,45,20,0.18)" />
+    <rect x="${x - 6}" y="${(y - h).toFixed(1)}" width="12" height="${h.toFixed(1)}" rx="5" fill="#6b8a5a" />
+    <rect x="${(x + flip * 4).toFixed(1)}" y="${(y - h * 0.6).toFixed(1)}" width="7" height="${(h * 0.32).toFixed(1)}" rx="3.5" fill="#6b8a5a" />
+    <rect x="${(x - flip * 4 - 7).toFixed(1)}" y="${(y - h * 0.45).toFixed(1)}" width="7" height="${(h * 0.28).toFixed(1)}" rx="3.5" fill="#5c7a4c" />
+  `;
+}
+
+function renderBarrelCactus(x, y, seed) {
+  const r = 11 + pseudoRandom(seed) * 5;
+  return `
+    <ellipse cx="${x}" cy="${(y + r * 0.3).toFixed(1)}" rx="${(r * 1.1).toFixed(1)}" ry="${(r * 0.35).toFixed(1)}" fill="rgba(60,45,20,0.16)" />
+    <ellipse cx="${x}" cy="${y}" rx="${r.toFixed(1)}" ry="${(r * 0.85).toFixed(1)}" fill="#7a9a5f" />
+    <ellipse cx="${(x - r * 0.3).toFixed(1)}" cy="${(y - r * 0.2).toFixed(1)}" rx="${(r * 0.35).toFixed(1)}" ry="${(r * 0.5).toFixed(1)}" fill="#8fae70" opacity="0.7" />
+  `;
+}
+
+function renderDesertRock(x, y, seed) {
+  const w = 15 + (seed % 3) * 4;
+  return `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${(w * 0.55).toFixed(1)}" fill="#a89060" stroke="#7a6540" stroke-width="1.5" />`;
+}
+
+const ISLAND_BIOMES = {
+  // A denser mountain range: renderMiniMountains already draws one
+  // cluster near the top of every island — these fill the rest of the
+  // ring with more, so Ironroot Algebra reads as *the* mountainous one.
+  algebra: (bbox, seedBase) =>
+    ringPositions(bbox, 6, seedBase)
+      .map((p, i) => (i % 3 !== 2 ? renderPeakCluster(p.x, p.y, p.seed) : renderScree(p.x, p.y, p.seed)))
+      .join(""),
+  geometry: (bbox, seedBase) =>
+    ringPositions(bbox, 6, seedBase)
+      .map((p, i) => (i === 0 ? renderWell(p.x, p.y) : renderHouse(p.x, p.y, p.seed)))
+      .join(""),
+  functions: (bbox, seedBase) =>
+    ringPositions(bbox, 7, seedBase)
+      .map((p) => renderPurpleTree(p.x, p.y, p.seed))
+      .join(""),
+  numstats: (bbox, seedBase) =>
+    ringPositions(bbox, 6, seedBase, 45, 80)
+      .map((p, i) => (i % 3 === 0 ? renderBarrelCactus(p.x, p.y, p.seed) : i % 3 === 1 ? renderSaguaro(p.x, p.y, p.seed) : renderDesertRock(p.x, p.y, p.seed)))
+      .join(""),
+};
+
+function renderIslandBiome(zoneId, bbox, seedBase) {
+  const renderer = ISLAND_BIOMES[zoneId];
+  return renderer ? renderer(bbox, seedBase) : "";
 }
 
 function renderWatchtower(x, y) {
@@ -354,19 +462,6 @@ function renderWatchtower(x, y) {
     <rect x="${x - 12}" y="${y - 28}" width="24" height="9" fill="#2a2438" stroke="#1f1a2b" stroke-width="1.5" />
     <circle cx="${x}" cy="${y - 36}" r="4.5" fill="#e8a860" opacity="0.9" />
   `;
-}
-
-const ISLAND_LANDMARKS = {
-  algebra: renderCairn,
-  geometry: renderCrystalCluster,
-  functions: renderStoneArch,
-  numstats: renderCoinPile,
-};
-
-function renderIslandLandmark(zoneId, bbox) {
-  const renderer = ISLAND_LANDMARKS[zoneId];
-  if (!renderer) return "";
-  return renderer((bbox.x0 + bbox.x1) / 2, bbox.y1 + 70);
 }
 
 // Each island is drawn tightly around that zone's *actual* placed nodes
@@ -393,7 +488,7 @@ function renderMathRegions(zoneGroups) {
     .map(({ zone }, i) => {
       const bbox = boxes[i];
       if (!bbox) return "";
-      return renderIsland(bbox, zone.fill, i + 1) + renderIslandLandmark(zone.id, bbox);
+      return renderIsland(bbox, zone.fill, i + 1) + renderIslandBiome(zone.id, bbox, i + 1);
     })
     .join("");
 
