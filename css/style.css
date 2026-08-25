@@ -1304,12 +1304,17 @@ input[type="password"] {
    percentages stay aligned at any screen size, same trick as the hub's
    own scene used before it grew into a full walkable world. No card
    framing of its own (no shadow/border) — it's meant to blend straight
-   into .lesson-map-area's ground color around it, not float above it. */
+   into .lesson-map-area's ground color around it, not float above it.
+   Deliberately no max-width here: capping this at the SVG's own design
+   width (680px) used to leave the wider .lesson-map-area's flat ground
+   color showing on both sides, reading as a narrower "card" boxed
+   inside the full-bleed strip behind it instead of one continuous
+   scene. Letting it fill 100% of .lesson-map-area and relying on
+   aspect-ratio to keep it proportioned means the terrain just renders
+   bigger (and the scene scrolls further) on a wide screen, not letterboxed. */
 .lesson-terrain-scene {
   position: relative;
   width: 100%;
-  max-width: 680px;
-  margin: 0 auto;
 }
 
 .lesson-terrain-svg {
