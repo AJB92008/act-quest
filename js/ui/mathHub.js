@@ -217,17 +217,37 @@ const SAND = "#ecdfb8";
 // silhouette instead of a crisp box — closedBlobPath (lessonTerrain.js)
 // then threads a smooth curve through those points instead of straight
 // segments between them.
+//
+// `pad` is either one number (same padding on every side) or a
+// `{left,right,top,bottom}` object — each of the 16 angles picks its
+// pad from whichever side its own direction points toward, switching
+// exactly at the axis crossings where that side's contribution to the
+// point's position is already ~0, so the outline stays visually
+// continuous. The per-side form is what lets renderMathRegions shrink
+// only the side of an island that actually faces a close neighbor,
+// instead of shrinking the whole island just to keep one edge clear.
+// The bulge multiplies only the *pad* portion of each ray, not the tight
+// box's own half-extent — so a point's max distance beyond the tight
+// bbox edge is a predictable `pad * 1.3`, never `(halfExtent + pad) *
+// 1.3`. That predictability is what renderMathRegions' safeShorePad
+// relies on: without it, a big zone (large halfWBase) bulging by 30% on
+// its *own* extent alone could eat well into a neighbor's gutter even
+// with pad clamped to near zero, since the bulge would still be scaling
+// a large base number, not just the small pad.
 function organicIslandPoints(bbox, pad, seed, n = 16) {
   const cx = (bbox.x0 + bbox.x1) / 2;
   const cy = (bbox.y0 + bbox.y1) / 2;
-  const halfW = (bbox.x1 - bbox.x0) / 2 + pad;
-  const halfH = (bbox.y1 - bbox.y0) / 2 + pad;
+  const p = typeof pad === "number" ? { left: pad, right: pad, top: pad, bottom: pad } : pad;
+  const halfWBase = (bbox.x1 - bbox.x0) / 2;
+  const halfHBase = (bbox.y1 - bbox.y0) / 2;
   return Array.from({ length: n }, (_, i) => {
     const angle = (i / n) * Math.PI * 2;
-    const ex = Math.cos(angle) * halfW;
-    const ey = Math.sin(angle) * halfH;
+    const dirX = Math.cos(angle);
+    const dirY = Math.sin(angle);
+    const padX = dirX >= 0 ? p.right : p.left;
+    const padY = dirY >= 0 ? p.bottom : p.top;
     const bulge = 1 + pseudoRandom(seed * 31 + i) * 0.3;
-    return { x: cx + ex * bulge, y: cy + ey * bulge };
+    return { x: cx + dirX * halfWBase + dirX * padX * bulge, y: cy + dirY * halfHBase + dirY * padY * bulge };
   });
 }
 
@@ -261,20 +281,46 @@ function renderMiniMountains(bbox, seed) {
   return `<path d="${top} ${base}" fill="#8b81a8" />${faces}`;
 }
 
+const DEFAULT_SHORE_PAD = 150;
+// The sand ring's own thickness: the interior (zone-color) pad always
+// sits this much inside whatever the outer (sand) pad is, on every side
+// — 95/150 (not, say, 58/105) started this at a flat 55, chosen so an
+// ellipse built from a rectangle's own half-width/half-height still
+// reaches that rectangle's own *corners* (a corner sits farther from
+// center than either semi-axis alone) — a grid's corner-most nodes sit
+// exactly at the tight bbox's corners, so the inner pad has to clear
+// that diagonal gap, not just the bbox's own straight half-extents, or a
+// corner node ends up painted onto the sand ring instead of its own
+// zone's color. Kept as a fixed offset (not a ratio) so a side that's
+// been shrunk down near MIN_SHORE_PAD still keeps a visible sliver of
+// sand instead of the interior swallowing it.
+const SHORE_RING_WIDTH = 55;
+function innerPadFor(outerPad) {
+  if (typeof outerPad === "number") return Math.max(20, outerPad - SHORE_RING_WIDTH);
+  return {
+    left: Math.max(20, outerPad.left - SHORE_RING_WIDTH),
+    right: Math.max(20, outerPad.right - SHORE_RING_WIDTH),
+    top: Math.max(20, outerPad.top - SHORE_RING_WIDTH),
+    bottom: Math.max(20, outerPad.bottom - SHORE_RING_WIDTH),
+  };
+}
+
 // One island: a lighter sand ring (the shoreline) under the zone's own
 // solid-colored interior, both traced through the same seeded angles so
 // the ring's width stays fairly even all the way around, plus a small
-// mountain range sitting on top of the interior fill.
-function renderIsland(bbox, fill, seed) {
-  // 95/150 (not, say, 58/105): an ellipse built from a rectangle's own
-  // half-width/half-height doesn't actually reach that rectangle's own
-  // *corners* (a corner sits farther from center than either semi-axis
-  // alone) — a grid's corner-most nodes sit exactly at the tight bbox's
-  // corners, so the inner pad has to clear that diagonal gap, not just
-  // the bbox's own straight half-extents, or a corner node ends up
-  // painted onto the sand ring instead of its own zone's color.
-  const outerPts = organicIslandPoints(bbox, 150, seed);
-  const innerPts = organicIslandPoints(bbox, 95, seed);
+// mountain range sitting on top of the interior fill. `outerPad` is
+// normally the flat default (150), but renderMathRegions passes a
+// shrunk, possibly per-side value for any island whose neighbor (another
+// topic island, or the boss's own island) sits close enough that the
+// default pad would otherwise reach past it — see renderMathRegions for
+// why that matters: the padded shoreline is also this file's own
+// walkable region (buildIslandPolygons samples exactly these sand
+// paths), so two islands' padding overlapping doesn't just look wrong,
+// it silently erases the water between them as a barrier to movement.
+function renderIsland(bbox, fill, seed, outerPad = DEFAULT_SHORE_PAD) {
+  const innerPad = innerPadFor(outerPad);
+  const outerPts = organicIslandPoints(bbox, outerPad, seed);
+  const innerPts = organicIslandPoints(bbox, innerPad, seed);
   return `
     <path d="${closedBlobPath(outerPts)}" fill="${SAND}" />
     <path d="${closedBlobPath(innerPts)}" fill="${fill}" />
@@ -461,31 +507,51 @@ function renderDesertRock(x, y, seed) {
   return `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${(w * 0.55).toFixed(1)}" fill="#a89060" stroke="#7a6540" stroke-width="1.5" />`;
 }
 
+// Each biome's own default ring (min, max) — unchanged from before — is
+// clamped against `ringCap` (renderMathRegions' own measure of how much
+// room actually exists before the *interior* fill gives way to sand on
+// this island's tightest side). On an island with plenty of clearance
+// ringCap is generous and every biome renders exactly as before; on one
+// squeezed by a close neighbor, the ring pulls in so decorations still
+// land on solid ground instead of scattering out past a shrunk shoreline
+// into open water.
 const ISLAND_BIOMES = {
   // A denser mountain range: renderMiniMountains already draws one
   // cluster near the top of every island — these fill the rest of the
   // ring with more, so Ironroot Algebra reads as *the* mountainous one.
-  algebra: (bbox, seedBase) =>
-    ringPositions(bbox, 6, seedBase)
+  algebra: (bbox, seedBase, ringCap) => {
+    const max = Math.min(90, ringCap);
+    const min = Math.min(55, max - 15);
+    return ringPositions(bbox, 6, seedBase, min, max)
       .map((p, i) => (i % 3 !== 2 ? renderPeakCluster(p.x, p.y, p.seed) : renderScree(p.x, p.y, p.seed)))
-      .join(""),
-  geometry: (bbox, seedBase) =>
-    ringPositions(bbox, 6, seedBase)
+      .join("");
+  },
+  geometry: (bbox, seedBase, ringCap) => {
+    const max = Math.min(90, ringCap);
+    const min = Math.min(55, max - 15);
+    return ringPositions(bbox, 6, seedBase, min, max)
       .map((p, i) => (i === 0 ? renderWell(p.x, p.y) : renderHouse(p.x, p.y, p.seed)))
-      .join(""),
-  functions: (bbox, seedBase) =>
-    ringPositions(bbox, 7, seedBase)
+      .join("");
+  },
+  functions: (bbox, seedBase, ringCap) => {
+    const max = Math.min(90, ringCap);
+    const min = Math.min(55, max - 15);
+    return ringPositions(bbox, 7, seedBase, min, max)
       .map((p) => renderPurpleTree(p.x, p.y, p.seed))
-      .join(""),
-  numstats: (bbox, seedBase) =>
-    ringPositions(bbox, 6, seedBase, 45, 80)
+      .join("");
+  },
+  numstats: (bbox, seedBase, ringCap) => {
+    const max = Math.min(80, ringCap);
+    const min = Math.min(45, max - 15);
+    return ringPositions(bbox, 6, seedBase, min, max)
       .map((p, i) => (i % 3 === 0 ? renderBarrelCactus(p.x, p.y, p.seed) : i % 3 === 1 ? renderSaguaro(p.x, p.y, p.seed) : renderDesertRock(p.x, p.y, p.seed)))
-      .join(""),
+      .join("");
+  },
 };
 
-function renderIslandBiome(zoneId, bbox, seedBase) {
+function renderIslandBiome(zoneId, bbox, seedBase, ringCap) {
   const renderer = ISLAND_BIOMES[zoneId];
-  return renderer ? renderer(bbox, seedBase) : "";
+  return renderer ? renderer(bbox, seedBase, ringCap) : "";
 }
 
 function renderWatchtower(x, y) {
@@ -495,6 +561,37 @@ function renderWatchtower(x, y) {
     <rect x="${x - 12}" y="${y - 28}" width="24" height="9" fill="#2a2438" stroke="#1f1a2b" stroke-width="1.5" />
     <circle cx="${x}" cy="${y - 36}" r="4.5" fill="#e8a860" opacity="0.9" />
   `;
+}
+
+// Every topic zone shares the same TOP_BAND y0/y1 (computeTerritories
+// only varies x0/x1 per zone), so the four topic islands are neighbors
+// left-to-right, and every one of them is also a neighbor of the boss's
+// own island sitting in BOSS_BAND below. GUTTER and each zone's own
+// gridPositions insetX/insetY already keep node clusters apart, but by
+// how much varies with skill count and column layout — squeeze the
+// default 150px shoreline pad down (per side, only on the side that
+// actually faces a neighbor) so the padded shoreline can never reach
+// past the halfway point to that neighbor's own tight node bbox. Without
+// this, two nearby islands' shorelines can overlap outright — which
+// doesn't just look wrong, it erases the water between them as a
+// walkable-region boundary too, since buildIslandPolygons (in
+// renderMathHub) samples these exact sand paths for movement.
+const WATER_GUTTER = 26;
+// A floor purely against a degenerate near-zero shoreline — much lower
+// than the old flat 45, on purpose: 45 was a *cosmetic* preference, and
+// letting it override the safety ceiling below (when a genuinely tight
+// gap makes 45 unsafe) is exactly the bug this whole file exists to
+// avoid. When the ceiling is between this floor and 45, the island's
+// shoreline is just a bit thinner on that one side — never overlapping.
+const MIN_SHORE_PAD = 20;
+// organicIslandPoints' own bulge can stretch a side's pad up to 1.3x —
+// divide by that here so the *worst-case* bulged point still clears
+// WATER_GUTTER of open water short of the neighbor's own tight bbox
+// edge, not just the unbulged pad value.
+const MAX_BULGE = 1.3;
+function safeShorePad(gap) {
+  if (gap == null) return DEFAULT_SHORE_PAD;
+  return Math.max(MIN_SHORE_PAD, Math.min(DEFAULT_SHORE_PAD, (gap / 2 - WATER_GUTTER) / MAX_BULGE));
 }
 
 // Each island is drawn tightly around that zone's *actual* placed nodes
@@ -516,17 +613,31 @@ function renderMathRegions(zoneGroups) {
     return { x0, x1, y0, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
   });
 
+  const bossBbox = { x0: BOSS_POS.x - 220, x1: BOSS_POS.x + 220, y0: BOSS_POS.y - 180, y1: BOSS_POS.y + 140 };
+
+  const pads = boxes.map((box, i) => {
+    if (!box) return DEFAULT_SHORE_PAD;
+    const leftGap = boxes[i - 1] ? box.x0 - boxes[i - 1].x1 : null;
+    const rightGap = boxes[i + 1] ? boxes[i + 1].x0 - box.x1 : null;
+    const bottomGap = bossBbox.y0 - box.y1;
+    return { left: safeShorePad(leftGap), right: safeShorePad(rightGap), top: DEFAULT_SHORE_PAD, bottom: safeShorePad(bottomGap) };
+  });
+  const bossPadTop = safeShorePad(Math.min(...boxes.filter(Boolean).map((b) => bossBbox.y0 - b.y1)));
+
   const water = renderWaterScenery(boxes.filter(Boolean));
   const islands = zoneGroups
     .map(({ zone }, i) => {
       const bbox = boxes[i];
       if (!bbox) return "";
-      return renderIsland(bbox, zone.fill, i + 1) + renderIslandBiome(zone.id, bbox, i + 1);
+      const innerPad = innerPadFor(pads[i]);
+      const ringCap = Math.max(25, Math.min(innerPad.left, innerPad.right, innerPad.top, innerPad.bottom) - 10);
+      return renderIsland(bbox, zone.fill, i + 1, pads[i]) + renderIslandBiome(zone.id, bbox, i + 1, ringCap);
     })
     .join("");
 
-  const bossBbox = { x0: BOSS_POS.x - 220, x1: BOSS_POS.x + 220, y0: BOSS_POS.y - 180, y1: BOSS_POS.y + 140 };
-  const bossIsland = renderIsland(bossBbox, BOSS_FILL, 99) + renderWatchtower(bossBbox.x0 + 55, (bossBbox.y0 + bossBbox.y1) / 2 + 20);
+  const bossIsland =
+    renderIsland(bossBbox, BOSS_FILL, 99, { left: DEFAULT_SHORE_PAD, right: DEFAULT_SHORE_PAD, top: bossPadTop, bottom: DEFAULT_SHORE_PAD }) +
+    renderWatchtower(bossBbox.x0 + 55, (bossBbox.y0 + bossBbox.y1) / 2 + 20);
   return water + islands + bossIsland;
 }
 
