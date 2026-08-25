@@ -249,6 +249,126 @@ function renderIsland(bbox, fill, seed) {
   `;
 }
 
+// A handful of bigger, hand-drawn, one-off set pieces scattered in the
+// open water — a lighthouse, a shipwreck, a couple of buoys, a few gulls
+// — purely decorative texture, deliberately NOT the same idea as the
+// small repeated topic-icon emoji that got tried and rejected twice
+// earlier: each of these is a distinct drawn shape appearing once, not a
+// repeated icon set. Every position leans on a real gap in the layout
+// (the space between two neighboring islands' own node clusters, or the
+// open flanks beside the boss island) rather than a hardcoded world
+// coordinate, so it stays correct if the zones' own skill counts ever
+// change.
+function renderLighthouse(x, y) {
+  return `
+    <ellipse cx="${x}" cy="${y + 34}" rx="24" ry="8" fill="rgba(20,15,35,0.22)" />
+    <path d="M${x - 15},${y + 30} L${x - 8},${y - 36} L${x + 8},${y - 36} L${x + 15},${y + 30} Z" fill="#e8e2d0" stroke="#8a8060" stroke-width="2" />
+    <rect x="${x - 8}" y="${y - 6}" width="16" height="7" fill="#c94a3f" />
+    <rect x="${x - 8}" y="${y + 9}" width="16" height="7" fill="#c94a3f" />
+    <path d="M${x - 10},${y - 36} L${x},${y - 50} L${x + 10},${y - 36} Z" fill="#5c4a3a" />
+    <circle cx="${x}" cy="${y - 40}" r="4" fill="#ffe9a8" />
+  `;
+}
+
+function renderShipwreck(x, y) {
+  return `
+    <ellipse cx="${x}" cy="${y + 10}" rx="44" ry="11" fill="rgba(20,15,35,0.2)" />
+    <path d="M${x - 40},${y} Q${x},${y + 20} ${x + 38},${y - 2} L${x + 32},${y + 11} Q${x - 4},${y + 24} ${x - 36},${y + 9} Z" fill="#6b5233" stroke="#4a3a26" stroke-width="2" />
+    <line x1="${x - 4}" y1="${y - 2}" x2="${x}" y2="${y - 30}" stroke="#4a3a26" stroke-width="3" />
+    <path d="M${x},${y - 30} L${x + 18},${y - 18} L${x},${y - 12} Z" fill="#d8cba8" opacity="0.85" />
+  `;
+}
+
+function renderBuoy(x, y, seed) {
+  const bob = pseudoRandom(seed) * 6 - 3;
+  return `
+    <ellipse cx="${x}" cy="${y + 13}" rx="11" ry="4" fill="rgba(20,15,35,0.2)" />
+    <path d="M${x - 7},${(y + 7 + bob).toFixed(1)} Q${x},${(y - 14 + bob).toFixed(1)} ${x + 7},${(y + 7 + bob).toFixed(1)} Z" fill="#c94a3f" stroke="#7a2a22" stroke-width="1.5" />
+    <circle cx="${x}" cy="${(y - 12 + bob).toFixed(1)}" r="3.5" fill="#f0e4c0" />
+  `;
+}
+
+function renderGull(x, y) {
+  return `<path d="M${x - 13},${y} Q${x - 6},${y - 7} ${x},${y} Q${x + 6},${y - 7} ${x + 13},${y}" stroke="#332a3d" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.75" />`;
+}
+
+function renderWaterScenery(islandBoxes) {
+  let out = "";
+  for (let i = 0; i < islandBoxes.length - 1; i++) {
+    const gapX = (islandBoxes[i].x1 + islandBoxes[i + 1].x0) / 2;
+    const gapY = Math.max(islandBoxes[i].cy, islandBoxes[i + 1].cy) + 130;
+    if (i === 0) out += renderLighthouse(gapX, gapY);
+    else if (i === 1) out += renderShipwreck(gapX, gapY - 70);
+    else out += renderBuoy(gapX, gapY, i + 5);
+  }
+  out += renderGull(340, 250);
+  out += renderGull(1080, 210);
+  out += renderGull(1850, 290);
+  return out;
+}
+
+// One signature, hand-drawn landmark per topic island — a visual pun on
+// what that topic actually studies, sitting just below that island's own
+// bottom row of nodes (real open room there: the island's own shoreline
+// extends well past the tight node bbox — see renderIsland's own pad).
+function renderCairn(x, y) {
+  return `
+    <ellipse cx="${x}" cy="${y + 24}" rx="19" ry="6" fill="rgba(20,15,35,0.2)" />
+    <ellipse cx="${x}" cy="${y + 15}" rx="17" ry="9" fill="#8a6a52" stroke="#5c4632" stroke-width="1.5" />
+    <ellipse cx="${x + 2}" cy="${y}" rx="12" ry="7" fill="#9c7c62" stroke="#5c4632" stroke-width="1.5" />
+    <ellipse cx="${x - 1}" cy="${y - 13}" rx="8" ry="5" fill="#ac8c70" stroke="#5c4632" stroke-width="1.5" />
+  `;
+}
+
+function renderCrystalCluster(x, y) {
+  return `
+    <ellipse cx="${x}" cy="${y + 18}" rx="23" ry="7" fill="rgba(20,15,35,0.2)" />
+    <path d="M${x - 4},${y + 16} L${x - 14},${y - 4} L${x - 2},${y - 26} L${x + 9},${y - 6} Z" fill="#9fd6cf" stroke="#5a9a90" stroke-width="1.5" opacity="0.92" />
+    <path d="M${x + 8},${y + 16} L${x + 1},${y - 2} L${x + 13},${y - 18} L${x + 19},${y + 2} Z" fill="#c7ece5" stroke="#5a9a90" stroke-width="1.5" opacity="0.92" />
+  `;
+}
+
+function renderStoneArch(x, y) {
+  return `
+    <ellipse cx="${x}" cy="${y + 20}" rx="29" ry="7" fill="rgba(20,15,35,0.2)" />
+    <path d="M${x - 23},${y + 18} Q${x - 23},${y - 25} ${x},${y - 29} Q${x + 23},${y - 25} ${x + 23},${y + 18}
+      L${x + 13},${y + 18} Q${x + 13},${y - 15} ${x},${y - 13} Q${x - 13},${y - 15} ${x - 13},${y + 18} Z"
+      fill="#a89ccb" stroke="#6b5f8f" stroke-width="1.5" />
+  `;
+}
+
+function renderCoinPile(x, y) {
+  return `
+    <ellipse cx="${x}" cy="${y + 15}" rx="25" ry="8" fill="rgba(20,15,35,0.2)" />
+    <ellipse cx="${x - 10}" cy="${y + 9}" rx="10" ry="5" fill="#e8c96a" stroke="#a8823c" stroke-width="1.5" />
+    <ellipse cx="${x + 4}" cy="${y + 5}" rx="10" ry="5" fill="#f0d67e" stroke="#a8823c" stroke-width="1.5" />
+    <ellipse cx="${x - 3}" cy="${y - 3}" rx="10" ry="5" fill="#e8c96a" stroke="#a8823c" stroke-width="1.5" />
+    <ellipse cx="${x + 8}" cy="${y - 7}" rx="8" ry="4.5" fill="#f0d67e" stroke="#a8823c" stroke-width="1.5" />
+  `;
+}
+
+function renderWatchtower(x, y) {
+  return `
+    <ellipse cx="${x}" cy="${y + 26}" rx="15" ry="6" fill="rgba(0,0,0,0.25)" />
+    <rect x="${x - 8}" y="${y - 22}" width="16" height="48" fill="#3a3348" stroke="#1f1a2b" stroke-width="1.5" />
+    <rect x="${x - 12}" y="${y - 28}" width="24" height="9" fill="#2a2438" stroke="#1f1a2b" stroke-width="1.5" />
+    <circle cx="${x}" cy="${y - 36}" r="4.5" fill="#e8a860" opacity="0.9" />
+  `;
+}
+
+const ISLAND_LANDMARKS = {
+  algebra: renderCairn,
+  geometry: renderCrystalCluster,
+  functions: renderStoneArch,
+  numstats: renderCoinPile,
+};
+
+function renderIslandLandmark(zoneId, bbox) {
+  const renderer = ISLAND_LANDMARKS[zoneId];
+  if (!renderer) return "";
+  return renderer((bbox.x0 + bbox.x1) / 2, bbox.y1 + 70);
+}
+
 // Each island is drawn tightly around that zone's *actual* placed nodes
 // (hubWorld.js's own `zoneGroups`, not this file's wider territory
 // columns from computeTerritories) — node positions are already inset
@@ -257,17 +377,29 @@ function renderIsland(bbox, fill, seed) {
 // leaves open water between neighboring islands, without moving a single
 // node to make room for it.
 function renderMathRegions(zoneGroups) {
+  const boxes = zoneGroups.map(({ points }) => {
+    if (!points.length) return null;
+    const xs = points.map((p) => p.x);
+    const ys = points.map((p) => p.y);
+    const x0 = Math.min(...xs);
+    const x1 = Math.max(...xs);
+    const y0 = Math.min(...ys);
+    const y1 = Math.max(...ys);
+    return { x0, x1, y0, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
+  });
+
+  const water = renderWaterScenery(boxes.filter(Boolean));
   const islands = zoneGroups
-    .map(({ zone, points }, i) => {
-      if (!points.length) return "";
-      const xs = points.map((p) => p.x);
-      const ys = points.map((p) => p.y);
-      const bbox = { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
-      return renderIsland(bbox, zone.fill, i + 1);
+    .map(({ zone }, i) => {
+      const bbox = boxes[i];
+      if (!bbox) return "";
+      return renderIsland(bbox, zone.fill, i + 1) + renderIslandLandmark(zone.id, bbox);
     })
     .join("");
+
   const bossBbox = { x0: BOSS_POS.x - 220, x1: BOSS_POS.x + 220, y0: BOSS_POS.y - 180, y1: BOSS_POS.y + 140 };
-  return islands + renderIsland(bossBbox, BOSS_FILL, 99);
+  const bossIsland = renderIsland(bossBbox, BOSS_FILL, 99) + renderWatchtower(bossBbox.x0 + 55, (bossBbox.y0 + bossBbox.y1) / 2 + 20);
+  return water + islands + bossIsland;
 }
 
 // Each zone's own nodes get connected in the same order they were placed
