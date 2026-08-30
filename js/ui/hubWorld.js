@@ -203,10 +203,17 @@ export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecorati
 // right up to an island's own edge but not out into open water instead
 // of just the world's outer margin — defaults to the plain rectangle
 // check when omitted, so every existing caller is unaffected.
-export function wireMovement({ avatarEl, worldEl, viewportEl, hintEl, spawn, targets, isWalkable = isInsideWorld }) {
+// `joystickEl` (optional) is an on-screen thumbstick base for touch (and
+// mouse-drag) devices with no physical keyboard — see wireJoystick below.
+// It feeds the exact same tick()/camera loop as WASD, just as a
+// continuously-variable direction+magnitude instead of a held key, so
+// every caller gets touch support for free by passing this one extra
+// element rather than reimplementing movement.
+export function wireMovement({ avatarEl, worldEl, viewportEl, hintEl, spawn, targets, isWalkable = isInsideWorld, joystickEl }) {
   let x = spawn.x;
   let y = spawn.y;
   const held = { w: false, a: false, s: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
+  const stick = { x: 0, y: 0 };
   let stopped = false;
   let rafId = null;
   let lastTarget = null;
@@ -262,6 +269,61 @@ export function wireMovement({ avatarEl, worldEl, viewportEl, hintEl, spawn, tar
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("keyup", onKeyUp);
 
+  // Touch (and mouse-drag) support: dragging from the joystick base sets
+  // `stick` to a unit-ish vector toward the pointer, same idea as an
+  // on-screen thumbstick in any mobile game. `pointerdown` + setPointerCapture
+  // means the drag keeps tracking even once the finger/cursor leaves the
+  // small joystick element, without needing a document-level listener.
+  const JOYSTICK_RADIUS = 46;
+  let activePointerId = null;
+  function setStickFromEvent(e) {
+    const rect = joystickEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / JOYSTICK_RADIUS;
+    const dy = (e.clientY - cy) / JOYSTICK_RADIUS;
+    const mag = Math.hypot(dx, dy);
+    if (mag > 1) {
+      stick.x = dx / mag;
+      stick.y = dy / mag;
+    } else {
+      stick.x = dx;
+      stick.y = dy;
+    }
+    joystickEl.style.setProperty("--knob-x", `${stick.x * JOYSTICK_RADIUS}px`);
+    joystickEl.style.setProperty("--knob-y", `${stick.y * JOYSTICK_RADIUS}px`);
+  }
+  function resetStick() {
+    stick.x = 0;
+    stick.y = 0;
+    joystickEl.style.setProperty("--knob-x", "0px");
+    joystickEl.style.setProperty("--knob-y", "0px");
+  }
+  function onPointerDown(e) {
+    activePointerId = e.pointerId;
+    joystickEl.setPointerCapture(e.pointerId);
+    joystickEl.classList.add("is-active");
+    setStickFromEvent(e);
+    e.preventDefault();
+  }
+  function onPointerMove(e) {
+    if (e.pointerId !== activePointerId) return;
+    setStickFromEvent(e);
+    e.preventDefault();
+  }
+  function onPointerUp(e) {
+    if (e.pointerId !== activePointerId) return;
+    activePointerId = null;
+    joystickEl.classList.remove("is-active");
+    resetStick();
+  }
+  if (joystickEl) {
+    joystickEl.addEventListener("pointerdown", onPointerDown);
+    joystickEl.addEventListener("pointermove", onPointerMove);
+    joystickEl.addEventListener("pointerup", onPointerUp);
+    joystickEl.addEventListener("pointercancel", onPointerUp);
+  }
+
   function checkArrivals() {
     for (const t of targets) {
       if (t.gate && !t.gate()) continue;
@@ -280,18 +342,30 @@ export function wireMovement({ avatarEl, worldEl, viewportEl, hintEl, spawn, tar
     if (stopped) return;
     let dx = 0;
     let dy = 0;
+    let speedScale = 1;
     if (held.w || held.arrowup) dy -= 1;
     if (held.s || held.arrowdown) dy += 1;
     if (held.a || held.arrowleft) dx -= 1;
     if (held.d || held.arrowright) dx += 1;
+    // Only fall back to the joystick when no key is held, so a keyboard
+    // and a touch input can't fight over the same frame — same
+    // first-match-wins spirit as checkArrivals' target list below.
+    if (!dx && !dy && (stick.x || stick.y)) {
+      dx = stick.x;
+      dy = stick.y;
+      // A stick push is analog (partway to the edge should walk slower),
+      // unlike a held key which is always "full speed in this direction" —
+      // clamped to 1 so an over-dragged knob can't exceed normal speed.
+      speedScale = clamp(Math.hypot(dx, dy), 0, 1);
+    }
     if (dx || dy) {
       if (!wasMoving) {
         wasMoving = true;
         hideHint();
       }
       const len = Math.hypot(dx, dy) || 1;
-      const nx = x + (dx / len) * AVATAR_SPEED;
-      const ny = y + (dy / len) * AVATAR_SPEED;
+      const nx = x + (dx / len) * AVATAR_SPEED * speedScale;
+      const ny = y + (dy / len) * AVATAR_SPEED * speedScale;
       if (isWalkable(nx, ny)) {
         x = nx;
         y = ny;
@@ -319,7 +393,25 @@ export function wireMovement({ avatarEl, worldEl, viewportEl, hintEl, spawn, tar
     document.removeEventListener("keyup", onKeyUp);
     window.removeEventListener("resize", measureViewport);
     document.removeEventListener("fullscreenchange", measureViewport);
+    if (joystickEl) {
+      joystickEl.removeEventListener("pointerdown", onPointerDown);
+      joystickEl.removeEventListener("pointermove", onPointerMove);
+      joystickEl.removeEventListener("pointerup", onPointerUp);
+      joystickEl.removeEventListener("pointercancel", onPointerUp);
+    }
   };
+}
+
+// Markup for the on-screen thumbstick itself — a fixed-position base plus
+// a knob whose offset is driven entirely by the `--knob-x`/`--knob-y` CSS
+// vars wireMovement's pointer handlers set above, so this file owns both
+// halves of the touch control instead of splitting it across callers.
+export function joystickHTML(id) {
+  return `
+    <div class="hub-joystick" id="${id}" aria-hidden="true">
+      <div class="hub-joystick-knob"></div>
+    </div>
+  `;
 }
 
 // The Fullscreen API only ever fullscreens one specific element and

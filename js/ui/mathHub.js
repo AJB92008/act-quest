@@ -41,7 +41,7 @@ import { monsterSVG } from "./monster.js";
 import { getBossMonster } from "../data/bossMonsters.js";
 import { getLessonCount } from "../data/questions/index.js";
 import { glowVars } from "./pathTrail.js";
-import { CENTER, BOSS_POS, BOSS_TRIGGER_RADIUS, WORLD_W, WORLD_H, WALK_MARGIN, renderWorldSvg, wireMovement, wireFullscreenToggle } from "./hubWorld.js";
+import { CENTER, BOSS_POS, BOSS_TRIGGER_RADIUS, WORLD_W, WORLD_H, WALK_MARGIN, renderWorldSvg, wireMovement, wireFullscreenToggle, joystickHTML } from "./hubWorld.js";
 import { closedBlobPath } from "./lessonTerrain.js";
 
 const SKILL_TRIGGER_RADIUS = 58;
@@ -787,9 +787,10 @@ export function renderMathHub(root, navigate, subject) {
     <main class="screen island-screen hub-island-screen ridge-scene" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
-      <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD across the islands — every trail leads to a skill</p>
+      <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD (or the joystick) across the islands — every trail leads to a skill</p>
       <div class="hub-viewport" id="hubViewport">
         <button class="hub-fullscreen-btn" id="hubFullscreenBtn" type="button" aria-label="Enter fullscreen">⛶</button>
+        ${joystickHTML("hubJoystick")}
         <div class="hub-world" id="hubWorld" style="width:${WORLD_W}px;height:${WORLD_H}px;">
           ${sceneSvg}
           ${layout.map((p) => renderSkillMarker(p, subject)).join("")}
@@ -823,6 +824,7 @@ export function renderMathHub(root, navigate, subject) {
     worldEl: root.querySelector("#hubWorld"),
     viewportEl: root.querySelector("#hubViewport"),
     hintEl: root.querySelector("#hubHint"),
+    joystickEl: root.querySelector("#hubJoystick"),
     spawn: { x: CENTER.x, y: CENTER.y },
     isWalkable,
     targets: [

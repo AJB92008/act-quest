@@ -658,6 +658,82 @@ input[type="password"] {
   color: rgba(222, 236, 240, 0.95);
 }
 
+/* Athenaeum Reef (ACT Reading's own hub, readingHub.js) — same "wide
+   painted scene behind a walkable hub" idea as .ocean-scene/.ridge-scene
+   above, tuned toward a warmer turquoise reef rather than either's own
+   blue-gray open water, so it reads as its own place rather than a
+   recolor of English's or Math's hub. */
+.reef-scene {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #d7f2ea 0%, #3fa9a0 48%, #0f3d3a 100%);
+}
+
+:root[data-theme="dark"] .reef-scene {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #1f4a46 0%, #123330 48%, #04100e 100%);
+}
+
+.reef-scene > * {
+  position: relative;
+  z-index: 1;
+}
+
+.reef-scene .back-btn,
+.reef-scene .map-subtitle,
+.reef-scene .island-heading-blurb {
+  color: rgba(10, 40, 36, 0.72);
+}
+
+.reef-scene .back-btn:hover {
+  color: rgba(10, 40, 36, 0.95);
+}
+
+:root[data-theme="dark"] .reef-scene .back-btn,
+:root[data-theme="dark"] .reef-scene .map-subtitle,
+:root[data-theme="dark"] .reef-scene .island-heading-blurb {
+  color: rgba(220, 240, 236, 0.75);
+}
+
+:root[data-theme="dark"] .reef-scene .back-btn:hover {
+  color: rgba(220, 240, 236, 0.95);
+}
+
+/* Lab Archipelago (ACT Science's own hub, scienceHub.js) — same idea
+   again, tuned toward a warm amber lab-light instead of any of the
+   other three hubs' own blue-green water, matching Science's own amber
+   brand color instead of forcing it into the same ocean palette every
+   other subject's hub already uses. */
+.lab-scene {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #fff3d6 0%, #e0a34a 48%, #3d2a12 100%);
+}
+
+:root[data-theme="dark"] .lab-scene {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #4a3a1e 0%, #2c2210 48%, #0a0703 100%);
+}
+
+.lab-scene > * {
+  position: relative;
+  z-index: 1;
+}
+
+.lab-scene .back-btn,
+.lab-scene .map-subtitle,
+.lab-scene .island-heading-blurb {
+  color: rgba(40, 28, 10, 0.72);
+}
+
+.lab-scene .back-btn:hover {
+  color: rgba(40, 28, 10, 0.95);
+}
+
+:root[data-theme="dark"] .lab-scene .back-btn,
+:root[data-theme="dark"] .lab-scene .map-subtitle,
+:root[data-theme="dark"] .lab-scene .island-heading-blurb {
+  color: rgba(240, 230, 210, 0.75);
+}
+
+:root[data-theme="dark"] .lab-scene .back-btn:hover {
+  color: rgba(240, 230, 210, 0.95);
+}
+
 /* Centers a .node-area-blob on just the button, not the taller
    .map-node-wrap/.path-node-wrap column it sits in (which also includes
    the label below) — without this, the blob's 50%/50% centering resolves
@@ -1116,6 +1192,20 @@ input[type="password"] {
   background: radial-gradient(ellipse 90% 75% at 50% 38%, #315a67 0%, #1b3540 48%, #081419 100%);
 }
 
+/* Lab Archipelago's own amber field clashes hard against the shared
+   blue-water default above (English's and Math's own scenes are close
+   enough to that default that neither needed this override) — matched
+   to .lab-scene's own gradient stops so fullscreen mode (which hides
+   .lab-scene itself, per the comment above) doesn't flash back to blue
+   water around Science's amber islands. */
+.lab-scene .hub-viewport {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #fff3d6 0%, #e0a34a 48%, #3d2a12 100%);
+}
+
+:root[data-theme="dark"] .lab-scene .hub-viewport {
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #4a3a1e 0%, #2c2210 48%, #0a0703 100%);
+}
+
 .hub-viewport:fullscreen {
   width: 100vw;
   height: 100vh;
@@ -1168,6 +1258,47 @@ input[type="password"] {
 .hub-fullscreen-btn:hover,
 .hub-fullscreen-btn:focus-visible {
   background: rgba(20, 30, 35, 0.65);
+}
+
+/* On-screen thumbstick (hubWorld.js's wireMovement/joystickHTML) — the
+   touch/mouse-drag equivalent of holding WASD. Sits in a bottom corner,
+   out of the way of the trails/markers a real layout scatters through
+   the middle of the world. touch-action: none stops a drag from also
+   scrolling the page or triggering pull-to-refresh; low opacity at rest
+   so it reads as a control, not scenery, without competing with the
+   scene for attention until it's actually touched. */
+.hub-joystick {
+  position: absolute;
+  z-index: 4;
+  left: 24px;
+  bottom: 24px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: rgba(20, 30, 35, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  touch-action: none;
+  cursor: grab;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+.hub-joystick.is-active {
+  opacity: 0.9;
+  cursor: grabbing;
+}
+
+.hub-joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transform: translate(calc(-50% + var(--knob-x, 0px)), calc(-50% + var(--knob-y, 0px)));
+  pointer-events: none;
 }
 
 .hub-world {
@@ -1480,53 +1611,6 @@ input[type="password"] {
     linear-gradient(180deg, #10131e 0%, #0b0d16 100%);
   background-size: 48px 48px, 30px 30px, 100% 100%;
   background-position: 0 0, 16px 16px, 0 0;
-}
-
-.background-lesson-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  max-width: 640px;
-  background: var(--card);
-  border: 2px solid var(--island-color, var(--border));
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 26px;
-  text-align: left;
-  box-shadow: var(--shadow);
-  transition: transform 0.15s ease;
-}
-
-.background-lesson-card:hover {
-  transform: translateY(-2px);
-}
-
-.background-lesson-icon {
-  font-size: 1.8rem;
-  flex: 0 0 auto;
-}
-
-.background-lesson-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-
-.background-lesson-text strong {
-  color: var(--island-color-text, var(--ink));
-}
-
-.background-lesson-text span {
-  color: var(--muted);
-  font-size: 0.88rem;
-}
-
-.background-lesson-arrow {
-  font-size: 1.3rem;
-  color: var(--island-color-text, var(--purple));
-  flex: 0 0 auto;
 }
 
 .boss-encounter {

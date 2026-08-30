@@ -12,6 +12,8 @@ import { pathPositions, pathHeight, renderPathSvg, renderDecorations, glowVars }
 import { getSubjectTheme } from "./subjectTheme.js";
 import { renderEnglishHub } from "./islandHub.js";
 import { renderMathHub } from "./mathHub.js";
+import { renderReadingHub } from "./readingHub.js";
+import { renderScienceHub } from "./scienceHub.js";
 
 const ROW_HEIGHT = 148;
 
@@ -41,6 +43,19 @@ export function renderIsland(root, navigate, { subjectId }) {
   // positional quadrants.
   if (subjectId === "math") {
     renderMathHub(root, navigate, subject);
+    return;
+  }
+
+  // ACT Reading and ACT Science get the same walkable-hub treatment as
+  // English and Math (see readingHub.js's/scienceHub.js's own header
+  // comments), just with reef and lab zones instead of meadow/hillside
+  // or mountain ridges.
+  if (subjectId === "reading") {
+    renderReadingHub(root, navigate, subject);
+    return;
+  }
+  if (subjectId === "science") {
+    renderScienceHub(root, navigate, subject);
     return;
   }
 
@@ -93,31 +108,6 @@ export function renderIsland(root, navigate, { subjectId }) {
       `;
     })
     .join("");
-
-  const referenceLinkHTML =
-    subjectId === "science"
-      ? `
-        <button class="background-lesson-card" data-reference="background">
-          <span class="background-lesson-icon">📚</span>
-          <span class="background-lesson-text">
-            <strong>ACT Science Background Knowledge</strong>
-            <span>All 18 core science concepts, plus the calculator-free math, in one reference lesson.</span>
-          </span>
-          <span class="background-lesson-arrow">&rarr;</span>
-        </button>
-      `
-      : subjectId === "reading"
-      ? `
-        <button class="background-lesson-card" data-reference="vocabulary">
-          <span class="background-lesson-icon">🔤</span>
-          <span class="background-lesson-text">
-            <strong>ACT Vocabulary Builder</strong>
-            <span>Words that keep showing up in ACT Reading passages and English answer choices.</span>
-          </span>
-          <span class="background-lesson-arrow">&rarr;</span>
-        </button>
-      `
-      : "";
 
   // A unique, subject-themed monster guards the bottom of the path — locked
   // (silhouette) until every skill above it is mastered, in full color once
@@ -175,7 +165,6 @@ export function renderIsland(root, navigate, { subjectId }) {
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
       <p class="island-heading-blurb">${subject.blurb}</p>
       <p class="map-subtitle">🏝️ Choose an Island to Explore</p>
-      ${referenceLinkHTML}
       ${comingSoonHTML}
       <div class="map-path-container" style="height:${totalHeight}px">
         ${renderPathSvg(positions, totalHeight, { color: subject.color })}
@@ -191,10 +180,6 @@ export function renderIsland(root, navigate, { subjectId }) {
   root.querySelectorAll("[data-skill]").forEach((btn) => {
     btn.addEventListener("click", () => navigate("skillPath", { skillId: btn.dataset.skill, subjectId }));
   });
-  const referenceBtn = root.querySelector("[data-reference]");
-  if (referenceBtn) {
-    referenceBtn.addEventListener("click", () => navigate(referenceBtn.dataset.reference, { subjectId }));
-  }
   const bossBtn = root.querySelector("[data-boss]");
   if (bossBtn) {
     bossBtn.addEventListener("click", () => navigate("bossQuiz", { subjectId }));

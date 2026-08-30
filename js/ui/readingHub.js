@@ -1,18 +1,17 @@
-// ACT English's "hub" island — see the design brief this was built from
-// (a big walkable island, one trail per skill, a central Vocabulary
-// Builder landmark, WASD movement that auto-opens whatever the player's
-// monster walks onto). Replaces island.js's usual scrollable skill list
-// for this one subject only; every other subject's island still renders
-// that original list unchanged — see island.js's own dispatch at the top
-// of renderIsland(). The underlying "big walkable world" mechanics (the
-// world/camera geometry, movement, fullscreen toggle) live in
-// hubWorld.js, shared with Idiom Instinct's own lesson path
-// (skillPathHub.js) — this file owns only what's specific to a skill
-// hub: the nature-themed zones, the Vocabulary Builder landmark, the
-// subject boss encounter, and the goat.
+// ACT Reading's "hub" island, Athenaeum Reef — the same walkable-hub
+// treatment as English's Wordwood Isle (islandHub.js) and Math's Numeria
+// Peaks (mathHub.js): a big walkable island, one trail per skill, a
+// central Vocabulary Builder landmark, WASD-or-joystick movement that
+// auto-opens whatever the player's monster walks onto. Replaces
+// island.js's usual scrollable skill list for this subject only — see
+// island.js's own dispatch at the top of renderIsland(). The underlying
+// "big walkable world" mechanics (world/camera geometry, movement,
+// fullscreen toggle) live in hubWorld.js; this file owns only what's
+// specific to Reading's own hub: the reef-themed zones and the
+// Vocabulary Builder landmark (also the reference lesson on Reading's
+// plain island list — see island.js's referenceLinkHTML).
 import { gameState } from "../state.js";
-import { hudHTML, wireHud, showToast } from "./hud.js";
-import { showDevPanel, toggleDevPanel } from "./devPanel.js";
+import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 import { getBossMonster } from "../data/bossMonsters.js";
 import { getLessonCount } from "../data/questions/index.js";
@@ -24,8 +23,6 @@ import {
   BOSS_TRIGGER_RADIUS,
   WORLD_W,
   WORLD_H,
-  decorationPos,
-  zoneCenter,
   computeZoneLayout,
   renderWorldSvg,
   wireMovement,
@@ -33,48 +30,23 @@ import {
   joystickHTML,
 } from "./hubWorld.js";
 
-// Dev mode's unlock gesture used to be 10 rapid clicks on the (now
-// removed) dark-mode toggle; with that gone, the Rocky Hillside's own
-// goat decoration (see computeGoatPos) is the new one — same 10-clicks-
-// within-5s mechanic, just moved somewhere only exists on this screen.
-const DEV_MODE_CLICKS = 10;
-const DEV_MODE_WINDOW_MS = 5000;
-// Module-level (not per-render) so rapid clicks keep counting across the
-// innerHTML rebuild every navigate() triggers — same reasoning hud.js's
-// old toggle-click tracking used.
-let goatClickTimestamps = [];
-
 const SKILL_TRIGGER_RADIUS = 58;
 const LANDMARK_TRIGGER_RADIUS = 150;
 
-// One big island, four differently-themed regions blended into it rather
-// than four separate islets — keeps the whole thing walkable as a single
-// landmass (matches "island should be very big," singular) while still
-// giving each cluster of skills its own distinct look and a handful of
-// small scenery details, per the brief. Each zone's `dir` points from the
-// world's center out toward that zone's corner; skill trails wind further
-// out along that same direction; the four fill colors deliberately land
-// far from every other subject's own palette elsewhere in the app.
+// One big reef island, five differently-themed regions blended into it
+// rather than five separate islets — same "one landmass, several zones"
+// approach as Wordwood Isle, just five-way (pentagon) instead of
+// English's four corners, since Reading's ten skills split evenly two
+// per zone (four zones would leave one zone with only one skill — see
+// computeZoneLayout's per-zone chunking). Directions are five evenly
+// spaced compass points rather than diagonals, so no zone crowds another.
 const ZONES = [
-  { id: "meadow", name: "Sunny Meadow", dir: { x: -1, y: -1 }, fill: "#c3dd8f", decorations: ["🌼", "🌸", "🦋", "🐝"] },
-  { id: "hillside", name: "Rocky Hillside", dir: { x: 1, y: -1 }, fill: "#c2ab84", decorations: ["🪨", "⛰️", "🐐"] },
-  { id: "forest", name: "Whisper Grove", dir: { x: -1, y: 1 }, fill: "#7fa35e", decorations: ["🌳", "🌲", "🦉"] },
-  { id: "dock", name: "Tidewater Dock", dir: { x: 1, y: 1 }, fill: "#dcc48f", decorations: ["⚓", "🚤", "🐚"] },
+  { id: "stacks", name: "Coral Stacks", dir: { x: 0, y: -1 }, fill: "#7fd9c4", decorations: ["🪸", "📚", "🐠"] },
+  { id: "tidepool", name: "Tide Pool Terrace", dir: { x: 0.95, y: -0.31 }, fill: "#a7e0d8", decorations: ["🌊", "🦀", "🐚"] },
+  { id: "lighthouse", name: "Lighthouse Point", dir: { x: 0.59, y: 0.81 }, fill: "#e8d29a", decorations: ["🧭", "⛵", "🐟"] },
+  { id: "archive", name: "Sunken Archive", dir: { x: -0.59, y: 0.81 }, fill: "#6fb8c9", decorations: ["📜", "🐙", "🦑"] },
+  { id: "driftwood", name: "Driftwood Cove", dir: { x: -0.95, y: -0.31 }, fill: "#c9a887", decorations: ["🪵", "🐬", "🐳"] },
 ];
-
-// The Rocky Hillside sits toward the world's top-right (see ZONES' own
-// `dir`), and its goat is the dev-mode unlock: 10 clicks within 5s, same
-// mechanic the old theme toggle used before dark mode was removed. Found
-// by position (zone id + the emoji itself) rather than a hardcoded index,
-// so reordering ZONES' decoration lists later can't silently move it.
-function computeGoatPos(layout) {
-  const hillside = ZONES.find((z) => z.id === "hillside");
-  const points = layout.filter((p) => p.zone === hillside);
-  if (!points.length) return null;
-  const { avgX, avgY } = zoneCenter(points);
-  const index = hillside.decorations.indexOf("🐐");
-  return decorationPos(avgX, avgY, index, hillside.decorations.length);
-}
 
 function renderSkillMarker({ item: skill, x, y }, subject) {
   const progress = gameState.getSkillProgress(skill.id);
@@ -107,10 +79,9 @@ function renderBossMarker(boss, bossStateClass, subject) {
   `;
 }
 
-export function renderEnglishHub(root, navigate, subject) {
+export function renderReadingHub(root, navigate, subject) {
   const layout = computeZoneLayout(subject.skills, ZONES);
   const landmarkPos = { x: CENTER.x, y: CENTER.y };
-  const goatPos = computeGoatPos(layout);
 
   const allMastered = subject.skills.every((skill) => gameState.isMastered(skill.id));
   const bossCleared = gameState.isBossCleared(subject.id);
@@ -119,17 +90,16 @@ export function renderEnglishHub(root, navigate, subject) {
 
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
-      "Wordwood Isle, a big island with a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock, each with its own trail of grammar skills, plus a dark path south to the boss lair",
+      "Athenaeum Reef, a big reef island with coral stacks, a tide pool terrace, a lighthouse point, a sunken archive, and a driftwood cove, each with its own trail of reading skills, plus a dark path south to the boss lair",
     centerClearing: { fill: "#efe4cf", stroke: "#c9a668", strokeWidth: 4 },
-    skipDecoration: (zone, emoji) => zone.id === "hillside" && emoji === "🐐",
   });
 
   root.innerHTML = `
     ${hudHTML("map")}
-    <main class="screen island-screen hub-island-screen ocean-scene" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
+    <main class="screen island-screen hub-island-screen reef-scene" style="--island-color:${subject.color};--island-bg:${subject.bg};${glowVars(subject.color)}">
       <button class="back-btn" data-back>&larr; Back to Map</button>
       <h1 class="island-heading">${subject.icon} ${subject.place}</h1>
-      <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD (or the joystick) through the meadow, hillside, grove, and dock — every trail leads to a skill</p>
+      <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD (or the joystick) through the stacks, tide pool, lighthouse, archive, and cove — every trail leads to a skill</p>
       <div class="hub-viewport" id="hubViewport">
         <button class="hub-fullscreen-btn" id="hubFullscreenBtn" type="button" aria-label="Enter fullscreen">⛶</button>
         ${joystickHTML("hubJoystick")}
@@ -143,11 +113,6 @@ export function renderEnglishHub(root, navigate, subject) {
           </div>
           ${layout.map((p) => renderSkillMarker(p, subject)).join("")}
           ${renderBossMarker(boss, bossStateClass, subject)}
-          ${
-            goatPos
-              ? `<button class="hub-goat-btn" id="hubGoatBtn" type="button" style="left:${goatPos.x}px;top:${goatPos.y}px" aria-label="A goat">🐐</button>`
-              : ""
-          }
           <div class="hub-avatar" id="hubAvatar" aria-hidden="true">${monsterSVG(gameState.getDisplayAvatar(), { size: 46 })}</div>
         </div>
       </div>
@@ -167,21 +132,6 @@ export function renderEnglishHub(root, navigate, subject) {
   });
   root.querySelector("[data-landmark]").addEventListener("click", () => goTo("vocabulary", {}));
   root.querySelector("[data-boss]")?.addEventListener("click", () => goTo("bossQuiz", { subjectId: subject.id }));
-
-  root.querySelector("#hubGoatBtn")?.addEventListener("click", () => {
-    const now = Date.now();
-    goatClickTimestamps.push(now);
-    goatClickTimestamps = goatClickTimestamps.filter((t) => now - t <= DEV_MODE_WINDOW_MS);
-    if (goatClickTimestamps.length < DEV_MODE_CLICKS) return;
-    goatClickTimestamps = [];
-    if (!gameState.devModeUnlocked) {
-      gameState.setDevModeUnlocked(true);
-      showToast("🛠️ Developer Mode unlocked!");
-      showDevPanel(goTo);
-    } else {
-      toggleDevPanel(goTo);
-    }
-  });
 
   const unwireFullscreen = wireFullscreenToggle(root.querySelector("#hubViewport"), root.querySelector("#hubFullscreenBtn"));
 
