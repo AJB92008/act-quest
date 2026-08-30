@@ -6,13 +6,16 @@
 // "world" bigger than the viewport, with one always-different,
 // dark-pathed "boss" spot at the bottom-middle, a following camera,
 // continuous WASD-or-joystick movement, an idle hint, and a fullscreen
-// toggle. Two zone-layout strategies live here — computeCurveLayout (an
-// S-curve spine, paired with renderRibbonIsland) for a single elongated
-// island, and each hub's own bespoke layout (Numeria Peaks/Lab
-// Archipelago) for separate islands — every caller supplies its own zone
-// list/colors/decorations and its own marker HTML either way; this
-// module only owns the math, the shared SVG scaffolding, and the
-// movement/camera/fullscreen wiring.
+// toggle. Three zone-layout strategies live here — computeCurveLayout
+// (any parametric spine — an S-curve, a spiral, whatever curveFn draws —
+// paired with renderRibbonIsland) for a single elongated island,
+// computeLobeLayout (paired with renderLobeIsland) for a cluster of
+// fused rounded lobes, and each hub's own bespoke layout (Numeria
+// Peaks/Lab Archipelago) for separate islands — every caller supplies
+// its own zone list/colors/decorations and its own marker HTML either
+// way; this module only owns the math, the shared SVG scaffolding, and
+// the movement/camera/fullscreen wiring.
+import { closedBlobPath } from "./lessonTerrain.js";
 export const WORLD_W = 2200;
 export const WORLD_H = 1600;
 export const CENTER = { x: WORLD_W / 2, y: WORLD_H / 2 };
@@ -448,30 +451,73 @@ function pseudoRandom(seed) {
   return x - Math.floor(x);
 }
 
-// Point + tangent angle at parameter t (0..1) along a cubic Bezier
-// through `cps` (4 {x,y} control points).
-function bezierPoint(cps, t) {
+// Raw (x, y) at parameter t (0..1) along a cubic Bezier through `cps`
+// (4 {x,y} control points) — one concrete curve shape callers can pass
+// to sampleParametricCurve/computeCurveLayout/renderRibbonIsland below;
+// islandHub.js's own spiral is another, unrelated shape using the exact
+// same downstream machinery.
+export function bezierCurveFn(cps) {
   const [p0, p1, p2, p3] = cps;
-  const mt = 1 - t;
-  const x = mt * mt * mt * p0.x + 3 * mt * mt * t * p1.x + 3 * mt * t * t * p2.x + t * t * t * p3.x;
-  const y = mt * mt * mt * p0.y + 3 * mt * mt * t * p1.y + 3 * mt * t * t * p2.y + t * t * t * p3.y;
-  const dx = 3 * mt * mt * (p1.x - p0.x) + 6 * mt * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x);
-  const dy = 3 * mt * mt * (p1.y - p0.y) + 6 * mt * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y);
-  return { x, y, angle: Math.atan2(dy, dx) };
+  return (t) => {
+    const mt = 1 - t;
+    return {
+      x: mt * mt * mt * p0.x + 3 * mt * mt * t * p1.x + 3 * mt * t * t * p2.x + t * t * t * p3.x,
+      y: mt * mt * mt * p0.y + 3 * mt * mt * t * p1.y + 3 * mt * t * t * p2.y + t * t * t * p3.y,
+    };
+  };
 }
 
-export function sampleCurve(controlPoints, n = 300) {
-  return Array.from({ length: n + 1 }, (_, i) => bezierPoint(controlPoints, i / n));
+// Samples any parametric curve `curveFn(t) => {x,y}` at n+1 evenly
+// spaced *parameter* steps, but also walks the result to attach each
+// sample's own cumulative arc length so far as `sNorm` (0..1, fraction
+// of the curve's total length) — a cubic Bezier's (or a spiral's) own
+// parameter isn't evenly spaced in actual on-screen distance, so reading
+// zone/marker positions off raw t alone bunches nodes together wherever
+// the curve happens to move fastest and stretches them apart wherever it
+// moves slowest. `angle` (the tangent direction) comes from a tiny
+// central-difference step rather than an analytic derivative, so this
+// works unchanged for *any* curveFn, not just ones whose derivative was
+// hand-coded.
+const TANGENT_EPS = 1e-4;
+export function sampleParametricCurve(curveFn, n = 400) {
+  const raw = [];
+  let cum = 0;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const p = curveFn(t);
+    const pBack = curveFn(Math.max(0, t - TANGENT_EPS));
+    const pFwd = curveFn(Math.min(1, t + TANGENT_EPS));
+    const angle = Math.atan2(pFwd.y - pBack.y, pFwd.x - pBack.x);
+    if (i > 0) cum += Math.hypot(p.x - raw[i - 1].x, p.y - raw[i - 1].y);
+    raw.push({ x: p.x, y: p.y, angle, s: cum });
+  }
+  const total = cum || 1;
+  return raw.map((p) => ({ ...p, sNorm: p.s / total }));
 }
 
-// A skill's position: evenly spaced along its own zone's t-range (with a
-// small inset so markers near a zone boundary don't crowd it), then
-// offset perpendicular to the curve's own tangent there — alternating
-// sides and varying distance, same "a real trail wanders" idea
-// computeZoneLayout's own `side` alternation uses, just measured
-// perpendicular to a curve instead of a straight zone direction.
-export function computeCurveLayout(items, zones, controlPoints) {
-  const curve = sampleCurve(controlPoints, 600);
+// Binary-searches a sampleParametricCurve result (sorted by `sNorm`,
+// ascending) for the sample closest to a given *arc-length* fraction —
+// this is what actually turns "zone 2 of 4" into "the point a real
+// quarter of the way along the curve," not just "t = 0.5."
+function curveIndexAtArcFraction(curve, sFrac) {
+  let lo = 0;
+  let hi = curve.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (curve[mid].sNorm < sFrac) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+// A skill's position: evenly spaced (by actual arc length, not raw
+// parameter — see sampleParametricCurve above) along its own zone's own
+// share of the curve's length, with a small inset so markers near a zone
+// boundary don't crowd it, then offset perpendicular to the curve's own
+// tangent there — alternating sides and varying distance, same "a real
+// trail wanders" idea computeZoneLayout's own `side` alternation used.
+export function computeCurveLayout(items, zones, curveFn) {
+  const curve = sampleParametricCurve(curveFn, 800);
   const n = zones.length;
   const perZone = Math.ceil(items.length / n);
   return items.map((item, i) => {
@@ -479,13 +525,13 @@ export function computeCurveLayout(items, zones, controlPoints) {
     const zone = zones[zoneIndex];
     const indexInZone = i - zoneIndex * perZone;
     const itemsInZone = Math.min(perZone, items.length - zoneIndex * perZone);
-    const tLo = zoneIndex / n;
-    const tHi = (zoneIndex + 1) / n;
-    const inset = (tHi - tLo) * 0.15;
-    const innerLo = tLo + inset;
-    const innerHi = tHi - inset;
-    const t = itemsInZone > 1 ? innerLo + (indexInZone / (itemsInZone - 1)) * (innerHi - innerLo) : (innerLo + innerHi) / 2;
-    const cp = curve[Math.round(t * (curve.length - 1))];
+    const sLo = zoneIndex / n;
+    const sHi = (zoneIndex + 1) / n;
+    const inset = (sHi - sLo) * 0.15;
+    const innerLo = sLo + inset;
+    const innerHi = sHi - inset;
+    const sFrac = itemsInZone > 1 ? innerLo + (indexInZone / (itemsInZone - 1)) * (innerHi - innerLo) : (innerLo + innerHi) / 2;
+    const cp = curve[curveIndexAtArcFraction(curve, sFrac)];
     const perpX = -Math.sin(cp.angle);
     const perpY = Math.cos(cp.angle);
     const side = (indexInZone % 2 === 0 ? 1 : -1) * (105 + (indexInZone % 3) * 40);
@@ -495,11 +541,14 @@ export function computeCurveLayout(items, zones, controlPoints) {
   });
 }
 
-// The curve's own point at a given t, for a caller that wants to place
-// something *on* the spine itself (a center landmark, say) rather than
-// on one of computeCurveLayout's own offset skill positions.
-export function pointOnCurve(controlPoints, t) {
-  return bezierPoint(controlPoints, t);
+// The curve's own point at a given *arc-length* fraction (0..1), for a
+// caller that wants to place something on the spine itself (a center
+// landmark, say) rather than on one of computeCurveLayout's own offset
+// skill positions — consistent with computeCurveLayout's own use of
+// arc-length fractions rather than raw parameter.
+export function pointOnCurve(curveFn, sFrac) {
+  const curve = sampleParametricCurve(curveFn, 800);
+  return curve[curveIndexAtArcFraction(curve, sFrac)];
 }
 
 function edgeTaper(t) {
@@ -511,8 +560,8 @@ function edgeTaper(t) {
 
 const RIBBON_SAND = "#ecdfb8";
 
-export function renderRibbonIsland(zoneGroups, controlPoints, { seed = 1, baseWidth = 320, shoreRingWidth = 55 } = {}) {
-  const curve = sampleCurve(controlPoints, 260);
+export function renderRibbonIsland(zoneGroups, curveFn, { seed = 1, baseWidth = 260, shoreRingWidth = 50 } = {}) {
+  const curve = sampleParametricCurve(curveFn, 300);
   const total = curve.length;
 
   // Both boundary rings (outer sand shore, inner zone-color fill) trace
@@ -549,8 +598,8 @@ export function renderRibbonIsland(zoneGroups, controlPoints, { seed = 1, baseWi
   const n = zoneGroups.length;
   const bands = zoneGroups
     .map(({ zone }, i) => {
-      const loIdx = Math.round((i / n) * (total - 1));
-      const hiIdx = Math.round(((i + 1) / n) * (total - 1));
+      const loIdx = curveIndexAtArcFraction(curve, i / n);
+      const hiIdx = curveIndexAtArcFraction(curve, (i + 1) / n);
       const leftArc = inner.left.slice(loIdx, hiIdx + 1);
       const rightArc = inner.right.slice(loIdx, hiIdx + 1);
       if (leftArc.length < 2) return "";
@@ -576,4 +625,87 @@ export function renderCurveTrails(zoneGroups) {
       return `<path d="${d}" stroke="#5c4a3a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />`;
     })
     .join("");
+}
+
+// A structurally different shape from a ribbon's single spine: one zone
+// per rounded lobe, the lobes arranged around a shared ring so each
+// overlaps its two neighbors enough to read as one fused landmass — a
+// cluster of petals/islets grown together, not a coastline you could
+// walk the length of. Built for Athenaeum Reef, deliberately unrelated
+// to Wordwood Isle's spiral ribbon (see islandHub.js) beyond both
+// replacing renderWorldSvg's own default blended-ellipse regionShapes.
+//
+// computeLobeLayout is the *positions* half (pass `ringCenter`/
+// `ringRadius`/`lobeRadius` identical to whatever renderLobeIsland below
+// gets, so a zone's own markers land inside the same lobe its color
+// actually occupies); renderLobeIsland is the *art* half (pass as
+// `regionShapes`, alongside `landmass: () => ""` — same reasoning as
+// renderRibbonIsland's own doc comment).
+export function computeLobeLayout(items, zones, { ringCenter, ringRadius, lobeRadius }) {
+  const n = zones.length;
+  const perZone = Math.ceil(items.length / n);
+  return items.map((item, i) => {
+    const zoneIndex = Math.min(Math.floor(i / perZone), n - 1);
+    const zone = zones[zoneIndex];
+    const indexInZone = i - zoneIndex * perZone;
+    const itemsInZone = Math.min(perZone, items.length - zoneIndex * perZone);
+    const angle = (zoneIndex / n) * Math.PI * 2 - Math.PI / 2;
+    const lobeCx = ringCenter.x + Math.cos(angle) * ringRadius;
+    const lobeCy = ringCenter.y + Math.sin(angle) * ringRadius;
+    // Markers spread along a short chord across the lobe (perpendicular
+    // to its own outward-facing direction), nudged outward a little —
+    // same "perpendicular offset from a reference direction" idea
+    // computeCurveLayout's own `side` uses, just measured across a lobe
+    // instead of along a spine.
+    const perpX = -Math.sin(angle);
+    const perpY = Math.cos(angle);
+    const spread = itemsInZone > 1 ? (indexInZone / (itemsInZone - 1) - 0.5) * 2 : 0;
+    const along = spread * (lobeRadius * 0.42);
+    const outward = lobeRadius * 0.12 + (indexInZone % 2) * lobeRadius * 0.16;
+    const x = clamp(lobeCx + perpX * along + Math.cos(angle) * outward, WALK_MARGIN, WORLD_W - WALK_MARGIN);
+    const y = clamp(lobeCy + perpY * along + Math.sin(angle) * outward, WALK_MARGIN, WORLD_H - WALK_MARGIN);
+    return { item, zone, x, y, dockX: lobeCx, dockY: lobeCy };
+  });
+}
+
+// The point on the shared ring a landmark (or anything else) should sit
+// at for a given fractional position `at` (0..1 around the ring) — e.g.
+// `at: 0` lands exactly on zone 0's own lobe center.
+export function pointOnLobeRing(at, { ringCenter, ringRadius }) {
+  const angle = at * Math.PI * 2 - Math.PI / 2;
+  return { x: ringCenter.x + Math.cos(angle) * ringRadius, y: ringCenter.y + Math.sin(angle) * ringRadius };
+}
+
+function organicRingPoints(center, radius, seed, n, jitterRange = [-0.25, 0.25]) {
+  const [lo, hi] = jitterRange;
+  return Array.from({ length: n }, (_, i) => {
+    const angle = (i / n) * Math.PI * 2;
+    const jitter = 1 + lo + pseudoRandom(seed * 31 + i) * (hi - lo);
+    const r = radius * jitter;
+    return { x: center.x + Math.cos(angle) * r, y: center.y + Math.sin(angle) * r };
+  });
+}
+
+export function renderLobeIsland(zoneGroups, { ringCenter, ringRadius, lobeRadius = 340, seed = 1 } = {}) {
+  const n = zoneGroups.length;
+  // One shared sand base wide enough to fully cover every lobe's own
+  // outward reach at every angle — jitter here is one-sided (never
+  // shrinks below the base radius) specifically so it can't dip inside
+  // a lobe's own bulge and leave a gap of open background showing
+  // through between two overlapping lobes.
+  const baseRadius = ringRadius + lobeRadius + 60;
+  const underPts = organicRingPoints(ringCenter, baseRadius, seed, 90, [0, 0.12]);
+  const shore = `<path d="${closedBlobPath(underPts)}" fill="${RIBBON_SAND}" />`;
+
+  const lobes = zoneGroups
+    .map(({ zone }, i) => {
+      const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const cx = ringCenter.x + Math.cos(angle) * ringRadius;
+      const cy = ringCenter.y + Math.sin(angle) * ringRadius;
+      const pts = organicRingPoints({ x: cx, y: cy }, lobeRadius - 40, seed + i * 7 + 3, 44);
+      return `<path d="${closedBlobPath(pts)}" fill="${zone.fill}" />`;
+    })
+    .join("");
+
+  return shore + lobes;
 }

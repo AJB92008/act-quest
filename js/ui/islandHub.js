@@ -34,19 +34,26 @@ import {
   joystickHTML,
 } from "./hubWorld.js";
 
-// A cubic Bezier's 4 control points, sweeping a flowing S from the
-// world's lower-left up through the top-middle and back down through
-// the lower-right — Wordwood Isle's own spine, replacing the old single
-// rounded landmass with something that actually has a shape (each of
-// ZONES' 4 entries below gets an equal-length fifth... quarter of this
-// curve's length, in array order, via computeCurveLayout/
-// renderRibbonIsland — see hubWorld.js's own header comment on those).
-const CURVE = [
-  { x: 200, y: 550 },
-  { x: 1000, y: 100 },
-  { x: 1200, y: 900 },
-  { x: 2000, y: 550 },
-];
+// A hook/nautilus-shell spiral, not a simple S — Wordwood Isle's own
+// spine, replacing the old single rounded landmass with something that
+// actually has a shape (each of ZONES' 4 entries below gets an
+// equal-*length* quarter of this curve — see hubWorld.js's own
+// computeCurveLayout, which measures real arc length, not raw parameter,
+// specifically so a tightly-curled stretch of spiral doesn't bunch its
+// zone's own markers together while a wide stretch spreads its own
+// too thin). `t` sweeps just over 3/4 of a full turn while the radius
+// grows the whole way, so successive loops stay well clear of each
+// other — never mind overlapping, since the ribbon itself
+// (renderRibbonIsland) is only ~260px wide against a 620px radius
+// growth across the sweep.
+function CURVE_FN(t) {
+  const center = { x: 1000, y: 620 };
+  const startAngle = -Math.PI * 0.15;
+  const turns = 0.74;
+  const angle = startAngle + t * turns * Math.PI * 2;
+  const r = 210 + t * 610;
+  return { x: center.x + Math.cos(angle) * r, y: center.y + Math.sin(angle) * r * 0.8 };
+}
 
 // Dev mode's unlock gesture used to be 10 rapid clicks on the (now
 // removed) dark-mode toggle; with that gone, the Rocky Hillside's own
@@ -128,13 +135,13 @@ function renderBossMarker(boss, bossStateClass, subject) {
 }
 
 export function renderEnglishHub(root, navigate, subject) {
-  const layout = computeCurveLayout(subject.skills, ZONES, CURVE);
+  const layout = computeCurveLayout(subject.skills, ZONES, CURVE_FN);
   // The Vocabulary Builder sits right on the spine at its midpoint —
   // Wordwood Isle's one landmark, same role CENTER played for the old
   // radiating layout, just relocated to wherever this hub's own curve
   // happens to have its middle instead of the world's raw geometric
   // center.
-  const landmarkPoint = pointOnCurve(CURVE, 0.5);
+  const landmarkPoint = pointOnCurve(CURVE_FN, 0.5);
   const landmarkPos = { x: landmarkPoint.x, y: landmarkPoint.y };
   const goatPos = computeGoatPos(layout);
 
@@ -145,10 +152,10 @@ export function renderEnglishHub(root, navigate, subject) {
 
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
-      "Wordwood Isle, one long curved island split into four clean bands along its own spine — a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock — each with its own trail of grammar skills, plus a dark path south to the boss lair",
+      "Wordwood Isle, one curled hook-shaped island split into four clean bands along its own spiral spine — a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock — each with its own trail of grammar skills, plus a dark path south to the boss lair",
     skipDecoration: (zone, emoji) => zone.id === "hillside" && emoji === "🐐",
     landmass: () => "",
-    regionShapes: (zoneGroups) => renderRibbonIsland(zoneGroups, CURVE),
+    regionShapes: (zoneGroups) => renderRibbonIsland(zoneGroups, CURVE_FN, { baseWidth: 270, shoreRingWidth: 50 }),
     trails: renderCurveTrails,
   });
 

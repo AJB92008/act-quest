@@ -10,6 +10,12 @@
 // specific to Reading's own hub: the reef-themed zones and the
 // Vocabulary Builder landmark (also the reference lesson on Reading's
 // plain island list — see island.js's referenceLinkHTML).
+//
+// Structurally different from Wordwood Isle on purpose: not another
+// curved ribbon, but a cluster of five rounded lobes (see hubWorld.js's
+// own computeLobeLayout/renderLobeIsland) fused together around a shared
+// ring, like petals grown into one landmass rather than a coastline you
+// could walk end to end.
 import { gameState } from "../state.js";
 import { hudHTML, wireHud } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -21,11 +27,9 @@ import {
   BOSS_TRIGGER_RADIUS,
   WORLD_W,
   WORLD_H,
-  computeCurveLayout,
-  pointOnCurve,
+  computeLobeLayout,
   renderWorldSvg,
-  renderRibbonIsland,
-  renderCurveTrails,
+  renderLobeIsland,
   wireMovement,
   wireFullscreenToggle,
   joystickHTML,
@@ -34,26 +38,20 @@ import {
 const SKILL_TRIGGER_RADIUS = 58;
 const LANDMARK_TRIGGER_RADIUS = 150;
 
-// A cubic Bezier's 4 control points, sweeping a gentle crescent from the
-// world's lower-left up through the top-middle and back down through
-// the lower-right — Athenaeum Reef's own spine (a different shape than
-// Wordwood Isle's, for visual variety between the two), replacing the
-// old single rounded landmass with something that actually has a shape.
-const CURVE = [
-  { x: 200, y: 950 },
-  { x: 950, y: 250 },
-  { x: 1300, y: 900 },
-  { x: 2020, y: 350 },
-];
+// Sized to stay clear of the boss's own dark clearing to the south
+// (BOSS_POS, well below RING.y + RING.lobeRadius + RING.ringRadius) and
+// the world's top edge — see the arithmetic in hubWorld.js's own
+// renderLobeIsland doc comment for why a lobe cluster's circular
+// footprint needs this kind of headroom check that an elongated ribbon
+// doesn't.
+const RING = { center: { x: 1100, y: 650 }, ringRadius: 230, lobeRadius: 230 };
 
-// One long reef island, five differently-themed bands along its own
-// spine rather than five separate islets — same "one landmass, several
-// zones" approach as Wordwood Isle, just five-way instead of English's
-// four, since Reading's ten skills split evenly two per zone (four zones
-// would leave one skill stranded alone — see computeCurveLayout's
-// per-zone chunking). Order here is order along CURVE, not a compass
-// direction; every skill stays in the exact same zone it's always been
-// in regardless of how this array is ordered.
+// Five lobes, one per reef zone, fused into one landmass rather than
+// five separate islets — order here is order around RING (see
+// computeLobeLayout/renderLobeIsland in hubWorld.js), starting straight
+// up from the ring's own center and going clockwise; every skill stays
+// in the exact same zone it's always been in regardless of how this
+// array is ordered.
 const ZONES = [
   { id: "stacks", name: "Coral Stacks", fill: "#7fd9c4", decorations: ["🪸", "📚", "🐠"] },
   { id: "tidepool", name: "Tide Pool Terrace", fill: "#a7e0d8", decorations: ["🌊", "🦀", "🐚"] },
@@ -94,12 +92,11 @@ function renderBossMarker(boss, bossStateClass, subject) {
 }
 
 export function renderReadingHub(root, navigate, subject) {
-  const layout = computeCurveLayout(subject.skills, ZONES, CURVE);
-  // The Vocabulary Builder sits right on the spine at its midpoint —
-  // same role a raw world CENTER played for the old radiating layout,
-  // just relocated to wherever this hub's own curve has its middle.
-  const landmarkPoint = pointOnCurve(CURVE, 0.5);
-  const landmarkPos = { x: landmarkPoint.x, y: landmarkPoint.y };
+  const layout = computeLobeLayout(subject.skills, ZONES, { ringCenter: RING.center, ringRadius: RING.ringRadius, lobeRadius: RING.lobeRadius });
+  // The Vocabulary Builder sits right where every lobe overlaps —
+  // the ring's own shared center — same "one clear landmark, easy to
+  // find" role Wordwood Isle's own spine-midpoint landmark plays.
+  const landmarkPos = { x: RING.center.x, y: RING.center.y };
 
   const allMastered = subject.skills.every((skill) => gameState.isMastered(skill.id));
   const bossCleared = gameState.isBossCleared(subject.id);
@@ -108,10 +105,9 @@ export function renderReadingHub(root, navigate, subject) {
 
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
-      "Athenaeum Reef, one long curved reef island split into five clean bands along its own spine — coral stacks, a tide pool terrace, a lighthouse point, a sunken archive, and a driftwood cove — each with its own trail of reading skills, plus a dark path south to the boss lair",
+      "Athenaeum Reef, five rounded reef lobes fused into one landmass around a shared center — coral stacks, a tide pool terrace, a lighthouse point, a sunken archive, and a driftwood cove — each with its own trail of reading skills, plus a dark path south to the boss lair",
     landmass: () => "",
-    regionShapes: (zoneGroups) => renderRibbonIsland(zoneGroups, CURVE),
-    trails: renderCurveTrails,
+    regionShapes: (zoneGroups) => renderLobeIsland(zoneGroups, { ringCenter: RING.center, ringRadius: RING.ringRadius, lobeRadius: RING.lobeRadius }),
   });
 
   root.innerHTML = `
@@ -161,10 +157,10 @@ export function renderReadingHub(root, navigate, subject) {
     viewportEl: root.querySelector("#hubViewport"),
     hintEl: root.querySelector("#hubHint"),
     joystickEl: root.querySelector("#hubJoystick"),
-    // 220px further along the spine's own tangent from the landmark —
-    // clear of its 150px trigger radius, so a single step at spawn can
-    // never yank the player straight into the Vocabulary Builder.
-    spawn: { x: landmarkPos.x + Math.cos(landmarkPoint.angle) * 220, y: landmarkPos.y + Math.sin(landmarkPoint.angle) * 220 },
+    // Straight out from the shared center, past the landmark's own
+    // 150px trigger radius, so a single step at spawn can never yank
+    // the player straight into the Vocabulary Builder.
+    spawn: { x: RING.center.x, y: RING.center.y + 220 },
     targets: [
       { x: landmarkPos.x, y: landmarkPos.y, radius: LANDMARK_TRIGGER_RADIUS, onArrive: () => goTo("vocabulary", {}) },
       { x: BOSS_POS.x, y: BOSS_POS.y, radius: BOSS_TRIGGER_RADIUS, gate: () => allMastered, onArrive: () => goTo("bossQuiz", { subjectId: subject.id }) },
