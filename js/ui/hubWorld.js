@@ -551,22 +551,24 @@ export function computeCurveLayout(items, zones, curveFn) {
     const cp = curve[curveIndexAtArcFraction(curve, sFrac)];
     const perpX = -Math.sin(cp.angle);
     const perpY = Math.cos(cp.angle);
-    // Always the *same sign* (never alternating +/-) and always a
-    // *large enough, similar* magnitude — both matter for a curving
-    // spine in a way neither did for computeZoneLayout's own straight
-    // zone direction. Alternating sides puts half the offsets on the
-    // curve's inside, where curvature is sharper than the spine's own
-    // (an inside offset's effective radius shrinks by the offset amount)
-    // — two same-side markers there can end up *closer* than their
-    // spine points were, even though their arc-length gap is correct.
-    // Offsetting consistently to the outside instead (this curve's
-    // outside is the negative-perpendicular direction; a curve turning
-    // the other way would need the opposite sign) keeps every marker on
-    // the *gentler* side, where offset markers stay roughly as far
-    // apart as their own spine points already are. The small
-    // per-parity variation (±80) is just enough for a visual zigzag,
-    // not enough to reintroduce the inside-crowding problem.
-    const side = -(200 + (indexInZone % 2) * 80);
+    // Four lanes cycling by index, not a plain +/- zigzag — a curving
+    // spine makes "which side" less important than "how far, and how
+    // often the same offset repeats." Offsetting toward the curve's
+    // *inside* (this curve's inside is the positive-perpendicular
+    // direction; a curve turning the other way would need the signs
+    // flipped) shrinks its *effective* radius of curvature by roughly
+    // the offset amount, so two same-offset markers there can end up
+    // closer than their spine points already were, even with a correct
+    // arc-length gap between them — purely offsetting outward avoids
+    // that but stacks every marker against one shore, leaving the
+    // walkway and the island's own inner half empty. Two lanes on each
+    // side (near/far) instead spreads markers across the ribbon's
+    // width — inner lanes only lightly inside, where the curvature
+    // penalty stays small, outer lanes further out where it's free —
+    // and cycling through 4 rather than 2 means a repeated offset is 4
+    // items apart along the curve instead of 2, so it has more of its
+    // own arc length to work with even before the offset is added.
+    const side = [-230, -80, 100, 210][indexInZone % 4];
     const x = clamp(cp.x + perpX * side, WALK_MARGIN, WORLD_W - WALK_MARGIN);
     const y = clamp(cp.y + perpY * side, WALK_MARGIN, WORLD_H - WALK_MARGIN);
     return { item, zone, x, y, dockX: x + Math.cos(cp.angle) * 40, dockY: y + Math.sin(cp.angle) * 40 };
