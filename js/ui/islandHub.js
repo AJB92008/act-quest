@@ -18,20 +18,35 @@ import { getBossMonster } from "../data/bossMonsters.js";
 import { getLessonCount } from "../data/questions/index.js";
 import { glowVars } from "./pathTrail.js";
 import {
-  CENTER,
-  LANDMARK_CLEARING_R,
   BOSS_POS,
   BOSS_TRIGGER_RADIUS,
   WORLD_W,
   WORLD_H,
   decorationPos,
   zoneCenter,
-  computeZoneLayout,
+  computeCurveLayout,
+  pointOnCurve,
   renderWorldSvg,
+  renderRibbonIsland,
+  renderCurveTrails,
   wireMovement,
   wireFullscreenToggle,
   joystickHTML,
 } from "./hubWorld.js";
+
+// A cubic Bezier's 4 control points, sweeping a flowing S from the
+// world's lower-left up through the top-middle and back down through
+// the lower-right — Wordwood Isle's own spine, replacing the old single
+// rounded landmass with something that actually has a shape (each of
+// ZONES' 4 entries below gets an equal-length fifth... quarter of this
+// curve's length, in array order, via computeCurveLayout/
+// renderRibbonIsland — see hubWorld.js's own header comment on those).
+const CURVE = [
+  { x: 200, y: 550 },
+  { x: 1000, y: 100 },
+  { x: 1200, y: 900 },
+  { x: 2000, y: 550 },
+];
 
 // Dev mode's unlock gesture used to be 10 rapid clicks on the (now
 // removed) dark-mode toggle; with that gone, the Rocky Hillside's own
@@ -47,26 +62,31 @@ let goatClickTimestamps = [];
 const SKILL_TRIGGER_RADIUS = 58;
 const LANDMARK_TRIGGER_RADIUS = 150;
 
-// One big island, four differently-themed regions blended into it rather
-// than four separate islets — keeps the whole thing walkable as a single
-// landmass (matches "island should be very big," singular) while still
-// giving each cluster of skills its own distinct look and a handful of
-// small scenery details, per the brief. Each zone's `dir` points from the
-// world's center out toward that zone's corner; skill trails wind further
-// out along that same direction; the four fill colors deliberately land
-// far from every other subject's own palette elsewhere in the app.
+// One long island, four differently-themed bands along its own spine
+// rather than four separate islets — keeps the whole thing walkable as a
+// single landmass (matches "island should be very big," singular) while
+// still giving each cluster of skills its own distinct look and a
+// handful of small scenery details, per the brief. Order here is order
+// along CURVE (see computeCurveLayout/renderRibbonIsland in
+// hubWorld.js) — Sunny Meadow starts the spine, Tidewater Dock ends it —
+// not a compass direction the way the old radiating layout's zones
+// pointed; the four fill colors deliberately land far from every other
+// subject's own palette elsewhere in the app. Reordering this array
+// would move a zone to a different stretch of the curve, but every
+// skill stays in the exact same zone it's always been in either way —
+// this is only ever a *position* change, never a re-grouping.
 const ZONES = [
-  { id: "meadow", name: "Sunny Meadow", dir: { x: -1, y: -1 }, fill: "#c3dd8f", decorations: ["🌼", "🌸", "🦋", "🐝"] },
-  { id: "hillside", name: "Rocky Hillside", dir: { x: 1, y: -1 }, fill: "#c2ab84", decorations: ["🪨", "⛰️", "🐐"] },
-  { id: "forest", name: "Whisper Grove", dir: { x: -1, y: 1 }, fill: "#7fa35e", decorations: ["🌳", "🌲", "🦉"] },
-  { id: "dock", name: "Tidewater Dock", dir: { x: 1, y: 1 }, fill: "#dcc48f", decorations: ["⚓", "🚤", "🐚"] },
+  { id: "meadow", name: "Sunny Meadow", fill: "#c3dd8f", decorations: ["🌼", "🌸", "🦋", "🐝"] },
+  { id: "hillside", name: "Rocky Hillside", fill: "#c2ab84", decorations: ["🪨", "⛰️", "🐐"] },
+  { id: "forest", name: "Whisper Grove", fill: "#7fa35e", decorations: ["🌳", "🌲", "🦉"] },
+  { id: "dock", name: "Tidewater Dock", fill: "#dcc48f", decorations: ["⚓", "🚤", "🐚"] },
 ];
 
-// The Rocky Hillside sits toward the world's top-right (see ZONES' own
-// `dir`), and its goat is the dev-mode unlock: 10 clicks within 5s, same
-// mechanic the old theme toggle used before dark mode was removed. Found
-// by position (zone id + the emoji itself) rather than a hardcoded index,
-// so reordering ZONES' decoration lists later can't silently move it.
+// Rocky Hillside's goat is the dev-mode unlock: 10 clicks within 5s,
+// same mechanic the old theme toggle used before dark mode was removed.
+// Found by position (zone id + the emoji itself) rather than a
+// hardcoded index, so reordering ZONES' decoration lists later can't
+// silently move it.
 function computeGoatPos(layout) {
   const hillside = ZONES.find((z) => z.id === "hillside");
   const points = layout.filter((p) => p.zone === hillside);
@@ -108,8 +128,14 @@ function renderBossMarker(boss, bossStateClass, subject) {
 }
 
 export function renderEnglishHub(root, navigate, subject) {
-  const layout = computeZoneLayout(subject.skills, ZONES);
-  const landmarkPos = { x: CENTER.x, y: CENTER.y };
+  const layout = computeCurveLayout(subject.skills, ZONES, CURVE);
+  // The Vocabulary Builder sits right on the spine at its midpoint —
+  // Wordwood Isle's one landmark, same role CENTER played for the old
+  // radiating layout, just relocated to wherever this hub's own curve
+  // happens to have its middle instead of the world's raw geometric
+  // center.
+  const landmarkPoint = pointOnCurve(CURVE, 0.5);
+  const landmarkPos = { x: landmarkPoint.x, y: landmarkPoint.y };
   const goatPos = computeGoatPos(layout);
 
   const allMastered = subject.skills.every((skill) => gameState.isMastered(skill.id));
@@ -119,9 +145,11 @@ export function renderEnglishHub(root, navigate, subject) {
 
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
-      "Wordwood Isle, a big island with a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock, each with its own trail of grammar skills, plus a dark path south to the boss lair",
-    centerClearing: { fill: "#efe4cf", stroke: "#c9a668", strokeWidth: 4 },
+      "Wordwood Isle, one long curved island split into four clean bands along its own spine — a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock — each with its own trail of grammar skills, plus a dark path south to the boss lair",
     skipDecoration: (zone, emoji) => zone.id === "hillside" && emoji === "🐐",
+    landmass: () => "",
+    regionShapes: (zoneGroups) => renderRibbonIsland(zoneGroups, CURVE),
+    trails: renderCurveTrails,
   });
 
   root.innerHTML = `
@@ -191,7 +219,11 @@ export function renderEnglishHub(root, navigate, subject) {
     viewportEl: root.querySelector("#hubViewport"),
     hintEl: root.querySelector("#hubHint"),
     joystickEl: root.querySelector("#hubJoystick"),
-    spawn: { x: CENTER.x, y: CENTER.y + LANDMARK_CLEARING_R + 55 },
+    // 220px further along the spine's own tangent from the landmark —
+    // clear of its 150px trigger radius (see the note on Science's own
+    // spawn/landmark spacing bug this mirrors), landing inside Whisper
+    // Grove's own stretch of the curve.
+    spawn: { x: landmarkPos.x + Math.cos(landmarkPoint.angle) * 220, y: landmarkPos.y + Math.sin(landmarkPoint.angle) * 220 },
     targets: [
       { x: landmarkPos.x, y: landmarkPos.y, radius: LANDMARK_TRIGGER_RADIUS, onArrive: () => goTo("vocabulary", {}) },
       { x: BOSS_POS.x, y: BOSS_POS.y, radius: BOSS_TRIGGER_RADIUS, gate: () => allMastered, onArrive: () => goTo("bossQuiz", { subjectId: subject.id }) },

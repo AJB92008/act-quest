@@ -17,14 +17,15 @@ import { getBossMonster } from "../data/bossMonsters.js";
 import { getLessonCount } from "../data/questions/index.js";
 import { glowVars } from "./pathTrail.js";
 import {
-  CENTER,
-  LANDMARK_CLEARING_R,
   BOSS_POS,
   BOSS_TRIGGER_RADIUS,
   WORLD_W,
   WORLD_H,
-  computeZoneLayout,
+  computeCurveLayout,
+  pointOnCurve,
   renderWorldSvg,
+  renderRibbonIsland,
+  renderCurveTrails,
   wireMovement,
   wireFullscreenToggle,
   joystickHTML,
@@ -33,19 +34,32 @@ import {
 const SKILL_TRIGGER_RADIUS = 58;
 const LANDMARK_TRIGGER_RADIUS = 150;
 
-// One big reef island, five differently-themed regions blended into it
-// rather than five separate islets — same "one landmass, several zones"
-// approach as Wordwood Isle, just five-way (pentagon) instead of
-// English's four corners, since Reading's ten skills split evenly two
-// per zone (four zones would leave one zone with only one skill — see
-// computeZoneLayout's per-zone chunking). Directions are five evenly
-// spaced compass points rather than diagonals, so no zone crowds another.
+// A cubic Bezier's 4 control points, sweeping a gentle crescent from the
+// world's lower-left up through the top-middle and back down through
+// the lower-right — Athenaeum Reef's own spine (a different shape than
+// Wordwood Isle's, for visual variety between the two), replacing the
+// old single rounded landmass with something that actually has a shape.
+const CURVE = [
+  { x: 200, y: 950 },
+  { x: 950, y: 250 },
+  { x: 1300, y: 900 },
+  { x: 2020, y: 350 },
+];
+
+// One long reef island, five differently-themed bands along its own
+// spine rather than five separate islets — same "one landmass, several
+// zones" approach as Wordwood Isle, just five-way instead of English's
+// four, since Reading's ten skills split evenly two per zone (four zones
+// would leave one skill stranded alone — see computeCurveLayout's
+// per-zone chunking). Order here is order along CURVE, not a compass
+// direction; every skill stays in the exact same zone it's always been
+// in regardless of how this array is ordered.
 const ZONES = [
-  { id: "stacks", name: "Coral Stacks", dir: { x: 0, y: -1 }, fill: "#7fd9c4", decorations: ["🪸", "📚", "🐠"] },
-  { id: "tidepool", name: "Tide Pool Terrace", dir: { x: 0.95, y: -0.31 }, fill: "#a7e0d8", decorations: ["🌊", "🦀", "🐚"] },
-  { id: "lighthouse", name: "Lighthouse Point", dir: { x: 0.59, y: 0.81 }, fill: "#e8d29a", decorations: ["🧭", "⛵", "🐟"] },
-  { id: "archive", name: "Sunken Archive", dir: { x: -0.59, y: 0.81 }, fill: "#6fb8c9", decorations: ["📜", "🐙", "🦑"] },
-  { id: "driftwood", name: "Driftwood Cove", dir: { x: -0.95, y: -0.31 }, fill: "#c9a887", decorations: ["🪵", "🐬", "🐳"] },
+  { id: "stacks", name: "Coral Stacks", fill: "#7fd9c4", decorations: ["🪸", "📚", "🐠"] },
+  { id: "tidepool", name: "Tide Pool Terrace", fill: "#a7e0d8", decorations: ["🌊", "🦀", "🐚"] },
+  { id: "lighthouse", name: "Lighthouse Point", fill: "#e8d29a", decorations: ["🧭", "⛵", "🐟"] },
+  { id: "archive", name: "Sunken Archive", fill: "#6fb8c9", decorations: ["📜", "🐙", "🦑"] },
+  { id: "driftwood", name: "Driftwood Cove", fill: "#c9a887", decorations: ["🪵", "🐬", "🐳"] },
 ];
 
 function renderSkillMarker({ item: skill, x, y }, subject) {
@@ -80,8 +94,12 @@ function renderBossMarker(boss, bossStateClass, subject) {
 }
 
 export function renderReadingHub(root, navigate, subject) {
-  const layout = computeZoneLayout(subject.skills, ZONES);
-  const landmarkPos = { x: CENTER.x, y: CENTER.y };
+  const layout = computeCurveLayout(subject.skills, ZONES, CURVE);
+  // The Vocabulary Builder sits right on the spine at its midpoint —
+  // same role a raw world CENTER played for the old radiating layout,
+  // just relocated to wherever this hub's own curve has its middle.
+  const landmarkPoint = pointOnCurve(CURVE, 0.5);
+  const landmarkPos = { x: landmarkPoint.x, y: landmarkPoint.y };
 
   const allMastered = subject.skills.every((skill) => gameState.isMastered(skill.id));
   const bossCleared = gameState.isBossCleared(subject.id);
@@ -90,8 +108,10 @@ export function renderReadingHub(root, navigate, subject) {
 
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
-      "Athenaeum Reef, a big reef island with coral stacks, a tide pool terrace, a lighthouse point, a sunken archive, and a driftwood cove, each with its own trail of reading skills, plus a dark path south to the boss lair",
-    centerClearing: { fill: "#efe4cf", stroke: "#c9a668", strokeWidth: 4 },
+      "Athenaeum Reef, one long curved reef island split into five clean bands along its own spine — coral stacks, a tide pool terrace, a lighthouse point, a sunken archive, and a driftwood cove — each with its own trail of reading skills, plus a dark path south to the boss lair",
+    landmass: () => "",
+    regionShapes: (zoneGroups) => renderRibbonIsland(zoneGroups, CURVE),
+    trails: renderCurveTrails,
   });
 
   root.innerHTML = `
@@ -141,7 +161,10 @@ export function renderReadingHub(root, navigate, subject) {
     viewportEl: root.querySelector("#hubViewport"),
     hintEl: root.querySelector("#hubHint"),
     joystickEl: root.querySelector("#hubJoystick"),
-    spawn: { x: CENTER.x, y: CENTER.y + LANDMARK_CLEARING_R + 55 },
+    // 220px further along the spine's own tangent from the landmark —
+    // clear of its 150px trigger radius, so a single step at spawn can
+    // never yank the player straight into the Vocabulary Builder.
+    spawn: { x: landmarkPos.x + Math.cos(landmarkPoint.angle) * 220, y: landmarkPos.y + Math.sin(landmarkPoint.angle) * 220 },
     targets: [
       { x: landmarkPos.x, y: landmarkPos.y, radius: LANDMARK_TRIGGER_RADIUS, onArrive: () => goTo("vocabulary", {}) },
       { x: BOSS_POS.x, y: BOSS_POS.y, radius: BOSS_TRIGGER_RADIUS, gate: () => allMastered, onArrive: () => goTo("bossQuiz", { subjectId: subject.id }) },

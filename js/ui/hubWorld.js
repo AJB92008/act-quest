@@ -2,13 +2,17 @@
 // first built for English's Wordwood Isle hub (islandHub.js), reused
 // as-is for Idiom Instinct's own lesson path (skillPathHub.js). Anything
 // here is generic over *what* is being laid out (skills, lessons,
-// whatever comes next): a fixed pixel "world" bigger than the viewport,
-// split into four themed zones radiating out from a center, with one
-// always-different, dark-pathed "boss" spot at the bottom-middle, a
-// following camera, continuous WASD movement, an idle hint, and a
-// fullscreen toggle. Every caller supplies its own zone list/colors/
-// decorations and its own marker HTML — this module only owns the math,
-// the shared SVG scaffolding, and the movement/camera/fullscreen wiring.
+// whatever comes next) and *how* its zones are arranged: a fixed pixel
+// "world" bigger than the viewport, with one always-different,
+// dark-pathed "boss" spot at the bottom-middle, a following camera,
+// continuous WASD-or-joystick movement, an idle hint, and a fullscreen
+// toggle. Two zone-layout strategies live here — computeCurveLayout (an
+// S-curve spine, paired with renderRibbonIsland) for a single elongated
+// island, and each hub's own bespoke layout (Numeria Peaks/Lab
+// Archipelago) for separate islands — every caller supplies its own zone
+// list/colors/decorations and its own marker HTML either way; this
+// module only owns the math, the shared SVG scaffolding, and the
+// movement/camera/fullscreen wiring.
 export const WORLD_W = 2200;
 export const WORLD_H = 1600;
 export const CENTER = { x: WORLD_W / 2, y: WORLD_H / 2 };
@@ -50,30 +54,6 @@ export function zoneCenter(points) {
   const avgX = points.reduce((s, p) => s + p.x, 0) / points.length;
   const avgY = points.reduce((s, p) => s + p.y, 0) / points.length;
   return { avgX, avgY };
-}
-
-// Splits `items` (skills, lessons, whatever) into contiguous chunks, one
-// per zone, then winds each chunk out from the world's center along that
-// zone's own direction — alternating side-to-side (a real trail wanders,
-// it doesn't beeline) so items land with real room between them instead
-// of crowding one ring. Every item gets `{item, zone, x, y, dockX, dockY}`.
-export function computeZoneLayout(items, zones) {
-  const perZone = Math.ceil(items.length / zones.length);
-  return items.map((item, i) => {
-    const zoneIndex = Math.min(Math.floor(i / perZone), zones.length - 1);
-    const zone = zones[zoneIndex];
-    const indexInZone = i - zoneIndex * perZone;
-    const len = Math.hypot(zone.dir.x, zone.dir.y) || 1;
-    const dirX = zone.dir.x / len;
-    const dirY = zone.dir.y / len;
-    const perpX = -dirY;
-    const perpY = dirX;
-    const along = 300 + indexInZone * 155;
-    const side = (indexInZone % 2 === 0 ? 1 : -1) * (100 + (indexInZone % 3) * 35);
-    const x = clamp(CENTER.x + dirX * along + perpX * side, WALK_MARGIN, WORLD_W - WALK_MARGIN);
-    const y = clamp(CENTER.y + dirY * along + perpY * side, WALK_MARGIN, WORLD_H - WALK_MARGIN);
-    return { item, zone, x, y, dockX: x + dirX * 55, dockY: y + dirY * 55 };
-  });
 }
 
 // The full background SVG: the landmass, each zone's soft region tint,
@@ -442,4 +422,158 @@ export function wireFullscreenToggle(viewportEl, btnEl) {
     document.removeEventListener("fullscreenchange", update);
     if (isFullscreen()) document.exitFullscreen().catch(() => {});
   };
+}
+
+// A curved-ribbon alternative to a landmass radiating out from a shared
+// CENTER (computeZoneLayout below, and renderWorldSvg's own default
+// `regionShapes` blended ellipses) — one long, sweeping island following
+// an S-curve spine, with zones as clean bands along its length instead
+// of wedges or blobs around a point. Built for Wordwood Isle and
+// Athenaeum Reef; Numeria Peaks/Lab Archipelago stay on their own
+// bespoke per-file archipelago rendering (separate islands, not one
+// shared landmass to bend into a curve at all).
+//
+// `computeCurveLayout` replaces computeZoneLayout as the *positions*
+// half; `renderRibbonIsland` replaces the default `regionShapes` (pass
+// alongside `landmass: () => ""`, same reasoning as any custom
+// regionShapes override — this function draws its own shoreline as part
+// of the same ribbon outline the zone bands are cut from). Both take the
+// *same* `controlPoints` (a cubic Bezier's 4 points) and independently
+// derive the identical per-zone t-range from just `zones.length` — an
+// equal fifth (or quarter) of the curve's length each, deliberately not
+// weighted by skill count, so the two never need to coordinate a shared
+// boundary through any other channel.
+function pseudoRandom(seed) {
+  const x = Math.sin(seed * 12.9898 + 3.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// Point + tangent angle at parameter t (0..1) along a cubic Bezier
+// through `cps` (4 {x,y} control points).
+function bezierPoint(cps, t) {
+  const [p0, p1, p2, p3] = cps;
+  const mt = 1 - t;
+  const x = mt * mt * mt * p0.x + 3 * mt * mt * t * p1.x + 3 * mt * t * t * p2.x + t * t * t * p3.x;
+  const y = mt * mt * mt * p0.y + 3 * mt * mt * t * p1.y + 3 * mt * t * t * p2.y + t * t * t * p3.y;
+  const dx = 3 * mt * mt * (p1.x - p0.x) + 6 * mt * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x);
+  const dy = 3 * mt * mt * (p1.y - p0.y) + 6 * mt * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y);
+  return { x, y, angle: Math.atan2(dy, dx) };
+}
+
+export function sampleCurve(controlPoints, n = 300) {
+  return Array.from({ length: n + 1 }, (_, i) => bezierPoint(controlPoints, i / n));
+}
+
+// A skill's position: evenly spaced along its own zone's t-range (with a
+// small inset so markers near a zone boundary don't crowd it), then
+// offset perpendicular to the curve's own tangent there — alternating
+// sides and varying distance, same "a real trail wanders" idea
+// computeZoneLayout's own `side` alternation uses, just measured
+// perpendicular to a curve instead of a straight zone direction.
+export function computeCurveLayout(items, zones, controlPoints) {
+  const curve = sampleCurve(controlPoints, 600);
+  const n = zones.length;
+  const perZone = Math.ceil(items.length / n);
+  return items.map((item, i) => {
+    const zoneIndex = Math.min(Math.floor(i / perZone), n - 1);
+    const zone = zones[zoneIndex];
+    const indexInZone = i - zoneIndex * perZone;
+    const itemsInZone = Math.min(perZone, items.length - zoneIndex * perZone);
+    const tLo = zoneIndex / n;
+    const tHi = (zoneIndex + 1) / n;
+    const inset = (tHi - tLo) * 0.15;
+    const innerLo = tLo + inset;
+    const innerHi = tHi - inset;
+    const t = itemsInZone > 1 ? innerLo + (indexInZone / (itemsInZone - 1)) * (innerHi - innerLo) : (innerLo + innerHi) / 2;
+    const cp = curve[Math.round(t * (curve.length - 1))];
+    const perpX = -Math.sin(cp.angle);
+    const perpY = Math.cos(cp.angle);
+    const side = (indexInZone % 2 === 0 ? 1 : -1) * (105 + (indexInZone % 3) * 40);
+    const x = clamp(cp.x + perpX * side, WALK_MARGIN, WORLD_W - WALK_MARGIN);
+    const y = clamp(cp.y + perpY * side, WALK_MARGIN, WORLD_H - WALK_MARGIN);
+    return { item, zone, x, y, dockX: x + Math.cos(cp.angle) * 40, dockY: y + Math.sin(cp.angle) * 40 };
+  });
+}
+
+// The curve's own point at a given t, for a caller that wants to place
+// something *on* the spine itself (a center landmark, say) rather than
+// on one of computeCurveLayout's own offset skill positions.
+export function pointOnCurve(controlPoints, t) {
+  return bezierPoint(controlPoints, t);
+}
+
+function edgeTaper(t) {
+  const EDGE = 0.07;
+  if (t < EDGE) return t / EDGE;
+  if (t > 1 - EDGE) return (1 - t) / EDGE;
+  return 1;
+}
+
+const RIBBON_SAND = "#ecdfb8";
+
+export function renderRibbonIsland(zoneGroups, controlPoints, { seed = 1, baseWidth = 320, shoreRingWidth = 55 } = {}) {
+  const curve = sampleCurve(controlPoints, 260);
+  const total = curve.length;
+
+  // Both boundary rings (outer sand shore, inner zone-color fill) trace
+  // the same spine, offset perpendicular to its tangent by a width that
+  // tapers to a point at both ends (a real peninsula narrows, it doesn't
+  // get cut off square) and jitters organically along the way, same
+  // "always a hand-drawn coastline, never a perfect stripe" spirit as
+  // mathHub.js's/scienceHub.js's own organicIslandPoints.
+  function ring(width) {
+    const left = [];
+    const right = [];
+    curve.forEach((cp, i) => {
+      const t = i / (total - 1);
+      const jitter = 1 + (pseudoRandom(seed * 17 + i) - 0.5) * 0.4;
+      const w = Math.max(6, width * edgeTaper(t) * jitter);
+      const perpX = -Math.sin(cp.angle);
+      const perpY = Math.cos(cp.angle);
+      left.push({ x: cp.x + perpX * w, y: cp.y + perpY * w });
+      right.push({ x: cp.x - perpX * w, y: cp.y - perpY * w });
+    });
+    return { left, right };
+  }
+
+  function smoothOpenPath(pts) {
+    const mid = pts.map((a, j) => (j === pts.length - 1 ? "" : ` Q${a.x.toFixed(1)},${a.y.toFixed(1)} ${((a.x + pts[j + 1].x) / 2).toFixed(1)},${((a.y + pts[j + 1].y) / 2).toFixed(1)}`));
+    return `L${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}${mid.join("")}`;
+  }
+
+  const outer = ring(baseWidth);
+  const shoreD = `M${outer.left[0].x.toFixed(1)},${outer.left[0].y.toFixed(1)} ${smoothOpenPath(outer.left.slice(1))} ${smoothOpenPath([...outer.right].reverse())} Z`;
+  const shore = `<path d="${shoreD}" fill="${RIBBON_SAND}" />`;
+
+  const inner = ring(Math.max(20, baseWidth - shoreRingWidth));
+  const n = zoneGroups.length;
+  const bands = zoneGroups
+    .map(({ zone }, i) => {
+      const loIdx = Math.round((i / n) * (total - 1));
+      const hiIdx = Math.round(((i + 1) / n) * (total - 1));
+      const leftArc = inner.left.slice(loIdx, hiIdx + 1);
+      const rightArc = inner.right.slice(loIdx, hiIdx + 1);
+      if (leftArc.length < 2) return "";
+      const d = `M${leftArc[0].x.toFixed(1)},${leftArc[0].y.toFixed(1)} ${smoothOpenPath(leftArc.slice(1))} ${smoothOpenPath([...rightArc].reverse())} Z`;
+      return `<path d="${d}" fill="${zone.fill}" />`;
+    })
+    .join("");
+
+  return shore + bands;
+}
+
+// Pass as `trails` alongside renderRibbonIsland — a curve layout's nodes
+// sit near the spine, not radiating from CENTER, so renderWorldSvg's own
+// default trail (a straight dashed line from CENTER to every node) would
+// zigzag across the whole ribbon instead of following it. Connects each
+// zone's own nodes in placement order instead, same idea as mathHub.js's
+// own renderMathTrails.
+export function renderCurveTrails(zoneGroups) {
+  return zoneGroups
+    .map(({ points }) => {
+      if (points.length < 2) return "";
+      const d = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+      return `<path d="${d}" stroke="#5c4a3a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />`;
+    })
+    .join("");
 }
