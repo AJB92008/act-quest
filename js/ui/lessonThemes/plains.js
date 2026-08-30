@@ -1,9 +1,10 @@
 // Idiom Instinct's own theme (see lessonTerrain.js for the shared engine
 // every lesson-path theme renders through). Idiom Instinct sits in
-// Wordwood Isle's own green zone, so this reads as open plains: a
-// winding river confined to its own band on one side, a couple of
-// grassy hills the trail skirts around, and book/scroll-themed details
-// at the lesson stops.
+// Whisper Grove, Wordwood Isle's own darker-green zone, so this reads as
+// open plains in that same deeper green (not Sunny Meadow's lighter
+// one): a winding river confined to its own band on one side, a couple
+// of grassy hills the trail skirts around, and book/scroll-themed
+// details at the lesson stops.
 import { COL_W, clamp, bandPath, renderTrailPath, nearestPosition } from "../lessonTerrain.js";
 
 const RIVER_BAND = { min: 30, max: 210 };
@@ -103,10 +104,12 @@ function renderAmbient(totalHeight) {
 // Each hill picks from a small set of shade pairs (not always the same
 // green-on-green) and its highlight blob sits at a jittered offset, so
 // three hills at different sizes don't all read as one shape rescaled.
+// Darker than the ground's own #7fa35e so a hill still stands out
+// against it instead of blending into a flat wash of green.
 const HILL_SHADES = [
-  ["#8db35f", "#a3c777"],
-  ["#7ba055", "#93bb6d"],
-  ["#96b869", "#abcb80"],
+  ["#5e8a3f", "#749f52"],
+  ["#527d38", "#688f47"],
+  ["#6b9349", "#82a862"],
 ];
 
 function renderScene(positions, totalHeight, bossName) {
@@ -128,7 +131,7 @@ function renderScene(positions, totalHeight, bossName) {
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
       aria-label="A close-up corner of Wordwood Isle: open grassy plains with a winding river down one side, hills, and a trail connecting every Idiom Instinct lesson up to ${bossName}'s own clearing">
-      <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#c3dd8f" />
+      <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#7fa35e" />
       <g>${renderAmbient(totalHeight)}</g>
       <path d="${renderRiver(totalHeight)}" fill="#7fa8b8" opacity="0.75" />
       ${renderRiverBanks(totalHeight)}
@@ -142,7 +145,7 @@ function renderScene(positions, totalHeight, bossName) {
 
 export const plainsTheme = {
   trailBand: LAND_BAND,
-  mapBg: "#c3dd8f",
+  mapBg: "#7fa35e",
   hintColor: "rgba(25, 40, 10, 0.75)",
   renderScene,
 };

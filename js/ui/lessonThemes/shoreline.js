@@ -1,12 +1,12 @@
 // Case Closed's own theme (see lessonTerrain.js for the shared engine
-// every lesson-path theme renders through) — a sandy beach where a swamp
-// meets the shore: mostly open sand (the trail's own band), with a strip
-// of murky swamp water and reeds confined along one edge. The water
-// itself carries real detail — a depth gradient, ripple texture, foam
-// scallops rolling in at its outer edge, and a bit of life (fish, a
-// frog, lily pads) — so it never reads as a flat color block. A little
-// suitcase washed up in the sand is the pun on the skill's own name (a
-// "case," closed).
+// every lesson-path theme renders through) — Case Closed sits in Sunny
+// Meadow, so this reads as an open grassy field where a marsh cuts in:
+// mostly open grass (the trail's own band), with a strip of murky marsh
+// water and reeds confined along one edge. The water itself carries real
+// detail — a depth gradient, ripple texture, foam scallops rolling in at
+// its outer edge, and a bit of life (fish, a frog, lily pads) — so it
+// never reads as a flat color block. A little suitcase abandoned in the
+// grass is the pun on the skill's own name (a "case," closed).
 import { COL_W, clamp, jaggedBandPath, nearestPosition, renderTrailPath, blobPoints, closedBlobPath } from "../lessonTerrain.js";
 
 const WATER_BAND = { min: -40, max: 216 };
@@ -56,8 +56,8 @@ function renderWaterDefs() {
         <stop offset="100%" stop-color="#61754c" />
       </linearGradient>
       <linearGradient id="caseClosedEdgeFade" x1="0" y1="0" x2="70" y2="0" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stop-color="#dfd0a0" stop-opacity="1" />
-        <stop offset="100%" stop-color="#dfd0a0" stop-opacity="0" />
+        <stop offset="0%" stop-color="#c3dd8f" stop-opacity="1" />
+        <stop offset="100%" stop-color="#c3dd8f" stop-opacity="0" />
       </linearGradient>
     </defs>
   `;
@@ -124,7 +124,7 @@ function renderWaterLife(shore) {
     .join("");
 }
 
-// A couple of sandy points poking into the water — breaks up the shore
+// A couple of grassy points poking into the water — breaks up the shore
 // edge further and keeps it from reading as one clean boundary line.
 function renderSandPoints(totalHeight) {
   const shore = computeShore(totalHeight);
@@ -132,7 +132,7 @@ function renderSandPoints(totalHeight) {
     const idx = clamp(Math.round(shore.length * f), 1, shore.length - 2);
     const s = shore[idx];
     const pts = blobPoints(s.right - 18, s.y, 34, 9, f * 10);
-    return `<path d="${closedBlobPath(pts)}" fill="#dfd0a0" opacity="0.92" />`;
+    return `<path d="${closedBlobPath(pts)}" fill="#c3dd8f" opacity="0.92" />`;
   }).join("");
 }
 
@@ -174,7 +174,7 @@ function renderSandTexture(totalHeight) {
     const x = clamp(BAND.min + hx * (BAND.max - BAND.min), BAND.min + 5, BAND.max - 5);
     const y = hy * totalHeight;
     const r = 1.5 + (i % 3);
-    return `<circle cx="${x}" cy="${y}" r="${r}" fill="#c9b47e" opacity="0.4" />`;
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="#9dbf6e" opacity="0.4" />`;
   }).join("");
 }
 
@@ -192,7 +192,7 @@ function renderSuitcase(positions) {
   return `<text x="${x}" y="${y}" font-size="34" text-anchor="middle">🧳</text>`;
 }
 
-const DECOR_EMOJI = ["🐚", "🦀", "⭐", "🐚", "🌾"];
+const DECOR_EMOJI = ["🌼", "🦋", "🌾", "🌸", "🐝"];
 
 function renderDecorations(positions) {
   return positions
@@ -219,9 +219,9 @@ function renderScene(positions, totalHeight, bossName) {
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: a sandy beach where a swamp meets the shore, a suitcase washed up in the sand, and a trail connecting every Case Closed lesson up to ${bossName}'s own clearing">
+      aria-label="A close-up corner of Wordwood Isle: an open grassy meadow where a marsh cuts in, a suitcase abandoned in the grass, and a trail connecting every Case Closed lesson up to ${bossName}'s own clearing">
       ${renderWaterDefs()}
-      <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#dfd0a0" />
+      <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#c3dd8f" />
       <g>${renderSandTexture(totalHeight)}</g>
       ${water}
       <g>${ripples}</g>
@@ -241,7 +241,7 @@ function renderScene(positions, totalHeight, bossName) {
 
 export const shorelineTheme = {
   trailBand: BAND,
-  mapBg: "#dfd0a0",
-  hintColor: "rgba(45, 35, 10, 0.78)",
+  mapBg: "#c3dd8f",
+  hintColor: "rgba(25, 40, 10, 0.75)",
   renderScene,
 };

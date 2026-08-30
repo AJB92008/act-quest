@@ -36,6 +36,8 @@ import {
   wireMovement,
   wireFullscreenToggle,
   joystickHTML,
+  pointInPolygon,
+  buildShorelinePolygons,
 } from "./hubWorld.js";
 
 // A hook/nautilus-shell spiral, not a simple S — Wordwood Isle's own
@@ -83,6 +85,12 @@ function CURVE_FN(t) {
 // itself, so markers never sit right at the water's edge.
 const RIBBON_WIDTH = 330;
 const RIBBON_SHORE_WIDTH = 55;
+// Both bridges' own rendered width, shared between the actual
+// renderPlankBridge() calls below and their matching walkable-corridor
+// polygons (see bridgePolygon/isWalkable) — kept in one place so the
+// walkable strip can never drift out of sync with what's actually drawn.
+const VOCAB_BRIDGE_WIDTH = 52;
+const BOSS_BRIDGE_WIDTH = 68;
 
 // The Vocabulary Builder's own islet sits just off the ribbon at the
 // curve's own arc-length *midpoint* — the middle of the curved path
@@ -119,6 +127,28 @@ function findNearestRibbonEdge(target, sMin, sMax, steps = 48) {
     }
   }
   return best;
+}
+
+// A rectangle polygon for a plank bridge's own walkable span — the
+// bridge itself isn't a sand-colored path (buildShorelinePolygons only
+// ever finds actual shoreline), so without this the avatar would hit
+// invisible water the moment it stepped off either island onto a
+// bridge, unable to reach the Vocabulary Builder or the boss despite the
+// visible crossing right there. `halfWidth` should be a little under the
+// bridge's own rendered `width / 2` so the walkable strip stays inside
+// the rails rather than hanging just past them.
+function bridgePolygon(ax, ay, bx, by, halfWidth) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const px = (-dy / len) * halfWidth;
+  const py = (dx / len) * halfWidth;
+  return [
+    { x: ax + px, y: ay + py },
+    { x: bx + px, y: by + py },
+    { x: bx - px, y: by - py },
+    { x: ax - px, y: ay - py },
+  ];
 }
 
 // A bridge's own end should touch the islet's actual shore, not its
@@ -319,13 +349,19 @@ export function renderEnglishHub(root, navigate, subject) {
     landmass: () => "",
     regionShapes: (zoneGroups) =>
       renderRibbonIsland(zoneGroups, CURVE_FN, { baseWidth: RIBBON_WIDTH, shoreRingWidth: RIBBON_SHORE_WIDTH }) +
-      renderPlankBridge(vocabBridgeStart.x, vocabBridgeStart.y, vocabBridgeAnchor.x, vocabBridgeAnchor.y, { width: 30, color: "#c9a668", railColor: "#8a6a48" }) +
+      renderPlankBridge(vocabBridgeStart.x, vocabBridgeStart.y, vocabBridgeAnchor.x, vocabBridgeAnchor.y, {
+        width: VOCAB_BRIDGE_WIDTH,
+        color: "#c9a668",
+        railColor: "#8a6a48",
+        railThickness: 6,
+        plankThickness: 9,
+      }) +
       renderVocabIslet(),
     trails: renderCurveTrails,
     bossBridge: () =>
       renderBossBridgeMist(bossBridgeAnchor.x, bossBridgeAnchor.y, BOSS_POS.x, BOSS_POS.y) +
       renderPlankBridge(bossBridgeAnchor.x, bossBridgeAnchor.y, BOSS_POS.x, BOSS_POS.y, {
-        width: 68,
+        width: BOSS_BRIDGE_WIDTH,
         color: "#241a15",
         railColor: "#140d0a",
         railThickness: 8,
@@ -398,12 +434,29 @@ export function renderEnglishHub(root, navigate, subject) {
 
   const unwireFullscreen = wireFullscreenToggle(root.querySelector("#hubViewport"), root.querySelector("#hubFullscreenBtn"));
 
+  // The avatar's walkable ground is the actual rendered shore (both the
+  // main island's ribbon and the Vocabulary Builder's own islet — both
+  // painted in RIBBON_SAND, so buildShorelinePolygons picks up each as
+  // its own polygon) plus a walkable strip down the middle of each
+  // bridge, since a bridge itself isn't sand-colored and would otherwise
+  // read as open water no avatar could cross. Built fresh off the live
+  // DOM (after root.innerHTML above), so it can never drift out of sync
+  // with whatever CURVE_FN/RIBBON_WIDTH/seed actually drew this render.
+  const shorePolygons = buildShorelinePolygons(root);
+  const bridgePolygons = [
+    bridgePolygon(vocabBridgeStart.x, vocabBridgeStart.y, vocabBridgeAnchor.x, vocabBridgeAnchor.y, VOCAB_BRIDGE_WIDTH / 2),
+    bridgePolygon(bossBridgeAnchor.x, bossBridgeAnchor.y, BOSS_POS.x, BOSS_POS.y, BOSS_BRIDGE_WIDTH / 2),
+  ];
+  const walkablePolygons = [...shorePolygons, ...bridgePolygons];
+  const isWalkable = (px, py) => walkablePolygons.some((poly) => pointInPolygon(px, py, poly));
+
   const stopMovement = wireMovement({
     avatarEl: root.querySelector("#hubAvatar"),
     worldEl: root.querySelector("#hubWorld"),
     viewportEl: root.querySelector("#hubViewport"),
     hintEl: root.querySelector("#hubHint"),
     joystickEl: root.querySelector("#hubJoystick"),
+    isWalkable,
     // Right on the spine's own centerline, halfway along its length —
     // verified clear of every marker's own SKILL_TRIGGER_RADIUS (closest
     // marker sits ~78px away, radius is 50px), same reasoning as

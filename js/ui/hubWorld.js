@@ -578,14 +578,26 @@ export function computeCurveLayout(items, zones, curveFn) {
     for (let indexInZone = 0; indexInZone < itemsInZone; indexInZone++) {
       const i = zoneIndex * perZone + indexInZone;
       const sFrac = itemsInZone > 1 ? innerLo + (indexInZone / (itemsInZone - 1)) * (innerHi - innerLo) : (innerLo + innerHi) / 2;
-      const cp = curve[curveIndexAtArcFraction(curve, sFrac)];
+      const curveIdx = curveIndexAtArcFraction(curve, sFrac);
+      const cp = curve[curveIdx];
       const perpX = -Math.sin(cp.angle);
       const perpY = Math.cos(cp.angle);
       const avgUsedSide = placed.length ? placed.reduce((s, p) => s + p.side, 0) / placed.length : 0;
+      // Scales every candidate lane by how much the shore itself has
+      // tapered at this exact point (renderRibbonIsland's own edgeTaper,
+      // same function, same curve) — near either end of the spine the
+      // rendered shore narrows toward a point, and a marker offset that
+      // ignores that can end up past the *actual* rendered coastline even
+      // though it's a perfectly ordinary lane everywhere else. Without
+      // this, a marker can land in water no avatar can walk to once
+      // isWalkable checks against the real rendered shore (see
+      // islandHub.js's own buildShorelinePolygons-based isWalkable).
+      const taper = edgeTaper(curveIdx / (curve.length - 1));
 
       let best = null;
       let bestScore = -Infinity;
-      for (const side of LANE_OFFSETS) {
+      for (const rawSide of LANE_OFFSETS) {
+        const side = rawSide * taper;
         const x = clamp(cp.x + perpX * side, WALK_MARGIN, WORLD_W - WALK_MARGIN);
         const y = clamp(cp.y + perpY * side, WALK_MARGIN, WORLD_H - WALK_MARGIN);
         const minDistToPlaced = placed.length ? Math.min(...placed.map((p) => Math.hypot(p.x - x, p.y - y))) : Infinity;
@@ -603,7 +615,8 @@ export function computeCurveLayout(items, zones, curveFn) {
         // lane maximizes the min distance to all of them, even if that
         // still falls short of MIN_MARKER_DIST.
         let fallbackScore = -Infinity;
-        for (const side of LANE_OFFSETS) {
+        for (const rawSide of LANE_OFFSETS) {
+          const side = rawSide * taper;
           const x = clamp(cp.x + perpX * side, WALK_MARGIN, WORLD_W - WALK_MARGIN);
           const y = clamp(cp.y + perpY * side, WALK_MARGIN, WORLD_H - WALK_MARGIN);
           const minDistToPlaced = Math.min(...placed.map((p) => Math.hypot(p.x - x, p.y - y)));
@@ -695,7 +708,46 @@ function edgeTaper(t) {
   return 1;
 }
 
-const RIBBON_SAND = "#ecdfb8";
+export const RIBBON_SAND = "#ecdfb8";
+
+// Standard even-odd point-in-polygon test — the shared primitive behind
+// every hub's own "keep the avatar off the water" check (see
+// buildShorelinePolygons below, and mathHub.js's own private copy of this
+// exact function predating this shared one).
+export function pointInPolygon(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x;
+    const yi = poly[i].y;
+    const xj = poly[j].x;
+    const yj = poly[j].y;
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+// The avatar's own walkable region is exactly "on a rendered sand
+// shore" — sampled straight off the live SVG's own sand-colored path(s)
+// after they're already in the DOM, rather than recomputing the same
+// seed/jitter/taper math a second time from scratch. Sampling the actual
+// rendered path (not just its raw control points) means this can never
+// drift out of sync with what's actually drawn — if the art changes, the
+// walkable region changes with it automatically. Must run after the
+// scene's own innerHTML is set (the paths have to exist in the DOM
+// first). Any island shape works here, ribbon or otherwise, as long as
+// its shoreline is drawn as one or more filled RIBBON_SAND paths — a
+// hub with several separate islands (several sand paths) gets one
+// walkable polygon per island for free, same as a hub with just one.
+export function buildShorelinePolygons(root, sampleCount = 48) {
+  const sandPaths = root.querySelectorAll(`.hub-scene-svg path[fill="${RIBBON_SAND}"]`);
+  return Array.from(sandPaths).map((path) => {
+    const len = path.getTotalLength();
+    return Array.from({ length: sampleCount }, (_, i) => {
+      const p = path.getPointAtLength((i / sampleCount) * len);
+      return { x: p.x, y: p.y };
+    });
+  });
+}
 
 export function renderRibbonIsland(zoneGroups, curveFn, { seed = 1, baseWidth = 260, shoreRingWidth = 50 } = {}) {
   const curve = sampleParametricCurve(curveFn, 300);

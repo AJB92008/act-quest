@@ -1,16 +1,15 @@
 // Sound-Alike Showdown's own theme (see lessonTerrain.js for the shared
-// engine every lesson-path theme renders through) — the odd one out of
-// this batch's coastal group: instead of mountains dominant with the
-// sea along one edge, here the OCEAN dominates the whole scene, and
-// rocky cliffs run down both the far left and far right edges, each
-// topped with its own small, irregular cluster of peaks — the sea
-// "that is by mountains." The water itself carries the depth cue: pale
-// turquoise shallows right against each cliff, deepening to a dark
-// channel in the middle where the trail actually runs. The signature
-// device is a run of sound-wave arcs radiating from each cliff face
-// toward the other, meeting in the middle of the bay — two matching
-// walls facing off across the water, a literal "showdown" of things
-// that sound alike.
+// engine every lesson-path theme renders through) — Sound-Alike Showdown
+// sits in Rocky Hillside, so unlike a coastal bay this reads as a
+// mountain tarn: a still highland lake dominates the scene, and rocky
+// cliffs run down both the far left and far right edges, each topped
+// with its own small, irregular cluster of peaks. The water itself
+// carries the depth cue: pale shallows right against each cliff,
+// deepening to a dark channel in the middle where the trail actually
+// runs. The signature device is a run of sound-wave arcs radiating from
+// each cliff face toward the other, meeting in the middle of the lake —
+// two matching walls facing off across the water, a literal "showdown"
+// of things that sound alike.
 import { COL_W, clamp, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 150, max: COL_W - 150 };
@@ -121,8 +120,8 @@ function renderShoreline(edge, side) {
     .reverse()
     .map((p) => `L${p.x},${p.y}`)
     .join(" ");
-  const band = `<path d="${line1} ${line2} Z" fill="#cdeee6" opacity="0.4" />`;
-  const surf = `<path d="${line1}" stroke="#eef8f4" stroke-width="2.5" fill="none" opacity="0.65" />`;
+  const band = `<path d="${line1} ${line2} Z" fill="#d8e0d4" opacity="0.4" />`;
+  const surf = `<path d="${line1}" stroke="#eef2ea" stroke-width="2.5" fill="none" opacity="0.65" />`;
   return band + surf;
 }
 
@@ -145,11 +144,11 @@ function renderWaterDefs() {
   return `
     <defs>
       <linearGradient id="echoBayDepth" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#5fb0ad" />
-        <stop offset="16%" stop-color="#2f6d78" />
-        <stop offset="50%" stop-color="#173a48" />
-        <stop offset="84%" stop-color="#2f6d78" />
-        <stop offset="100%" stop-color="#5fb0ad" />
+        <stop offset="0%" stop-color="#8fa89c" />
+        <stop offset="16%" stop-color="#5c766d" />
+        <stop offset="50%" stop-color="#2c3e3a" />
+        <stop offset="84%" stop-color="#5c766d" />
+        <stop offset="100%" stop-color="#8fa89c" />
       </linearGradient>
     </defs>
   `;
@@ -183,7 +182,7 @@ function renderSteppingStones(positions) {
     .join("");
 }
 
-const DECOR_EMOJI = ["🐟", "🕊️"];
+const DECOR_EMOJI = ["🐟", "🦅"];
 
 function renderDecorations(positions) {
   return positions
@@ -210,7 +209,7 @@ function renderScene(positions, totalHeight, bossName) {
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: an open bay between two rocky cliffs topped with irregular mountain clusters, pale shallows at the shoreline deepening to a dark channel, sound-wave arcs echoing between the two sides, connecting every Sound-Alike Showdown lesson up to ${bossName}'s own clearing">
+      aria-label="A close-up corner of Wordwood Isle: a still mountain tarn between two rocky cliffs topped with irregular peak clusters, pale shallows at the shoreline deepening to a dark channel, sound-wave arcs echoing between the two sides, connecting every Sound-Alike Showdown lesson up to ${bossName}'s own clearing">
       ${renderWaterDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="url(#echoBayDepth)" />
       ${renderCliffBand(leftEdge, "left")}
@@ -230,7 +229,7 @@ function renderScene(positions, totalHeight, bossName) {
 
 export const echoBayTheme = {
   trailBand: BAND,
-  mapBg: "#173a48",
+  mapBg: "#8c8270",
   hintColor: "rgba(240, 245, 245, 0.9)",
   renderScene,
 };
