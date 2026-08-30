@@ -515,13 +515,41 @@ function curveIndexAtArcFraction(curve, sFrac) {
   return lo;
 }
 
+// Candidate perpendicular offsets a marker can sit at, evenly spaced
+// across the ribbon's width. computeCurveLayout picks *which* one each
+// marker actually uses via a greedy per-zone search rather than a fixed
+// cycle — see that function's own comment for why a fixed cycle isn't
+// enough on a curving spine.
+const LANE_OFFSETS = Array.from({ length: 7 }, (_, i) => -230 + i * (460 / 6));
+// A marker must clear this distance from every earlier marker already
+// placed in the same zone (comfortably above 2×any hub's own skill
+// trigger radius, so two markers can never overlap) …
+const MIN_MARKER_DIST = 100;
+// … and among the lanes that clear it, computeCurveLayout prefers
+// whichever keeps the gap to the *immediately previous* marker close to
+// this value, so consecutive gaps along a zone's own path stay even
+// instead of swinging between cramped and sparse.
+const TARGET_MARKER_DIST = 140;
+// Tie-break weight nudging the choice toward whichever safe lane is
+// furthest from this zone's own average lane used so far — without this
+// the search settles on just the one or two lanes that are always safe
+// (usually the outermost) and never touches the rest of the ribbon's
+// width; this term is what makes the path actually sweep across it.
+const LANE_DIVERSITY_WEIGHT = 0.4;
+
 // A skill's position: evenly spaced (by actual arc length, not raw
 // parameter — see sampleParametricCurve above) along its own zone's own
 // share of the curve's length, with a small inset so markers near a zone
-// boundary don't crowd it, then offset toward the curve's own outside
-// (see the `side` comment below for why that has to be a consistent
-// direction here, unlike computeZoneLayout's own straight-line `side`
-// alternation).
+// boundary don't crowd it, then offset perpendicular to the spine by
+// whichever of LANE_OFFSETS a greedy per-zone search picks (see that
+// constant's own comment) — earlier this was a fixed 4-lane cycle, but a
+// fixed cycle can't adapt: offsetting toward the curve's *inside* shrinks
+// its *effective* radius of curvature by roughly the offset amount, so
+// how much room a given lane leaves depends on exactly where along the
+// spine it's used, not just which lane it is. Searching per-zone, in
+// skill order, against the markers already placed in that same zone,
+// makes "don't crowd" and "keep gaps even" the actual inputs instead of
+// something to hope a formula produces.
 //
 // Each zone's own share of arc length is proportional to how many items
 // it actually holds (`perZone`'s own last-zone remainder can leave one
@@ -537,42 +565,67 @@ export function computeCurveLayout(items, zones, curveFn) {
   const zoneCounts = zones.map((_, zi) => Math.max(0, Math.min(perZone, items.length - zi * perZone)));
   const boundaries = [0];
   zoneCounts.forEach((count) => boundaries.push(boundaries[boundaries.length - 1] + count / items.length));
-  return items.map((item, i) => {
-    const zoneIndex = Math.min(Math.floor(i / perZone), n - 1);
-    const zone = zones[zoneIndex];
-    const indexInZone = i - zoneIndex * perZone;
+
+  const results = new Array(items.length);
+  zones.forEach((zone, zoneIndex) => {
     const itemsInZone = zoneCounts[zoneIndex];
     const sLo = boundaries[zoneIndex];
     const sHi = boundaries[zoneIndex + 1];
     const inset = (sHi - sLo) * 0.12;
     const innerLo = sLo + inset;
     const innerHi = sHi - inset;
-    const sFrac = itemsInZone > 1 ? innerLo + (indexInZone / (itemsInZone - 1)) * (innerHi - innerLo) : (innerLo + innerHi) / 2;
-    const cp = curve[curveIndexAtArcFraction(curve, sFrac)];
-    const perpX = -Math.sin(cp.angle);
-    const perpY = Math.cos(cp.angle);
-    // Four lanes cycling by index, not a plain +/- zigzag — a curving
-    // spine makes "which side" less important than "how far, and how
-    // often the same offset repeats." Offsetting toward the curve's
-    // *inside* (this curve's inside is the positive-perpendicular
-    // direction; a curve turning the other way would need the signs
-    // flipped) shrinks its *effective* radius of curvature by roughly
-    // the offset amount, so two same-offset markers there can end up
-    // closer than their spine points already were, even with a correct
-    // arc-length gap between them — purely offsetting outward avoids
-    // that but stacks every marker against one shore, leaving the
-    // walkway and the island's own inner half empty. Two lanes on each
-    // side (near/far) instead spreads markers across the ribbon's
-    // width — inner lanes only lightly inside, where the curvature
-    // penalty stays small, outer lanes further out where it's free —
-    // and cycling through 4 rather than 2 means a repeated offset is 4
-    // items apart along the curve instead of 2, so it has more of its
-    // own arc length to work with even before the offset is added.
-    const side = [-230, -80, 100, 210][indexInZone % 4];
-    const x = clamp(cp.x + perpX * side, WALK_MARGIN, WORLD_W - WALK_MARGIN);
-    const y = clamp(cp.y + perpY * side, WALK_MARGIN, WORLD_H - WALK_MARGIN);
-    return { item, zone, x, y, dockX: x + Math.cos(cp.angle) * 40, dockY: y + Math.sin(cp.angle) * 40 };
+    const placed = [];
+    for (let indexInZone = 0; indexInZone < itemsInZone; indexInZone++) {
+      const i = zoneIndex * perZone + indexInZone;
+      const sFrac = itemsInZone > 1 ? innerLo + (indexInZone / (itemsInZone - 1)) * (innerHi - innerLo) : (innerLo + innerHi) / 2;
+      const cp = curve[curveIndexAtArcFraction(curve, sFrac)];
+      const perpX = -Math.sin(cp.angle);
+      const perpY = Math.cos(cp.angle);
+      const avgUsedSide = placed.length ? placed.reduce((s, p) => s + p.side, 0) / placed.length : 0;
+
+      let best = null;
+      let bestScore = -Infinity;
+      for (const side of LANE_OFFSETS) {
+        const x = clamp(cp.x + perpX * side, WALK_MARGIN, WORLD_W - WALK_MARGIN);
+        const y = clamp(cp.y + perpY * side, WALK_MARGIN, WORLD_H - WALK_MARGIN);
+        const minDistToPlaced = placed.length ? Math.min(...placed.map((p) => Math.hypot(p.x - x, p.y - y))) : Infinity;
+        if (minDistToPlaced < MIN_MARKER_DIST) continue;
+        const distToPrev = placed.length ? Math.hypot(placed[placed.length - 1].x - x, placed[placed.length - 1].y - y) : TARGET_MARKER_DIST;
+        const score = -Math.abs(distToPrev - TARGET_MARKER_DIST) + LANE_DIVERSITY_WEIGHT * Math.abs(side - avgUsedSide);
+        if (score > bestScore) {
+          bestScore = score;
+          best = { x, y, side };
+        }
+      }
+      if (!best) {
+        // Every lane would crowd some earlier marker in this zone (only
+        // possible on a very tight stretch) — fall back to whichever
+        // lane maximizes the min distance to all of them, even if that
+        // still falls short of MIN_MARKER_DIST.
+        let fallbackScore = -Infinity;
+        for (const side of LANE_OFFSETS) {
+          const x = clamp(cp.x + perpX * side, WALK_MARGIN, WORLD_W - WALK_MARGIN);
+          const y = clamp(cp.y + perpY * side, WALK_MARGIN, WORLD_H - WALK_MARGIN);
+          const minDistToPlaced = Math.min(...placed.map((p) => Math.hypot(p.x - x, p.y - y)));
+          if (minDistToPlaced > fallbackScore) {
+            fallbackScore = minDistToPlaced;
+            best = { x, y, side };
+          }
+        }
+      }
+
+      placed.push(best);
+      results[i] = {
+        item: items[i],
+        zone,
+        x: best.x,
+        y: best.y,
+        dockX: best.x + Math.cos(cp.angle) * 40,
+        dockY: best.y + Math.sin(cp.angle) * 40,
+      };
+    }
   });
+  return results;
 }
 
 // The curve's own point at a given *arc-length* fraction (0..1), for a
@@ -642,6 +695,28 @@ export function renderRibbonIsland(zoneGroups, curveFn, { seed = 1, baseWidth = 
   const curve = sampleParametricCurve(curveFn, 300);
   const total = curve.length;
 
+  // Smooth, interpolated between a fixed number of anchors spread evenly
+  // across the coastline's own *arc length* (`sNorm`, 0..1) rather than a
+  // fresh random value per raw sample — this curve's own samples aren't
+  // evenly spaced in arc length (see sampleParametricCurve's own doc
+  // comment: a spiral's tightly-wound end packs many samples into a
+  // short physical distance), so jittering by raw sample index gives
+  // that tightly-wound stretch many more independent wiggles per pixel
+  // than anywhere else on the coastline, reading as a dense, spiky
+  // starburst instead of a coastline. Anchoring by arc length instead
+  // means nearby samples in a densely-sampled stretch mostly interpolate
+  // between the same two anchors — same noise "wavelength" in physical
+  // terms everywhere along the coastline, tightly-wound or not.
+  const JITTER_ANCHORS = 28;
+  function anchoredJitter(sNorm, seedOffset) {
+    const pos = sNorm * (JITTER_ANCHORS - 1);
+    const i0 = Math.floor(pos);
+    const i1 = Math.min(i0 + 1, JITTER_ANCHORS - 1);
+    const v0 = pseudoRandom(seedOffset + i0);
+    const v1 = pseudoRandom(seedOffset + i1);
+    return v0 + (v1 - v0) * (pos - i0);
+  }
+
   // Both boundary rings (outer sand shore, inner zone-color fill) trace
   // the same spine, offset perpendicular to its tangent by a width that
   // tapers to a point at both ends (a real peninsula narrows, it doesn't
@@ -653,7 +728,7 @@ export function renderRibbonIsland(zoneGroups, curveFn, { seed = 1, baseWidth = 
     const right = [];
     curve.forEach((cp, i) => {
       const t = i / (total - 1);
-      const jitter = 1 + (pseudoRandom(seed * 17 + i) - 0.5) * 0.4;
+      const jitter = 1 + (anchoredJitter(cp.sNorm, seed * 17) - 0.5) * 0.4;
       const w = Math.max(6, width * edgeTaper(t) * jitter);
       const perpX = -Math.sin(cp.angle);
       const perpY = Math.cos(cp.angle);

@@ -46,14 +46,10 @@ import {
 // but arc-length correctness alone still isn't enough on a curve this
 // tightly wound: two markers a fixed arc-length apart end up physically
 // *closer* together than that (their straight-line chord, not the arc)
-// the more sharply the curve bends between them, an effect that gets
-// much worse if they're also offset toward the curve's own *inside*
-// (see computeCurveLayout's own `side` comment for why every marker
-// here is offset to the outside, consistently, instead of alternating).
-// SPIRAL_CENTER/the radius formula below are tuned so the spine itself
-// stays well inside WALK_MARGIN even after that outward marker offset —
-// pushed further out and only 1 of 25 markers still needs the
-// fallback clamp to the world's own walkable edge.
+// the more sharply the curve bends between them — see hubWorld.js's own
+// computeCurveLayout for how it picks each marker's perpendicular offset
+// with that in mind. SPIRAL_CENTER/the radius formula below are tuned so
+// the spine itself stays well inside WALK_MARGIN even after that offset.
 const SPIRAL_CENTER = { x: 1100, y: 510 };
 function CURVE_FN(t) {
   const startAngle = -Math.PI * 0.15;
@@ -63,7 +59,7 @@ function CURVE_FN(t) {
   return { x: SPIRAL_CENTER.x + Math.cos(angle) * r, y: SPIRAL_CENTER.y + Math.sin(angle) * r * 0.75 };
 }
 // Wide enough to contain computeCurveLayout's own marker offsets (up to
-// 280px out from the spine) with real margin left over to the shoreline
+// 230px out from the spine) with real margin left over to the shoreline
 // itself, so markers never sit right at the water's edge.
 const RIBBON_WIDTH = 330;
 const RIBBON_SHORE_WIDTH = 55;
@@ -125,9 +121,9 @@ function renderVocabIslet(seed = 5) {
 }
 
 // Dev mode's unlock gesture used to be 10 rapid clicks on the (now
-// removed) dark-mode toggle; with that gone, the Rocky Hillside's own
-// goat decoration (see computeGoatPos) is the new one — same 10-clicks-
-// within-5s mechanic, just moved somewhere only exists on this screen.
+// removed) dark-mode toggle; with that gone, a goat hidden on Rocky
+// Hillside (see computeGoatPos) is the new one — same 10-clicks-within-5s
+// mechanic, just moved somewhere only exists on this screen.
 const DEV_MODE_CLICKS = 10;
 const DEV_MODE_WINDOW_MS = 5000;
 // Module-level (not per-render) so rapid clicks keep counting across the
@@ -135,13 +131,13 @@ const DEV_MODE_WINDOW_MS = 5000;
 // old toggle-click tracking used.
 let goatClickTimestamps = [];
 
-// Smaller than the other hubs' shared 58px default — this spiral packs
-// its tightest same-side pair (the dock zone's last two markers, where
-// the curve's own inner winding leaves the least room) about 86px
-// apart; two 58px hitboxes there would already overlap (2*58=116>86),
-// so every hitbox on this hub shrinks a little to guarantee none do,
-// with real margin: 2*40=80 < 86.
-const SKILL_TRIGGER_RADIUS = 40;
+// Smaller than the other hubs' shared 58px default — computeCurveLayout's
+// own greedy placement guarantees every pair of markers on this spiral is
+// at least MIN_MARKER_DIST=100px apart (in practice the tightest pair
+// ends up ~111px), but two 58px hitboxes would still overlap at that gap
+// (2*58=116>111). 50px leaves real margin (2*50=100<111) while still
+// being bigger than Wordwood Isle's old 40px felt walking through it.
+const SKILL_TRIGGER_RADIUS = 50;
 const LANDMARK_TRIGGER_RADIUS = 150;
 
 // One long island, four differently-themed bands along its own spine
@@ -157,25 +153,52 @@ const LANDMARK_TRIGGER_RADIUS = 150;
 // would move a zone to a different stretch of the curve, but every
 // skill stays in the exact same zone it's always been in either way —
 // this is only ever a *position* change, never a re-grouping.
+// `description` is what the legend shows for each zone — a plain
+// description of what it actually covers, not one of the ACT's own 3
+// real reporting-category names (Conventions of Standard English/
+// Knowledge of Language/Production of Writing — see js/data/skills.js),
+// since these 4 visual zones don't line up with those 3 categories
+// 1:1. No `decorations` array anymore — the old per-zone emoji (flowers,
+// rocks, trees, an anchor...) didn't map to any lesson and just added
+// visual noise; still an array (not omitted) because renderWorldSvg's
+// own default decoration pass reads `zone.decorations` unconditionally.
 const ZONES = [
-  { id: "meadow", name: "Sunny Meadow", fill: "#c3dd8f", decorations: ["🌼", "🌸", "🦋", "🐝"] },
-  { id: "hillside", name: "Rocky Hillside", fill: "#c2ab84", decorations: ["🪨", "⛰️", "🐐"] },
-  { id: "forest", name: "Whisper Grove", fill: "#7fa35e", decorations: ["🌳", "🌲", "🦉"] },
-  { id: "dock", name: "Tidewater Dock", fill: "#dcc48f", decorations: ["⚓", "🚤", "🐚"] },
+  { id: "meadow", name: "Sunny Meadow", fill: "#c3dd8f", description: "Punctuation & mechanics", decorations: [] },
+  { id: "hillside", name: "Rocky Hillside", fill: "#c2ab84", description: "Grammar & agreement", decorations: [] },
+  { id: "forest", name: "Whisper Grove", fill: "#7fa35e", description: "Sentence structure", decorations: [] },
+  { id: "dock", name: "Tidewater Dock", fill: "#dcc48f", description: "Organization & style", decorations: [] },
 ];
+
+function renderLegend() {
+  return `
+    <div class="hub-legend" aria-hidden="true">
+      <p class="hub-legend-title">Island regions</p>
+      ${ZONES.map(
+        (zone) => `
+        <div class="hub-legend-row">
+          <span class="hub-legend-swatch" style="background:${zone.fill}"></span>
+          <span>
+            <span class="hub-legend-name">${zone.name}</span><br>
+            <span class="hub-legend-desc">${zone.description}</span>
+          </span>
+        </div>
+      `
+      ).join("")}
+    </div>
+  `;
+}
 
 // Rocky Hillside's goat is the dev-mode unlock: 10 clicks within 5s,
 // same mechanic the old theme toggle used before dark mode was removed.
-// Found by position (zone id + the emoji itself) rather than a
-// hardcoded index, so reordering ZONES' decoration lists later can't
-// silently move it.
+// With the zone's own decorations gone, it isn't found by emoji index
+// anymore — it just sits at decorationPos' own spot #0 off that zone's
+// center, the same fixed spot it already occupied.
 function computeGoatPos(layout) {
   const hillside = ZONES.find((z) => z.id === "hillside");
   const points = layout.filter((p) => p.zone === hillside);
   if (!points.length) return null;
   const { avgX, avgY } = zoneCenter(points);
-  const index = hillside.decorations.indexOf("🐐");
-  return decorationPos(avgX, avgY, index, hillside.decorations.length);
+  return decorationPos(avgX, avgY, 0, 1);
 }
 
 function renderSkillMarker({ item: skill, x, y }, subject) {
@@ -199,9 +222,9 @@ function renderBossMarker(boss, bossStateClass, subject) {
   const cleared = bossStateClass === "is-cleared";
   return `
     <div class="hub-marker-wrap" style="left:${BOSS_POS.x}px;top:${BOSS_POS.y}px;">
-      <button class="hub-boss-marker ${bossStateClass}" data-boss ${locked ? "disabled" : ""}
+      <button class="hub-boss-marker is-grammar-golem ${bossStateClass}" data-boss ${locked ? "disabled" : ""}
         aria-label="${boss.name}, ${subject.name} Boss Quiz${cleared ? " (cleared)" : locked ? `: locked until every skill on this island is mastered` : ""}">
-        ${monsterSVG(boss.avatar, { size: 74 })}
+        ${monsterSVG(boss.avatar, { size: 92 })}
         ${cleared ? `<span class="hub-boss-crown">👑</span>` : locked ? `<span class="hub-boss-lock">🔒</span>` : ""}
       </button>
       <span class="hub-skill-name hub-boss-name">${locked ? "🔒 " : ""}${boss.name}</span>
@@ -235,7 +258,6 @@ export function renderEnglishHub(root, navigate, subject) {
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
       "Wordwood Isle, one curled hook-shaped island split into four clean bands along its own spiral spine — a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock — plus a small islet at the spiral's own center, reachable by its own bridge, holding the Vocabulary Builder, and a dark bridge off the island's southern edge leading to the boss's own platform",
-    skipDecoration: (zone, emoji) => zone.id === "hillside" && emoji === "🐐",
     landmass: () => "",
     regionShapes: (zoneGroups) =>
       renderRibbonIsland(zoneGroups, CURVE_FN, { baseWidth: RIBBON_WIDTH, shoreRingWidth: RIBBON_SHORE_WIDTH }) +
@@ -255,14 +277,16 @@ export function renderEnglishHub(root, navigate, subject) {
       <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD (or the joystick) through the meadow, hillside, grove, and dock — every trail leads to a skill</p>
       <div class="hub-viewport" id="hubViewport">
         <button class="hub-fullscreen-btn" id="hubFullscreenBtn" type="button" aria-label="Enter fullscreen">⛶</button>
+        ${renderLegend()}
         ${joystickHTML("hubJoystick")}
         <div class="hub-world" id="hubWorld" style="width:${WORLD_W}px;height:${WORLD_H}px;">
           ${sceneSvg}
           <div class="hub-marker-wrap" style="left:${landmarkPos.x}px;top:${landmarkPos.y}px;">
-            <button class="hub-landmark" data-landmark aria-label="ACT Vocabulary Builder">
+            <button class="hub-landmark" data-landmark aria-label="ACT Vocabulary Builder (bonus, not a graded skill)">
               <span class="hub-landmark-icon">🔤</span>
+              <span class="hub-landmark-bonus-badge" aria-hidden="true">Bonus</span>
             </button>
-            <span class="hub-skill-name hub-landmark-name">Vocabulary Builder</span>
+            <span class="hub-skill-name hub-landmark-name is-bonus-name">Vocabulary Builder</span>
           </div>
           ${layout.map((p) => renderSkillMarker(p, subject)).join("")}
           ${renderBossMarker(boss, bossStateClass, subject)}
@@ -315,10 +339,12 @@ export function renderEnglishHub(root, navigate, subject) {
     hintEl: root.querySelector("#hubHint"),
     joystickEl: root.querySelector("#hubJoystick"),
     // Right on the spine's own centerline, halfway along its length —
-    // computeCurveLayout only ever offsets markers *away* from this
-    // line (see its own `side`), so spawning on it keeps the player
-    // clear of every skill's trigger radius from the very first frame,
-    // same reasoning as Science's own spawn/landmark spacing fix.
+    // verified clear of every marker's own SKILL_TRIGGER_RADIUS (closest
+    // marker sits ~78px away, radius is 50px), same reasoning as
+    // Science's own spawn/landmark spacing fix. Re-check this if
+    // SKILL_TRIGGER_RADIUS grows or CURVE_FN/ZONES' skill counts change —
+    // computeCurveLayout's greedy placement can put a marker anywhere
+    // from -230 to +230px off the spine, including right on it.
     spawn: (() => {
       const p = pointOnCurve(CURVE_FN, 0.5);
       return { x: p.x, y: p.y };

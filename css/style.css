@@ -1301,6 +1301,81 @@ input[type="password"] {
   pointer-events: none;
 }
 
+/* A small always-present key to what each land color on the map means —
+   same floating-corner treatment as .hub-fullscreen-btn, opposite corner
+   so the two never collide. Text content (zone names/descriptions) comes
+   from whichever hub renders it; this only owns the shared look. */
+.hub-legend {
+  position: absolute;
+  z-index: 4;
+  top: 14px;
+  left: 14px;
+  max-width: 190px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(20, 30, 35, 0.55);
+  backdrop-filter: blur(4px);
+  color: #fff;
+}
+
+.hub-legend-title {
+  margin: 0 0 7px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+
+.hub-legend-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.hub-legend-row:last-child {
+  margin-bottom: 0;
+}
+
+.hub-legend-swatch {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  margin-top: 2px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+
+.hub-legend-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.hub-legend-desc {
+  font-size: 0.68rem;
+  opacity: 0.85;
+  line-height: 1.25;
+}
+
+@media (max-width: 640px) {
+  .hub-legend {
+    max-width: 130px;
+    padding: 8px 9px;
+  }
+  .hub-legend-swatch {
+    width: 10px;
+    height: 10px;
+  }
+  .hub-legend-name {
+    font-size: 0.64rem;
+  }
+  .hub-legend-desc {
+    font-size: 0.58rem;
+  }
+}
+
 .hub-world {
   position: absolute;
   left: 0;
@@ -1338,6 +1413,7 @@ input[type="password"] {
 }
 
 .hub-landmark {
+  position: relative;
   width: 84px;
   height: 84px;
   border-radius: 50%;
@@ -1358,6 +1434,7 @@ input[type="password"] {
 }
 
 .hub-skill-marker {
+  position: relative;
   padding: 0;
   transition: transform 0.15s ease;
 }
@@ -1456,6 +1533,80 @@ input[type="password"] {
 .hub-boss-emoji {
   font-size: 2.4rem;
   line-height: 1;
+}
+
+/* Wordwood Isle only (scoped through .ocean-scene.hub-island-screen,
+   which only islandHub.js's own <main> ever carries both of at once) —
+   a soft/painterly pass on top of the plain flat node-circle every other
+   hub still uses unchanged: a rounded highlight standing in for a light
+   source, and a visible ring so mastered vs. open reads at a glance
+   without needing to be close enough to see the checkmark. */
+.ocean-scene.hub-island-screen .hub-skill-marker.is-open {
+  background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--node-color, var(--purple)) 55%, #fff 45%) 0%, var(--node-color, var(--purple)) 62%);
+  box-shadow: inset 0 -4px 7px rgba(0, 0, 0, 0.18), 0 0 0 3px color-mix(in srgb, var(--node-color, var(--purple)) 55%, #fff 45%), 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.ocean-scene.hub-island-screen .hub-skill-marker.is-mastered {
+  background: radial-gradient(circle at 32% 28%, #ffe6a8 0%, #ffcf5c 45%, #ff9f38 100%);
+  box-shadow: inset 0 -4px 7px rgba(140, 70, 0, 0.25), 0 0 0 3px #ffe6a8, 0 6px 14px rgba(255, 159, 56, 0.35);
+}
+
+.ocean-scene.hub-island-screen .hub-skill-name {
+  background: linear-gradient(180deg, #fffaf0, #f6ecd6);
+  border: 1px solid rgba(154, 122, 72, 0.35);
+}
+
+.ocean-scene.hub-island-screen .hub-skill-name.is-bonus-name {
+  background: linear-gradient(180deg, #f0e6ff, #e2d2fb);
+  border-color: rgba(120, 80, 190, 0.35);
+}
+
+/* Marks a landmark as optional/bonus content rather than a graded skill
+   on the path — Wordwood Isle's Vocabulary Builder specifically, not a
+   graded lesson so it was never going to fit into path order. */
+.hub-landmark-bonus-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #caa6ff, #9d6bf0);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 8px rgba(120, 70, 200, 0.4), 0 0 0 2px #fffaf0;
+}
+
+/* The Grammar Golem's own marker — bigger and more ornate than a regular
+   boss lair (see .hub-boss-marker above), signalling "final challenge"
+   through scale and detail rather than a differently-styled asset. */
+.hub-boss-marker.is-grammar-golem {
+  width: 118px;
+  height: 118px;
+  background: radial-gradient(circle at 35% 30%, #4a372c 0%, #241a15 60%, #140d0a 100%);
+  box-shadow:
+    0 0 0 3px #140d0a,
+    0 0 0 7px #6b1f1f,
+    0 0 0 9px #a8552f,
+    0 14px 26px rgba(0, 0, 0, 0.45);
+}
+
+.hub-boss-marker.is-grammar-golem.is-locked {
+  box-shadow:
+    0 0 0 3px #140d0a,
+    0 0 0 7px #4a4a4a,
+    0 0 0 9px #6b6b6b,
+    0 14px 26px rgba(0, 0, 0, 0.45);
+}
+
+.hub-boss-marker.is-grammar-golem.is-cleared {
+  box-shadow:
+    0 0 0 3px #140d0a,
+    0 0 0 7px #ffd25f,
+    0 0 0 9px #a8752f,
+    0 14px 26px rgba(0, 0, 0, 0.45);
 }
 
 .hub-boss-name {
