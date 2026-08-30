@@ -17,6 +17,7 @@ import { monsterSVG } from "./monster.js";
 import { getBossMonster } from "../data/bossMonsters.js";
 import { getLessonCount } from "../data/questions/index.js";
 import { glowVars } from "./pathTrail.js";
+import { closedBlobPath } from "./lessonTerrain.js";
 import {
   BOSS_POS,
   BOSS_TRIGGER_RADIUS,
@@ -26,6 +27,9 @@ import {
   zoneCenter,
   computeCurveLayout,
   pointOnCurve,
+  ribbonEdgePoint,
+  organicRingPoints,
+  renderPlankBridge,
   renderWorldSvg,
   renderRibbonIsland,
   renderCurveTrails,
@@ -36,23 +40,88 @@ import {
 
 // A hook/nautilus-shell spiral, not a simple S — Wordwood Isle's own
 // spine, replacing the old single rounded landmass with something that
-// actually has a shape (each of ZONES' 4 entries below gets an
-// equal-*length* quarter of this curve — see hubWorld.js's own
-// computeCurveLayout, which measures real arc length, not raw parameter,
-// specifically so a tightly-curled stretch of spiral doesn't bunch its
-// zone's own markers together while a wide stretch spreads its own
-// too thin). `t` sweeps just over 3/4 of a full turn while the radius
-// grows the whole way, so successive loops stay well clear of each
-// other — never mind overlapping, since the ribbon itself
-// (renderRibbonIsland) is only ~260px wide against a 620px radius
-// growth across the sweep.
+// actually has a shape. Each of ZONES' 4 entries below gets a
+// length-of-curve share proportional to its own skill count (see
+// hubWorld.js's own computeCurveLayout), measured in real arc length —
+// but arc-length correctness alone still isn't enough on a curve this
+// tightly wound: two markers a fixed arc-length apart end up physically
+// *closer* together than that (their straight-line chord, not the arc)
+// the more sharply the curve bends between them, an effect that gets
+// much worse if they're also offset toward the curve's own *inside*
+// (see computeCurveLayout's own `side` comment for why every marker
+// here is offset to the outside, consistently, instead of alternating).
+// SPIRAL_CENTER/the radius formula below are tuned so the spine itself
+// stays well inside WALK_MARGIN even after that outward marker offset —
+// pushed further out and only 1 of 25 markers still needs the
+// fallback clamp to the world's own walkable edge.
+const SPIRAL_CENTER = { x: 1100, y: 510 };
 function CURVE_FN(t) {
-  const center = { x: 1000, y: 620 };
   const startAngle = -Math.PI * 0.15;
-  const turns = 0.74;
+  const turns = 0.58;
   const angle = startAngle + t * turns * Math.PI * 2;
-  const r = 210 + t * 610;
-  return { x: center.x + Math.cos(angle) * r, y: center.y + Math.sin(angle) * r * 0.8 };
+  const r = 350 + t * 400;
+  return { x: SPIRAL_CENTER.x + Math.cos(angle) * r, y: SPIRAL_CENTER.y + Math.sin(angle) * r * 0.75 };
+}
+// Wide enough to contain computeCurveLayout's own marker offsets (up to
+// 280px out from the spine) with real margin left over to the shoreline
+// itself, so markers never sit right at the water's edge.
+const RIBBON_WIDTH = 330;
+const RIBBON_SHORE_WIDTH = 55;
+
+// The Vocabulary Builder's own islet sits just off the ribbon at the
+// curve's own arc-length *midpoint* — the middle of the curved path
+// itself, not the spiral's unrelated mathematical center point (which
+// sits inside the tightest part of the inner winding, nowhere near the
+// visual middle of the shape) — offset perpendicular from the spine
+// there by more than a full ribbon width, so the islet sits in open
+// water beside the island rather than on top of it.
+const VOCAB_ISLET_OFFSET = 480;
+const midSpine = pointOnCurve(CURVE_FN, 0.5);
+const VOCAB_ISLET = {
+  x: midSpine.x - Math.sin(midSpine.angle) * VOCAB_ISLET_OFFSET,
+  y: midSpine.y + Math.cos(midSpine.angle) * VOCAB_ISLET_OFFSET,
+  radius: 100,
+};
+
+// Walks a stretch of the ribbon's own two edges (both `side`s, arc
+// fractions `sMin`..`sMax`) looking for whichever point sits physically
+// closest to `target` — used to anchor a bridge to wherever the
+// island's actual coastline is, rather than a hand-guessed coordinate
+// that could drift out of sync if the spiral's own shape ever changes.
+function findNearestRibbonEdge(target, sMin, sMax, steps = 48) {
+  let best = null;
+  let bestDist = Infinity;
+  for (let i = 0; i <= steps; i++) {
+    const sFrac = sMin + (i / steps) * (sMax - sMin);
+    for (const side of [1, -1]) {
+      const p = ribbonEdgePoint(CURVE_FN, sFrac, RIBBON_WIDTH, side);
+      const d = Math.hypot(p.x - target.x, p.y - target.y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = p;
+      }
+    }
+  }
+  return best;
+}
+
+// A bridge's own end should touch the islet's actual shore, not its
+// center — steps back from `to` toward `from` by exactly the islet's
+// own radius, along the straight line between them.
+function pullBackToEdge(from, to, radius) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const len = Math.hypot(dx, dy) || 1;
+  return { x: from.x + (dx / len) * radius, y: from.y + (dy / len) * radius };
+}
+
+const ISLET_SAND = "#ecdfb8";
+const ISLET_FILL = "#efe4cf";
+
+function renderVocabIslet(seed = 5) {
+  const outerPts = organicRingPoints(VOCAB_ISLET, VOCAB_ISLET.radius + 22, seed, 40, [0, 0.15]);
+  const innerPts = organicRingPoints(VOCAB_ISLET, VOCAB_ISLET.radius - 14, seed, 40, [0, 0.15]);
+  return `<path d="${closedBlobPath(outerPts)}" fill="${ISLET_SAND}" /><path d="${closedBlobPath(innerPts)}" fill="${ISLET_FILL}" stroke="#c9a668" stroke-width="4" />`;
 }
 
 // Dev mode's unlock gesture used to be 10 rapid clicks on the (now
@@ -66,7 +135,13 @@ const DEV_MODE_WINDOW_MS = 5000;
 // old toggle-click tracking used.
 let goatClickTimestamps = [];
 
-const SKILL_TRIGGER_RADIUS = 58;
+// Smaller than the other hubs' shared 58px default — this spiral packs
+// its tightest same-side pair (the dock zone's last two markers, where
+// the curve's own inner winding leaves the least room) about 86px
+// apart; two 58px hitboxes there would already overlap (2*58=116>86),
+// so every hitbox on this hub shrinks a little to guarantee none do,
+// with real margin: 2*40=80 < 86.
+const SKILL_TRIGGER_RADIUS = 40;
 const LANDMARK_TRIGGER_RADIUS = 150;
 
 // One long island, four differently-themed bands along its own spine
@@ -136,13 +211,20 @@ function renderBossMarker(boss, bossStateClass, subject) {
 
 export function renderEnglishHub(root, navigate, subject) {
   const layout = computeCurveLayout(subject.skills, ZONES, CURVE_FN);
-  // The Vocabulary Builder sits right on the spine at its midpoint —
-  // Wordwood Isle's one landmark, same role CENTER played for the old
-  // radiating layout, just relocated to wherever this hub's own curve
-  // happens to have its middle instead of the world's raw geometric
-  // center.
-  const landmarkPoint = pointOnCurve(CURVE_FN, 0.5);
-  const landmarkPos = { x: landmarkPoint.x, y: landmarkPoint.y };
+  // The Vocabulary Builder sits on its own islet at the spiral's own
+  // mathematical center (see VOCAB_ISLET above) rather than directly on
+  // the spine, reached by its own bridge from wherever the ribbon's
+  // actual coastline happens to pass closest — searched fresh each
+  // render rather than a hand-picked point, so it can never drift out of
+  // sync with CURVE_FN/RIBBON_WIDTH if either changes later.
+  const landmarkPos = { x: VOCAB_ISLET.x, y: VOCAB_ISLET.y };
+  const vocabBridgeAnchor = findNearestRibbonEdge(VOCAB_ISLET, 0, 1);
+  const vocabBridgeStart = pullBackToEdge(VOCAB_ISLET, vocabBridgeAnchor, VOCAB_ISLET.radius);
+  // Same search, but against BOSS_POS and over the *whole* ribbon —
+  // "south off the island's edge" means finding whichever stretch of
+  // coastline is actually nearest the boss, not assuming it's any one
+  // particular zone's own end of the spiral.
+  const bossBridgeAnchor = findNearestRibbonEdge(BOSS_POS, 0, 1);
   const goatPos = computeGoatPos(layout);
 
   const allMastered = subject.skills.every((skill) => gameState.isMastered(skill.id));
@@ -152,11 +234,17 @@ export function renderEnglishHub(root, navigate, subject) {
 
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
-      "Wordwood Isle, one curled hook-shaped island split into four clean bands along its own spiral spine — a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock — each with its own trail of grammar skills, plus a dark path south to the boss lair",
+      "Wordwood Isle, one curled hook-shaped island split into four clean bands along its own spiral spine — a sunny meadow, a rocky hillside, a whisper grove, and a tidewater dock — plus a small islet at the spiral's own center, reachable by its own bridge, holding the Vocabulary Builder, and a dark bridge off the island's southern edge leading to the boss's own platform",
     skipDecoration: (zone, emoji) => zone.id === "hillside" && emoji === "🐐",
     landmass: () => "",
-    regionShapes: (zoneGroups) => renderRibbonIsland(zoneGroups, CURVE_FN, { baseWidth: 270, shoreRingWidth: 50 }),
+    regionShapes: (zoneGroups) =>
+      renderRibbonIsland(zoneGroups, CURVE_FN, { baseWidth: RIBBON_WIDTH, shoreRingWidth: RIBBON_SHORE_WIDTH }) +
+      renderPlankBridge(vocabBridgeStart.x, vocabBridgeStart.y, vocabBridgeAnchor.x, vocabBridgeAnchor.y, { width: 30, color: "#c9a668", railColor: "#8a6a48" }) +
+      renderVocabIslet(),
     trails: renderCurveTrails,
+    bossBridge: () =>
+      renderPlankBridge(bossBridgeAnchor.x, bossBridgeAnchor.y, BOSS_POS.x, BOSS_POS.y, { width: 40, color: "#241a15", railColor: "#140d0a" }) +
+      `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="95" fill="#2c211c" opacity="0.32" />`,
   });
 
   root.innerHTML = `
@@ -226,11 +314,15 @@ export function renderEnglishHub(root, navigate, subject) {
     viewportEl: root.querySelector("#hubViewport"),
     hintEl: root.querySelector("#hubHint"),
     joystickEl: root.querySelector("#hubJoystick"),
-    // 220px further along the spine's own tangent from the landmark —
-    // clear of its 150px trigger radius (see the note on Science's own
-    // spawn/landmark spacing bug this mirrors), landing inside Whisper
-    // Grove's own stretch of the curve.
-    spawn: { x: landmarkPos.x + Math.cos(landmarkPoint.angle) * 220, y: landmarkPos.y + Math.sin(landmarkPoint.angle) * 220 },
+    // Right on the spine's own centerline, halfway along its length —
+    // computeCurveLayout only ever offsets markers *away* from this
+    // line (see its own `side`), so spawning on it keeps the player
+    // clear of every skill's trigger radius from the very first frame,
+    // same reasoning as Science's own spawn/landmark spacing fix.
+    spawn: (() => {
+      const p = pointOnCurve(CURVE_FN, 0.5);
+      return { x: p.x, y: p.y };
+    })(),
     targets: [
       { x: landmarkPos.x, y: landmarkPos.y, radius: LANDMARK_TRIGGER_RADIUS, onArrive: () => goTo("vocabulary", {}) },
       { x: BOSS_POS.x, y: BOSS_POS.y, radius: BOSS_TRIGGER_RADIUS, gate: () => allMastered, onArrive: () => goTo("bossQuiz", { subjectId: subject.id }) },

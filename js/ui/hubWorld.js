@@ -82,7 +82,7 @@ export function zoneCenter(points) {
 // draw every trail starting from that one shared point — defaults to
 // that same center-radiating line when omitted. All three default to
 // their exact prior behavior, so every existing caller renders unchanged.
-export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecoration, landmass, regionShapes, trails } = {}) {
+export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecoration, landmass, regionShapes, trails, bossBridge } = {}) {
   const zones = [...new Set(layout.map((p) => p.zone))];
   const zoneGroups = zones.map((zone) => ({ zone, points: layout.filter((p) => p.zone === zone) }));
 
@@ -143,8 +143,13 @@ export function renderWorldSvg(layout, { ariaLabel, centerClearing, skipDecorati
   // The one dark, deliberately plain path to the boss spot — no zigzag,
   // no dock stub, a different color and dash than every other trail so
   // it reads as "somewhere more serious" the moment you look at the map.
-  const bossPath = `<path d="M${CENTER.x},${CENTER.y} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#3b2a22" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.8" />`;
-  const bossLair = `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="118" fill="#2c211c" opacity="0.22" />`;
+  // `bossBridge` (optional) replaces both pieces entirely, for a hub
+  // whose boss route should be an actual bridge structure off the
+  // island's own edge rather than a plain line from raw CENTER (see
+  // islandHub.js's own renderBossBridge) — every other caller keeps this
+  // exact default, unaffected.
+  const bossPath = bossBridge ? bossBridge() : `<path d="M${CENTER.x},${CENTER.y} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#3b2a22" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.8" />`;
+  const bossLair = bossBridge ? "" : `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="118" fill="#2c211c" opacity="0.22" />`;
   const clearing = centerClearing
     ? `<circle cx="${CENTER.x}" cy="${CENTER.y}" r="${LANDMARK_CLEARING_R}" fill="${centerClearing.fill}" stroke="${centerClearing.stroke}" stroke-width="${centerClearing.strokeWidth}" />`
     : "";
@@ -513,28 +518,55 @@ function curveIndexAtArcFraction(curve, sFrac) {
 // A skill's position: evenly spaced (by actual arc length, not raw
 // parameter — see sampleParametricCurve above) along its own zone's own
 // share of the curve's length, with a small inset so markers near a zone
-// boundary don't crowd it, then offset perpendicular to the curve's own
-// tangent there — alternating sides and varying distance, same "a real
-// trail wanders" idea computeZoneLayout's own `side` alternation used.
+// boundary don't crowd it, then offset toward the curve's own outside
+// (see the `side` comment below for why that has to be a consistent
+// direction here, unlike computeZoneLayout's own straight-line `side`
+// alternation).
+//
+// Each zone's own share of arc length is proportional to how many items
+// it actually holds (`perZone`'s own last-zone remainder can leave one
+// zone with noticeably fewer items than the rest) — a flat 1/n share
+// regardless of count would pack a bigger zone's items tighter into the
+// same length than a smaller zone's, same reasoning mathHub.js's own
+// computeTerritories already sizes its columns by skill count rather
+// than splitting the walkable width evenly.
 export function computeCurveLayout(items, zones, curveFn) {
   const curve = sampleParametricCurve(curveFn, 800);
   const n = zones.length;
   const perZone = Math.ceil(items.length / n);
+  const zoneCounts = zones.map((_, zi) => Math.max(0, Math.min(perZone, items.length - zi * perZone)));
+  const boundaries = [0];
+  zoneCounts.forEach((count) => boundaries.push(boundaries[boundaries.length - 1] + count / items.length));
   return items.map((item, i) => {
     const zoneIndex = Math.min(Math.floor(i / perZone), n - 1);
     const zone = zones[zoneIndex];
     const indexInZone = i - zoneIndex * perZone;
-    const itemsInZone = Math.min(perZone, items.length - zoneIndex * perZone);
-    const sLo = zoneIndex / n;
-    const sHi = (zoneIndex + 1) / n;
-    const inset = (sHi - sLo) * 0.15;
+    const itemsInZone = zoneCounts[zoneIndex];
+    const sLo = boundaries[zoneIndex];
+    const sHi = boundaries[zoneIndex + 1];
+    const inset = (sHi - sLo) * 0.12;
     const innerLo = sLo + inset;
     const innerHi = sHi - inset;
     const sFrac = itemsInZone > 1 ? innerLo + (indexInZone / (itemsInZone - 1)) * (innerHi - innerLo) : (innerLo + innerHi) / 2;
     const cp = curve[curveIndexAtArcFraction(curve, sFrac)];
     const perpX = -Math.sin(cp.angle);
     const perpY = Math.cos(cp.angle);
-    const side = (indexInZone % 2 === 0 ? 1 : -1) * (105 + (indexInZone % 3) * 40);
+    // Always the *same sign* (never alternating +/-) and always a
+    // *large enough, similar* magnitude — both matter for a curving
+    // spine in a way neither did for computeZoneLayout's own straight
+    // zone direction. Alternating sides puts half the offsets on the
+    // curve's inside, where curvature is sharper than the spine's own
+    // (an inside offset's effective radius shrinks by the offset amount)
+    // — two same-side markers there can end up *closer* than their
+    // spine points were, even though their arc-length gap is correct.
+    // Offsetting consistently to the outside instead (this curve's
+    // outside is the negative-perpendicular direction; a curve turning
+    // the other way would need the opposite sign) keeps every marker on
+    // the *gentler* side, where offset markers stay roughly as far
+    // apart as their own spine points already are. The small
+    // per-parity variation (±80) is just enough for a visual zigzag,
+    // not enough to reintroduce the inside-crowding problem.
+    const side = -(200 + (indexInZone % 2) * 80);
     const x = clamp(cp.x + perpX * side, WALK_MARGIN, WORLD_W - WALK_MARGIN);
     const y = clamp(cp.y + perpY * side, WALK_MARGIN, WORLD_H - WALK_MARGIN);
     return { item, zone, x, y, dockX: x + Math.cos(cp.angle) * 40, dockY: y + Math.sin(cp.angle) * 40 };
@@ -549,6 +581,50 @@ export function computeCurveLayout(items, zones, curveFn) {
 export function pointOnCurve(curveFn, sFrac) {
   const curve = sampleParametricCurve(curveFn, 800);
   return curve[curveIndexAtArcFraction(curve, sFrac)];
+}
+
+// A point on the ribbon's own edge (not the spine) at a given arc-length
+// fraction — `side: 1` or `-1` picks which of the two edges, `width`
+// should match whatever renderRibbonIsland was actually called with, so
+// the point this returns sits exactly on that ribbon's real coastline.
+// For a caller that wants to anchor something (a bridge, say) to
+// wherever an island's own edge actually is, rather than guessing a
+// world-coordinate by hand.
+export function ribbonEdgePoint(curveFn, sFrac, width, side = 1) {
+  const cp = pointOnCurve(curveFn, sFrac);
+  const perpX = -Math.sin(cp.angle) * side;
+  const perpY = Math.cos(cp.angle) * side;
+  return { x: cp.x + perpX * width, y: cp.y + perpY * width, angle: cp.angle };
+}
+
+// A small plank-and-rail bridge between two points — two dark rails
+// with evenly spaced cross-planks between them, distinct from both a
+// shoreline's own sand and a trail's thin dashed line, since a bridge is
+// a built structure crossing open space rather than either of those.
+// `color` lets a caller reuse this for very different moods (a plain
+// wooden bridge to an everyday landmark vs. the dark, ominous one to a
+// boss) without duplicating the geometry.
+export function renderPlankBridge(ax, ay, bx, by, { width = 34, color = "#8a6a48", railColor = "#5c4530", plankCount } = {}) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+  const half = width / 2;
+  const rails = `
+    <line x1="${(ax + px * half).toFixed(1)}" y1="${(ay + py * half).toFixed(1)}" x2="${(bx + px * half).toFixed(1)}" y2="${(by + py * half).toFixed(1)}" stroke="${railColor}" stroke-width="5" stroke-linecap="round" />
+    <line x1="${(ax - px * half).toFixed(1)}" y1="${(ay - py * half).toFixed(1)}" x2="${(bx - px * half).toFixed(1)}" y2="${(by - py * half).toFixed(1)}" stroke="${railColor}" stroke-width="5" stroke-linecap="round" />
+  `;
+  const n = plankCount ?? Math.max(4, Math.round(len / 26));
+  const planks = Array.from({ length: n }, (_, i) => {
+    const t = (i + 0.5) / n;
+    const cx = ax + dx * t;
+    const cy = ay + dy * t;
+    return `<line x1="${(cx + px * half).toFixed(1)}" y1="${(cy + py * half).toFixed(1)}" x2="${(cx - px * half).toFixed(1)}" y2="${(cy - py * half).toFixed(1)}" stroke="${color}" stroke-width="7" stroke-linecap="round" />`;
+  }).join("");
+  return rails + planks;
 }
 
 function edgeTaper(t) {
@@ -595,11 +671,17 @@ export function renderRibbonIsland(zoneGroups, curveFn, { seed = 1, baseWidth = 
   const shore = `<path d="${shoreD}" fill="${RIBBON_SAND}" />`;
 
   const inner = ring(Math.max(20, baseWidth - shoreRingWidth));
-  const n = zoneGroups.length;
+  // Band boundaries proportional to each zone's own point count — must
+  // match computeCurveLayout's own boundaries exactly (same formula, off
+  // the same zoneGroups.points.length), or a band's painted color would
+  // end at a different spot than that zone's own markers actually stop.
+  const totalPoints = zoneGroups.reduce((sum, g) => sum + g.points.length, 0) || 1;
+  const boundaries = [0];
+  zoneGroups.forEach((g) => boundaries.push(boundaries[boundaries.length - 1] + g.points.length / totalPoints));
   const bands = zoneGroups
     .map(({ zone }, i) => {
-      const loIdx = curveIndexAtArcFraction(curve, i / n);
-      const hiIdx = curveIndexAtArcFraction(curve, (i + 1) / n);
+      const loIdx = curveIndexAtArcFraction(curve, boundaries[i]);
+      const hiIdx = curveIndexAtArcFraction(curve, boundaries[i + 1]);
       const leftArc = inner.left.slice(loIdx, hiIdx + 1);
       const rightArc = inner.right.slice(loIdx, hiIdx + 1);
       if (leftArc.length < 2) return "";
@@ -676,7 +758,12 @@ export function pointOnLobeRing(at, { ringCenter, ringRadius }) {
   return { x: ringCenter.x + Math.cos(angle) * ringRadius, y: ringCenter.y + Math.sin(angle) * ringRadius };
 }
 
-function organicRingPoints(center, radius, seed, n, jitterRange = [-0.25, 0.25]) {
+// An organic ring of points around `center` at roughly `radius`, jittered
+// per-point by a seeded amount within `jitterRange` (a fraction of
+// radius) — the building block behind renderLobeIsland's own fused
+// lobes, exported too for any caller that wants a plain small organic
+// islet on its own (see islandHub.js's own Vocabulary Builder islet).
+export function organicRingPoints(center, radius, seed, n, jitterRange = [-0.25, 0.25]) {
   const [lo, hi] = jitterRange;
   return Array.from({ length: n }, (_, i) => {
     const angle = (i / n) * Math.PI * 2;
