@@ -806,6 +806,29 @@ input[type="password"] {
   50% { transform: translateY(-6px); }
 }
 
+/* The boss bridge's own torch accents (islandHub.js's own
+   renderBossBridgeTorches) — a gentle opacity flicker so they read as
+   flame rather than a flat dot. The glow ring beneath each flame pulses
+   opposite it (dimmer exactly when the flame itself is brightest would
+   look wrong; a shared but offset rhythm reads as one flickering light). */
+.boss-bridge-torch {
+  animation: torch-flicker 1.8s ease-in-out infinite;
+}
+
+.boss-bridge-torch-glow {
+  animation: torch-glow-flicker 1.8s ease-in-out infinite;
+}
+
+@keyframes torch-flicker {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes torch-glow-flicker {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.22; }
+}
+
 .map-island-node {
   position: relative;
   width: 88px;

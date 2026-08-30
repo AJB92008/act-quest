@@ -50,13 +50,33 @@ import {
 // computeCurveLayout for how it picks each marker's perpendicular offset
 // with that in mind. SPIRAL_CENTER/the radius formula below are tuned so
 // the spine itself stays well inside WALK_MARGIN even after that offset.
-const SPIRAL_CENTER = { x: 1100, y: 510 };
+//
+// The inner radius (470, was 350) and y-squash (0.87, was 0.75) are both
+// bumped from their original values to fix a real self-intersection: the
+// tightest bend's own radius of curvature used to be ~232px, less than
+// RIBBON_WIDTH (330) — offsetting the shore that far past the curve's own
+// center of curvature folded the shore polygon over itself, rendering as
+// a visible gap in the coastline (near where Sunny Meadow and Rocky
+// Hillside meet). These values keep the curve's tightest bend at a
+// radius of curvature of ~383px, safely past 330. SPIRAL_CENTER.y (310,
+// was 510) is a separate, independent tune: it exists purely to trade
+// the extra vertical room these two changes need between the island's
+// own north tip (must stay clear of the world's top edge) and the boss's
+// southern platform (must stay clear of the boss's own dark clearing) —
+// see BOSS_POS/renderBossMarker below. It also happens to roughly double
+// the boss bridge's own length (the nearest-coastline-point-to-BOSS_POS
+// distance) as a side effect, which was wanted anyway. Re-run this
+// module's own layout math (min pairwise marker distance, spawn-point
+// clearance, shore's own y-bounds) if any of these three ever change
+// again — they're a genuinely coupled system, not three independent
+// knobs.
+const SPIRAL_CENTER = { x: 1100, y: 310 };
 function CURVE_FN(t) {
   const startAngle = -Math.PI * 0.15;
   const turns = 0.58;
   const angle = startAngle + t * turns * Math.PI * 2;
-  const r = 350 + t * 400;
-  return { x: SPIRAL_CENTER.x + Math.cos(angle) * r, y: SPIRAL_CENTER.y + Math.sin(angle) * r * 0.75 };
+  const r = 470 + t * 280;
+  return { x: SPIRAL_CENTER.x + Math.cos(angle) * r, y: SPIRAL_CENTER.y + Math.sin(angle) * r * 0.87 };
 }
 // Wide enough to contain computeCurveLayout's own marker offsets (up to
 // 230px out from the spine) with real margin left over to the shoreline
@@ -118,6 +138,44 @@ function renderVocabIslet(seed = 5) {
   const outerPts = organicRingPoints(VOCAB_ISLET, VOCAB_ISLET.radius + 22, seed, 40, [0, 0.15]);
   const innerPts = organicRingPoints(VOCAB_ISLET, VOCAB_ISLET.radius - 14, seed, 40, [0, 0.15]);
   return `<path d="${closedBlobPath(outerPts)}" fill="${ISLET_SAND}" /><path d="${closedBlobPath(innerPts)}" fill="${ISLET_FILL}" stroke="#c9a668" stroke-width="4" />`;
+}
+
+// Sells "ominous path to a boss" beyond just the bridge's own geometry —
+// a soft dark mist hugging the water the whole bridge crosses (drawn
+// first, so the bridge itself renders on top of it) and a few warm torch
+// glows along one rail (drawn last, so they sit visibly on top of the
+// planks rather than under them) — see the two render calls below.
+// Pure visual dressing, no gameplay effect; scoped to islandHub.js since
+// Wordwood Isle is the only hub with an actual boss *bridge* to dress up
+// (every other hub's boss sits on renderWorldSvg's own default plain
+// dashed path from CENTER).
+function renderBossBridgeMist(ax, ay, bx, by) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
+  const midX = (ax + bx) / 2;
+  const midY = (ay + by) / 2;
+  return `<ellipse cx="${midX.toFixed(1)}" cy="${midY.toFixed(1)}" rx="${(len / 2 + 70).toFixed(1)}" ry="95" fill="#0a1520" opacity="0.3" transform="rotate(${angleDeg.toFixed(1)} ${midX.toFixed(1)} ${midY.toFixed(1)})" />`;
+}
+
+function renderBossBridgeTorches(ax, ay, bx, by) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const px = -dy / len;
+  const py = dx / len;
+  const railOffset = 42;
+  return [0.2, 0.5, 0.8]
+    .map((f) => {
+      const tx = ax + dx * f + px * railOffset;
+      const ty = ay + dy * f + py * railOffset;
+      return (
+        `<circle class="boss-bridge-torch-glow" cx="${tx.toFixed(1)}" cy="${ty.toFixed(1)}" r="20" fill="#ffb347" opacity="0.16" />` +
+        `<circle class="boss-bridge-torch" cx="${tx.toFixed(1)}" cy="${ty.toFixed(1)}" r="6" fill="#ffcf7a" />`
+      );
+    })
+    .join("");
 }
 
 // Dev mode's unlock gesture used to be 10 rapid clicks on the (now
@@ -265,8 +323,16 @@ export function renderEnglishHub(root, navigate, subject) {
       renderVocabIslet(),
     trails: renderCurveTrails,
     bossBridge: () =>
-      renderPlankBridge(bossBridgeAnchor.x, bossBridgeAnchor.y, BOSS_POS.x, BOSS_POS.y, { width: 40, color: "#241a15", railColor: "#140d0a" }) +
-      `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="95" fill="#2c211c" opacity="0.32" />`,
+      renderBossBridgeMist(bossBridgeAnchor.x, bossBridgeAnchor.y, BOSS_POS.x, BOSS_POS.y) +
+      renderPlankBridge(bossBridgeAnchor.x, bossBridgeAnchor.y, BOSS_POS.x, BOSS_POS.y, {
+        width: 68,
+        color: "#241a15",
+        railColor: "#140d0a",
+        railThickness: 8,
+        plankThickness: 11,
+      }) +
+      `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="95" fill="#2c211c" opacity="0.32" />` +
+      renderBossBridgeTorches(bossBridgeAnchor.x, bossBridgeAnchor.y, BOSS_POS.x, BOSS_POS.y),
   });
 
   root.innerHTML = `

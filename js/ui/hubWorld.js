@@ -659,7 +659,13 @@ export function ribbonEdgePoint(curveFn, sFrac, width, side = 1) {
 // `color` lets a caller reuse this for very different moods (a plain
 // wooden bridge to an everyday landmark vs. the dark, ominous one to a
 // boss) without duplicating the geometry.
-export function renderPlankBridge(ax, ay, bx, by, { width = 34, color = "#8a6a48", railColor = "#5c4530", plankCount } = {}) {
+export function renderPlankBridge(
+  ax,
+  ay,
+  bx,
+  by,
+  { width = 34, color = "#8a6a48", railColor = "#5c4530", plankCount, railThickness = 5, plankThickness = 7 } = {}
+) {
   const dx = bx - ax;
   const dy = by - ay;
   const len = Math.hypot(dx, dy) || 1;
@@ -669,15 +675,15 @@ export function renderPlankBridge(ax, ay, bx, by, { width = 34, color = "#8a6a48
   const py = ux;
   const half = width / 2;
   const rails = `
-    <line x1="${(ax + px * half).toFixed(1)}" y1="${(ay + py * half).toFixed(1)}" x2="${(bx + px * half).toFixed(1)}" y2="${(by + py * half).toFixed(1)}" stroke="${railColor}" stroke-width="5" stroke-linecap="round" />
-    <line x1="${(ax - px * half).toFixed(1)}" y1="${(ay - py * half).toFixed(1)}" x2="${(bx - px * half).toFixed(1)}" y2="${(by - py * half).toFixed(1)}" stroke="${railColor}" stroke-width="5" stroke-linecap="round" />
+    <line x1="${(ax + px * half).toFixed(1)}" y1="${(ay + py * half).toFixed(1)}" x2="${(bx + px * half).toFixed(1)}" y2="${(by + py * half).toFixed(1)}" stroke="${railColor}" stroke-width="${railThickness}" stroke-linecap="round" />
+    <line x1="${(ax - px * half).toFixed(1)}" y1="${(ay - py * half).toFixed(1)}" x2="${(bx - px * half).toFixed(1)}" y2="${(by - py * half).toFixed(1)}" stroke="${railColor}" stroke-width="${railThickness}" stroke-linecap="round" />
   `;
   const n = plankCount ?? Math.max(4, Math.round(len / 26));
   const planks = Array.from({ length: n }, (_, i) => {
     const t = (i + 0.5) / n;
     const cx = ax + dx * t;
     const cy = ay + dy * t;
-    return `<line x1="${(cx + px * half).toFixed(1)}" y1="${(cy + py * half).toFixed(1)}" x2="${(cx - px * half).toFixed(1)}" y2="${(cy - py * half).toFixed(1)}" stroke="${color}" stroke-width="7" stroke-linecap="round" />`;
+    return `<line x1="${(cx + px * half).toFixed(1)}" y1="${(cy + py * half).toFixed(1)}" x2="${(cx - px * half).toFixed(1)}" y2="${(cy - py * half).toFixed(1)}" stroke="${color}" stroke-width="${plankThickness}" stroke-linecap="round" />`;
   }).join("");
   return rails + planks;
 }
