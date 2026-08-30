@@ -1,0 +1,35 @@
+#!/bin/sh
+# Auto-bumps js/data/version.js's APP_VERSION by 1 (its last, dot-separated
+# segment — "1.105" -> "1.106") on every commit to main, so the version
+# shown in Developer Mode always reflects the latest commit without anyone
+# having to remember to touch it by hand. No-ops on any other branch, so
+# work on a feature branch doesn't burn version numbers before it's ever
+# merged. Requires this repo's `core.hooksPath` to point at .githooks (a
+# one-time `git config core.hooksPath .githooks` — see README.md's own
+# "Versioning" section); a fresh clone that hasn't run that command won't
+# have this hook active at all, since .git/hooks itself is never tracked.
+set -e
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$branch" != "main" ]; then
+  exit 0
+fi
+
+VERSION_FILE="js/data/version.js"
+if [ ! -f "$VERSION_FILE" ]; then
+  exit 0
+fi
+
+current=$(grep -o '[0-9][0-9]*\.[0-9][0-9]*' "$VERSION_FILE" | head -1)
+if [ -z "$current" ]; then
+  exit 0
+fi
+
+major=${current%%.*}
+minor=${current#*.}
+next_minor=$((10#$minor + 1))
+new_version="$major.$next_minor"
+
+sed -i.bak "s/$current/$new_version/" "$VERSION_FILE"
+rm -f "$VERSION_FILE.bak"
+git add "$VERSION_FILE"

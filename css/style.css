@@ -3820,6 +3820,12 @@ button.drill-skill-row:hover {
   cursor: grabbing;
 }
 
+.dev-panel-version {
+  font-weight: 600;
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
 .dev-panel-header-actions {
   display: flex;
   gap: 4px;

@@ -130,3 +130,20 @@ http://localhost:8080/?dev=1&onboarded=1&xp=2000&mastered=english&screen=island&
 
 See the comment at the top of `js/devBootstrap.js` for the full list of
 recognized params.
+
+## Versioning
+
+`js/data/version.js` exports `APP_VERSION`, shown in Developer Mode's own
+header (unrelated to `package.json`'s "version" field, which exists only
+for the CI test-runner's tooling). It's bumped automatically — one clone
+needs a one-time:
+
+```
+git config core.hooksPath .githooks
+```
+
+— after which `.githooks/pre-commit` bumps `APP_VERSION` by 1 (e.g.
+1.105 -> 1.106) on every commit to `main`, folding the change into that
+same commit. `.git/hooks` itself is never tracked by git, which is why
+this lives in `.githooks/` and needs that one manual `core.hooksPath`
+config per clone instead of working automatically.

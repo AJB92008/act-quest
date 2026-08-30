@@ -11,6 +11,7 @@ import { STATES } from "../data/stateTests.js";
 import { TESTS, isSubjectPlayable } from "../data/tests.js";
 import { gameState, EVOLUTION_STAGE_NAMES } from "../state.js";
 import { monsterSVG } from "./monster.js";
+import { APP_VERSION } from "../data/version.js";
 
 const firstBgTopic = SCIENCE_BACKGROUND.sections[0].topics[0];
 const firstVocabTopic = VOCABULARY.sections[0].topics[0];
@@ -371,7 +372,7 @@ function createPanel() {
 
   panelEl.innerHTML = `
     <div class="dev-panel-header" id="devPanelHeader">
-      <span>🛠️ Developer Mode</span>
+      <span>🛠️ Developer Mode <span class="dev-panel-version">v${APP_VERSION}</span></span>
       <div class="dev-panel-header-actions">
         <button id="devPanelCollapseBtn" title="Collapse" aria-label="Collapse developer panel">▾</button>
         <button id="devPanelCloseBtn" title="Hide" aria-label="Hide developer panel">×</button>
