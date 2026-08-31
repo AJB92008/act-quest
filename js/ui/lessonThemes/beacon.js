@@ -4,7 +4,11 @@
 // — a visual pun on the skill itself ("Signal": a semicolon signals a
 // close connection between two independent clauses, so the whole scene
 // is built around one visible, unmistakable signal-post). No river,
-// unlike plains.js.
+// unlike plains.js. Denser than a first pass: the windmill gets a
+// proper base and roof instead of a bare pole, flags run more
+// frequently along the trail, and ambient wheat/grass texture fills
+// the open field so it never reads as an empty flat block around the
+// one landmark.
 import { COL_W, clamp, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 60, max: COL_W - 60 };
@@ -21,10 +25,28 @@ function renderWindmill(x, y) {
     })
     .join("");
   return `
+    <ellipse cx="${x}" cy="${y + 47}" rx="26" ry="8" fill="rgba(20,45,30,0.14)" />
+    <path d="M${x - 20},${y + 46} L${x - 13},${y + 22} L${x + 13},${y + 22} L${x + 20},${y + 46} Z" fill="#c9b48a" stroke="#8a6a44" stroke-width="2" />
     <rect x="${x - 7}" y="${y - 30}" width="14" height="76" fill="#8a6a44" rx="3" />
+    <path d="M${x - 10},${y - 30} L${x},${y - 42} L${x + 10},${y - 30} Z" fill="#6b4a2e" />
     ${blades}
     <circle cx="${x}" cy="${y - 30}" r="7" fill="#5a4128" />
   `;
+}
+
+// Small tufts of tall grass/wheat scattered across the whole field,
+// independent of the trail — ambient texture so the plains are never a
+// flat fill.
+function renderFieldTexture(totalHeight) {
+  const count = Math.max(40, Math.round(totalHeight / 26));
+  return Array.from({ length: count }, (_, i) => {
+    const hx = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+    const hy = Math.abs(Math.sin(i * 78.233 + 4.1) * 12543.789) % 1;
+    const x = clamp(hx * COL_W, 8, COL_W - 8);
+    const y = hy * totalHeight;
+    const h = 9 + (i % 3) * 6;
+    return `<path d="M${x},${y} Q${x + 2},${y - h * 0.6} ${x},${y - h}" stroke="#9aa855" stroke-width="2" fill="none" opacity="0.55" />`;
+  }).join("");
 }
 
 function renderFlag(x, y) {
@@ -49,7 +71,7 @@ function renderAmbient(positions) {
 
 function renderFlagRow(positions) {
   return positions
-    .filter((_, i) => i % 4 === 3)
+    .filter((_, i) => i % 3 === 1)
     .map((p) => {
       const side = p.x < (BAND.min + BAND.max) / 2 ? 1 : -1;
       const dx = clamp(p.x + side * 40, BAND.min + 10, BAND.max - 25);
@@ -68,6 +90,7 @@ function renderScene(positions, totalHeight, bossName) {
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
       aria-label="A close-up corner of Wordwood Isle: open plains with a windmill signal-post and small flags along the trail, connecting every Semicolon Signal lesson up to ${bossName}'s own clearing">
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#c8d98f" />
+      <g>${renderFieldTexture(totalHeight)}</g>
       <g>${renderAmbient(positions)}</g>
       ${renderWindmill(clamp(millX, BAND.min + 40, BAND.max - 40), mid.y)}
       ${bossClearing}

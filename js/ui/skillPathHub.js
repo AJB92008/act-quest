@@ -12,12 +12,17 @@
 // topic, not wandering), and Writer's Goal gets a misty swamp crossed by
 // a built wooden boardwalk (a clear, deliberate path laid straight
 // through otherwise murky terrain). The meadow zone: Comma Sense gets a
-// composite scene, mountains giving way to plains with the trail
-// crossing between (a comma's own brief pause between two things),
+// composite scene, a brief run of mountains right at the top giving way
+// to plains dominating the rest (a comma's own brief pause between two
+// things — plains-dominant so the scene still reads as Sunny Meadow),
 // Apostrophe Ally gets a plains scene built entirely from paired/twin
-// features (ponds, hills, flowers — an "ally," always in twos),
+// features (ponds, hills, grass tufts, flowers — an "ally," always in
+// twos — denser than a first pass at the idea, so the field doesn't
+// read as empty between pairs),
 // Semicolon Signal gets a plains scene centered on a windmill landmark
-// with small signal flags along the trail, Colon Call gets a plains
+// (now with a proper base and roof) with more frequent signal flags
+// along the trail and ambient wheat texture filling the field, Colon
+// Call gets a plains
 // scene full of calling birds and a bell tower (a colon "calls out"
 // what follows), Dash Dash gets a windswept prairie whose trail is
 // drawn in long chunky dashes instead of dots, Full Stop gets its own

@@ -1,14 +1,17 @@
 // Comma Sense's own theme (see lessonTerrain.js for the shared engine
 // every lesson-path theme renders through) — the one composite scene of
-// the set: rocky mountains fill the upper portion, open plains fill the
-// lower, and the trail crosses from one into the other partway down — a
-// visual pun on the skill itself (a comma marks a brief pause between
-// two different things, same as the trail's own pause crossing from
-// dramatic peaks into calm flat ground).
+// the set: a brief run of rocky mountains right at the top, then open
+// plains the rest of the way down — a visual pun on the skill itself
+// (a comma marks a brief pause between two different things, same as
+// the trail's own brief pause through dramatic peaks before it settles
+// into calm flat ground). Comma Sense sits in Sunny Meadow, so plains
+// dominate the scene rather than splitting it evenly with the
+// mountains — the meadow is where this skill actually lives on the
+// isle's own map, the peaks are only the "pause."
 import { COL_W, clamp, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 60, max: COL_W - 60 };
-const SPLIT_FRACTION = 0.4;
+const SPLIT_FRACTION = 0.15;
 
 // A single jagged silhouette spanning the whole width — one connected
 // mountain range, not a scatter of separate peaks.
