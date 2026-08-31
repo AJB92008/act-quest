@@ -34,8 +34,9 @@
 // pointing back to it every time; Time Traveler gets an all-mountain
 // scene whose cliff strata visibly age from weathered to vivid down its
 // length (the mountain showing its own past, present, and future);
-// Number Match gets coastal mountains with sea stacks rising from the
-// water in deliberately countable groups of one, two, and three;
+// Number Match gets a plain all-mountain valley, same template as Match
+// Makers and Clear Antecedent, its walls topped with recurring ridge
+// silhouettes and foothill scree instead of any water feature;
 // Apples to Apples gets coastal mountains mirrored to the other side,
 // with matching pairs of twin sea arches and a few literal apple trees;
 // and Sound-Alike Showdown flips the coastal balance entirely — open

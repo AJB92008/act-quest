@@ -1,129 +1,70 @@
 // Number Match's own theme (see lessonTerrain.js for the shared engine
-// every lesson-path theme renders through) — coastal mountains: rocky
-// cliff terrain (the trail's own band) dominates, with the ocean
-// confined along one edge, same technique as Case Closed's shoreline
-// but re-colored for open sea instead of swamp. The signature device is
-// a run of sea stacks rising out of the water in deliberately countable
-// groups — one alone, then a pair, then a cluster of three — a visual
-// pun on the skill itself: matching a subject's number, singular or
-// plural, to its verb.
-import { COL_W, clamp, jaggedBandPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
+// every lesson-path theme renders through) — a plain all-mountain
+// valley, same template as Match Makers/Clear Antecedent: two continuous
+// jagged rock walls flank the trail the whole way down, with a mountain
+// ridge silhouette cresting each wall at intervals. No water and no
+// counting device (an earlier version used sea stacks counted in
+// deliberate groups of one/two/three; dropped along with the coastline
+// itself so this hillside skill reads as an ordinary inland valley, like
+// its non-coastal neighbors).
+import { COL_W, clamp, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
 
-const WATER_BAND = { min: -40, max: 205 };
-const BAND = { min: 220, max: COL_W - 40 };
+const BAND = { min: 100, max: COL_W - 100 };
 
-function computeShore(totalHeight) {
-  const steps = Math.max(36, Math.round(totalHeight / 48));
-  const mid = 95;
+function computeWallEdge(totalHeight, phase) {
+  const steps = Math.max(40, Math.round(totalHeight / 42));
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
-    const edgeFalloff = clamp(Math.min(y / 130, (totalHeight - y) / 130), 0, 1);
-    const envelope = 0.35 + 0.65 * edgeFalloff;
     const wobble =
-      60 * Math.sin(i * 0.36 + 0.5) +
-      36 * Math.sin(i * 0.95 + 2.0) +
-      22 * Math.sin(i * 2.1 + 0.9) +
-      12 * Math.sin(i * 4.6 + 1.7);
-    const edge = mid + envelope * wobble;
-    return { y, left: WATER_BAND.min, right: clamp(edge, 15, WATER_BAND.max) };
+      48 * Math.sin(i * 0.4 + phase) +
+      30 * Math.sin(i * 1.05 + phase * 1.6) +
+      19 * Math.sin(i * 2.3 + phase * 0.7) +
+      11 * Math.sin(i * 5.1 + phase * 2.1);
+    return { y, depth: clamp(60 + wobble, 14, 92) };
   });
 }
 
-function renderWaterDefs() {
+// The wall's outer edge (away from the trail, off past the frame) is a
+// flat color running the full height of the canvas — a fade to
+// transparent right at that edge lets the rock dissolve into the ground
+// before it ever reaches the frame boundary, instead of getting clipped
+// there. The jagged inner (trail-facing) edge is untouched.
+function renderWallFadeDefs() {
   return `
     <defs>
-      <linearGradient id="seaStacksDepth" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#2e4e5c" />
-        <stop offset="100%" stop-color="#5f95a8" />
+      <linearGradient id="seaStacksLeftFade" x1="0" y1="0" x2="60" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#9e9280" stop-opacity="0" />
+        <stop offset="100%" stop-color="#9e9280" stop-opacity="1" />
       </linearGradient>
-      <linearGradient id="seaStacksEdgeFade" x1="0" y1="0" x2="70" y2="0" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stop-color="#9e9280" stop-opacity="1" />
-        <stop offset="100%" stop-color="#9e9280" stop-opacity="0" />
+      <linearGradient id="seaStacksRightFade" x1="${COL_W}" y1="0" x2="${COL_W - 60}" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#9e9280" stop-opacity="0" />
+        <stop offset="100%" stop-color="#9e9280" stop-opacity="1" />
       </linearGradient>
     </defs>
   `;
 }
 
-// The water's outer edge (away from the cliffs, off past the frame) is
-// a flat fill running the full height of the canvas — even off-canvas,
-// the visible sliver right at x=0 is a hard, dead-straight cut, since a
-// solid fill just stops wherever the viewBox does. A vignette overlay,
-// painted on top of the water right at that edge, fades from the
-// ground's own color (opaque) down to fully transparent, so the water
-// dissolves into the ground before the frame boundary instead of
-// getting clipped there. The wavy shore (cliff-facing) edge is
-// untouched.
-function renderWaterEdgeFade(totalHeight) {
-  return `<rect x="0" y="0" width="70" height="${totalHeight}" fill="url(#seaStacksEdgeFade)" />`;
+function renderWall(edge, side) {
+  const pts = edge.map((e) => ({ x: side === "left" ? e.depth : COL_W - e.depth, y: e.y }));
+  const outerX = side === "left" ? -40 : COL_W + 40;
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+  const fillPath = `${line} L${outerX},${edge[edge.length - 1].y} L${outerX},0 Z`;
+  const fill = side === "left" ? "url(#seaStacksLeftFade)" : "url(#seaStacksRightFade)";
+  return `<path d="${fillPath}" fill="${fill}" stroke="#6b6353" stroke-width="2" opacity="0.95" />`;
 }
 
-function renderWater(shore) {
-  const band = jaggedBandPath(
-    shore.map((s) => ({ x: s.left, y: s.y })),
-    shore.map((s) => ({ x: s.right, y: s.y }))
-  );
-  const foamLine = shore.map((s, i) => `${i === 0 ? "M" : "L"}${s.right},${s.y}`).join(" ");
-  return `
-    <path d="${band}" fill="url(#seaStacksDepth)" opacity="0.9" />
-    <path d="${foamLine}" stroke="#eef2ea" stroke-width="3" fill="none" opacity="0.45" stroke-linecap="round" />
-  `;
-}
-
-function renderSeaStack(x, y, h) {
-  const w = 16 + h * 0.12;
-  return `
-    <ellipse cx="${x}" cy="${y + 4}" rx="${w * 0.8}" ry="5" fill="rgba(10,20,20,0.2)" />
-    <path d="M${x - w / 2},${y} Q${x - w * 0.6},${y - h * 0.5} ${x - w * 0.3},${y - h} L${x + w * 0.3},${y - h} Q${x + w * 0.6},${y - h * 0.5} ${x + w / 2},${y} Z" fill="#8c8270" stroke="#6b6353" stroke-width="1.5" />
-    <ellipse cx="${x}" cy="${y - h}" rx="${w * 0.32}" ry="6" fill="#8fa96a" opacity="0.85" />
-  `;
-}
-
-// Deliberately countable groups: one stack alone, then a pair, then a
-// cluster of three, repeating down the whole coastline.
-function renderStackGroups(shore) {
-  const groupPattern = [1, 2, 3];
-  const groupCount = Math.max(3, Math.round(shore.length / 10));
-  const out = [];
-  for (let g = 0; g < groupCount; g++) {
-    const count = groupPattern[g % groupPattern.length];
-    const idx = clamp(Math.round(((g + 0.5) / groupCount) * shore.length), 2, shore.length - 2);
-    const s = shore[idx];
-    if (s.right < 45) continue;
-    const spread = Math.min(46, s.right - 20);
-    for (let k = 0; k < count; k++) {
-      const fx = count === 1 ? 0.5 : k / (count - 1);
-      const x = clamp(15 + fx * spread, 12, s.right - 8);
-      const h = 42 + ((g + k) % 3) * 12;
-      out.push(renderSeaStack(x, s.y, h));
-    }
-  }
-  return out.join("");
-}
-
-function renderReedsAtShore(shore) {
-  return shore
-    .filter((_, i) => i % 5 === 2)
-    .map((s) => `<path d="M${s.right + 8},${s.y} Q${s.right + 12},${s.y - 16} ${s.right + 6},${s.y - 26}" stroke="#7a8a5a" stroke-width="2" fill="none" opacity="0.7" />`)
-    .join("");
-}
-
-function renderFoothillRock(x, y, r) {
-  return `<path d="M${x - r},${y} L${x - r * 0.4},${y - r} L${x + r * 0.5},${y - r * 0.7} L${x + r},${y} Z" fill="#8c8270" stroke="#6b6353" stroke-width="2" />`;
-}
-
-// A little mountain ridge silhouette on the cliff-top, recurring down
-// the whole land side — coastal cliffs backed by real mountain shapes,
-// not just flat rocky ground.
+// A little mountain ridge silhouette cresting the wall, recurring down
+// its whole length — coastal-cliff-style ridge detail, minus the coast.
 function renderRidgeCluster(cx, baseY) {
   const peaks = 3;
   const step = 60;
   const pts = [];
   for (let i = 0; i < peaks; i++) {
     const x = cx - step + i * step;
-    const h = 60 + (i % 2) * 26;
+    const h = 58 + (i % 2) * 26;
     pts.push({ x, y: baseY - h });
   }
-  const line = `M${cx - step - 20},${baseY} L${pts[0].x},${pts[0].y} L${(pts[0].x + pts[1].x) / 2},${baseY - 24} L${pts[1].x},${pts[1].y} L${(pts[1].x + pts[2].x) / 2},${baseY - 20} L${pts[2].x},${pts[2].y} L${cx + step + 20},${baseY}`;
+  const line = `M${cx - step - 20},${baseY} L${pts[0].x},${pts[0].y} L${(pts[0].x + pts[1].x) / 2},${baseY - 22} L${pts[1].x},${pts[1].y} L${(pts[1].x + pts[2].x) / 2},${baseY - 18} L${pts[2].x},${pts[2].y} L${cx + step + 20},${baseY}`;
   const cap = pts
     .map((p) => `<path d="M${p.x - 10},${p.y + 14} L${p.x},${p.y} L${p.x + 10},${p.y + 14} Z" fill="#eef2ea" opacity="0.8" />`)
     .join("");
@@ -131,10 +72,10 @@ function renderRidgeCluster(cx, baseY) {
 }
 
 function computeRidges(totalHeight) {
-  const count = Math.max(2, Math.round(totalHeight / 620));
+  const count = Math.max(3, Math.round(totalHeight / 400));
   return Array.from({ length: count }, (_, i) => ({
     y: ((i + 0.5) / count) * totalHeight,
-    x: BAND.min + 90 + (i % 2) * 60,
+    side: i % 2 === 0 ? "left" : "right",
   }));
 }
 
@@ -148,7 +89,11 @@ function computeScree(positions, totalHeight) {
   });
 }
 
-const DECOR_EMOJI = ["🦅", "🐚"];
+function renderFoothillRock(x, y, r) {
+  return `<path d="M${x - r},${y} L${x - r * 0.4},${y - r} L${x + r * 0.5},${y - r * 0.7} L${x + r},${y} Z" fill="#8c8270" stroke="#6b6353" stroke-width="2" />`;
+}
+
+const DECOR_EMOJI = ["🦅", "🐐"];
 
 function renderDecorations(positions) {
   return positions
@@ -162,29 +107,25 @@ function renderDecorations(positions) {
 }
 
 function renderScene(positions, totalHeight, bossName) {
-  const shore = computeShore(totalHeight);
-  const water = renderWater(shore);
-  const stacks = renderStackGroups(shore);
-  const reeds = renderReedsAtShore(shore);
+  const leftEdge = computeWallEdge(totalHeight, 0.5);
+  const rightEdge = computeWallEdge(totalHeight, 2.3);
+  const walls = renderWall(leftEdge, "left") + renderWall(rightEdge, "right");
   const ridges = computeRidges(totalHeight)
-    .map((r) => renderRidgeCluster(r.x, r.y))
+    .map((r) => renderRidgeCluster(r.side === "left" ? 90 : COL_W - 90, r.y))
     .join("");
   const scree = computeScree(positions, totalHeight)
     .map((r) => renderFoothillRock(r.x, r.y, r.r))
     .join("");
   const last = positions[positions.length - 1];
-  const bossClearing = `<circle cx="${last.x}" cy="${last.y}" r="82" fill="#efe4cf" stroke="#c9a668" stroke-width="4" />`;
+  const bossClearing = `<circle cx="${last.x}" cy="${last.y}" r="86" fill="#efe4cf" stroke="#c9a668" stroke-width="4" />`;
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: rocky coastal cliffs and mountain ridges above the sea, with sea stacks rising from the water in countable groups of one, two, and three, connecting every Number Match lesson up to ${bossName}'s own clearing">
-      ${renderWaterDefs()}
+      aria-label="A close-up corner of Wordwood Isle: a mountain valley between two jagged rock walls topped with ridge silhouettes, connecting every Number Match lesson up to ${bossName}'s own clearing">
+      ${renderWallFadeDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#9e9280" />
-      ${water}
-      ${renderWaterEdgeFade(totalHeight)}
-      ${stacks}
-      <g>${reeds}</g>
       <g>${scree}</g>
+      ${walls}
       ${ridges}
       ${bossClearing}
       <path d="${renderTrailPath(positions)}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />
