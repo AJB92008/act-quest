@@ -1144,6 +1144,300 @@ export const english = {
       answer: 1,
       explain: "\"Who works downtown\" is a nonessential clause describing Maria and needs a comma on both sides, not just before it.",
     },
+    {
+      q: "The telescope captured stunning images of Saturn's rings, astronomers celebrated the discovery.",
+      choices: [
+        "The telescope captured stunning images of Saturn's rings, astronomers celebrated the discovery.",
+        "The telescope captured stunning images of Saturn's rings, and astronomers celebrated the discovery.",
+        "The telescope captured stunning images of Saturn's rings astronomers celebrated the discovery.",
+        "The telescope captured stunning images of Saturn's rings, and, astronomers celebrated the discovery.",
+      ],
+      answer: 1,
+      explain:
+        "Joining two independent clauses with only a comma creates a comma splice, so a coordinating conjunction like \"and\" must follow the comma.",
+    },
+    {
+      q: "The manager approved the budget, the team ordered new equipment.",
+      choices: [
+        "The manager approved the budget, the team ordered new equipment.",
+        "The manager approved the budget the team ordered new equipment.",
+        "The manager approved the budget and, the team ordered new equipment.",
+        "The manager approved the budget, and the team ordered new equipment.",
+      ],
+      answer: 3,
+      explain:
+        "Two independent clauses cannot be joined by a comma alone; a coordinating conjunction such as \"and\" must follow the comma.",
+    },
+    {
+      q: "The aquarium's newest resident is a giant Pacific octopus, one of the most intelligent invertebrates on Earth.",
+      choices: [
+        "The aquarium's newest resident is a giant Pacific octopus, one of the most intelligent invertebrates on Earth.",
+        "The aquarium's newest resident is a giant Pacific octopus one of the most intelligent invertebrates on Earth.",
+        "The aquarium's newest resident is a giant Pacific octopus, one of the most intelligent invertebrates, on Earth.",
+        "The aquarium's newest resident is, a giant Pacific octopus, one of the most intelligent invertebrates on Earth.",
+      ],
+      answer: 0,
+      explain:
+        "A nonessential appositive at the end of a sentence needs only a single comma before it, so this version is already correct.",
+    },
+    {
+      q: "During the renovation curators discovered a hidden mural a work believed lost for decades.",
+      choices: [
+        "During the renovation curators discovered a hidden mural a work believed lost for decades.",
+        "During the renovation, curators discovered a hidden mural a work believed lost for decades.",
+        "During the renovation, curators discovered a hidden mural, a work believed lost for decades.",
+        "During the renovation curators discovered a hidden mural, a work believed lost for decades.",
+      ],
+      answer: 2,
+      explain:
+        "The introductory phrase \"During the renovation\" needs a comma after it, and the trailing appositive \"a work believed lost for decades\" needs a comma before it as well.",
+    },
+    {
+      q: "She adopted three small brown puppies from the shelter.",
+      choices: [
+        "She adopted three small brown puppies from the shelter.",
+        "She adopted three, small, brown puppies from the shelter.",
+        "She adopted three small, brown puppies from the shelter.",
+        "She adopted, three small brown puppies from the shelter.",
+      ],
+      answer: 0,
+      explain:
+        "\"Three,\" \"small,\" and \"brown\" are cumulative adjectives that build on each other rather than independently modifying \"puppies,\" so no commas separate them; this version is already correct.",
+    },
+    {
+      q: "The soup tasted rich hearty and surprisingly spicy.",
+      choices: [
+        "The soup tasted rich hearty and surprisingly spicy.",
+        "The soup tasted rich, hearty, and surprisingly spicy.",
+        "The soup tasted rich, hearty and surprisingly spicy.",
+        "The soup tasted rich hearty, and, surprisingly spicy.",
+      ],
+      answer: 1,
+      explain:
+        "A series of three adjectives describing the subject after a linking verb needs commas between each item, including before \"and.\"",
+    },
+    {
+      q: "Meanwhile the drought continued to strain local farms.",
+      choices: [
+        "Meanwhile the drought continued to strain local farms.",
+        "Meanwhile, the drought, continued to strain local farms.",
+        "Meanwhile the drought continued, to strain local farms.",
+        "Meanwhile, the drought continued to strain local farms.",
+      ],
+      answer: 3,
+      explain:
+        "A transitional word like \"Meanwhile\" at the start of a sentence needs a comma after it before the main clause begins.",
+    },
+    {
+      q: "Consequently the airline canceled dozens of flights.",
+      choices: [
+        "Consequently the airline canceled dozens of flights.",
+        "Consequently, the airline canceled dozens of flights.",
+        "Consequently, the airline, canceled dozens of flights.",
+        "Consequently the airline, canceled dozens of flights.",
+      ],
+      answer: 1,
+      explain:
+        "A transitional word like \"Consequently\" at the start of a sentence needs a comma after it before the main clause begins.",
+    },
+    {
+      q: "I think Professor Diaz that the deadline should be extended.",
+      choices: [
+        "I think Professor Diaz that the deadline should be extended.",
+        "I think Professor Diaz, that the deadline should be extended.",
+        "I think, Professor Diaz, that the deadline should be extended.",
+        "I think, Professor Diaz that the deadline should be extended.",
+      ],
+      answer: 2,
+      explain:
+        "When directly addressing someone in the middle of a sentence, set the name off with commas on both sides.",
+    },
+    {
+      q: "Your test results Mr. Alvarez look completely normal.",
+      choices: [
+        "Your test results Mr. Alvarez look completely normal.",
+        "Your test results, Mr. Alvarez, look completely normal.",
+        "Your test results, Mr. Alvarez look completely normal.",
+        "Your test results Mr. Alvarez, look completely normal.",
+      ],
+      answer: 1,
+      explain:
+        "When directly addressing someone in the middle of a sentence, set the name off with commas on both sides.",
+    },
+    {
+      q: "Many desert plants such as cacti and agave store water in thick leaves.",
+      choices: [
+        "Many desert plants such as cacti and agave store water in thick leaves.",
+        "Many desert plants, such as cacti and agave store water in thick leaves.",
+        "Many desert plants such as cacti and agave, store water in thick leaves.",
+        "Many desert plants, such as cacti and agave, store water in thick leaves.",
+      ],
+      answer: 3,
+      explain:
+        "The nonessential example phrase \"such as cacti and agave\" needs a comma on both sides since it isn't needed to identify which plants are meant.",
+    },
+    {
+      q: "Several countries including Kenya and Ethiopia dominate distance running.",
+      choices: [
+        "Several countries including Kenya and Ethiopia dominate distance running.",
+        "Several countries, including Kenya and Ethiopia, dominate distance running.",
+        "Several countries, including Kenya and Ethiopia dominate distance running.",
+        "Several countries including Kenya and Ethiopia, dominate distance running.",
+      ],
+      answer: 1,
+      explain:
+        "The nonessential example phrase \"including Kenya and Ethiopia\" needs a comma on both sides.",
+    },
+    {
+      q: "The delay was caused not by the vendor but by a shipping error.",
+      choices: [
+        "The delay was caused not by the vendor but by a shipping error.",
+        "The delay was caused, not by the vendor but by a shipping error.",
+        "The delay was caused not by the vendor, but by a shipping error.",
+        "The delay was caused not by the vendor but, by a shipping error.",
+      ],
+      answer: 2,
+      explain:
+        "A comma sets off the contrasting \"not X, but Y\" structure before \"but.\"",
+    },
+    {
+      q: "The dam finally gave way flooding the valley below.",
+      choices: [
+        "The dam finally gave way flooding the valley below.",
+        "The dam finally gave way, flooding the valley below.",
+        "The dam finally, gave way flooding the valley below.",
+        "The dam finally gave way, flooding, the valley below.",
+      ],
+      answer: 1,
+      explain:
+        "A comma sets off a concluding participial phrase (\"flooding the valley below\") that describes the result of the main clause.",
+    },
+    {
+      q: "Of all my siblings, my sister Rachel is the most outgoing.",
+      choices: [
+        "Of all my siblings, my sister Rachel is the most outgoing.",
+        "Of all my siblings, my sister, Rachel, is the most outgoing.",
+        "Of all my siblings, my sister, Rachel is the most outgoing.",
+        "Of all my siblings my sister Rachel is the most outgoing.",
+      ],
+      answer: 0,
+      explain:
+        "Since the writer has more than one sibling, the name \"Rachel\" restrictively identifies which sister is meant and should not be set off with commas.",
+    },
+    {
+      q: "The committee made up of teachers and parents meets monthly.",
+      choices: [
+        "The committee made up of teachers and parents meets monthly.",
+        "The committee, made up of teachers and parents meets monthly.",
+        "The committee made up of teachers, and parents, meets monthly.",
+        "The committee, made up of teachers and parents, meets monthly.",
+      ],
+      answer: 3,
+      explain:
+        "The nonessential participial phrase \"made up of teachers and parents\" describes the committee and needs a comma on both sides.",
+    },
+    {
+      q: "The Parker Solar Probe designed to survive extreme heat successfully approached the sun.",
+      choices: [
+        "The Parker Solar Probe designed to survive extreme heat successfully approached the sun.",
+        "The Parker Solar Probe, designed to survive extreme heat, successfully approached the sun.",
+        "The Parker Solar Probe, designed to survive extreme heat successfully approached the sun.",
+        "The Parker Solar Probe designed to survive extreme heat, successfully approached the sun.",
+      ],
+      answer: 1,
+      explain:
+        "Since the proper name already identifies the spacecraft, the participial phrase \"designed to survive extreme heat\" is nonessential and needs a comma on both sides.",
+    },
+    {
+      q: "The results of course varied widely across regions.",
+      choices: [
+        "The results of course varied widely across regions.",
+        "The results, of course varied widely across regions.",
+        "The results, of course, varied widely across regions.",
+        "The results of course, varied widely across regions.",
+      ],
+      answer: 2,
+      explain:
+        "The parenthetical interrupter \"of course\" needs a comma on both sides when it interrupts a sentence.",
+    },
+    {
+      q: "For the trip she packed a tent and a sleeping bag.",
+      choices: [
+        "For the trip she packed a tent and a sleeping bag.",
+        "For the trip, she packed a tent and a sleeping bag.",
+        "For the trip, she packed a tent, and a sleeping bag.",
+        "For the trip, she packed, a tent and a sleeping bag.",
+      ],
+      answer: 1,
+      explain:
+        "The introductory phrase \"For the trip\" needs a comma after it, but no comma belongs before \"and\" when only two items are joined.",
+    },
+    {
+      q: "The bridge closed for repairs which frustrated commuters.",
+      choices: [
+        "The bridge closed for repairs which frustrated commuters.",
+        "The bridge closed, for repairs which frustrated commuters.",
+        "The bridge closed for repairs, which, frustrated commuters.",
+        "The bridge closed for repairs, which frustrated commuters.",
+      ],
+      answer: 3,
+      explain:
+        "A comma is needed before \"which\" when the clause comments on the entire preceding idea rather than modifying a single noun.",
+    },
+    {
+      q: "The report was thorough though somewhat repetitive.",
+      choices: [
+        "The report was thorough though somewhat repetitive.",
+        "The report was thorough, though somewhat repetitive.",
+        "The report was thorough, though, somewhat repetitive.",
+        "The report, was thorough though somewhat repetitive.",
+      ],
+      answer: 1,
+      explain:
+        "A comma sets off a concluding contrasting phrase introduced by \"though\" from the main clause.",
+    },
+    {
+      q: "The app crashed repeatedly, <u>engineers rushed</u> to release a patch.",
+      choices: ["NO CHANGE", "and engineers rushed", "therefore engineers rushed", "engineers, rushed"],
+      answer: 1,
+      explain: "The two clauses need a coordinating conjunction such as \"and\" after the comma; \"therefore\" is a conjunctive adverb and cannot follow a comma alone to join two independent clauses this way.",
+    },
+    {
+      q: "The chef's signature dish <u>a spicy seafood stew</u> sold out within an hour.",
+      choices: ["NO CHANGE", "a spicy seafood stew,", ", a spicy seafood stew,", ", a spicy seafood stew"],
+      answer: 2,
+      explain: "The nonessential appositive \"a spicy seafood stew\" renames \"the chef's signature dish\" and needs a comma on both sides.",
+    },
+    {
+      q: "Perennial herbs <u>such as rosemary and thyme</u> survive the winter outdoors.",
+      choices: ["NO CHANGE", "such as rosemary and thyme,", ", such as rosemary and thyme", ", such as rosemary and thyme,"],
+      answer: 0,
+      explain: "\"Such as rosemary and thyme\" restricts which perennial herbs are meant, so it should not be set off with commas; this version is already correct.",
+    },
+    {
+      q: "The hikers filled their water bottles checked their maps and tightened their boots before setting out.",
+      choices: [
+        "The hikers filled their water bottles checked their maps and tightened their boots before setting out.",
+        "The hikers filled their water bottles, checked their maps and tightened their boots before setting out.",
+        "The hikers filled their water bottles, checked their maps, and tightened their boots before setting out.",
+        "The hikers filled their water bottles, checked, their maps, and tightened their boots before setting out.",
+      ],
+      answer: 2,
+      explain:
+        "This sentence lists three parallel verb phrases in a series, so commas—including one before \"and\"—must separate each item just as in a list of nouns.",
+    },
+    {
+      q: "\"The bridge is structurally sound\" the engineer confirmed.",
+      choices: [
+        "\"The bridge is structurally sound\" the engineer confirmed.",
+        "\"The bridge is structurally sound,\" the engineer confirmed.",
+        "\"The bridge is structurally sound,\" the engineer, confirmed.",
+        "\"The bridge is structurally sound.\" the engineer confirmed.",
+      ],
+      answer: 1,
+      explain:
+        "When a direct quotation is followed by an attribution like \"the engineer confirmed,\" a comma goes inside the closing quotation mark, not a period.",
+    },
   ],
   "en-apostrophes": [
     {
@@ -2275,6 +2569,300 @@ export const english = {
       choices: ["NO CHANGE", "yours", "you're's", "yours'"],
       answer: 1,
       explain: "\"Yours\" is a possessive pronoun and never takes an apostrophe, unlike possessive nouns.",
+    },
+    {
+      q: "The manager was frustrated by his leaving without notice.",
+      choices: [
+        "The manager was frustrated by his leaving without notice.",
+        "The manager was frustrated by him leaving without notice.",
+        "The manager was frustrated by he leaving without notice.",
+        "The manager was frustrated by his' leaving without notice.",
+      ],
+      answer: 0,
+      explain:
+        "A pronoun before a gerund (\"leaving\") should be possessive (\"his\"), not an object or subject pronoun; this version is already correct.",
+    },
+    {
+      q: "The teacher didn't approve of me skipping the assignment.",
+      choices: [
+        "The teacher didn't approve of me skipping the assignment.",
+        "The teacher didn't approve of I skipping the assignment.",
+        "The teacher didn't approve of my skipping the assignment.",
+        "The teacher didn't approve of mine skipping the assignment.",
+      ],
+      answer: 2,
+      explain:
+        "A pronoun modifying a gerund (\"skipping\") should take the possessive form (\"my\"), not the object pronoun \"me.\"",
+    },
+    {
+      q: "Scientists were puzzled by them migrating so early this year.",
+      choices: [
+        "Scientists were puzzled by them migrating so early this year.",
+        "Scientists were puzzled by they migrating so early this year.",
+        "Scientists were puzzled by theirs migrating so early this year.",
+        "Scientists were puzzled by their migrating so early this year.",
+      ],
+      answer: 3,
+      explain:
+        "A pronoun modifying a gerund (\"migrating\") should be possessive (\"their\"), not an object, subject, or absolute-possessive pronoun.",
+    },
+    {
+      q: "The apple's at the market were unusually sweet this year.",
+      choices: [
+        "The apple's at the market were unusually sweet this year.",
+        "The apples at the market were unusually sweet this year.",
+        "The apples' at the market were unusually sweet this year.",
+        "The apple's' at the market were unusually sweet this year.",
+      ],
+      answer: 1,
+      explain:
+        "\"Apples\" is simply a plural noun here (nothing is possessed), so it takes no apostrophe at all.",
+    },
+    {
+      q: "Several laptop's on the shelf were already sold out.",
+      choices: [
+        "Several laptop's on the shelf were already sold out.",
+        "Several laptops' on the shelf were already sold out.",
+        "Several laptops on the shelf were already sold out.",
+        "Several laptop's' on the shelf were already sold out.",
+      ],
+      answer: 2,
+      explain:
+        "\"Laptops\" is a plain plural noun with nothing possessed, so no apostrophe belongs before or after the s.",
+    },
+    {
+      q: "The eagle's soared above the canyon at sunrise.",
+      choices: [
+        "The eagle's soared above the canyon at sunrise.",
+        "The eagles' soared above the canyon at sunrise.",
+        "The eagle's' soared above the canyon at sunrise.",
+        "The eagles soared above the canyon at sunrise.",
+      ],
+      answer: 3,
+      explain:
+        "\"Eagles\" is the plain plural subject of \"soared\"; since nothing is being possessed, no apostrophe is needed.",
+    },
+    {
+      q: "The painting's hung in neat rows along the gallery wall.",
+      choices: [
+        "The painting's hung in neat rows along the gallery wall.",
+        "The paintings hung in neat rows along the gallery wall.",
+        "The paintings' hung in neat rows along the gallery wall.",
+        "The painting's' hung in neat rows along the gallery wall.",
+      ],
+      answer: 1,
+      explain:
+        "\"Paintings\" is a plain plural noun functioning as the subject of \"hung\"; since nothing is possessed, no apostrophe is needed.",
+    },
+    {
+      q: "The editor-in-chiefs decision was final.",
+      choices: [
+        "The editor-in-chiefs decision was final.",
+        "The editor's-in-chief decision was final.",
+        "The editor-in-chief's decision was final.",
+        "The editor-in-chief's' decision was final.",
+      ],
+      answer: 2,
+      explain:
+        "For a hyphenated compound noun, the possessive apostrophe + s attaches to the very end of the whole term: \"editor-in-chief's.\"",
+    },
+    {
+      q: "My mother-in-laws garden won a local award.",
+      choices: [
+        "My mother-in-laws garden won a local award.",
+        "My mother's-in-law garden won a local award.",
+        "My mothers-in-law's garden won a local award.",
+        "My mother-in-law's garden won a local award.",
+      ],
+      answer: 3,
+      explain:
+        "For a hyphenated compound noun like \"mother-in-law,\" the possessive apostrophe + s goes at the very end of the term, not after the first word.",
+    },
+    {
+      q: "You should of called before stopping by.",
+      choices: [
+        "You should of called before stopping by.",
+        "You should've called before stopping by.",
+        "You should have of called before stopping by.",
+        "You should' of called before stopping by.",
+      ],
+      answer: 1,
+      explain:
+        "The contraction of \"should have\" is \"should've\"; \"should of\" is a common misspelling that should never appear in writing.",
+    },
+    {
+      q: "I would of finished the report sooner if I'd had the data.",
+      choices: [
+        "I would of finished the report sooner if I'd had the data.",
+        "I would have of finished the report sooner if I'd had the data.",
+        "I would've finished the report sooner if I'd had the data.",
+        "I would' of finished the report sooner if I'd had the data.",
+      ],
+      answer: 2,
+      explain:
+        "The contraction of \"would have\" is \"would've\"; \"would of\" is a nonstandard misspelling.",
+    },
+    {
+      q: "The team could of won if they'd scored in overtime.",
+      choices: [
+        "The team could of won if they'd scored in overtime.",
+        "The team could have of won if they'd scored in overtime.",
+        "The team could' of won if they'd scored in overtime.",
+        "The team could've won if they'd scored in overtime.",
+      ],
+      answer: 3,
+      explain:
+        "The contraction of \"could have\" is \"could've\"; \"could of\" is a nonstandard misspelling that should be avoided in writing.",
+    },
+    {
+      q: "Make sure you're passport is still valid before the trip.",
+      choices: [
+        "Make sure you're passport is still valid before the trip.",
+        "Make sure your passport is still valid before the trip.",
+        "Make sure yore passport is still valid before the trip.",
+        "Make sure your're passport is still valid before the trip.",
+      ],
+      answer: 1,
+      explain:
+        "\"Your\" is the possessive form needed before \"passport\"; \"you're\" is a contraction of \"you are\" and doesn't fit here.",
+    },
+    {
+      q: "Your going to love this new workout routine.",
+      choices: [
+        "Your going to love this new workout routine.",
+        "Youre going to love this new workout routine.",
+        "You're going to love this new workout routine.",
+        "Your' going to love this new workout routine.",
+      ],
+      answer: 2,
+      explain:
+        "\"You're\" is the contraction of \"you are,\" which is needed here; \"your\" is only the possessive form.",
+    },
+    {
+      q: "The blue bikes by the door are <u>theirs'</u>, not ours.",
+      choices: ["NO CHANGE", "theirs", "their's", "theirs's"],
+      answer: 1,
+      explain: "\"Theirs\" is a possessive pronoun and never takes an apostrophe.",
+    },
+    {
+      q: "The last-minute save in the championship game was <u>our's</u>.",
+      choices: ["NO CHANGE", "our's'", "ours", "ours'"],
+      answer: 2,
+      explain: "\"Ours\" is a possessive pronoun and never takes an apostrophe.",
+    },
+    {
+      q: "Nobody objected to <u>him</u> leading the discussion.",
+      choices: ["NO CHANGE", "he", "him's", "his"],
+      answer: 3,
+      explain: "A pronoun modifying the gerund \"leading\" should be possessive (\"his\"), not the object pronoun \"him.\"",
+    },
+    {
+      q: "She gave her employer two weeks notice before resigning.",
+      choices: [
+        "She gave her employer two weeks notice before resigning.",
+        "She gave her employer two weeks' notice before resigning.",
+        "She gave her employer two week's notice before resigning.",
+        "She gave her employer two weeks's notice before resigning.",
+      ],
+      answer: 1,
+      explain:
+        "A time-duration phrase like \"two weeks' notice\" takes a possessive apostrophe after the plural \"weeks.\"",
+    },
+    {
+      q: "The delay cost us a full days work.",
+      choices: [
+        "The delay cost us a full days work.",
+        "The delay cost us a full days' work.",
+        "The delay cost us a full day's work.",
+        "The delay cost us a full day's' work.",
+      ],
+      answer: 2,
+      explain:
+        "A singular time-duration phrase like \"a day's work\" takes a possessive apostrophe after \"day.\"",
+    },
+    {
+      q: "The investment will mature in five years time.",
+      choices: [
+        "The investment will mature in five years time.",
+        "The investment will mature in five year's time.",
+        "The investment will mature in five years's time.",
+        "The investment will mature in five years' time.",
+      ],
+      answer: 3,
+      explain:
+        "A plural time-duration phrase like \"five years' time\" takes a possessive apostrophe after the plural \"years.\"",
+    },
+    {
+      q: "She still owns hundreds of CD's from the 1990s.",
+      choices: [
+        "She still owns hundreds of CD's from the 1990s.",
+        "She still owns hundreds of CDs from the 1990s.",
+        "She still owns hundreds of CDs' from the 1990s.",
+        "She still owns hundreds of C.D's from the 1990s.",
+      ],
+      answer: 1,
+      explain:
+        "Plural acronyms like \"CDs\" take no apostrophe, unlike the pluralized lowercase letters that do (such as \"p's and q's\").",
+    },
+    {
+      q: "The lab upgraded all of its PC's last spring.",
+      choices: [
+        "The lab upgraded all of its PC's last spring.",
+        "The lab upgraded all of its PCs' last spring.",
+        "The lab upgraded all of its PCs last spring.",
+        "The lab upgraded all of its P.C's last spring.",
+      ],
+      answer: 2,
+      explain:
+        "Plural acronyms like \"PCs\" take no apostrophe to form the plural.",
+    },
+    {
+      q: "She rolled two 7's in a row during the game.",
+      choices: [
+        "She rolled two 7's in a row during the game.",
+        "She rolled two 7,s in a row during the game.",
+        "She rolled two 7s' in a row during the game.",
+        "She rolled two 7s in a row during the game.",
+      ],
+      answer: 3,
+      explain:
+        "Plural numerals like \"7s\" take no apostrophe, unlike lowercase or single capital letters, which need one for clarity.",
+    },
+    {
+      q: "The coachs assistants clipboard was left on the bench.",
+      choices: [
+        "The coachs assistants clipboard was left on the bench.",
+        "The coach's assistant's clipboard was left on the bench.",
+        "The coach's assistants clipboard was left on the bench.",
+        "The coachs assistant's clipboard was left on the bench.",
+      ],
+      answer: 1,
+      explain:
+        "In a chain of possession (\"the coach's assistant's clipboard\"), each singular possessive noun in the chain takes its own apostrophe + s.",
+    },
+    {
+      q: "It is wise to proofread ones own writing before submitting it.",
+      choices: [
+        "It is wise to proofread ones own writing before submitting it.",
+        "It is wise to proofread ones' own writing before submitting it.",
+        "It is wise to proofread one's own writing before submitting it.",
+        "It is wise to proofread one's' own writing before submitting it.",
+      ],
+      answer: 2,
+      explain:
+        "Unlike \"its,\" the possessive of the indefinite pronoun \"one\" does take an apostrophe: \"one's.\"",
+    },
+    {
+      q: "Chris' new bike arrived earlier than expected.",
+      choices: [
+        "Chris' new bike arrived earlier than expected.",
+        "Chriss's new bike arrived earlier than expected.",
+        "Chris's' new bike arrived earlier than expected.",
+        "Chris's new bike arrived earlier than expected.",
+      ],
+      answer: 3,
+      explain:
+        "A singular proper name ending in s still takes apostrophe + s to show possession: \"Chris's.\"",
     },
   ],
   "en-colons": [
@@ -3408,6 +3996,277 @@ export const english = {
       answer: 1,
       explain: "The stray comma before \"boots\" incorrectly splits the final list item from \"and\"; a list should read \"a tent, a sleeping bag, and boots.\"",
     },
+    {
+      q: "Dear Hiring Manager, I am excited to apply for the marketing coordinator position.",
+      choices: [
+        "Dear Hiring Manager, I am excited to apply for the marketing coordinator position.",
+        "Dear Hiring Manager: I am excited to apply for the marketing coordinator position.",
+        "Dear Hiring Manager; I am excited to apply for the marketing coordinator position.",
+        "Dear Hiring Manager I am excited to apply for the marketing coordinator position.",
+      ],
+      answer: 1,
+      explain: "In a formal business letter, a colon, not a comma, follows the salutation.",
+    },
+    {
+      q: "Dear Grandma, thank you so much for the birthday card you sent.",
+      choices: [
+        "Dear Grandma, thank you so much for the birthday card you sent.",
+        "Dear Grandma: thank you so much for the birthday card you sent.",
+        "Dear Grandma; thank you so much for the birthday card you sent.",
+        "Dear Grandma thank you so much for the birthday card you sent.",
+      ],
+      answer: 0,
+      explain: "In a personal, informal letter, a comma, not a colon, follows the salutation, so this version is already correct.",
+    },
+    {
+      q: "Dear Customer Service Team, I am writing to report a defective product.",
+      choices: [
+        "Dear Customer Service Team, I am writing to report a defective product.",
+        "Dear Customer Service Team: I am writing to report a defective product.",
+        "Dear Customer Service Team; I am writing to report a defective product.",
+        "Dear Customer Service Team I am writing to report a defective product.",
+      ],
+      answer: 1,
+      explain: "In a formal business letter, a colon, not a comma, follows the salutation.",
+    },
+    {
+      q: "<u>Dear Professor Nakamura,</u> I am requesting an extension on the final paper.",
+      choices: ["NO CHANGE", "Dear Professor Nakamura:", "Dear Professor Nakamura;", "Dear Professor Nakamura"],
+      answer: 1,
+      explain: "A formal letter to a professor calls for a colon after the salutation, not a comma.",
+    },
+    {
+      q: "The startup's mission statement was direct \"Innovate boldly, serve honestly.\"",
+      choices: [
+        "The startup's mission statement was direct \"Innovate boldly, serve honestly.\"",
+        "The startup's mission statement was direct: \"Innovate boldly, serve honestly.\"",
+        "The startup's mission statement was direct, \"Innovate boldly, serve honestly.\"",
+        "The startup's mission statement was direct; \"Innovate boldly, serve honestly.\"",
+      ],
+      answer: 1,
+      explain: "A colon, not a comma, formally introduces a quotation when the preceding independent clause doesn't include a speech verb like \"said.\"",
+    },
+    {
+      q: "The union leader's closing words were unforgettable \"We rise together, or not at all.\"",
+      choices: [
+        "The union leader's closing words were unforgettable \"We rise together, or not at all.\"",
+        "The union leader's closing words were unforgettable, \"We rise together, or not at all.\"",
+        "The union leader's closing words were unforgettable: \"We rise together, or not at all.\"",
+        "The union leader's closing words were unforgettable; \"We rise together, or not at all.\"",
+      ],
+      answer: 2,
+      explain: "A colon, not a comma, formally introduces a quotation when the preceding independent clause doesn't include a speech verb like \"said.\"",
+    },
+    {
+      q: "The lead researcher's conclusion was blunt \"The results contradict decades of assumptions.\"",
+      choices: [
+        "The lead researcher's conclusion was blunt \"The results contradict decades of assumptions.\"",
+        "The lead researcher's conclusion was blunt, \"The results contradict decades of assumptions.\"",
+        "The lead researcher's conclusion was blunt; \"The results contradict decades of assumptions.\"",
+        "The lead researcher's conclusion was blunt: \"The results contradict decades of assumptions.\"",
+      ],
+      answer: 3,
+      explain: "A colon, not a comma, formally introduces a quotation when the preceding independent clause doesn't include a speech verb like \"said.\"",
+    },
+    {
+      q: "The coach's halftime message was simple \"Trust the process and finish strong.\"",
+      choices: [
+        "The coach's halftime message was simple \"Trust the process and finish strong.\"",
+        "The coach's halftime message was simple, \"Trust the process and finish strong.\"",
+        "The coach's halftime message was simple; \"Trust the process and finish strong.\"",
+        "The coach's halftime message was simple: \"Trust the process and finish strong.\"",
+      ],
+      answer: 3,
+      explain: "A colon, not a comma, formally introduces a quotation when the preceding independent clause doesn't include a speech verb like \"said.\"",
+    },
+    {
+      q: "Her debut novel was titled Salt Water, A Memoir of the Coast.",
+      choices: [
+        "Her debut novel was titled Salt Water, A Memoir of the Coast.",
+        "Her debut novel was titled Salt Water; A Memoir of the Coast.",
+        "Her debut novel was titled Salt Water: A Memoir of the Coast.",
+        "Her debut novel was titled Salt Water A Memoir of the Coast.",
+      ],
+      answer: 2,
+      explain: "A colon separates a title from its subtitle.",
+    },
+    {
+      q: "The documentary was called Vanishing Ice, Life at the Edge of a Glacier.",
+      choices: [
+        "The documentary was called Vanishing Ice, Life at the Edge of a Glacier.",
+        "The documentary was called Vanishing Ice; Life at the Edge of a Glacier.",
+        "The documentary was called Vanishing Ice: Life at the Edge of a Glacier.",
+        "The documentary was called Vanishing Ice Life at the Edge of a Glacier.",
+      ],
+      answer: 2,
+      explain: "A colon separates a title from its subtitle.",
+    },
+    {
+      q: "Her thesis was titled Silent Signals, Communication Among Deep-Sea Fish.",
+      choices: [
+        "Her thesis was titled Silent Signals, Communication Among Deep-Sea Fish.",
+        "Her thesis was titled Silent Signals Communication Among Deep-Sea Fish.",
+        "Her thesis was titled Silent Signals: Communication Among Deep-Sea Fish.",
+        "Her thesis was titled Silent Signals; Communication Among Deep-Sea Fish.",
+      ],
+      answer: 2,
+      explain: "A colon separates a title from its subtitle.",
+    },
+    {
+      q: "The gallery's new exhibit is called <u>Broken Light: Portraits</u> of Resilience.",
+      choices: ["NO CHANGE", "Broken Light, Portraits", "Broken Light; Portraits", "Broken Light Portraits"],
+      answer: 0,
+      explain: "A colon correctly separates the exhibit's title from its subtitle, so this version is already correct.",
+    },
+    {
+      q: "The steps for the marinade are as follows, mix the oil, whisk in the vinegar, and add the herbs.",
+      choices: [
+        "The steps for the marinade are as follows, mix the oil, whisk in the vinegar, and add the herbs.",
+        "The steps for the marinade are as follows mix the oil, whisk in the vinegar, and add the herbs.",
+        "The steps for the marinade are as follows: mix the oil, whisk in the vinegar, and add the herbs.",
+        "The steps for the marinade are as follows; mix the oil, whisk in the vinegar, and add the herbs.",
+      ],
+      answer: 2,
+      explain: "The phrase \"as follows\" completes an independent clause and is conventionally followed by a colon introducing the list.",
+    },
+    {
+      q: "The evacuation procedure is as follows, exit calmly, use the stairs, and gather at the lot.",
+      choices: [
+        "The evacuation procedure is as follows, exit calmly, use the stairs, and gather at the lot.",
+        "The evacuation procedure is as follows exit calmly, use the stairs, and gather at the lot.",
+        "The evacuation procedure is as follows; exit calmly, use the stairs, and gather at the lot.",
+        "The evacuation procedure is as follows: exit calmly, use the stairs, and gather at the lot.",
+      ],
+      answer: 3,
+      explain: "The phrase \"as follows\" completes an independent clause and is conventionally followed by a colon introducing the list.",
+    },
+    {
+      q: "Today's meeting will cover the following topics, budget, staffing, and the new client contract.",
+      choices: [
+        "Today's meeting will cover the following topics, budget, staffing, and the new client contract.",
+        "Today's meeting will cover the following topics budget, staffing, and the new client contract.",
+        "Today's meeting will cover the following topics; budget, staffing, and the new client contract.",
+        "Today's meeting will cover the following topics: budget, staffing, and the new client contract.",
+      ],
+      answer: 3,
+      explain: "\"The following\" signals a list to come, and a colon after the complete clause correctly introduces it.",
+    },
+    {
+      q: "The tour includes the following stops, the castle, the harbor, and the old market square.",
+      choices: [
+        "The tour includes the following stops, the castle, the harbor, and the old market square.",
+        "The tour includes the following stops the castle, the harbor, and the old market square.",
+        "The tour includes the following stops: the castle, the harbor, and the old market square.",
+        "The tour includes the following stops; the castle, the harbor, and the old market square.",
+      ],
+      answer: 2,
+      explain: "\"The following\" signals a list to come, and a colon after the complete clause correctly introduces it.",
+    },
+    {
+      q: "The professor closed the lecture with a question that lingered is free will truly an illusion?",
+      choices: [
+        "The professor closed the lecture with a question that lingered is free will truly an illusion?",
+        "The professor closed the lecture with a question that lingered, is free will truly an illusion?",
+        "The professor closed the lecture with a question that lingered; is free will truly an illusion?",
+        "The professor closed the lecture with a question that lingered: is free will truly an illusion?",
+      ],
+      answer: 3,
+      explain: "A colon can introduce a question that restates the idea named in the preceding independent clause.",
+    },
+    {
+      q: "The interviewer's final question caught her off guard where do you see yourself in five years?",
+      choices: [
+        "The interviewer's final question caught her off guard where do you see yourself in five years?",
+        "The interviewer's final question caught her off guard, where do you see yourself in five years?",
+        "The interviewer's final question caught her off guard: where do you see yourself in five years?",
+        "The interviewer's final question caught her off guard; where do you see yourself in five years?",
+      ],
+      answer: 2,
+      explain: "A colon can introduce a question that restates the idea named in the preceding independent clause.",
+    },
+    {
+      q: "Note, the library closes early on holidays.",
+      choices: [
+        "Note, the library closes early on holidays.",
+        "Note; the library closes early on holidays.",
+        "Note the library closes early on holidays.",
+        "Note: the library closes early on holidays.",
+      ],
+      answer: 3,
+      explain: "A short label like \"Note\" conventionally takes a colon, not a comma or semicolon, before the information that follows.",
+    },
+    {
+      q: "The reserve's ecosystem encompasses: wetlands, grasslands, and old-growth forest.",
+      choices: [
+        "The reserve's ecosystem encompasses: wetlands, grasslands, and old-growth forest.",
+        "The reserve's ecosystem, encompasses: wetlands, grasslands, and old-growth forest.",
+        "The reserve's ecosystem encompasses wetlands, grasslands, and old-growth forest.",
+        "The reserve's ecosystem encompasses; wetlands, grasslands, and old-growth forest.",
+      ],
+      answer: 2,
+      explain: "A colon shouldn't directly follow a verb like \"encompasses\"; the verb already introduces the list on its own.",
+    },
+    {
+      q: "The new laptop's price ranges from: $800 to $1,200 depending on storage.",
+      choices: [
+        "The new laptop's price ranges from: $800 to $1,200 depending on storage.",
+        "The new laptop's price ranges from $800 to $1,200 depending on storage.",
+        "The new laptop's price, ranges from: $800 to $1,200 depending on storage.",
+        "The new laptop's price ranges from; $800 to $1,200 depending on storage.",
+      ],
+      answer: 1,
+      explain: "A colon shouldn't follow \"ranges from,\" since the phrase already introduces the range on its own.",
+    },
+    {
+      q: "The company's total debt amounts to: nearly two million dollars.",
+      choices: [
+        "The company's total debt amounts to: nearly two million dollars.",
+        "The company's total debt amounts to nearly two million dollars.",
+        "The company's total debt, amounts to: nearly two million dollars.",
+        "The company's total debt amounts to; nearly two million dollars.",
+      ],
+      answer: 1,
+      explain: "A colon shouldn't follow \"amounts to,\" since the phrase already connects the subject to the amount that follows.",
+    },
+    {
+      q: "The narrator's closing line was <u>haunting, \"Nature</u> always finds a way back.\"",
+      choices: ["NO CHANGE", "haunting; \"Nature", "haunting \"Nature", "haunting: \"Nature"],
+      answer: 3,
+      explain: "A colon, not a comma, formally introduces the quotation, since \"was haunting\" doesn't include a speech verb like \"said.\"",
+    },
+    {
+      q: "Spring garden prep works as follows, clear debris, turn the soil, and add compost.",
+      choices: [
+        "Spring garden prep works as follows, clear debris, turn the soil, and add compost.",
+        "Spring garden prep works as follows clear debris, turn the soil, and add compost.",
+        "Spring garden prep works as follows; clear debris, turn the soil, and add compost.",
+        "Spring garden prep works as follows: clear debris, turn the soil, and add compost.",
+      ],
+      answer: 3,
+      explain: "The phrase \"as follows\" completes an independent clause and is conventionally followed by a colon introducing the list.",
+    },
+    {
+      q: "The warehouse manager flagged the following shortages, gloves, pallets, and packing tape.",
+      choices: [
+        "The warehouse manager flagged the following shortages, gloves, pallets, and packing tape.",
+        "The warehouse manager flagged the following shortages gloves, pallets, and packing tape.",
+        "The warehouse manager flagged the following shortages; gloves, pallets, and packing tape.",
+        "The warehouse manager flagged the following shortages: gloves, pallets, and packing tape.",
+      ],
+      answer: 3,
+      explain: "\"The following\" signals a list to come, and a colon after the complete clause correctly introduces it.",
+    },
+    {
+      q: "Warning, the trail ahead is closed due to flooding.",
+      choices: [
+        "Warning, the trail ahead is closed due to flooding.",
+        "Warning: the trail ahead is closed due to flooding.",
+        "Warning the trail ahead is closed due to flooding.",
+        "Warning; the trail ahead is closed due to flooding.",
+      ],
+      answer: 1,
+      explain: "A short label like \"Warning\" conventionally takes a colon, not a comma or semicolon, before the information that follows.",
+    },
   ],
   "en-semicolons": [
     {
@@ -4539,6 +5398,277 @@ export const english = {
       choices: ["NO CHANGE", ", and", "and", "; and,"],
       answer: 1,
       explain: "\"A novelist\" and \"her editor, Sam Voss\" are both nonessential appositives within one list, not independent clauses, so a comma before \"and\" is correct, not a semicolon.",
+    },
+    {
+      q: "The sky darkened the wind picked up the first drops began to fall.",
+      choices: [
+        "The sky darkened the wind picked up the first drops began to fall.",
+        "The sky darkened, the wind picked up, the first drops began to fall.",
+        "The sky darkened; the wind picked up; the first drops began to fall.",
+        "The sky darkened; the wind picked up, the first drops began to fall.",
+      ],
+      answer: 2,
+      explain: "When three independent clauses are strung together with no conjunctions, semicolons, not commas, must separate each one to avoid a comma splice.",
+    },
+    {
+      q: "The budget shrank the timeline slipped the client grew impatient.",
+      choices: [
+        "The budget shrank the timeline slipped the client grew impatient.",
+        "The budget shrank; the timeline slipped; the client grew impatient.",
+        "The budget shrank, the timeline slipped, the client grew impatient.",
+        "The budget shrank; the timeline slipped, the client grew impatient.",
+      ],
+      answer: 1,
+      explain: "When three independent clauses are strung together with no conjunctions, semicolons, not commas, must separate each one to avoid a comma splice.",
+    },
+    {
+      q: "The soup arrived cold the bread was stale the service never improved.",
+      choices: [
+        "The soup arrived cold the bread was stale the service never improved.",
+        "The soup arrived cold, the bread was stale, the service never improved.",
+        "The soup arrived cold; the bread was stale, the service never improved.",
+        "The soup arrived cold; the bread was stale; the service never improved.",
+      ],
+      answer: 3,
+      explain: "When three independent clauses are strung together with no conjunctions, semicolons, not commas, must separate each one to avoid a comma splice.",
+    },
+    {
+      q: "The treaty collapsed border skirmishes resumed refugees fled the region.",
+      choices: [
+        "The treaty collapsed border skirmishes resumed refugees fled the region.",
+        "The treaty collapsed, border skirmishes resumed, refugees fled the region.",
+        "The treaty collapsed; border skirmishes resumed; refugees fled the region.",
+        "The treaty collapsed; border skirmishes resumed, refugees fled the region.",
+      ],
+      answer: 2,
+      explain: "When three independent clauses are strung together with no conjunctions, semicolons, not commas, must separate each one to avoid a comma splice.",
+    },
+    {
+      q: "Coral reefs face many threats for example rising ocean temperatures cause bleaching.",
+      choices: [
+        "Coral reefs face many threats for example rising ocean temperatures cause bleaching.",
+        "Coral reefs face many threats, for example rising ocean temperatures cause bleaching.",
+        "Coral reefs face many threats; for example, rising ocean temperatures cause bleaching.",
+        "Coral reefs face many threats; for example rising ocean temperatures cause bleaching.",
+      ],
+      answer: 2,
+      explain: "A transitional phrase like \"for example\" joining two independent clauses needs a semicolon before it and a comma after it.",
+    },
+    {
+      q: "The server needs a full reboot that is every process must restart from scratch.",
+      choices: [
+        "The server needs a full reboot that is every process must restart from scratch.",
+        "The server needs a full reboot; that is, every process must restart from scratch.",
+        "The server needs a full reboot, that is every process must restart from scratch.",
+        "The server needs a full reboot; that is every process must restart from scratch.",
+      ],
+      answer: 1,
+      explain: "A transitional phrase like \"that is\" joining two independent clauses needs a semicolon before it and a comma after it.",
+    },
+    {
+      q: "The wolves rarely attack livestock in fact most sightings end without incident.",
+      choices: [
+        "The wolves rarely attack livestock in fact most sightings end without incident.",
+        "The wolves rarely attack livestock, in fact most sightings end without incident.",
+        "The wolves rarely attack livestock; in fact most sightings end without incident.",
+        "The wolves rarely attack livestock; in fact, most sightings end without incident.",
+      ],
+      answer: 3,
+      explain: "A transitional phrase like \"in fact\" joining two independent clauses needs a semicolon before it and a comma after it.",
+    },
+    {
+      q: "Layoffs hit one department hardest namely customer support lost half its staff.",
+      choices: [
+        "Layoffs hit one department hardest namely customer support lost half its staff.",
+        "Layoffs hit one department hardest, namely customer support lost half its staff.",
+        "Layoffs hit one department hardest; namely, customer support lost half its staff.",
+        "Layoffs hit one department hardest; namely customer support lost half its staff.",
+      ],
+      answer: 2,
+      explain: "A transitional phrase like \"namely\" joining two independent clauses needs a semicolon before it and a comma after it.",
+    },
+    {
+      q: "The professor graded on a strict curve in other words only ten students earned an A.",
+      choices: [
+        "The professor graded on a strict curve in other words only ten students earned an A.",
+        "The professor graded on a strict curve; in other words, only ten students earned an A.",
+        "The professor graded on a strict curve, in other words only ten students earned an A.",
+        "The professor graded on a strict curve; in other words only ten students earned an A.",
+      ],
+      answer: 1,
+      explain: "A transitional phrase like \"in other words\" joining two independent clauses needs a semicolon before it and a comma after it.",
+    },
+    {
+      q: "Injuries plagued the team all season for instance three starters missed the playoffs.",
+      choices: [
+        "Injuries plagued the team all season for instance three starters missed the playoffs.",
+        "Injuries plagued the team all season, for instance three starters missed the playoffs.",
+        "Injuries plagued the team all season; for instance three starters missed the playoffs.",
+        "Injuries plagued the team all season; for instance, three starters missed the playoffs.",
+      ],
+      answer: 3,
+      explain: "A transitional phrase like \"for instance\" joining two independent clauses needs a semicolon before it and a comma after it.",
+    },
+    {
+      q: "Interest rates climbed sharply as a result mortgage applications fell.",
+      choices: [
+        "Interest rates climbed sharply as a result mortgage applications fell.",
+        "Interest rates climbed sharply, as a result mortgage applications fell.",
+        "Interest rates climbed sharply; as a result, mortgage applications fell.",
+        "Interest rates climbed sharply; as a result mortgage applications fell.",
+      ],
+      answer: 2,
+      explain: "A transitional phrase like \"as a result\" joining two independent clauses needs a semicolon before it and a comma after it.",
+    },
+    {
+      q: "The committee interviewed Maya and Leo Priya and Sam and Noah and Ava.",
+      choices: [
+        "The committee interviewed Maya and Leo Priya and Sam and Noah and Ava.",
+        "The committee interviewed Maya and Leo, Priya and Sam, and Noah and Ava.",
+        "The committee interviewed Maya and Leo; Priya and Sam; and Noah and Ava.",
+        "The committee interviewed Maya; and Leo, Priya; and Sam, and Noah; and Ava.",
+      ],
+      answer: 2,
+      explain: "Since each pairing already contains its own \"and,\" semicolons are needed to separate the three pairs clearly.",
+    },
+    {
+      q: "The bracket paired Diaz and Kim Ortiz and Lee and Nguyen and Park.",
+      choices: [
+        "The bracket paired Diaz and Kim Ortiz and Lee and Nguyen and Park.",
+        "The bracket paired Diaz and Kim; Ortiz and Lee; and Nguyen and Park.",
+        "The bracket paired Diaz and Kim, Ortiz and Lee, and Nguyen and Park.",
+        "The bracket paired Diaz; and Kim, Ortiz; and Lee, and Nguyen; and Park.",
+      ],
+      answer: 1,
+      explain: "Since each pairing already contains its own \"and,\" semicolons are needed to separate the three pairs clearly.",
+    },
+    {
+      q: "The tutor grouped Ana and Beto Chen and Dana and Eli and Farah.",
+      choices: [
+        "The tutor grouped Ana and Beto Chen and Dana and Eli and Farah.",
+        "The tutor grouped Ana and Beto, Chen and Dana, and Eli and Farah.",
+        "The tutor grouped Ana; and Beto, Chen; and Dana, and Eli; and Farah.",
+        "The tutor grouped Ana and Beto; Chen and Dana; and Eli and Farah.",
+      ],
+      answer: 3,
+      explain: "Since each pairing already contains its own \"and,\" semicolons are needed to separate the three pairs clearly.",
+    },
+    {
+      q: "The generator failed, <u>the lights flickered, the backup</u> kicked in moments later.",
+      choices: ["NO CHANGE", "the lights flickered; the backup", "the lights flickered the backup", "the lights flickered: the backup"],
+      answer: 1,
+      explain: "Three independent clauses strung together need semicolons, not commas, between each one to avoid a comma splice.",
+    },
+    {
+      q: "The bakery seemed to be struggling<u>, in fact sales</u> had nearly doubled.",
+      choices: ["NO CHANGE", "; in fact, sales", "; in fact sales", ": in fact, sales"],
+      answer: 1,
+      explain: "A transitional phrase like \"in fact\" joining two independent clauses needs a semicolon before it and a comma after it, not just a comma before it.",
+    },
+    {
+      q: "The relay featured Ortiz and Diaz<u>, Kim and Park, and</u> Lee and Cho.",
+      choices: ["NO CHANGE", "; Kim and Park; and", "; Kim and Park, and", ", Kim and Park; and"],
+      answer: 1,
+      explain: "Since each pairing in this list already contains its own \"and,\" semicolons must separate every pair, not just some of them.",
+    },
+    {
+      q: "The telescope's mirror cracked; the observation was postponed.",
+      choices: [
+        "The telescope's mirror cracked; the observation was postponed.",
+        "The telescope's mirror cracked, the observation was postponed.",
+        "The telescope's mirror cracked the observation was postponed.",
+        "The telescope's mirror cracked: the observation was postponed.",
+      ],
+      answer: 0,
+      explain: "Two independent clauses joined without a conjunction correctly take a semicolon. This version is already correct.",
+    },
+    {
+      q: "The chess clock ran out her opponent claimed the win.",
+      choices: [
+        "The chess clock ran out her opponent claimed the win.",
+        "The chess clock ran out; her opponent claimed the win.",
+        "The chess clock ran out, her opponent claimed the win.",
+        "The chess clock ran out: her opponent claimed the win.",
+      ],
+      answer: 1,
+      explain: "These are two closely related independent clauses with no conjunction, so a semicolon correctly joins them.",
+    },
+    {
+      q: "The sourdough starter died overnight the baker began again from scratch.",
+      choices: [
+        "The sourdough starter died overnight the baker began again from scratch.",
+        "The sourdough starter died overnight, the baker began again from scratch.",
+        "The sourdough starter died overnight: the baker began again from scratch.",
+        "The sourdough starter died overnight; the baker began again from scratch.",
+      ],
+      answer: 3,
+      explain: "These are two closely related independent clauses with no conjunction, so a semicolon correctly joins them.",
+    },
+    {
+      q: "The reef bleached dramatically scientists rushed to document the damage.",
+      choices: [
+        "The reef bleached dramatically scientists rushed to document the damage.",
+        "The reef bleached dramatically, scientists rushed to document the damage.",
+        "The reef bleached dramatically; scientists rushed to document the damage.",
+        "The reef bleached dramatically: scientists rushed to document the damage.",
+      ],
+      answer: 2,
+      explain: "These are two closely related independent clauses with no conjunction, so a semicolon correctly joins them.",
+    },
+    {
+      q: "She refused to serve the dish; because it hadn't rested long enough.",
+      choices: [
+        "She refused to serve the dish; because it hadn't rested long enough.",
+        "She refused to serve the dish because it hadn't rested long enough.",
+        "She refused to serve the dish, because; it hadn't rested long enough.",
+        "She refused to serve the dish: because it hadn't rested long enough.",
+      ],
+      answer: 1,
+      explain: "A semicolon can't be followed by a dependent clause like \"because it hadn't rested long enough\"; no punctuation is needed here at all.",
+    },
+    {
+      q: "The app crashed repeatedly; because a recent update broke the login screen.",
+      choices: [
+        "The app crashed repeatedly; because a recent update broke the login screen.",
+        "The app crashed repeatedly, because; a recent update broke the login screen.",
+        "The app crashed repeatedly because a recent update broke the login screen.",
+        "The app crashed repeatedly: because a recent update broke the login screen.",
+      ],
+      answer: 2,
+      explain: "A semicolon can't be followed by a dependent clause like \"because a recent update broke the login screen\"; no punctuation is needed here at all.",
+    },
+    {
+      q: "The curtain rose; but the actors froze in the wrong positions.",
+      choices: [
+        "The curtain rose; but the actors froze in the wrong positions.",
+        "The curtain rose, but the actors froze in the wrong positions.",
+        "The curtain rose but the actors froze in the wrong positions.",
+        "The curtain rose; but, the actors froze in the wrong positions.",
+      ],
+      answer: 1,
+      explain: "A semicolon and a coordinating conjunction like \"but\" shouldn't be used together; use a comma before \"but\" instead.",
+    },
+    {
+      q: "She crossed the finish line; but her knees buckled seconds later.",
+      choices: [
+        "She crossed the finish line; but her knees buckled seconds later.",
+        "She crossed the finish line but her knees buckled seconds later.",
+        "She crossed the finish line, but her knees buckled seconds later.",
+        "She crossed the finish line; but, her knees buckled seconds later.",
+      ],
+      answer: 2,
+      explain: "A semicolon and a coordinating conjunction like \"but\" shouldn't be used together; use a comma before \"but\" instead.",
+    },
+    {
+      q: "The astronaut floated free; weightless and calm.",
+      choices: [
+        "The astronaut floated free; weightless and calm.",
+        "The astronaut floated free, weightless and calm.",
+        "The astronaut floated free: weightless and calm.",
+        "The astronaut floated free weightless and calm.",
+      ],
+      answer: 1,
+      explain: "\"Weightless and calm\" is a descriptive phrase, not an independent clause, so it should be set off with a comma, not a semicolon.",
     },
   ],
   "en-dashes": [
@@ -5672,6 +6802,267 @@ export const english = {
       answer: 1,
       explain: "A single dash is enough to set off the trailing explanatory phrase; the stray comma after \"to\" incorrectly splits it further.",
     },
+    {
+      q: "The bakery-famous for its croissants-drew long lines every morning.",
+      choices: [
+        "The bakery-famous for its croissants-drew long lines every morning.",
+        "The bakery, famous for its croissants-drew long lines every morning.",
+        "The bakery—famous for its croissants—drew long lines every morning.",
+        "The bakery famous for its croissants drew long lines every morning.",
+      ],
+      answer: 2,
+      explain: "A hyphen can't substitute for an em dash; the nonessential interrupting phrase needs a pair of dashes, not hyphens.",
+    },
+    {
+      q: "The orchestra-renowned across Europe-sold out every performance.",
+      choices: [
+        "The orchestra-renowned across Europe-sold out every performance.",
+        "The orchestra, renowned across Europe-sold out every performance.",
+        "The orchestra renowned across Europe sold out every performance.",
+        "The orchestra—renowned across Europe—sold out every performance.",
+      ],
+      answer: 3,
+      explain: "A hyphen can't substitute for an em dash; the nonessential interrupting phrase needs a pair of dashes, not hyphens.",
+    },
+    {
+      q: "The trail-steep and rocky in places-tested even experienced hikers.",
+      choices: [
+        "The trail-steep and rocky in places-tested even experienced hikers.",
+        "The trail—steep and rocky in places—tested even experienced hikers.",
+        "The trail, steep and rocky in places-tested even experienced hikers.",
+        "The trail steep and rocky in places tested even experienced hikers.",
+      ],
+      answer: 1,
+      explain: "A hyphen can't substitute for an em dash; the nonessential interrupting phrase needs a pair of dashes, not hyphens.",
+    },
+    {
+      q: "The startup-founded by two college roommates-attracted investors within weeks.",
+      choices: [
+        "The startup-founded by two college roommates-attracted investors within weeks.",
+        "The startup founded by two college roommates attracted investors within weeks.",
+        "The startup, founded by two college roommates-attracted investors within weeks.",
+        "The startup—founded by two college roommates—attracted investors within weeks.",
+      ],
+      answer: 3,
+      explain: "A hyphen can't substitute for an em dash; the nonessential interrupting phrase needs a pair of dashes, not hyphens.",
+    },
+    {
+      q: "The clinic-understaffed since the merger-struggled to see every patient.",
+      choices: [
+        "The clinic-understaffed since the merger-struggled to see every patient.",
+        "The clinic—understaffed since the merger—struggled to see every patient.",
+        "The clinic, understaffed since the merger-struggled to see every patient.",
+        "The clinic understaffed since the merger struggled to see every patient.",
+      ],
+      answer: 1,
+      explain: "A hyphen can't substitute for an em dash; the nonessential interrupting phrase needs a pair of dashes, not hyphens.",
+    },
+    {
+      q: "The old factory-converted into loft apartments-sold out within a week.",
+      choices: [
+        "The old factory-converted into loft apartments-sold out within a week.",
+        "The old factory, converted into loft apartments-sold out within a week.",
+        "The old factory converted into loft apartments sold out within a week.",
+        "The old factory—converted into loft apartments—sold out within a week.",
+      ],
+      answer: 3,
+      explain: "A hyphen can't substitute for an em dash; the nonessential interrupting phrase needs a pair of dashes, not hyphens.",
+    },
+    {
+      q: "The keynote speaker-a former NASA engineer-captivated the entire audience.",
+      choices: [
+        "The keynote speaker-a former NASA engineer-captivated the entire audience.",
+        "The keynote speaker—a former NASA engineer—captivated the entire audience.",
+        "The keynote speaker, a former NASA engineer-captivated the entire audience.",
+        "The keynote speaker a former NASA engineer captivated the entire audience.",
+      ],
+      answer: 1,
+      explain: "A hyphen can't substitute for an em dash; the nonessential interrupting phrase needs a pair of dashes, not hyphens.",
+    },
+    {
+      q: "My favorite hobbies are—hiking, painting, and reading.",
+      choices: [
+        "My favorite hobbies are—hiking, painting, and reading.",
+        "My favorite hobbies are hiking, painting, and reading.",
+        "My favorite hobbies, are—hiking, painting, and reading.",
+        "My favorite hobbies are; hiking, painting, and reading.",
+      ],
+      answer: 1,
+      explain: "A dash shouldn't directly follow a linking verb like \"are\"; the verb already introduces the list on its own.",
+    },
+    {
+      q: "The diner's breakfast special includes—eggs, toast, and bacon.",
+      choices: [
+        "The diner's breakfast special includes—eggs, toast, and bacon.",
+        "The diner's breakfast special, includes—eggs, toast, and bacon.",
+        "The diner's breakfast special includes eggs, toast, and bacon.",
+        "The diner's breakfast special includes; eggs, toast, and bacon.",
+      ],
+      answer: 2,
+      explain: "A dash shouldn't directly follow a verb like \"includes\"; the verb already introduces the list on its own.",
+    },
+    {
+      q: "Her top priorities are—family, health, and career.",
+      choices: [
+        "Her top priorities are—family, health, and career.",
+        "Her top priorities are family, health, and career.",
+        "Her top priorities, are—family, health, and career.",
+        "Her top priorities are; family, health, and career.",
+      ],
+      answer: 1,
+      explain: "A dash shouldn't directly follow a linking verb like \"are\"; the verb already introduces the list on its own.",
+    },
+    {
+      q: "The new phone's key features consist of—a faster chip, a bigger screen, and better cameras.",
+      choices: [
+        "The new phone's key features consist of—a faster chip, a bigger screen, and better cameras.",
+        "The new phone's key features, consist of—a faster chip, a bigger screen, and better cameras.",
+        "The new phone's key features consist of; a faster chip, a bigger screen, and better cameras.",
+        "The new phone's key features consist of a faster chip, a bigger screen, and better cameras.",
+      ],
+      answer: 3,
+      explain: "A dash shouldn't directly follow a phrase like \"consist of\"; it already introduces the list on its own.",
+    },
+    {
+      q: "My weekly workout routine consists of—running, lifting, and yoga.",
+      choices: [
+        "My weekly workout routine consists of—running, lifting, and yoga.",
+        "My weekly workout routine, consists of—running, lifting, and yoga.",
+        "My weekly workout routine consists of running, lifting, and yoga.",
+        "My weekly workout routine consists of; running, lifting, and yoga.",
+      ],
+      answer: 2,
+      explain: "A dash shouldn't directly follow a phrase like \"consists of\"; it already introduces the list on its own.",
+    },
+    {
+      q: "\"I don't think we should—\" she stopped herself before finishing the sentence.",
+      choices: [
+        "\"I don't think we should—\" she stopped herself before finishing the sentence.",
+        "\"I don't think we should,\" she stopped herself before finishing the sentence.",
+        "\"I don't think we should\" she stopped herself before finishing the sentence.",
+        "\"I don't think we should;\" she stopped herself before finishing the sentence.",
+      ],
+      answer: 0,
+      explain: "A dash inside the quotation marks correctly shows that the speaker's sentence was cut off abruptly; this version is already correct.",
+    },
+    {
+      q: "\"Objection, Your Honor, the witness is,\" the lawyer began, but the judge cut him off.",
+      choices: [
+        "\"Objection, Your Honor, the witness is,\" the lawyer began, but the judge cut him off.",
+        "\"Objection, Your Honor, the witness is—\" the lawyer began, but the judge cut him off.",
+        "\"Objection, Your Honor, the witness is\" the lawyer began, but the judge cut him off.",
+        "\"Objection, Your Honor, the witness is...\" the lawyer began, but the judge cut him off.",
+      ],
+      answer: 1,
+      explain: "A dash, not a comma or ellipsis, shows that the lawyer was cut off by someone else, here the judge, rather than pausing or trailing off voluntarily.",
+    },
+    {
+      q: "\"If you would just let me—\" his mother interrupted before he could finish.",
+      choices: [
+        "\"If you would just let me—\" his mother interrupted before he could finish.",
+        "\"If you would just let me,\" his mother interrupted before he could finish.",
+        "\"If you would just let me\" his mother interrupted before he could finish.",
+        "\"If you would just let me...\" his mother interrupted before he could finish.",
+      ],
+      answer: 0,
+      explain: "A dash, not an ellipsis, shows that the speaker was cut off by someone else, here his mother, rather than trailing off voluntarily.",
+    },
+    {
+      q: "\"The final answer is,\" the contestant hesitated, and the buzzer sounded.",
+      choices: [
+        "\"The final answer is,\" the contestant hesitated, and the buzzer sounded.",
+        "\"The final answer is\" the contestant hesitated, and the buzzer sounded.",
+        "\"The final answer is—\" the contestant hesitated, and the buzzer sounded.",
+        "\"The final answer is;\" the contestant hesitated, and the buzzer sounded.",
+      ],
+      answer: 2,
+      explain: "A dash inside the quotation marks correctly shows that the contestant's answer was cut off before completion.",
+    },
+    {
+      q: "\"He's going for the buzzer-beater,\" the announcer shouted, and the crowd erupted before he could finish.",
+      choices: [
+        "\"He's going for the buzzer-beater,\" the announcer shouted, and the crowd erupted before he could finish.",
+        "\"He's going for the buzzer-beater\" the announcer shouted, and the crowd erupted before he could finish.",
+        "\"He's going for the buzzer-beater...\" the announcer shouted, and the crowd erupted before he could finish.",
+        "\"He's going for the buzzer-beater—\" the announcer shouted, and the crowd erupted before he could finish.",
+      ],
+      answer: 3,
+      explain: "A dash, not a comma or ellipsis, shows that the announcer's call was cut off by the crowd's noise, rather than trailing off voluntarily.",
+    },
+    {
+      q: "The forecast—rain—ruined the outdoor wedding plans.",
+      choices: [
+        "The forecast—rain—ruined the outdoor wedding plans.",
+        "The forecast, rain—ruined the outdoor wedding plans.",
+        "The forecast—rain, ruined the outdoor wedding plans.",
+        "The forecast rain ruined the outdoor wedding plans.",
+      ],
+      answer: 0,
+      explain: "A pair of dashes can set off a single-word aside for emphasis, and both dashes here correctly match.",
+    },
+    {
+      q: "The verdict, guilty echoed through the silent courtroom.",
+      choices: [
+        "The verdict, guilty echoed through the silent courtroom.",
+        "The verdict guilty echoed through the silent courtroom.",
+        "The verdict—guilty, echoed through the silent courtroom.",
+        "The verdict—guilty—echoed through the silent courtroom.",
+      ],
+      answer: 3,
+      explain: "A pair of matching dashes correctly sets off the single-word aside \"guilty\" for emphasis.",
+    },
+    {
+      q: "The diagnosis—cancer—changed the course of her entire life.",
+      choices: [
+        "The diagnosis—cancer—changed the course of her entire life.",
+        "The diagnosis, cancer—changed the course of her entire life.",
+        "The diagnosis—cancer, changed the course of her entire life.",
+        "The diagnosis cancer changed the course of her entire life.",
+      ],
+      answer: 0,
+      explain: "A pair of dashes can set off a single-word aside for emphasis, and both dashes here correctly match.",
+    },
+    {
+      q: "The alert, unprecedented warned residents to evacuate immediately.",
+      choices: [
+        "The alert, unprecedented warned residents to evacuate immediately.",
+        "The alert unprecedented warned residents to evacuate immediately.",
+        "The alert—unprecedented—warned residents to evacuate immediately.",
+        "The alert—unprecedented, warned residents to evacuate immediately.",
+      ],
+      answer: 2,
+      explain: "A pair of matching dashes correctly sets off the single-word aside \"unprecedented\" for emphasis.",
+    },
+    {
+      q: "The museum's newest wing<u>-designed by a local architect-</u>opens next spring.",
+      choices: ["NO CHANGE", ", designed by a local architect,", "—designed by a local architect—", "designed by a local architect"],
+      answer: 2,
+      explain: "A hyphen can't substitute for an em dash; the nonessential interrupting phrase needs a pair of dashes, not hyphens.",
+    },
+    {
+      q: "The café's specialty drinks <u>are—a</u> caramel latte, a matcha, and a cold brew.",
+      choices: ["NO CHANGE", "are, a", "are a", "are; a"],
+      answer: 2,
+      explain: "A dash shouldn't directly follow a linking verb like \"are\"; the verb already introduces the list on its own.",
+    },
+    {
+      q: "\"I promise I'll <u>never—\"</u> he stopped mid-sentence when she walked in.",
+      choices: ["NO CHANGE", "never,\"", "never\"", "never;\""],
+      answer: 0,
+      explain: "A dash inside the quotation marks correctly shows that the speaker's sentence was cut off abruptly; this version is already correct.",
+    },
+    {
+      q: "The verdict<u>, unexpected, stunned</u> the courtroom.",
+      choices: ["NO CHANGE", "— unexpected — stunned", "unexpected stunned", "— unexpected, stunned"],
+      answer: 1,
+      explain: "A pair of matching dashes, not commas, correctly sets off the single-word aside \"unexpected\" for emphasis.",
+    },
+    {
+      q: "The safety checklist <u>includes—helmets,</u> gloves, and knee pads.",
+      choices: ["NO CHANGE", "includes, helmets,", "includes helmets,", "includes; helmets,"],
+      answer: 2,
+      explain: "A dash shouldn't directly follow a verb like \"includes\"; the verb already introduces the list on its own.",
+    },
   ],
   "en-endpunct": [
     {
@@ -6803,6 +8194,277 @@ export const english = {
       choices: ["NO CHANGE", "door?", "door!", "door;"],
       answer: 1,
       explain: "This sentence asks a genuine question, so it needs a question mark rather than a period.",
+    },
+    {
+      q: "After years of study, she finally earned her Ph.D..",
+      choices: [
+        "After years of study, she finally earned her Ph.D..",
+        "After years of study, she finally earned her Ph.D.",
+        "After years of study, she finally earned her Ph.D.?",
+        "After years of study, she finally earned her Ph.D.!",
+      ],
+      answer: 1,
+      explain: "When a sentence ends with an abbreviation that already ends in a period, that single period also closes the sentence; no second period is added.",
+    },
+    {
+      q: "The startup was renamed Bright Horizons Inc..",
+      choices: [
+        "The startup was renamed Bright Horizons Inc..",
+        "The startup was renamed Bright Horizons Inc.?",
+        "The startup was renamed Bright Horizons Inc.",
+        "The startup was renamed Bright Horizons Inc.!",
+      ],
+      answer: 2,
+      explain: "When a sentence ends with an abbreviation that already ends in a period, that single period also closes the sentence; no second period is added.",
+    },
+    {
+      q: "The patient was referred to Dr. Elena Ruiz, M.D..",
+      choices: [
+        "The patient was referred to Dr. Elena Ruiz, M.D..",
+        "The patient was referred to Dr. Elena Ruiz, M.D.?",
+        "The patient was referred to Dr. Elena Ruiz, M.D.!",
+        "The patient was referred to Dr. Elena Ruiz, M.D.",
+      ],
+      answer: 3,
+      explain: "When a sentence ends with an abbreviation that already ends in a period, that single period also closes the sentence; no second period is added.",
+    },
+    {
+      q: "The letter was signed by Robert Chen Jr..",
+      choices: [
+        "The letter was signed by Robert Chen Jr..",
+        "The letter was signed by Robert Chen Jr.",
+        "The letter was signed by Robert Chen Jr.?",
+        "The letter was signed by Robert Chen Jr.!",
+      ],
+      answer: 1,
+      explain: "When a sentence ends with an abbreviation that already ends in a period, that single period also closes the sentence; no second period is added.",
+    },
+    {
+      q: "The recipe called for basic pantry staples: flour, sugar, salt, etc..",
+      choices: [
+        "The recipe called for basic pantry staples: flour, sugar, salt, etc..",
+        "The recipe called for basic pantry staples: flour, sugar, salt, etc.?",
+        "The recipe called for basic pantry staples: flour, sugar, salt, etc.",
+        "The recipe called for basic pantry staples: flour, sugar, salt, etc.!",
+      ],
+      answer: 2,
+      explain: "When a sentence ends with an abbreviation that already ends in a period, that single period also closes the sentence; no second period is added.",
+    },
+    {
+      q: "Please close the door when you leave.",
+      choices: [
+        "Please close the door when you leave.",
+        "Please close the door when you leave!",
+        "Please close the door when you leave?",
+        "Please close the door when you leave,",
+      ],
+      answer: 0,
+      explain: "A calm, polite request doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "Please remember to water the plants!",
+      choices: [
+        "Please remember to water the plants!",
+        "Please remember to water the plants.",
+        "Please remember to water the plants?",
+        "Please remember to water the plants,",
+      ],
+      answer: 1,
+      explain: "A calm, polite request doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "Feel free to take a seat anywhere.",
+      choices: [
+        "Feel free to take a seat anywhere.",
+        "Feel free to take a seat anywhere!",
+        "Feel free to take a seat anywhere?",
+        "Feel free to take a seat anywhere,",
+      ],
+      answer: 0,
+      explain: "A calm, polite invitation doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "Kindly submit your timesheet by Friday!",
+      choices: [
+        "Kindly submit your timesheet by Friday!",
+        "Kindly submit your timesheet by Friday?",
+        "Kindly submit your timesheet by Friday.",
+        "Kindly submit your timesheet by Friday,",
+      ],
+      answer: 2,
+      explain: "A calm, professional request doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "Please take your time with the exam.",
+      choices: [
+        "Please take your time with the exam.",
+        "Please take your time with the exam!",
+        "Please take your time with the exam?",
+        "Please take your time with the exam,",
+      ],
+      answer: 0,
+      explain: "A calm, reassuring request doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "Help yourself to more coffee!",
+      choices: [
+        "Help yourself to more coffee!",
+        "Help yourself to more coffee?",
+        "Help yourself to more coffee,",
+        "Help yourself to more coffee.",
+      ],
+      answer: 3,
+      explain: "A calm, polite invitation doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "\"Would you like some water?\" \"Sure.\"",
+      choices: [
+        "\"Would you like some water?\" \"Sure.\"",
+        "\"Would you like some water?\" \"Sure!\"",
+        "\"Would you like some water?\" \"Sure?\"",
+        "\"Would you like some water?\" \"Sure,\"",
+      ],
+      answer: 0,
+      explain: "A calm, casual answer doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "\"Is the meeting still at three?\" \"Yes!\"",
+      choices: [
+        "\"Is the meeting still at three?\" \"Yes!\"",
+        "\"Is the meeting still at three?\" \"Yes.\"",
+        "\"Is the meeting still at three?\" \"Yes?\"",
+        "\"Is the meeting still at three?\" \"Yes,\"",
+      ],
+      answer: 1,
+      explain: "A calm, matter-of-fact answer doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "\"Did you finish the report?\" \"Not yet.\"",
+      choices: [
+        "\"Did you finish the report?\" \"Not yet.\"",
+        "\"Did you finish the report?\" \"Not yet!\"",
+        "\"Did you finish the report?\" \"Not yet?\"",
+        "\"Did you finish the report?\" \"Not yet,\"",
+      ],
+      answer: 0,
+      explain: "A calm, matter-of-fact answer doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "\"Should we take the highway?\" \"Probably!\"",
+      choices: [
+        "\"Should we take the highway?\" \"Probably!\"",
+        "\"Should we take the highway?\" \"Probably?\"",
+        "\"Should we take the highway?\" \"Probably.\"",
+        "\"Should we take the highway?\" \"Probably,\"",
+      ],
+      answer: 2,
+      explain: "A calm, matter-of-fact answer doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "You're coming to the reunion, right.",
+      choices: [
+        "You're coming to the reunion, right.",
+        "You're coming to the reunion, right?",
+        "You're coming to the reunion, right!",
+        "You're coming to the reunion, right;",
+      ],
+      answer: 1,
+      explain: "A tag question like \"right\" at the end of a sentence turns it into a genuine question, which needs a question mark.",
+    },
+    {
+      q: "The bus hasn't left yet, has it.",
+      choices: [
+        "The bus hasn't left yet, has it.",
+        "The bus hasn't left yet, has it!",
+        "The bus hasn't left yet, has it?",
+        "The bus hasn't left yet, has it;",
+      ],
+      answer: 2,
+      explain: "A tag question like \"has it\" at the end of a sentence turns it into a genuine question, which needs a question mark.",
+    },
+    {
+      q: "This cake tastes amazing, doesn't it.",
+      choices: [
+        "This cake tastes amazing, doesn't it.",
+        "This cake tastes amazing, doesn't it?",
+        "This cake tastes amazing, doesn't it!",
+        "This cake tastes amazing, doesn't it;",
+      ],
+      answer: 1,
+      explain: "A tag question like \"doesn't it\" at the end of a sentence turns it into a genuine question, which needs a question mark.",
+    },
+    {
+      q: "You locked the front door, didn't you.",
+      choices: [
+        "You locked the front door, didn't you.",
+        "You locked the front door, didn't you!",
+        "You locked the front door, didn't you;",
+        "You locked the front door, didn't you?",
+      ],
+      answer: 3,
+      explain: "A tag question like \"didn't you\" at the end of a sentence turns it into a genuine question, which needs a question mark.",
+    },
+    {
+      q: "We're still meeting at noon, aren't we.",
+      choices: [
+        "We're still meeting at noon, aren't we.",
+        "We're still meeting at noon, aren't we?",
+        "We're still meeting at noon, aren't we!",
+        "We're still meeting at noon, aren't we;",
+      ],
+      answer: 1,
+      explain: "A tag question like \"aren't we\" at the end of a sentence turns it into a genuine question, which needs a question mark.",
+    },
+    {
+      q: "In a formal email, she wrote, \"Are you certain about this decision?!\"",
+      choices: [
+        "In a formal email, she wrote, \"Are you certain about this decision?!\"",
+        "In a formal email, she wrote, \"Are you certain about this decision?\"",
+        "In a formal email, she wrote, \"Are you certain about this decision.\"",
+        "In a formal email, she wrote, \"Are you certain about this decision!\"",
+      ],
+      answer: 1,
+      explain: "Formal writing uses a single end mark; a genuine question should end with just a question mark, not a combined \"?!\"",
+    },
+    {
+      q: "In the meeting minutes, the secretary recorded, \"Did the board really approve the layoffs?!\"",
+      choices: [
+        "In the meeting minutes, the secretary recorded, \"Did the board really approve the layoffs?!\"",
+        "In the meeting minutes, the secretary recorded, \"Did the board really approve the layoffs.\"",
+        "In the meeting minutes, the secretary recorded, \"Did the board really approve the layoffs?\"",
+        "In the meeting minutes, the secretary recorded, \"Did the board really approve the layoffs!\"",
+      ],
+      answer: 2,
+      explain: "Formal writing uses a single end mark; a genuine question should end with just a question mark, not a combined \"?!\"",
+    },
+    {
+      q: "In the lab report, the student wrote, \"Could the equipment have malfunctioned?!\"",
+      choices: [
+        "In the lab report, the student wrote, \"Could the equipment have malfunctioned?!\"",
+        "In the lab report, the student wrote, \"Could the equipment have malfunctioned!\"",
+        "In the lab report, the student wrote, \"Could the equipment have malfunctioned.\"",
+        "In the lab report, the student wrote, \"Could the equipment have malfunctioned?\"",
+      ],
+      answer: 3,
+      explain: "Formal writing uses a single end mark; a genuine question should end with just a question mark, not a combined \"?!\"",
+    },
+    {
+      q: "The award was presented to Maria Santos <u>Ph.D..</u>",
+      choices: ["NO CHANGE", "Ph.D.?", "Ph.D.!", "Ph.D."],
+      answer: 3,
+      explain: "When a sentence ends with an abbreviation that already ends in a period, that single period also closes the sentence; no second period is needed.",
+    },
+    {
+      q: "Please arrive fifteen minutes <u>early!</u>",
+      choices: ["NO CHANGE", "early?", "early.", "early;"],
+      answer: 2,
+      explain: "A calm, polite request doesn't need an exclamation point; a period is correct here.",
+    },
+    {
+      q: "You already mailed the package, <u>right.</u>",
+      choices: ["NO CHANGE", "right!", "right?", "right;"],
+      answer: 2,
+      explain: "A tag question like \"right\" at the end of a sentence turns it into a genuine question, which needs a question mark.",
     },
   ],
   "en-subobjpronouns": [
@@ -7936,6 +9598,277 @@ export const english = {
       answer: 1,
       explain: "As the object of the preposition \"between,\" both pronouns need the object form: \"her and him,\" not the subject forms \"she and he.\"",
     },
+    {
+      q: "Thanks for inviting my brother and I to the wedding.",
+      choices: [
+        "Thanks for inviting my brother and I to the wedding.",
+        "Thanks for inviting my brother and me to the wedding.",
+        "Thanks for inviting my brother and myself to the wedding.",
+        "Thanks for inviting I and my brother to the wedding.",
+      ],
+      answer: 1,
+      explain: "As the object of the gerund \"inviting,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "I really appreciated meeting your brother and I at the reception.",
+      choices: [
+        "I really appreciated meeting your brother and I at the reception.",
+        "I really appreciated meeting your brother and myself at the reception.",
+        "I really appreciated meeting your brother and me at the reception.",
+        "I really appreciated meeting I and your brother at the reception.",
+      ],
+      answer: 2,
+      explain: "As the object of the gerund \"meeting,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "The volunteers enjoyed helping my grandmother and I move the furniture.",
+      choices: [
+        "The volunteers enjoyed helping my grandmother and I move the furniture.",
+        "The volunteers enjoyed helping my grandmother and me move the furniture.",
+        "The volunteers enjoyed helping my grandmother and myself move the furniture.",
+        "The volunteers enjoyed helping I and my grandmother move the furniture.",
+      ],
+      answer: 1,
+      explain: "As the object of the gerund \"helping,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "We're grateful for supporting my cousin and I throughout the campaign.",
+      choices: [
+        "We're grateful for supporting my cousin and I throughout the campaign.",
+        "We're grateful for supporting my cousin and myself throughout the campaign.",
+        "We're grateful for supporting I and my cousin throughout the campaign.",
+        "We're grateful for supporting my cousin and me throughout the campaign.",
+      ],
+      answer: 3,
+      explain: "As the object of the gerund \"supporting,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "The director enjoyed watching Priya and I rehearse the final scene.",
+      choices: [
+        "The director enjoyed watching Priya and I rehearse the final scene.",
+        "The director enjoyed watching Priya and me rehearse the final scene.",
+        "The director enjoyed watching Priya and myself rehearse the final scene.",
+        "The director enjoyed watching I and Priya rehearse the final scene.",
+      ],
+      answer: 1,
+      explain: "As the object of the gerund \"watching,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "She wanted to thank Marcus and I for the support.",
+      choices: [
+        "She wanted to thank Marcus and I for the support.",
+        "She wanted to thank Marcus and me for the support.",
+        "She wanted to thank Marcus and myself for the support.",
+        "She wanted to thank I and Marcus for the support.",
+      ],
+      answer: 1,
+      explain: "As the object of the infinitive \"to thank,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "The principal chose to recognize Elena and I at the assembly.",
+      choices: [
+        "The principal chose to recognize Elena and I at the assembly.",
+        "The principal chose to recognize Elena and myself at the assembly.",
+        "The principal chose to recognize Elena and me at the assembly.",
+        "The principal chose to recognize I and Elena at the assembly.",
+      ],
+      answer: 2,
+      explain: "As the object of the infinitive \"to recognize,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "The manager decided to promote Tariq and I this year.",
+      choices: [
+        "The manager decided to promote Tariq and I this year.",
+        "The manager decided to promote Tariq and me this year.",
+        "The manager decided to promote Tariq and myself this year.",
+        "The manager decided to promote I and Tariq this year.",
+      ],
+      answer: 1,
+      explain: "As the object of the infinitive \"to promote,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "The teacher asked to see my partner and I after class.",
+      choices: [
+        "The teacher asked to see my partner and I after class.",
+        "The teacher asked to see my partner and myself after class.",
+        "The teacher asked to see I and my partner after class.",
+        "The teacher asked to see my partner and me after class.",
+      ],
+      answer: 3,
+      explain: "As the object of the infinitive \"to see,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "The captain hoped to include Lily and I in the starting lineup.",
+      choices: [
+        "The captain hoped to include Lily and I in the starting lineup.",
+        "The captain hoped to include Lily and me in the starting lineup.",
+        "The captain hoped to include Lily and myself in the starting lineup.",
+        "The captain hoped to include I and Lily in the starting lineup.",
+      ],
+      answer: 1,
+      explain: "As the object of the infinitive \"to include,\" the pronoun should be the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "Us students deserve a say in the new dress code.",
+      choices: [
+        "Us students deserve a say in the new dress code.",
+        "We students deserve a say in the new dress code.",
+        "We students deserves a say in the new dress code.",
+        "Us students deserves a say in the new dress code.",
+      ],
+      answer: 1,
+      explain: "Since the pronoun is part of the subject (\"students\"), the subject form \"we\" is correct, not the object form \"us.\"",
+    },
+    {
+      q: "Us fans never gave up on the team.",
+      choices: [
+        "Us fans never gave up on the team.",
+        "We fans never gives up on the team.",
+        "We fans never gave up on the team.",
+        "Us fans never gives up on the team.",
+      ],
+      answer: 2,
+      explain: "Since the pronoun is part of the subject (\"fans\"), the subject form \"we\" is correct, not the object form \"us.\"",
+    },
+    {
+      q: "Us volunteers organized the entire food drive.",
+      choices: [
+        "Us volunteers organized the entire food drive.",
+        "We volunteers organized the entire food drive.",
+        "We volunteer organized the entire food drive.",
+        "Us volunteer organized the entire food drive.",
+      ],
+      answer: 1,
+      explain: "Since the pronoun is part of the subject (\"volunteers\"), the subject form \"we\" is correct, not the object form \"us.\"",
+    },
+    {
+      q: "The coach gave we players a pep talk before the game.",
+      choices: [
+        "The coach gave we players a pep talk before the game.",
+        "The coach gave us players a pep talk before the game.",
+        "The coach gave we player a pep talk before the game.",
+        "The coach gave us player a pep talk before the game.",
+      ],
+      answer: 1,
+      explain: "Since the pronoun is the object of \"gave\" (modifying \"players\"), the object form \"us\" is correct, not the subject form \"we.\"",
+    },
+    {
+      q: "The scholarship was designed for we first-generation students.",
+      choices: [
+        "The scholarship was designed for we first-generation students.",
+        "The scholarship was designed for we first-generation student.",
+        "The scholarship was designed for us first-generation students.",
+        "The scholarship was designed for us first-generation student.",
+      ],
+      answer: 2,
+      explain: "Since the pronoun is the object of the preposition \"for\" (modifying \"students\"), the object form \"us\" is correct, not the subject form \"we.\"",
+    },
+    {
+      q: "The manager sent we employees a memo about the new policy.",
+      choices: [
+        "The manager sent we employees a memo about the new policy.",
+        "The manager sent we employee a memo about the new policy.",
+        "The manager sent us employee a memo about the new policy.",
+        "The manager sent us employees a memo about the new policy.",
+      ],
+      answer: 3,
+      explain: "Since the pronoun is the object of \"sent\" (modifying \"employees\"), the object form \"us\" is correct, not the subject form \"we.\"",
+    },
+    {
+      q: "The prize went to Maria, Tom, and I.",
+      choices: [
+        "The prize went to Maria, Tom, and I.",
+        "The prize went to Maria, Tom, and me.",
+        "The prize went to Maria, Tom, and myself.",
+        "The prize went to I, Maria, and Tom.",
+      ],
+      answer: 1,
+      explain: "As the object of the preposition \"to,\" every pronoun in the list needs the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "Sarah, Jamal, and me are organizing the reunion.",
+      choices: [
+        "Sarah, Jamal, and me are organizing the reunion.",
+        "Me, Sarah, and Jamal are organizing the reunion.",
+        "Sarah, Jamal, and myself are organizing the reunion.",
+        "Sarah, Jamal, and I are organizing the reunion.",
+      ],
+      answer: 3,
+      explain: "As part of the compound subject, the subject pronoun \"I\" is correct, not the object form \"me.\"",
+    },
+    {
+      q: "The teacher praised Wei, Ana, and I for the group project.",
+      choices: [
+        "The teacher praised Wei, Ana, and I for the group project.",
+        "The teacher praised Wei, Ana, and myself for the group project.",
+        "The teacher praised Wei, Ana, and me for the group project.",
+        "The teacher praised I, Wei, and Ana for the group project.",
+      ],
+      answer: 2,
+      explain: "As the object of the verb \"praised,\" every pronoun in the list needs the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "Coach split the drills between Leo, Priya, and I.",
+      choices: [
+        "Coach split the drills between Leo, Priya, and I.",
+        "Coach split the drills between Leo, Priya, and myself.",
+        "Coach split the drills between I, Leo, and Priya.",
+        "Coach split the drills between Leo, Priya, and me.",
+      ],
+      answer: 3,
+      explain: "As the object of the preposition \"between,\" every pronoun in the list needs the object form \"me,\" not the subject form \"I.\"",
+    },
+    {
+      q: "Please call myself if you have any questions.",
+      choices: [
+        "Please call myself if you have any questions.",
+        "Please call me if you have any questions.",
+        "Please call I if you have any questions.",
+        "Please call mine if you have any questions.",
+      ],
+      answer: 1,
+      explain: "\"Myself\" is a reflexive pronoun and can't stand in as a simple object; the object pronoun \"me\" is correct here.",
+    },
+    {
+      q: "The manager asked myself to lead the meeting.",
+      choices: [
+        "The manager asked myself to lead the meeting.",
+        "The manager asked I to lead the meeting.",
+        "The manager asked me to lead the meeting.",
+        "The manager asked mine to lead the meeting.",
+      ],
+      answer: 2,
+      explain: "\"Myself\" is a reflexive pronoun and can't stand in as a simple object; the object pronoun \"me\" is correct here.",
+    },
+    {
+      q: "They invited myself to speak at the conference.",
+      choices: [
+        "They invited myself to speak at the conference.",
+        "They invited me to speak at the conference.",
+        "They invited I to speak at the conference.",
+        "They invited mine to speak at the conference.",
+      ],
+      answer: 1,
+      explain: "\"Myself\" is a reflexive pronoun and can't stand in as a simple object; the object pronoun \"me\" is correct here.",
+    },
+    {
+      q: "Thanks for helping <u>my sister and I</u> move into the new apartment.",
+      choices: ["NO CHANGE", "my sister and me", "my sister and myself", "I and my sister"],
+      answer: 1,
+      explain: "As the object of the gerund \"helping,\" the object form \"me\" is correct, not the subject form \"I.\"",
+    },
+    {
+      q: "<u>Us</u> teachers voted to change the schedule.",
+      choices: ["NO CHANGE", "Ourselves", "We", "Our"],
+      answer: 2,
+      explain: "Since the pronoun is part of the subject (\"teachers\"), the subject form \"we\" is correct, not the object form \"us.\"",
+    },
+    {
+      q: "The award was shared between Noah, Zara, and <u>I</u>.",
+      choices: ["NO CHANGE", "myself", "we", "me"],
+      answer: 3,
+      explain: "As the object of the preposition \"between,\" the object form \"me\" is correct, not the subject form \"I.\"",
+    },
   ],
   "en-thatwho": [
     {
@@ -9068,6 +11001,277 @@ export const english = {
       answer: 1,
       explain: "\"That\" shouldn't introduce a nonessential clause set off by commas; \"which\" is required here instead.",
     },
+    {
+      q: "She aced the final exam, that surprised her exhausted teacher.",
+      choices: [
+        "She aced the final exam, that surprised her exhausted teacher.",
+        "She aced the final exam, which surprised her exhausted teacher.",
+        "She aced the final exam, who surprised her exhausted teacher.",
+        "She aced the final exam that surprised her exhausted teacher.",
+      ],
+      answer: 1,
+      explain: "\"Which\" can refer to the entire preceding idea (acing the exam), not just a single noun; \"that\" can't introduce this kind of nonessential clause.",
+    },
+    {
+      q: "The team lost by one point, that devastated the entire fan base.",
+      choices: [
+        "The team lost by one point, that devastated the entire fan base.",
+        "The team lost by one point, who devastated the entire fan base.",
+        "The team lost by one point, which devastated the entire fan base.",
+        "The team lost by one point that devastated the entire fan base.",
+      ],
+      answer: 2,
+      explain: "\"Which\" can refer to the entire preceding idea (losing by one point), not just a single noun; \"that\" can't introduce this kind of nonessential clause.",
+    },
+    {
+      q: "The factory shut down without warning, that left hundreds unemployed.",
+      choices: [
+        "The factory shut down without warning, that left hundreds unemployed.",
+        "The factory shut down without warning, who left hundreds unemployed.",
+        "The factory shut down without warning that left hundreds unemployed.",
+        "The factory shut down without warning, which left hundreds unemployed.",
+      ],
+      answer: 3,
+      explain: "\"Which\" can refer to the entire preceding idea (the sudden shutdown), not just a single noun; \"that\" can't introduce this kind of nonessential clause.",
+    },
+    {
+      q: "The bridge reopened ahead of schedule, that relieved frustrated commuters.",
+      choices: [
+        "The bridge reopened ahead of schedule, that relieved frustrated commuters.",
+        "The bridge reopened ahead of schedule, which relieved frustrated commuters.",
+        "The bridge reopened ahead of schedule, who relieved frustrated commuters.",
+        "The bridge reopened ahead of schedule that relieved frustrated commuters.",
+      ],
+      answer: 1,
+      explain: "\"Which\" can refer to the entire preceding idea (reopening early), not just a single noun; \"that\" can't introduce this kind of nonessential clause.",
+    },
+    {
+      q: "The experiment produced unexpected results, that puzzled the entire research team.",
+      choices: [
+        "The experiment produced unexpected results, that puzzled the entire research team.",
+        "The experiment produced unexpected results, who puzzled the entire research team.",
+        "The experiment produced unexpected results, which puzzled the entire research team.",
+        "The experiment produced unexpected results that puzzled the entire research team.",
+      ],
+      answer: 2,
+      explain: "\"Which\" can refer to the entire preceding idea (the unexpected results), not just a single noun; \"that\" can't introduce this kind of nonessential clause.",
+    },
+    {
+      q: "The band canceled the tour at the last minute, that disappointed thousands of fans.",
+      choices: [
+        "The band canceled the tour at the last minute, that disappointed thousands of fans.",
+        "The band canceled the tour at the last minute, who disappointed thousands of fans.",
+        "The band canceled the tour at the last minute that disappointed thousands of fans.",
+        "The band canceled the tour at the last minute, which disappointed thousands of fans.",
+      ],
+      answer: 3,
+      explain: "\"Which\" can refer to the entire preceding idea (canceling the tour), not just a single noun; \"that\" can't introduce this kind of nonessential clause.",
+    },
+    {
+      q: "The negotiations dragged on for weeks, that frustrated everyone involved.",
+      choices: [
+        "The negotiations dragged on for weeks, that frustrated everyone involved.",
+        "The negotiations dragged on for weeks, which frustrated everyone involved.",
+        "The negotiations dragged on for weeks, who frustrated everyone involved.",
+        "The negotiations dragged on for weeks that frustrated everyone involved.",
+      ],
+      answer: 1,
+      explain: "\"Which\" can refer to the entire preceding idea (the dragged-out negotiations), not just a single noun; \"that\" can't introduce this kind of nonessential clause.",
+    },
+    {
+      q: "Anyone that wants extra credit should see me after class.",
+      choices: [
+        "Anyone that wants extra credit should see me after class.",
+        "Anyone who wants extra credit should see me after class.",
+        "Anyone which wants extra credit should see me after class.",
+        "Anyone whom wants extra credit should see me after class.",
+      ],
+      answer: 1,
+      explain: "\"Anyone\" refers to a person, so the relative pronoun should be \"who,\" not \"that\" or \"which.\"",
+    },
+    {
+      q: "Everyone that finishes the race gets a medal.",
+      choices: [
+        "Everyone that finishes the race gets a medal.",
+        "Everyone which finishes the race gets a medal.",
+        "Everyone who finishes the race gets a medal.",
+        "Everyone whom finishes the race gets a medal.",
+      ],
+      answer: 2,
+      explain: "\"Everyone\" refers to people, so the relative pronoun should be \"who,\" not \"that\" or \"which.\"",
+    },
+    {
+      q: "Somebody that saw the accident should call the police.",
+      choices: [
+        "Somebody that saw the accident should call the police.",
+        "Somebody which saw the accident should call the police.",
+        "Somebody whom saw the accident should call the police.",
+        "Somebody who saw the accident should call the police.",
+      ],
+      answer: 3,
+      explain: "\"Somebody\" refers to a person, so the relative pronoun should be \"who,\" not \"that\" or \"which.\"",
+    },
+    {
+      q: "Nobody that arrives after the deadline will be considered.",
+      choices: [
+        "Nobody that arrives after the deadline will be considered.",
+        "Nobody who arrives after the deadline will be considered.",
+        "Nobody which arrives after the deadline will be considered.",
+        "Nobody whom arrives after the deadline will be considered.",
+      ],
+      answer: 1,
+      explain: "\"Nobody\" refers to a person, so the relative pronoun should be \"who,\" not \"that\" or \"which.\"",
+    },
+    {
+      q: "Anybody that needs a ride should text the group chat.",
+      choices: [
+        "Anybody that needs a ride should text the group chat.",
+        "Anybody whom needs a ride should text the group chat.",
+        "Anybody who needs a ride should text the group chat.",
+        "Anybody which needs a ride should text the group chat.",
+      ],
+      answer: 2,
+      explain: "\"Anybody\" refers to a person, so the relative pronoun should be \"who,\" not \"that\" or \"which.\"",
+    },
+    {
+      q: "Someone that left their umbrella can pick it up at the front desk.",
+      choices: [
+        "Someone that left their umbrella can pick it up at the front desk.",
+        "Someone whom left their umbrella can pick it up at the front desk.",
+        "Someone which left their umbrella can pick it up at the front desk.",
+        "Someone who left their umbrella can pick it up at the front desk.",
+      ],
+      answer: 3,
+      explain: "\"Someone\" refers to a person, so the relative pronoun should be \"who,\" not \"that\" or \"which.\"",
+    },
+    {
+      q: "The company whose profits soared last quarter is expanding overseas.",
+      choices: [
+        "The company whose profits soared last quarter is expanding overseas.",
+        "The company who's profits soared last quarter is expanding overseas.",
+        "The company which profits soared last quarter is expanding overseas.",
+        "The company that profits soared last quarter is expanding overseas.",
+      ],
+      answer: 0,
+      explain: "\"Whose\" can correctly show possession for things as well as people (the company's profits), so this version is already correct.",
+    },
+    {
+      q: "The book that ending shocked every reader became an instant bestseller.",
+      choices: [
+        "The book that ending shocked every reader became an instant bestseller.",
+        "The book whose ending shocked every reader became an instant bestseller.",
+        "The book who's ending shocked every reader became an instant bestseller.",
+        "The book which ending shocked every reader became an instant bestseller.",
+      ],
+      answer: 1,
+      explain: "\"Whose\" correctly shows possession here (the book's ending) and can be used for things, not just people.",
+    },
+    {
+      q: "The city that skyline has changed dramatically attracts new residents every year.",
+      choices: [
+        "The city that skyline has changed dramatically attracts new residents every year.",
+        "The city which skyline has changed dramatically attracts new residents every year.",
+        "The city whose skyline has changed dramatically attracts new residents every year.",
+        "The city who's skyline has changed dramatically attracts new residents every year.",
+      ],
+      answer: 2,
+      explain: "\"Whose\" correctly shows possession here (the city's skyline) and can be used for things, not just people.",
+    },
+    {
+      q: "The restaurant that menu changes seasonally just won a local award.",
+      choices: [
+        "The restaurant that menu changes seasonally just won a local award.",
+        "The restaurant which menu changes seasonally just won a local award.",
+        "The restaurant who's menu changes seasonally just won a local award.",
+        "The restaurant whose menu changes seasonally just won a local award.",
+      ],
+      answer: 3,
+      explain: "\"Whose\" correctly shows possession here (the restaurant's menu) and can be used for things, not just people.",
+    },
+    {
+      q: "The app who's interface confused new users was redesigned.",
+      choices: [
+        "The app who's interface confused new users was redesigned.",
+        "The app whose interface confused new users was redesigned.",
+        "The app that interface confused new users was redesigned.",
+        "The app which interface confused new users was redesigned.",
+      ],
+      answer: 1,
+      explain: "\"Whose\" correctly shows possession here (the app's interface) and can be used for things, not just people.",
+    },
+    {
+      q: "The jury who reached the verdict deliberated for six hours.",
+      choices: [
+        "The jury who reached the verdict deliberated for six hours.",
+        "The jury that reached the verdict deliberated for six hours.",
+        "The jury whom reached the verdict deliberated for six hours.",
+        "The jury whose reached the verdict deliberated for six hours.",
+      ],
+      answer: 1,
+      explain: "A jury referred to as a single collective unit typically takes \"that\" or \"which,\" not \"who.\"",
+    },
+    {
+      q: "The audience who watched the show gave a standing ovation.",
+      choices: [
+        "The audience who watched the show gave a standing ovation.",
+        "The audience whom watched the show gave a standing ovation.",
+        "The audience that watched the show gave a standing ovation.",
+        "The audience whose watched the show gave a standing ovation.",
+      ],
+      answer: 2,
+      explain: "An audience referred to as a single collective unit typically takes \"that\" or \"which,\" not \"who.\"",
+    },
+    {
+      q: "The band who performed last night sold out every show on tour.",
+      choices: [
+        "The band who performed last night sold out every show on tour.",
+        "The band that performed last night sold out every show on tour.",
+        "The band whom performed last night sold out every show on tour.",
+        "The band whose performed last night sold out every show on tour.",
+      ],
+      answer: 1,
+      explain: "A band referred to as a single collective unit typically takes \"that\" or \"which,\" not \"who.\"",
+    },
+    {
+      q: "The council who approved the budget meets again next month.",
+      choices: [
+        "The council who approved the budget meets again next month.",
+        "The council whom approved the budget meets again next month.",
+        "The council whose approved the budget meets again next month.",
+        "The council that approved the budget meets again next month.",
+      ],
+      answer: 3,
+      explain: "A council referred to as a single collective unit typically takes \"that\" or \"which,\" not \"who.\"",
+    },
+    {
+      q: "The choir who performs at graduation practices every Thursday.",
+      choices: [
+        "The choir who performs at graduation practices every Thursday.",
+        "The choir whom performs at graduation practices every Thursday.",
+        "The choir that performs at graduation practices every Thursday.",
+        "The choir whose performs at graduation practices every Thursday.",
+      ],
+      answer: 2,
+      explain: "A choir referred to as a single collective unit typically takes \"that\" or \"which,\" not \"who.\"",
+    },
+    {
+      q: "The nonprofit <u>who</u> organized the drive raised record donations.",
+      choices: ["NO CHANGE", "which", "whom", "that"],
+      answer: 3,
+      explain: "A nonprofit referred to as a collective unit typically takes \"that\" or \"which,\" not \"who.\"",
+    },
+    {
+      q: "Anyone <u>that</u> forgot their badge must check in at the front desk.",
+      choices: ["NO CHANGE", "who", "which", "whom"],
+      answer: 1,
+      explain: "\"Anyone\" refers to a person, so the relative pronoun should be \"who,\" not \"that\" or \"which.\"",
+    },
+    {
+      q: "The startup <u>who's</u> valuation tripled last year just went public.",
+      choices: ["NO CHANGE", "which", "whose", "that"],
+      answer: 2,
+      explain: "\"Whose\" correctly shows possession here (the startup's valuation) and can be used for things, not just people.",
+    },
   ],
   "en-pronounagreement": [
     {
@@ -10199,6 +12403,292 @@ export const english = {
       choices: ["NO CHANGE", "his or her", "its", "our"],
       answer: 1,
       explain: "\"Each\" is grammatically singular, so the traditionally formal agreement is \"his or her,\" not the plural \"their.\"",
+    },
+    {
+      q: "The two roommates always help one another with chores.",
+      choices: [
+        "The two roommates always help one another with chores.",
+        "The two roommates always help each other with chores.",
+        "The two roommates always help themselves with chores.",
+        "The two roommates always help itself with chores.",
+      ],
+      answer: 1,
+      explain: "Traditionally, \"each other\" refers to exactly two people, while \"one another\" refers to three or more; since there are only two roommates, \"each other\" is correct.",
+    },
+    {
+      q: "All five teammates supported each other throughout the tournament.",
+      choices: [
+        "All five teammates supported each other throughout the tournament.",
+        "All five teammates supported themselves throughout the tournament.",
+        "All five teammates supported one another throughout the tournament.",
+        "All five teammates supported itself throughout the tournament.",
+      ],
+      answer: 2,
+      explain: "Traditionally, \"one another\" refers to three or more people, while \"each other\" refers to exactly two; since there are five teammates, \"one another\" is correct.",
+    },
+    {
+      q: "The two business partners trust one another completely.",
+      choices: [
+        "The two business partners trust one another completely.",
+        "The two business partners trust each other completely.",
+        "The two business partners trust themselves completely.",
+        "The two business partners trust itself completely.",
+      ],
+      answer: 1,
+      explain: "Traditionally, \"each other\" refers to exactly two people, while \"one another\" refers to three or more; since there are only two partners, \"each other\" is correct.",
+    },
+    {
+      q: "The committee's twelve members respect each other's opinions.",
+      choices: [
+        "The committee's twelve members respect each other's opinions.",
+        "The committee's twelve members respect themselves opinions.",
+        "The committee's twelve members respect one another's opinions.",
+        "The committee's twelve members respect itself's opinions.",
+      ],
+      answer: 2,
+      explain: "Traditionally, \"one another\" refers to three or more people, while \"each other\" refers to exactly two; since there are twelve members, \"one another\" is correct.",
+    },
+    {
+      q: "The twins always finish one another's sentences.",
+      choices: [
+        "The twins always finish one another's sentences.",
+        "The twins always finish each other's sentences.",
+        "The twins always finish themselves sentences.",
+        "The twins always finish itself's sentences.",
+      ],
+      answer: 1,
+      explain: "Traditionally, \"each other\" refers to exactly two people, while \"one another\" refers to three or more; since \"twins\" means two people, \"each other\" is correct.",
+    },
+    {
+      q: "Either the coach or the players will bring their own water bottles.",
+      choices: [
+        "Either the coach or the players will bring their own water bottles.",
+        "Either the coach or the players will bring his own water bottles.",
+        "Either the coach or the players will bring its own water bottles.",
+        "Either the coach or the players will bring our own water bottles.",
+      ],
+      answer: 0,
+      explain: "When antecedents are joined by \"or,\" the pronoun agrees with the nearer one (\"the players\"), so the plural \"their\" is correct here.",
+    },
+    {
+      q: "Either the players or the coach will bring their own water bottle.",
+      choices: [
+        "Either the players or the coach will bring their own water bottle.",
+        "Either the players or the coach will bring her own water bottle.",
+        "Either the players or the coach will bring its own water bottle.",
+        "Either the players or the coach will bring our own water bottle.",
+      ],
+      answer: 1,
+      explain: "When antecedents are joined by \"or,\" the pronoun agrees with the nearer one (\"the coach\"), so the singular \"her\" is correct here.",
+    },
+    {
+      q: "Neither the teachers nor the principal has finalized her schedule yet.",
+      choices: [
+        "Neither the teachers nor the principal has finalized her schedule yet.",
+        "Neither the teachers nor the principal has finalized their schedule yet.",
+        "Neither the teachers nor the principal has finalized its schedule yet.",
+        "Neither the teachers nor the principal has finalized our schedule yet.",
+      ],
+      answer: 0,
+      explain: "When antecedents are joined by \"nor,\" the pronoun agrees with the nearer one (\"the principal\"), so the singular \"her\" is correct here.",
+    },
+    {
+      q: "Neither the principal nor the teachers have finalized her schedules yet.",
+      choices: [
+        "Neither the principal nor the teachers have finalized her schedules yet.",
+        "Neither the principal nor the teachers have finalized its schedules yet.",
+        "Neither the principal nor the teachers have finalized their schedules yet.",
+        "Neither the principal nor the teachers have finalized our schedules yet.",
+      ],
+      answer: 2,
+      explain: "When antecedents are joined by \"nor,\" the pronoun agrees with the nearer one (\"the teachers\"), so the plural \"their\" is correct.",
+    },
+    {
+      q: "Either the manager or the interns will submit his report by Friday.",
+      choices: [
+        "Either the manager or the interns will submit his report by Friday.",
+        "Either the manager or the interns will submit their report by Friday.",
+        "Either the manager or the interns will submit its report by Friday.",
+        "Either the manager or the interns will submit our report by Friday.",
+      ],
+      answer: 1,
+      explain: "When antecedents are joined by \"or,\" the pronoun agrees with the nearer one (\"the interns\"), so the plural \"their\" is correct.",
+    },
+    {
+      q: "Either the interns or the manager will submit their report by Friday.",
+      choices: [
+        "Either the interns or the manager will submit their report by Friday.",
+        "Either the interns or the manager will submit its report by Friday.",
+        "Either the interns or the manager will submit his or her report by Friday.",
+        "Either the interns or the manager will submit our report by Friday.",
+      ],
+      answer: 2,
+      explain: "When antecedents are joined by \"or,\" the pronoun agrees with the nearer one (\"the manager\"), so a singular form like \"his or her\" is correct, not the plural \"their.\"",
+    },
+    {
+      q: "My mom and my dad share their old car.",
+      choices: [
+        "My mom and my dad share their old car.",
+        "My mom and my dad share his old car.",
+        "My mom and my dad share her old car.",
+        "My mom and my dad share its old car.",
+      ],
+      answer: 0,
+      explain: "\"My mom and my dad\" joined by \"and\" forms a plural compound antecedent, so the plural \"their\" is correct here.",
+    },
+    {
+      q: "The chef and the server split his tips evenly.",
+      choices: [
+        "The chef and the server split his tips evenly.",
+        "The chef and the server split their tips evenly.",
+        "The chef and the server split its tips evenly.",
+        "The chef and the server split her tips evenly.",
+      ],
+      answer: 1,
+      explain: "\"The chef and the server\" joined by \"and\" forms a plural compound antecedent, so the plural \"their\" is correct, not a singular pronoun.",
+    },
+    {
+      q: "The pilot and the co-pilot reviewed their checklist before takeoff.",
+      choices: [
+        "The pilot and the co-pilot reviewed their checklist before takeoff.",
+        "The pilot and the co-pilot reviewed his checklist before takeoff.",
+        "The pilot and the co-pilot reviewed its checklist before takeoff.",
+        "The pilot and the co-pilot reviewed her checklist before takeoff.",
+      ],
+      answer: 0,
+      explain: "\"The pilot and the co-pilot\" joined by \"and\" forms a plural compound antecedent, so the plural \"their\" is correct here.",
+    },
+    {
+      q: "The director and the producer announced her plans for the sequel.",
+      choices: [
+        "The director and the producer announced her plans for the sequel.",
+        "The director and the producer announced their plans for the sequel.",
+        "The director and the producer announced its plans for the sequel.",
+        "The director and the producer announced his plans for the sequel.",
+      ],
+      answer: 1,
+      explain: "\"The director and the producer\" joined by \"and\" forms a plural compound antecedent, so the plural \"their\" is correct, not a singular pronoun.",
+    },
+    {
+      q: "A number of students forgot their permission slips.",
+      choices: [
+        "A number of students forgot their permission slips.",
+        "A number of students forgot its permission slips.",
+        "A number of students forgot his permission slip.",
+        "A number of students forgot our permission slips.",
+      ],
+      answer: 0,
+      explain: "\"A number of\" takes a plural meaning (many students), so the plural \"their\" is correct here.",
+    },
+    {
+      q: "The number of absences has hurt their average this semester.",
+      choices: [
+        "The number of absences has hurt their average this semester.",
+        "The number of absences has hurt its average this semester.",
+        "The number of absences has hurt his average this semester.",
+        "The number of absences has hurt our average this semester.",
+      ],
+      answer: 1,
+      explain: "\"The number of\" refers to the single count itself, so the singular \"its\" is correct, not the plural \"their.\"",
+    },
+    {
+      q: "A number of volunteers brought their own supplies.",
+      choices: [
+        "A number of volunteers brought their own supplies.",
+        "A number of volunteers brought its own supplies.",
+        "A number of volunteers brought his own supplies.",
+        "A number of volunteers brought our own supplies.",
+      ],
+      answer: 0,
+      explain: "\"A number of\" takes a plural meaning (many volunteers), so the plural \"their\" is correct here.",
+    },
+    {
+      q: "The number of applicants has grown since their program launched.",
+      choices: [
+        "The number of applicants has grown since their program launched.",
+        "The number of applicants has grown since its program launched.",
+        "The number of applicants has grown since his program launched.",
+        "The number of applicants has grown since our program launched.",
+      ],
+      answer: 1,
+      explain: "\"The number of\" refers to the single count itself, so the singular \"its\" is correct, not the plural \"their.\"",
+    },
+    {
+      q: "The team congratulated themselves after the win.",
+      choices: [
+        "The team congratulated themselves after the win.",
+        "The team congratulated itself after the win.",
+        "The team congratulated himself after the win.",
+        "The team congratulated ourselves after the win.",
+      ],
+      answer: 1,
+      explain: "\"Team\" is treated as a singular collective noun, so the reflexive pronoun should be \"itself,\" not \"themselves.\"",
+    },
+    {
+      q: "The committee prides itself on transparency.",
+      choices: [
+        "The committee prides itself on transparency.",
+        "The committee prides themselves on transparency.",
+        "The committee prides himself on transparency.",
+        "The committee prides ourselves on transparency.",
+      ],
+      answer: 0,
+      explain: "\"Committee\" is treated as a singular collective noun, so the reflexive pronoun \"itself\" is correct here.",
+    },
+    {
+      q: "The staff reminded themselves to lock up every night.",
+      choices: [
+        "The staff reminded themselves to lock up every night.",
+        "The staff reminded itself to lock up every night.",
+        "The staff reminded himself to lock up every night.",
+        "The staff reminded ourselves to lock up every night.",
+      ],
+      answer: 1,
+      explain: "\"Staff\" is treated as a singular collective noun, so the reflexive pronoun should be \"itself,\" not \"themselves.\"",
+    },
+    {
+      q: "The players reminded themselves to stay focused.",
+      choices: [
+        "The players reminded themselves to stay focused.",
+        "The players reminded itself to stay focused.",
+        "The players reminded himself to stay focused.",
+        "The players reminded ourselves to stay focused.",
+      ],
+      answer: 0,
+      explain: "\"Players\" is a plain plural noun, so the plural reflexive pronoun \"themselves\" is correct here.",
+    },
+    {
+      q: "If a customer needs help, they can chat with support anytime.",
+      choices: [
+        "If a customer needs help, they can chat with support anytime.",
+        "If a customer needs help, he can chat with support anytime.",
+        "If a customer needs help, it can chat with support anytime.",
+        "If a customer needs help, we can chat with support anytime.",
+      ],
+      answer: 0,
+      explain: "Modern usage accepts singular \"they\" to refer to a generic person of unspecified gender like \"a customer,\" so this version is already correct.",
+    },
+    {
+      q: "Whenever an employee has feedback, he can submit it anonymously.",
+      choices: [
+        "Whenever an employee has feedback, he can submit it anonymously.",
+        "Whenever an employee has feedback, they can submit it anonymously.",
+        "Whenever an employee has feedback, it can submit it anonymously.",
+        "Whenever an employee has feedback, we can submit it anonymously.",
+      ],
+      answer: 1,
+      explain: "Since the employee's gender isn't specified, modern usage prefers the singular \"they\" over the presumed \"he.\"",
+    },
+    {
+      q: "If a passenger loses an item, he should visit the help desk.",
+      choices: [
+        "If a passenger loses an item, he should visit the help desk.",
+        "If a passenger loses an item, they should visit the help desk.",
+        "If a passenger loses an item, it should visit the help desk.",
+        "If a passenger loses an item, we should visit the help desk.",
+      ],
+      answer: 1,
+      explain: "Since the passenger's gender isn't specified, modern usage prefers the singular \"they\" over the presumed \"he.\"",
     },
   ],
   "en-ambiguous": [
