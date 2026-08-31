@@ -50,12 +50,14 @@
 // platforms recurring up both walls (seeing the whole structure at
 // once); Trim the Fat gets a stark, bleached desert with pruned cacti
 // and almost nothing else (concision — everything unnecessary cut
-// away); and Tone Tuner gets a dune desert whose light and dune color
-// shift once from warm sunrise gold to cool dusk purple down its whole
-// length, with a tuning dial recurring along the trail (matching tone
-// consistently, retuned deliberately rather than at random). Add a new
-// skill here (plus one line in skillPath.js's dispatch) rather than
-// writing a whole new file — that's the point of the shared engine.
+// away); and Tone Tuner gets a dune desert meeting the sea along one
+// edge — finally giving Tidewater Dock some actual tidewater — whose
+// light, dune color, AND the water itself all shift once from warm
+// sunrise gold to cool dusk purple down its whole length, with a tuning
+// dial recurring along the trail (matching tone consistently, retuned
+// deliberately rather than at random). Add a new skill here (plus one
+// line in skillPath.js's dispatch) rather than writing a whole new
+// file — that's the point of the shared engine.
 import { renderLessonTerrainPath } from "./lessonTerrain.js";
 import { plainsTheme } from "./lessonThemes/plains.js";
 import { jungleTheme } from "./lessonThemes/jungle.js";
