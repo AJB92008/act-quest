@@ -1,15 +1,20 @@
 // Time Traveler's own theme (see lessonTerrain.js for the shared engine
-// every lesson-path theme renders through) — an all-mountain valley
-// flanked by two continuous rock walls, each one built slice by slice
-// from strata bands whose color shifts the whole way down: muted,
-// weathered tones near the top (the trail's earliest lessons), warmer
+// every lesson-path theme renders through) — a mountain wall along the
+// RIGHT edge, coastal water along the left (same shoreline technique as
+// the isle's other coastal skills), the wall built slice by slice from
+// strata bands whose color shifts the whole way down: muted, weathered
+// tones near the top (the trail's earliest lessons), warmer
 // "present-day" tones through the middle, and vivid, almost unnaturally
 // saturated bands near the boss's clearing at the bottom — a visual pun
 // on verb tense, the same mountain literally showing its own past,
-// present, and future as you travel down it.
-import { COL_W, clamp, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
+// present, and future as you travel down it. The water itself carries
+// no part of that pun — it's plain coastal water, there so this
+// hillside skill reads as being on the coast like several of its
+// neighbors.
+import { COL_W, clamp, jaggedBandPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
 
-const BAND = { min: 90, max: COL_W - 90 };
+const WATER_BAND = { min: -40, max: 210 };
+const BAND = { min: 225, max: COL_W - 90 };
 
 const ANCIENT_BANDS = ["#8a8270", "#736b5a", "#5c564a"];
 const PRESENT_BANDS = ["#9a8a5a", "#8a6a4a", "#6a4a3a"];
@@ -21,22 +26,22 @@ function bandsFor(t) {
   return FUTURE_BANDS;
 }
 
-function computeWallEdge(totalHeight, phase) {
+function computeWallEdge(totalHeight) {
   const steps = Math.max(45, Math.round(totalHeight / 40));
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
     const wobble =
-      42 * Math.sin(i * 0.4 + phase) +
-      26 * Math.sin(i * 1.05 + phase * 1.5) +
-      17 * Math.sin(i * 2.3 + phase * 0.7) +
-      10 * Math.sin(i * 5.2 + phase * 2.1);
+      42 * Math.sin(i * 0.4 + 2.2) +
+      26 * Math.sin(i * 1.05 + 3.3) +
+      17 * Math.sin(i * 2.3 + 1.4) +
+      10 * Math.sin(i * 5.2 + 4.4);
     return { y, depth: clamp(56 + wobble, 12, 84) };
   });
 }
 
-// Slice by slice down the whole wall, each one banded by the era its
-// height falls into — the wall itself is the strata.
-function renderStrataWall(edge, side, totalHeight) {
+// Slice by slice down the wall, each one banded by the era its height
+// falls into — the wall itself is the strata.
+function renderStrataWall(edge, totalHeight) {
   const slices = [];
   for (let i = 0; i < edge.length - 1; i++) {
     const a = edge[i];
@@ -44,9 +49,9 @@ function renderStrataWall(edge, side, totalHeight) {
     const t = ((a.y + b.y) / 2) / totalHeight;
     const bands = bandsFor(t);
     const color = bands[i % bands.length];
-    const ax = side === "left" ? a.depth : COL_W - a.depth;
-    const bx = side === "left" ? b.depth : COL_W - b.depth;
-    const outerX = side === "left" ? -40 : COL_W + 40;
+    const ax = COL_W - a.depth;
+    const bx = COL_W - b.depth;
+    const outerX = COL_W + 40;
     slices.push(`<path d="M${outerX},${a.y} L${ax},${a.y} L${bx},${b.y} L${outerX},${b.y} Z" fill="${color}" />`);
   }
   return slices.join("");
@@ -54,7 +59,7 @@ function renderStrataWall(edge, side, totalHeight) {
 
 // The wall's outer edge (away from the trail, off past the frame) is a
 // flat-colored slice running the full height of the canvas — even
-// off-canvas, the visible sliver right at x=0/x=COL_W is a hard,
+// off-canvas, the visible sliver right at x=COL_W is a hard,
 // dead-straight cut, since a solid fill just stops wherever the viewBox
 // does. Each slice here has its own strata color, so rather than a
 // separate gradient per color, a single vignette overlay fades from the
@@ -63,14 +68,18 @@ function renderStrataWall(edge, side, totalHeight) {
 // there, so the wall dissolves into the ground before the frame
 // boundary regardless of which era's palette it's in. The jagged inner
 // (trail-facing) edge is untouched.
-function renderOuterFadeDefs() {
+function renderDefs() {
   return `
     <defs>
-      <linearGradient id="strataPeaksLeftFade" x1="0" y1="0" x2="70" y2="0" gradientUnits="userSpaceOnUse">
+      <linearGradient id="strataPeaksRightFade" x1="${COL_W}" y1="0" x2="${COL_W - 70}" y2="0" gradientUnits="userSpaceOnUse">
         <stop offset="0%" stop-color="#948a7a" stop-opacity="1" />
         <stop offset="100%" stop-color="#948a7a" stop-opacity="0" />
       </linearGradient>
-      <linearGradient id="strataPeaksRightFade" x1="${COL_W}" y1="0" x2="${COL_W - 70}" y2="0" gradientUnits="userSpaceOnUse">
+      <linearGradient id="strataPeaksWaterDepth" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#2e4e5c" />
+        <stop offset="100%" stop-color="#5f95a8" />
+      </linearGradient>
+      <linearGradient id="strataPeaksWaterFade" x1="0" y1="0" x2="70" y2="0" gradientUnits="userSpaceOnUse">
         <stop offset="0%" stop-color="#948a7a" stop-opacity="1" />
         <stop offset="100%" stop-color="#948a7a" stop-opacity="0" />
       </linearGradient>
@@ -78,24 +87,41 @@ function renderOuterFadeDefs() {
   `;
 }
 
-function renderOuterFadeOverlays(totalHeight) {
-  return `
-    <rect x="0" y="0" width="70" height="${totalHeight}" fill="url(#strataPeaksLeftFade)" />
-    <rect x="${COL_W - 70}" y="0" width="70" height="${totalHeight}" fill="url(#strataPeaksRightFade)" />
-  `;
+function renderOuterFadeOverlay(totalHeight) {
+  return `<rect x="${COL_W - 70}" y="0" width="70" height="${totalHeight}" fill="url(#strataPeaksRightFade)" />`;
 }
 
-function edgeDepthAt(edge, y) {
-  let nearest = edge[0];
-  let best = Infinity;
-  for (const e of edge) {
-    const d = Math.abs(e.y - y);
-    if (d < best) {
-      best = d;
-      nearest = e;
-    }
-  }
-  return nearest.depth;
+function computeShore(totalHeight) {
+  const steps = Math.max(36, Math.round(totalHeight / 48));
+  const mid = 100;
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const y = (totalHeight / steps) * i;
+    const edgeFalloff = clamp(Math.min(y / 130, (totalHeight - y) / 130), 0, 1);
+    const envelope = 0.35 + 0.65 * edgeFalloff;
+    const wobble =
+      56 * Math.sin(i * 0.33 + 0.7) +
+      33 * Math.sin(i * 0.88 + 1.9) +
+      20 * Math.sin(i * 1.95 + 0.5) +
+      11 * Math.sin(i * 4.3 + 1.6);
+    const edge = mid + envelope * wobble;
+    return { y, left: WATER_BAND.min, right: clamp(edge, 15, WATER_BAND.max) };
+  });
+}
+
+function renderWaterEdgeFade(totalHeight) {
+  return `<rect x="0" y="0" width="70" height="${totalHeight}" fill="url(#strataPeaksWaterFade)" />`;
+}
+
+function renderWater(shore) {
+  const band = jaggedBandPath(
+    shore.map((s) => ({ x: s.left, y: s.y })),
+    shore.map((s) => ({ x: s.right, y: s.y }))
+  );
+  const foamLine = shore.map((s, i) => `${i === 0 ? "M" : "L"}${s.right},${s.y}`).join(" ");
+  return `
+    <path d="${band}" fill="url(#strataPeaksWaterDepth)" opacity="0.9" />
+    <path d="${foamLine}" stroke="#eef2ea" stroke-width="3" fill="none" opacity="0.45" stroke-linecap="round" />
+  `;
 }
 
 // A small progression of one-off accents — a fossil near the ancient
@@ -103,8 +129,8 @@ function edgeDepthAt(edge, y) {
 function renderTimeAccents(positions, totalHeight) {
   const early = positions[Math.floor(positions.length * 0.1)];
   const late = positions[Math.floor(positions.length * 0.92)];
-  const sideEarly = early.x < COL_W / 2 ? 1 : -1;
-  const sideLate = late.x < COL_W / 2 ? 1 : -1;
+  const sideEarly = early.x < (BAND.min + BAND.max) / 2 ? 1 : -1;
+  const sideLate = late.x < (BAND.min + BAND.max) / 2 ? 1 : -1;
   return `
     <text x="${clamp(early.x - sideEarly * 55, BAND.min + 10, BAND.max - 10)}" y="${early.y - 10}" font-size="22" text-anchor="middle" opacity="0.85">🦴</text>
     <text x="${clamp(late.x - sideLate * 55, BAND.min + 10, BAND.max - 10)}" y="${late.y - 10}" font-size="22" text-anchor="middle" opacity="0.9">✨</text>
@@ -144,13 +170,11 @@ function renderDecorations(positions) {
 }
 
 function renderScene(positions, totalHeight, bossName) {
-  const leftEdge = computeWallEdge(totalHeight, 0.6);
-  const rightEdge = computeWallEdge(totalHeight, 2.2);
-  const walls = renderStrataWall(leftEdge, "left", totalHeight) + renderStrataWall(rightEdge, "right", totalHeight);
-  const wallOutlines = `
-    <path d="${leftEdge.map((e, i) => `${i === 0 ? "M" : "L"}${e.depth},${e.y}`).join(" ")}" fill="none" stroke="#2c281f" stroke-width="1.5" opacity="0.3" />
-    <path d="${rightEdge.map((e, i) => `${i === 0 ? "M" : "L"}${COL_W - e.depth},${e.y}`).join(" ")}" fill="none" stroke="#2c281f" stroke-width="1.5" opacity="0.3" />
-  `;
+  const wallEdge = computeWallEdge(totalHeight);
+  const wall = renderStrataWall(wallEdge, totalHeight);
+  const wallOutline = `<path d="${wallEdge.map((e, i) => `${i === 0 ? "M" : "L"}${COL_W - e.depth},${e.y}`).join(" ")}" fill="none" stroke="#2c281f" stroke-width="1.5" opacity="0.3" />`;
+  const shore = computeShore(totalHeight);
+  const water = renderWater(shore);
   const scree = renderScree(positions, totalHeight);
   const accents = renderTimeAccents(positions, totalHeight);
   const last = positions[positions.length - 1];
@@ -158,13 +182,15 @@ function renderScene(positions, totalHeight, bossName) {
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: a mountain valley whose flanking rock strata visibly age from weathered to vivid down its length, connecting every Time Traveler lesson up to ${bossName}'s own clearing">
-      ${renderOuterFadeDefs()}
+      aria-label="A close-up corner of Wordwood Isle: coastal water along one edge and a mountain wall along the other, its flanking rock strata visibly aging from weathered to vivid down its length, connecting every Time Traveler lesson up to ${bossName}'s own clearing">
+      ${renderDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#948a7a" />
       <g>${scree}</g>
-      ${walls}
-      ${wallOutlines}
-      ${renderOuterFadeOverlays(totalHeight)}
+      ${water}
+      ${renderWaterEdgeFade(totalHeight)}
+      ${wall}
+      ${wallOutline}
+      ${renderOuterFadeOverlay(totalHeight)}
       ${accents}
       ${bossClearing}
       <path d="${renderTrailPath(positions)}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />

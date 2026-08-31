@@ -21,19 +21,22 @@
 // scene full of calling birds and a bell tower (a colon "calls out"
 // what follows), Dash Dash gets a windswept prairie whose trail is
 // drawn in long chunky dashes instead of dots, Full Stop gets its own
-// hushed swamp variant with one still pool and a fully unbroken trail
-// line (a period is one definitive stop), and Case Closed gets a
-// wide-open grassy field (no water feature) with a suitcase abandoned
-// in the grass (a literal "case"). The hillside zone: Who's There? gets
+// hushed swamp variant meeting the coast — one still cove reaching in
+// from the edge instead of a landlocked pool, and a fully unbroken
+// trail line (a period is one definitive stop, echoed by the one
+// singular body of water too), and Case Closed gets a wide-open grassy
+// field (no water feature) with a suitcase abandoned in the grass (a
+// literal "case"). The hillside zone: Who's There? gets
 // a heavily mountain-weighted scene (a small plains strip only at the very
 // bottom) with one deliberate low pass in the range, guarded by a
 // watchtower; Match Makers gets an all-mountain valley lined with
 // matching peak PAIRS, each pair sharing the same height and the same
 // colored pennant; Clear Antecedent gets an all-mountain scene where
 // the exact same landmark peak recurs, identical, with signposts
-// pointing back to it every time; Time Traveler gets an all-mountain
-// scene whose cliff strata visibly age from weathered to vivid down its
-// length (the mountain showing its own past, present, and future);
+// pointing back to it every time; Time Traveler gets coastal water
+// along one edge and a mountain wall along the other, whose cliff
+// strata visibly age from weathered to vivid down its length (the
+// mountain showing its own past, present, and future);
 // Number Match gets a plain all-mountain valley, same template as Match
 // Makers and Clear Antecedent, its walls topped with recurring ridge
 // silhouettes and foothill scree instead of any water feature;

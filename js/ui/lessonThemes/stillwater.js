@@ -1,17 +1,23 @@
 // Full Stop's own theme (see lessonTerrain.js for the shared engine
-// every lesson-path theme renders through) — a hushed swamp at dawn: one
-// large, perfectly still pool instead of Writer's Goal's several busy
-// bogs, a single bare dead tree instead of leafy cypress, and hardly any
-// wildlife. Pale and misty rather than dark — soft dawn-fog grays and
-// sage instead of a dim night palette, so "hushed and still" reads as
-// calm rather than gloomy. The trail is a solid, unbroken line — the
-// one theme without any dash/dot pattern at all — a visual pun on the
-// skill itself (a period is one definitive, unbroken stop, not a
-// trailing-off dotted line).
+// every lesson-path theme renders through) — a hushed swamp meeting the
+// sea at dawn: one large, perfectly still cove reaching in from the
+// left edge (open to the coast beyond the frame, not a landlocked pond)
+// instead of Writer's Goal's several busy bogs, a single bare dead tree
+// instead of leafy cypress, and hardly any wildlife. Pale and misty
+// rather than dark — soft dawn-fog grays and sage instead of a dim
+// night palette, so "hushed and still" reads as calm rather than
+// gloomy. The trail is a solid, unbroken line — the one theme without
+// any dash/dot pattern at all — a visual pun on the skill itself (a
+// period is one definitive, unbroken stop, not a trailing-off dotted
+// line) — echoed by the one single, singular body of water too.
 import { COL_W, clamp, blobPoints, closedBlobPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 60, max: COL_W - 60 };
 
+// No edge-fade vignette here unlike the isle's other coastal skills —
+// the pool's own blob shape is already organic and irregular, so
+// clipping it at the frame boundary doesn't produce the hard straight
+// cut that technique exists to soften.
 function renderStillPool(cx, cy, r) {
   const outer = closedBlobPath(blobPoints(cx, cy, r, 11, 3.4));
   const inner = closedBlobPath(blobPoints(cx + r * 0.05, cy - r * 0.05, r * 0.5, 8, 5.1));
@@ -105,7 +111,7 @@ function renderSolidTrail(positions) {
 
 function renderScene(positions, totalHeight, bossName) {
   const poolY = totalHeight * 0.5;
-  const poolX = COL_W / 2;
+  const poolX = -70;
   const trees = computeBareTrees(positions, totalHeight)
     .map((t) => renderBareTree(t.x, t.y, t.r))
     .join("");
@@ -117,10 +123,10 @@ function renderScene(positions, totalHeight, bossName) {
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: a hushed, misty swamp at dawn with one large quiet pool and bare trees, crossed by an unbroken trail connecting every Full Stop lesson up to ${bossName}'s own clearing">
+      aria-label="A close-up corner of Wordwood Isle: a hushed, misty swamp meeting the sea at dawn, one large quiet cove reaching in from the coast and bare trees, crossed by an unbroken trail connecting every Full Stop lesson up to ${bossName}'s own clearing">
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#d3dbd4" />
       ${renderDawnGlow()}
-      ${renderStillPool(poolX, poolY, 150)}
+      ${renderStillPool(poolX, poolY, 230)}
       <g>${trees}</g>
       <g>${reeds}</g>
       ${renderMist(totalHeight)}
