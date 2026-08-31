@@ -26,10 +26,12 @@
 // trail line (a period is one definitive stop, echoed by the one
 // singular body of water too), and Case Closed gets a wide-open grassy
 // field (no water feature) with a suitcase abandoned in the grass (a
-// literal "case"). The hillside zone: Who's There? gets
-// a heavily mountain-weighted scene (a small plains strip only at the very
-// bottom) with one deliberate low pass in the range, guarded by a
-// watchtower; Match Makers gets an all-mountain valley lined with
+// literal "case"). The hillside zone: Who's There? gets a
+// mountain-weighted scene, sandy clearings between ranges instead of
+// plains, and a narrow sliver of sea hugging the same edge the whole
+// way down (coast with mountains) with one deliberate low pass in
+// each range, guarded by a watchtower; Match Makers gets an
+// all-mountain valley lined with
 // matching peak PAIRS, each pair sharing the same height and the same
 // colored pennant; Clear Antecedent gets an all-mountain scene where
 // the exact same landmark peak recurs, identical, with signposts

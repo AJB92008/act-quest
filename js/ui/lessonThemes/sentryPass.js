@@ -1,16 +1,21 @@
 // Who's There?'s own theme (see lessonTerrain.js for the shared engine
-// every lesson-path theme renders through) — mountain zones and plains
-// zones alternate all the way down the whole scene (not a single
-// mountain block giving way to one plains strip at the end, the way
-// Comma Sense does it): you cross a jagged range, drop into a plains
-// clearing, then climb into another range, over and over. Every range
-// has one deliberate low gap (a saddle) with a little watchtower
-// standing guard right in the notch — the mountain itself asking "who's
-// there?" of anyone crossing through, again and again.
-import { COL_W, clamp, renderTrailPath } from "../lessonTerrain.js";
+// every lesson-path theme renders through) — mountain zones and sandy
+// clearing zones alternate all the way down the whole scene (not a
+// single mountain block giving way to one strip at the end, the way
+// Comma Sense does it): you cross a jagged range, drop into a clearing,
+// then climb into another range, over and over. Every range has one
+// deliberate low gap (a saddle) with a little watchtower standing
+// guard right in the notch — the mountain itself asking "who's there?"
+// of anyone crossing through, again and again. A narrow sliver of sea
+// hugs the same edge the whole way down, in every clearing (never
+// alternating sides, never wide enough to compete with the mountains
+// or reach the trail's own band) — coast with mountains, not a beach
+// scene with mountains as an afterthought.
+import { COL_W, clamp, jaggedBandPath, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 60, max: COL_W - 60 };
 const ZONE_H = 480;
+const WATER_EDGE_MAX = 42;
 
 function computeZones(totalHeight) {
   const zones = [];
@@ -18,7 +23,7 @@ function computeZones(totalHeight) {
   let i = 0;
   while (y < totalHeight) {
     const h = Math.min(ZONE_H, totalHeight - y);
-    zones.push({ y, h, type: i % 2 === 0 ? "mountain" : "plains" });
+    zones.push({ y, h, type: i % 2 === 0 ? "mountain" : "clearing" });
     y += h;
     i++;
   }
@@ -72,6 +77,47 @@ function renderWatchtower(x, y) {
   `;
 }
 
+// A narrow, consistent sliver of sea along the left edge of a clearing
+// zone — well clear of the trail's own band (BAND.min is 60; this
+// never reaches past WATER_EDGE_MAX, 42), so the trail never crosses
+// it. Same edge, every clearing, the whole way down.
+function computeZoneShore(zoneY, zoneH, seed) {
+  const steps = Math.max(14, Math.round(zoneH / 40));
+  const mid = 24;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const localY = (zoneH / steps) * i;
+    const edgeFalloff = clamp(Math.min(localY / 70, (zoneH - localY) / 70), 0, 1);
+    const envelope = 0.3 + 0.7 * edgeFalloff;
+    const wobble = 16 * Math.sin(i * 0.5 + seed) + 8 * Math.sin(i * 1.3 + seed * 1.7);
+    pts.push({ y: zoneY + localY, edge: clamp(mid + envelope * wobble, 8, WATER_EDGE_MAX) });
+  }
+  return pts;
+}
+
+function renderZoneWater(shore) {
+  const band = jaggedBandPath(
+    shore.map((s) => ({ x: -40, y: s.y })),
+    shore.map((s) => ({ x: s.edge, y: s.y }))
+  );
+  const foamLine = shore.map((s, i) => `${i === 0 ? "M" : "L"}${s.edge},${s.y}`).join(" ");
+  return `
+    <path d="${band}" fill="url(#sentryPassWaterDepth)" opacity="0.9" />
+    <path d="${foamLine}" stroke="#eef2ea" stroke-width="2.5" fill="none" opacity="0.4" stroke-linecap="round" />
+  `;
+}
+
+function renderDefs() {
+  return `
+    <defs>
+      <linearGradient id="sentryPassWaterDepth" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#2e4e5c" />
+        <stop offset="100%" stop-color="#5f95a8" />
+      </linearGradient>
+    </defs>
+  `;
+}
+
 function computeFoothillRocks(zoneBottom) {
   return [0.16, 0.4, 0.62, 0.88].map((f, i) => ({
     x: f * COL_W,
@@ -85,7 +131,7 @@ function renderFoothillRock({ x, y, r }) {
 }
 
 const MOUNTAIN_EMOJI = ["🐐", "🦅"];
-const PLAIN_EMOJI = ["🌼", "🦋"];
+const CLEARING_EMOJI = ["🐚", "🦀"];
 
 function renderDecorations(positions, zones) {
   return positions
@@ -94,7 +140,7 @@ function renderDecorations(positions, zones) {
       const zone = zones.find((z) => p.y >= z.y && p.y < z.y + z.h) || zones[zones.length - 1];
       const side = p.x < (BAND.min + BAND.max) / 2 ? 1 : -1;
       const dx = clamp(p.x + side * 58, BAND.min + 15, BAND.max - 10);
-      const emoji = zone.type === "plains" ? PLAIN_EMOJI[i % PLAIN_EMOJI.length] : MOUNTAIN_EMOJI[i % MOUNTAIN_EMOJI.length];
+      const emoji = zone.type === "clearing" ? CLEARING_EMOJI[i % CLEARING_EMOJI.length] : MOUNTAIN_EMOJI[i % MOUNTAIN_EMOJI.length];
       return `<text x="${dx}" y="${p.y - 12}" font-size="23" text-anchor="middle">${emoji}</text>`;
     })
     .join("");
@@ -103,7 +149,7 @@ function renderDecorations(positions, zones) {
 function renderScene(positions, totalHeight, bossName) {
   const zones = computeZones(totalHeight);
   const grounds = zones
-    .map((z) => `<rect x="0" y="${z.y}" width="${COL_W}" height="${z.h}" fill="${z.type === "mountain" ? "#ab9f86" : "#c3dd8f"}" />`)
+    .map((z) => `<rect x="0" y="${z.y}" width="${COL_W}" height="${z.h}" fill="${z.type === "mountain" ? "#ab9f86" : "#d8c896"}" />`)
     .join("");
   const mountains = zones
     .filter((z) => z.type === "mountain")
@@ -113,13 +159,19 @@ function renderScene(positions, totalHeight, bossName) {
       return `${renderRange(range.pts, z.y + z.h)}<g>${foothillRocks}</g>${renderWatchtower(range.passX, range.passY)}`;
     })
     .join("");
+  const water = zones
+    .filter((z) => z.type === "clearing")
+    .map((z, i) => renderZoneWater(computeZoneShore(z.y, z.h, i * 1.9 + 0.6)))
+    .join("");
   const last = positions[positions.length - 1];
   const bossClearing = `<circle cx="${last.x}" cy="${last.y}" r="86" fill="#efe4cf" stroke="#c9a668" stroke-width="4" />`;
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: watchtower-guarded mountain passes alternating with plains clearings all the way down, connecting every Who's There? lesson up to ${bossName}'s own clearing">
+      aria-label="A close-up corner of Wordwood Isle: watchtower-guarded mountain passes alternating with clearings, a narrow sliver of sea hugging one edge the whole way down, connecting every Who's There? lesson up to ${bossName}'s own clearing">
+      ${renderDefs()}
       ${grounds}
+      ${water}
       ${mountains}
       ${bossClearing}
       <path d="${renderTrailPath(positions)}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />
