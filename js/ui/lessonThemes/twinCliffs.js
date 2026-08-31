@@ -1,19 +1,25 @@
 // Apples to Apples' own theme (see lessonTerrain.js for the shared
-// engine every lesson-path theme renders through) — coastal mountains
-// again, like Number Match, but mirrored: the sea sits along the RIGHT
-// edge here instead of the left, so the two coastal skills don't read
-// as flipped copies of each other. The signature device is a run of
-// matching sea-arch PAIRS rising from the water — two identical rock
-// arches, side by side, over and over — a direct visual pun on the
-// skill itself: putting two like things side by side for a fair
-// comparison. A few apple trees dotted along the clifftop are the
-// literal nod to the skill's own name.
-import { COL_W, clamp, jaggedBandPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
+// engine every lesson-path theme renders through) — a rocky mountain
+// wall along the RIGHT edge (mirrored from Number Match's own wall
+// setup, so the two non-coastal hillside skills don't read as flipped
+// copies of each other), rising straight out of solid ground instead of
+// the sea. The signature device — matching rock-arch PAIRS, carved from
+// the wall itself now rather than rising out of water — is unchanged:
+// two identical arches, side by side, over and over, a direct visual
+// pun on the skill itself: putting two like things side by side for a
+// fair comparison. A few apple trees dotted along the clifftop are the
+// literal nod to the skill's own name. (An earlier version had open
+// water in the wall's place, with the arches rising from it as sea
+// arches; dropped along with every other coastal skill's water feature
+// so this hillside skill reads as ordinary mountain terrain, like its
+// non-coastal neighbors Number Match, Match Makers, and Clear
+// Antecedent.)
+import { COL_W, clamp, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 40, max: COL_W - 220 };
-const WATER_OUTER = COL_W + 40;
+const WALL_OUTER = COL_W + 40;
 
-function computeShore(totalHeight) {
+function computeWallEdge(totalHeight) {
   const steps = Math.max(36, Math.round(totalHeight / 48));
   const mid = COL_W - 150;
   return Array.from({ length: steps + 1 }, (_, i) => {
@@ -26,44 +32,30 @@ function computeShore(totalHeight) {
       20 * Math.sin(i * 2.0 + 0.3) +
       11 * Math.sin(i * 4.4 + 1.4);
     const edge = mid + envelope * wobble;
-    return { y, left: clamp(edge, COL_W - 195, WATER_OUTER - 15), right: WATER_OUTER };
+    return { y, edge: clamp(edge, COL_W - 195, WALL_OUTER - 15) };
   });
 }
 
-function renderWaterDefs() {
+// The wall's outer edge (away from the trail, off past the frame) is a
+// flat color running the full height of the canvas — a fade to
+// transparent right at the frame's own edge lets the rock dissolve into
+// the ground before it ever reaches that boundary, instead of getting
+// clipped there. The jagged inner (trail-facing) edge is untouched.
+function renderWallFadeDefs() {
   return `
     <defs>
-      <linearGradient id="twinCliffsDepth" x1="1" y1="0" x2="0" y2="0">
-        <stop offset="0%" stop-color="#2c4a56" />
-        <stop offset="100%" stop-color="#5a8a9c" />
-      </linearGradient>
-      <linearGradient id="twinCliffsEdgeFade" x1="${COL_W}" y1="0" x2="${COL_W - 70}" y2="0" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stop-color="#a89b82" stop-opacity="1" />
-        <stop offset="100%" stop-color="#a89b82" stop-opacity="0" />
+      <linearGradient id="twinCliffsWallFade" x1="${COL_W}" y1="0" x2="${COL_W - 60}" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#a89b82" stop-opacity="0" />
+        <stop offset="100%" stop-color="#a89b82" stop-opacity="1" />
       </linearGradient>
     </defs>
   `;
 }
 
-// A vignette painted on top of the water, right at the frame's own
-// right edge — fades from the cliff-top's own ground color (opaque)
-// down to fully transparent, so the water dissolves into the ground
-// before the frame boundary instead of the flat fill just stopping
-// there in a hard cut. The wavy shore (cliff-facing) edge is untouched.
-function renderWaterEdgeFade(totalHeight) {
-  return `<rect x="${COL_W - 70}" y="0" width="70" height="${totalHeight}" fill="url(#twinCliffsEdgeFade)" />`;
-}
-
-function renderWater(shore) {
-  const band = jaggedBandPath(
-    shore.map((s) => ({ x: s.left, y: s.y })),
-    shore.map((s) => ({ x: s.right, y: s.y }))
-  );
-  const foamLine = shore.map((s, i) => `${i === 0 ? "M" : "L"}${s.left},${s.y}`).join(" ");
-  return `
-    <path d="${band}" fill="url(#twinCliffsDepth)" opacity="0.9" />
-    <path d="${foamLine}" stroke="#eef2ea" stroke-width="3" fill="none" opacity="0.45" stroke-linecap="round" />
-  `;
+function renderWall(wall) {
+  const line = wall.map((w, i) => `${i === 0 ? "M" : "L"}${w.edge},${w.y}`).join(" ");
+  const fillPath = `${line} L${WALL_OUTER},${wall[wall.length - 1].y} L${WALL_OUTER},0 Z`;
+  return `<path d="${fillPath}" fill="url(#twinCliffsWallFade)" stroke="#6b6353" stroke-width="2" opacity="0.95" />`;
 }
 
 // One rock arch — two short pillars and a curved span between them.
@@ -78,20 +70,20 @@ function renderArch(x, y, scale) {
 }
 
 // Twin arches — the same shape and size, planted right next to each
-// other — repeated down the whole coastline.
-function renderArchPairs(shore) {
-  const count = Math.max(3, Math.round(shore.length / 11));
+// other — repeated down the whole wall, carved straight out of it.
+function renderArchPairs(wall) {
+  const count = Math.max(3, Math.round(wall.length / 11));
   const out = [];
   for (let g = 0; g < count; g++) {
-    const idx = clamp(Math.round(((g + 0.5) / count) * shore.length), 2, shore.length - 2);
-    const s = shore[idx];
-    const width = WATER_OUTER - s.left;
+    const idx = clamp(Math.round(((g + 0.5) / count) * wall.length), 2, wall.length - 2);
+    const w = wall[idx];
+    const width = WALL_OUTER - w.edge;
     if (width < 55) continue;
     const scale = 0.85 + (g % 2) * 0.25;
     const gap = 46 * scale;
-    const cx = s.left + Math.min(width - 30, 55);
-    out.push(renderArch(cx, s.y, scale));
-    out.push(renderArch(cx + gap, s.y, scale));
+    const cx = w.edge + Math.min(width - 30, 55);
+    out.push(renderArch(cx, w.y, scale));
+    out.push(renderArch(cx + gap, w.y, scale));
   }
   return out.join("");
 }
@@ -172,9 +164,9 @@ function renderDecorations(positions) {
 }
 
 function renderScene(positions, totalHeight, bossName) {
-  const shore = computeShore(totalHeight);
-  const water = renderWater(shore);
-  const arches = renderArchPairs(shore);
+  const wall = computeWallEdge(totalHeight);
+  const wallShape = renderWall(wall);
+  const arches = renderArchPairs(wall);
   const trees = computeAppleTrees(positions, totalHeight)
     .map((t) => renderAppleTree(t.x, t.y))
     .join("");
@@ -189,13 +181,12 @@ function renderScene(positions, totalHeight, bossName) {
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: rocky coastal cliffs and mountain ridges above the sea, with matching pairs of twin sea arches and a few apple trees on the clifftop, connecting every Apples to Apples lesson up to ${bossName}'s own clearing">
-      ${renderWaterDefs()}
+      aria-label="A close-up corner of Wordwood Isle: a rocky mountain wall and mountain ridges along one edge, with matching pairs of twin rock arches carved from the wall and a few apple trees on the clifftop, connecting every Apples to Apples lesson up to ${bossName}'s own clearing">
+      ${renderWallFadeDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#a89b82" />
-      ${water}
-      ${renderWaterEdgeFade(totalHeight)}
-      ${arches}
       <g>${scree}</g>
+      ${wallShape}
+      ${arches}
       ${ridges}
       <g>${trees}</g>
       ${bossClearing}

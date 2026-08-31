@@ -6,4 +6,4 @@
 // hand-edit this file, the hook overwrites it (see that script, and the
 // "Versioning" section in README.md for the one-time local setup it
 // needs).
-export const APP_VERSION = "1.108";
+export const APP_VERSION = "1.109";

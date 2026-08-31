@@ -22,10 +22,10 @@
 // what follows), Dash Dash gets a windswept prairie whose trail is
 // drawn in long chunky dashes instead of dots, Full Stop gets its own
 // hushed swamp variant with one still pool and a fully unbroken trail
-// line (a period is one definitive stop), and Case Closed gets a sandy
-// beach with swamp water along one edge and a washed-up suitcase (a
-// literal "case"). The hillside zone: Who's There? gets a heavily
-// mountain-weighted scene (a small plains strip only at the very
+// line (a period is one definitive stop), and Case Closed gets a
+// wide-open grassy field (no water feature) with a suitcase abandoned
+// in the grass (a literal "case"). The hillside zone: Who's There? gets
+// a heavily mountain-weighted scene (a small plains strip only at the very
 // bottom) with one deliberate low pass in the range, guarded by a
 // watchtower; Match Makers gets an all-mountain valley lined with
 // matching peak PAIRS, each pair sharing the same height and the same
@@ -37,8 +37,9 @@
 // Number Match gets a plain all-mountain valley, same template as Match
 // Makers and Clear Antecedent, its walls topped with recurring ridge
 // silhouettes and foothill scree instead of any water feature;
-// Apples to Apples gets coastal mountains mirrored to the other side,
-// with matching pairs of twin sea arches and a few literal apple trees;
+// Apples to Apples gets a rocky mountain wall mirrored to the other
+// side (no water feature either), with matching pairs of twin rock
+// arches carved from the wall and a few literal apple trees;
 // and Sound-Alike Showdown flips the coastal balance entirely — open
 // water dominates, with matching cliffs (and mountain peaks cresting
 // above them) on both the left and right edges, sound-wave arcs echoing
