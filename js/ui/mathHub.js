@@ -735,6 +735,17 @@ function safeShorePad(gap) {
   return Math.max(MIN_SHORE_PAD, Math.min(DEFAULT_SHORE_PAD, (gap / 2 - WATER_GUTTER) / MAX_BULGE));
 }
 
+// Same reasoning as safeShorePad, but for a shoreline that borders the
+// world's own hard edge (WORLD_H/WORLD_W — where the SVG's own viewBox
+// clips) instead of a neighboring island — used for the boss island's
+// bottom pad below. No halving: safeShorePad splits a *shared* gap
+// between two islands each claiming half, but nothing sits on the far
+// side of the world's edge to claim the other half, so the full
+// headroom belongs to this one pad.
+function safeEdgePad(headroom) {
+  return Math.max(MIN_SHORE_PAD, Math.min(DEFAULT_SHORE_PAD, (headroom - WATER_GUTTER) / MAX_BULGE));
+}
+
 // A narrow strip of the exact same sand as every shoreline, connecting
 // two islands straight across their own water gap — just a filled quad,
 // no organic outline of its own. Same SAND fill as every shoreline means
@@ -781,7 +792,19 @@ function renderMathRegions(zoneGroups) {
     return { x0, x1, y0, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
   });
 
-  const bossBbox = { x0: BOSS_POS.x - 220, x1: BOSS_POS.x + 220, y0: BOSS_POS.y - 180, y1: BOSS_POS.y + 140 };
+  // BOSS_POS.y sits only 180px above WORLD_H (the world's own hard
+  // bottom edge, where the SVG's viewBox itself clips) — not enough
+  // room for this box's old +140 reach *plus* a full, bulge-safe
+  // DEFAULT_SHORE_PAD shoreline below it, which is exactly why the
+  // island's own sand used to run straight off the bottom of the world
+  // instead of curving into a shoreline like every other edge. Splits
+  // the fix across both: pull the box's own bottom edge up (140 -> 70,
+  // still leaves the boss its own footprint) and size the shoreline pad
+  // itself off whatever room that leaves (see safeEdgePad below), rather
+  // than only shrinking the box or only thinning the pad.
+  const BOSS_BOTTOM_REACH = 70;
+  const bossBbox = { x0: BOSS_POS.x - 220, x1: BOSS_POS.x + 220, y0: BOSS_POS.y - 180, y1: BOSS_POS.y + BOSS_BOTTOM_REACH };
+  const bossBottomPad = safeEdgePad(WORLD_H - bossBbox.y1);
 
   const pads = boxes.map((box, i) => {
     if (!box) return DEFAULT_SHORE_PAD;
@@ -825,7 +848,7 @@ function renderMathRegions(zoneGroups) {
     .join("");
 
   const bossIsland =
-    renderIsland(bossBbox, BOSS_FILL, 99, { left: DEFAULT_SHORE_PAD, right: DEFAULT_SHORE_PAD, top: bossPadTop, bottom: DEFAULT_SHORE_PAD }) +
+    renderIsland(bossBbox, BOSS_FILL, 99, { left: DEFAULT_SHORE_PAD, right: DEFAULT_SHORE_PAD, top: bossPadTop, bottom: bossBottomPad }) +
     renderWatchtower(bossBbox.x0 + 55, (bossBbox.y0 + bossBbox.y1) / 2 + 20);
   return causewaysMarkup + islands + bossIsland;
 }
