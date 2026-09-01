@@ -411,31 +411,43 @@ function organicIslandPoints(bbox, pad, seed, n = 48) {
 // height that might not be. Alternating light/dark slope faces (rising
 // toward a peak = lit, falling = shadowed) give it real dimension
 // instead of reading as a flat 2D silhouette.
-function renderMiniMountains(bbox, seed, headroom = 150) {
+// Shared vertical/horizontal placement math every zone's own central
+// terrain motif below is built on — one island's mountain range, another's
+// shale formation, another's spires, all sitting on the exact same safe
+// footing (above the topmost node row, sized to the actual headroom)
+// rather than each reimplementing that arithmetic with its own chance to
+// drift out of sync. See NODE_CLEARANCE for why bbox.y0 alone isn't
+// enough, and the width floor's own comment (below) for why w needs one.
+const NODE_CLEARANCE = 45;
+function computeMotifBounds(bbox, headroom) {
+  const bottomY = bbox.y0 - NODE_CLEARANCE;
+  const budget = Math.max(35, Math.min(100, headroom - NODE_CLEARANCE));
+  const cx = (bbox.x0 + bbox.x1) / 2;
   // Floored the same way organicIslandPoints already floors its own
   // halfW, and for the same reason: a single-column zone's tight node
   // bbox is only as wide as its per-skill jitter spread (Goldtally
   // Flats, 3 skills forced into one column by gridPositions, measured
-  // ~11px wide) — using that raw width collapsed the whole mountain
-  // range down to a barely-visible sliver while every wider, multi-
-  // column zone got a full one, the exact "one island looks unfinished"
-  // this floor exists to prevent. 250 is picked to land in the same
-  // ~150px painted-width range those other islands' ranges land in
-  // (w * 0.6 is the horizontal spread below), not an arbitrary number.
+  // ~11px wide) — an unfloored width collapses whatever motif is built
+  // on it down to a barely-visible sliver while every wider, multi-
+  // column zone gets a full one. 250 lands the painted motif in the
+  // same ~150px width every zone now measures at.
   const w = Math.max(250, bbox.x1 - bbox.x0);
-  // Centered on the bbox's own midpoint rather than offset from x0 —
-  // for a normal (unfloored) w those are the same anchor (x0 + 0.5w ==
-  // (x0+x1)/2), but once w is floored above they diverge: anchoring on
-  // x0 would push the whole range off to one side instead of centering
-  // it over the zone's actual nodes.
-  const cx = (bbox.x0 + bbox.x1) / 2;
-  // NODE_CLEARANCE clears the topmost node's own 23px circle radius
-  // plus a visible margin, measured from that node's *center* (bbox.y0)
-  // — not just from bbox.y0 itself, which would still let the mountain's
-  // bottom edge cut into the node's own circle.
-  const NODE_CLEARANCE = 45;
-  const bottomY = bbox.y0 - NODE_CLEARANCE;
-  const budget = Math.max(35, Math.min(100, headroom - NODE_CLEARANCE));
+  return { bottomY, budget, cx, w };
+}
+
+// Ironroot Algebra — jagged mountain peaks, sized/placed by
+// computeMotifBounds above. Alternating light/dark slope faces (rising
+// toward a peak = lit, falling = shadowed) give it real dimension
+// instead of reading as a flat 2D silhouette. Deliberately darker than
+// the zone's own fill (not the same tone) — same reasoning as
+// SHALE_SHADES/SPIRE_SHADES below, tied to the zone's own rust/brown
+// family instead of the mismatched purple-gray this used to be filled
+// with, but with enough value contrast to still read against the
+// lighter brown interior it sits on.
+const MOUNTAIN_SHADES = ["#8a5f47", "#6b4530", "#c2926f"];
+const MOUNTAIN_STROKE = "#4a3323";
+function renderMiniMountains(bbox, seed, headroom = 150) {
+  const { bottomY, budget, cx, w } = computeMotifBounds(bbox, headroom);
   const faceDrop = budget * 0.2;
   const peakH = budget * 0.8;
   const baseY = bottomY - faceDrop;
@@ -459,7 +471,180 @@ function renderMiniMountains(bbox, seed, headroom = 150) {
   }
   const top = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
   const base = `L${pts[pts.length - 1].x.toFixed(1)},${(baseY + faceDrop).toFixed(1)} L${pts[0].x.toFixed(1)},${(baseY + faceDrop).toFixed(1)} Z`;
-  return `<path d="${top} ${base}" fill="#8b81a8" />${faces}`;
+  return `<path d="${top} ${base}" fill="${MOUNTAIN_SHADES[0]}" stroke="${MOUNTAIN_STROKE}" stroke-width="1.5" />${faces}`;
+}
+
+// A single tilted rock slab, standing on (x, baseY) as its own base —
+// the one shape both Shalefoot Geometry's central formation and its
+// smaller scattered outcrops below are built from, just at different
+// scales, tying the two together as the same rock rather than two
+// unrelated decorations sharing an island.
+function renderShaleSlab(x, baseY, w, h, angle, shade) {
+  return `<rect x="${(x - w / 2).toFixed(1)}" y="${(baseY - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${shade}" stroke="#3f4a56" stroke-width="1.5" opacity="0.95" transform="rotate(${angle.toFixed(1)} ${x.toFixed(1)} ${baseY.toFixed(1)})" />`;
+}
+
+// Shalefoot Geometry — angular, tilted rock slabs instead of a jagged
+// peak silhouette: an actual shale outcrop (thin, flat-layered rock
+// that shears into rectangular slabs), and a visual pun on the skill
+// itself — the one island whose landmark is built from literal
+// rectangles instead of an organic mountain shape.
+const SHALE_SHADES = ["#7d93a8", "#647c92", "#95a8b8"];
+function renderShaleFormation(bbox, seed, headroom = 150) {
+  const { bottomY, budget, cx, w } = computeMotifBounds(bbox, headroom);
+  const slabCount = 4 + (seed % 2);
+  let out = "";
+  for (let i = 0; i < slabCount; i++) {
+    const f = slabCount > 1 ? i / (slabCount - 1) : 0.5;
+    const x = cx - w * 0.3 + f * w * 0.6;
+    const jitter = pseudoRandom(seed * 61 + i);
+    const h = budget * (0.45 + jitter * 0.5);
+    const angle = (pseudoRandom(seed * 67 + i) - 0.5) * 26;
+    const slabW = w * 0.16;
+    const shade = SHALE_SHADES[i % SHALE_SHADES.length];
+    out += renderShaleSlab(x, bottomY, slabW, h, angle, shade);
+  }
+  return out;
+}
+
+// A single thin spire, standing on (x, baseY) — Skyline Functions' own
+// scaled-down building block, same idea as renderShaleSlab.
+function renderSpire(x, baseY, w, h, shade) {
+  const topW = w * 0.32;
+  return `
+    <path d="M${(x - w / 2).toFixed(1)},${baseY.toFixed(1)} L${(x - topW / 2).toFixed(1)},${(baseY - h * 0.85).toFixed(1)} L${x.toFixed(1)},${(baseY - h).toFixed(1)} L${(x + topW / 2).toFixed(1)},${(baseY - h * 0.85).toFixed(1)} L${(x + w / 2).toFixed(1)},${baseY.toFixed(1)} Z" fill="${shade}" stroke="#453a5c" stroke-width="1.5" opacity="0.95" />
+    <circle cx="${x.toFixed(1)}" cy="${(baseY - h).toFixed(1)}" r="2.5" fill="#ffe9ff" opacity="0.75" />
+  `;
+}
+
+// Skyline Functions — a row of thin spires at varying heights instead
+// of a mountain silhouette: reads as an actual skyline (the zone's own
+// name), and the varying-height row doubles as a function's own graph
+// — a step plot or histogram sketched in rock instead of ink.
+const SPIRE_SHADES = ["#8b7fc4", "#6f6690", "#a89adf"];
+function renderSpireFormation(bbox, seed, headroom = 150) {
+  const { bottomY, budget, cx, w } = computeMotifBounds(bbox, headroom);
+  const spireCount = 4 + (seed % 2);
+  let out = "";
+  for (let i = 0; i < spireCount; i++) {
+    const f = spireCount > 1 ? i / (spireCount - 1) : 0.5;
+    const x = cx - w * 0.3 + f * w * 0.6;
+    const jitter = pseudoRandom(seed * 73 + i);
+    const h = budget * (0.4 + jitter * 0.55);
+    const spireW = w * 0.1;
+    const shade = SPIRE_SHADES[i % SPIRE_SHADES.length];
+    out += renderSpire(x, bottomY, spireW, h, shade);
+  }
+  return out;
+}
+
+// A single purple-canopied tree, standing on (x, baseY) — Skyline
+// Functions' own ground-level accent, scattered around the shoreline
+// ring alongside (not instead of) the spire skyline itself: distant
+// spires for the skyline pun, actual purple trees for the "forest" the
+// zone's own purple color already reads as up close. Canopy drawn from
+// SPIRE_SHADES so the trees stay the same purple family as the spires
+// rather than introducing an unrelated green.
+function renderPurpleTree(x, baseY, h, shade) {
+  const trunkW = h * 0.12;
+  const trunkH = h * 0.32;
+  const canopyR = h * 0.36;
+  return `
+    <rect x="${(x - trunkW / 2).toFixed(1)}" y="${(baseY - trunkH).toFixed(1)}" width="${trunkW.toFixed(1)}" height="${trunkH.toFixed(1)}" fill="#453a5c" />
+    <circle cx="${x.toFixed(1)}" cy="${(baseY - trunkH - canopyR * 0.7).toFixed(1)}" r="${canopyR.toFixed(1)}" fill="${shade}" stroke="#453a5c" stroke-width="1.5" opacity="0.95" />
+  `;
+}
+
+function renderGoldNugget(x, y, r) {
+  return `
+    <ellipse cx="${x.toFixed(1)}" cy="${(y + r * 0.3).toFixed(1)}" rx="${(r * 1.05).toFixed(1)}" ry="${(r * 0.35).toFixed(1)}" fill="rgba(60,45,20,0.16)" />
+    <ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${r.toFixed(1)}" ry="${(r * 0.82).toFixed(1)}" fill="#d4af37" stroke="#8a6d1f" stroke-width="1.5" />
+    <ellipse cx="${(x - r * 0.28).toFixed(1)}" cy="${(y - r * 0.22).toFixed(1)}" rx="${(r * 0.34).toFixed(1)}" ry="${(r * 0.2).toFixed(1)}" fill="#f0d97a" opacity="0.75" />
+  `;
+}
+
+// Four scratched lines and a closing diagonal — the actual counting
+// mark "Goldtally" puns on, planted straight into the ground like a
+// signpost. `count` lets the scattered small versions below use fewer
+// lines (an in-progress tally) than the central full set of five.
+function renderTallyMark(x, baseY, h, count = 5) {
+  const lines = Array.from({ length: Math.min(4, count) }, (_, i) => `<line x1="${(x + i * (h * 0.14) - h * 0.21).toFixed(1)}" y1="${baseY.toFixed(1)}" x2="${(x + i * (h * 0.14) - h * 0.21).toFixed(1)}" y2="${(baseY - h).toFixed(1)}" stroke="#6b5233" stroke-width="3" stroke-linecap="round" />`).join("");
+  const diag = count > 4 ? `<line x1="${(x - h * 0.26).toFixed(1)}" y1="${(baseY - h * 0.12).toFixed(1)}" x2="${(x + h * 0.26).toFixed(1)}" y2="${(baseY - h * 0.88).toFixed(1)}" stroke="#6b5233" stroke-width="3" stroke-linecap="round" />` : "";
+  return lines + diag;
+}
+
+// Goldtally Flats — deliberately NOT a mountain silhouette (the zone's
+// own name is "Flats"): a low cluster of gold nuggets and one full
+// tally mark instead, low-profile rather than tall so this island keeps
+// reading as flat ground even with its own landmark on it.
+function renderFlatsFormation(bbox, seed, headroom = 150) {
+  const { bottomY, cx, w } = computeMotifBounds(bbox, headroom);
+  const tallyH = Math.min(60, headroom - NODE_CLEARANCE - 10);
+  const nuggetR = 15 + (seed % 3) * 3;
+  return `
+    ${renderGoldNugget(cx - w * 0.22, bottomY - nuggetR * 0.6, nuggetR)}
+    ${renderTallyMark(cx, bottomY, tallyH, 5)}
+    ${renderGoldNugget(cx + w * 0.2, bottomY - nuggetR * 0.5, nuggetR * 0.8)}
+  `;
+}
+
+// One central terrain motif per zone (algebra keeps the mountain range
+// every island used to get; the other three each get their own, so
+// "Ironroot," "Shalefoot," "Skyline," and "Flats" actually look like
+// different places instead of the same silhouette recolored four
+// times), plus a handful of smaller matching accents scattered through
+// that island's own shoreline ring (ringPositions keeps them outside
+// the node bbox at every angle, so they never land on a node or trail).
+const ZONE_TERRAIN = {
+  algebra: {
+    central: renderMiniMountains,
+    scatterCount: 5,
+    scatter: (p, seed) => {
+      const h = 26 + pseudoRandom(seed) * 16;
+      const shade = MOUNTAIN_SHADES[seed % MOUNTAIN_SHADES.length];
+      return `<path d="M${(p.x - h * 0.4).toFixed(1)},${p.y.toFixed(1)} L${p.x.toFixed(1)},${(p.y - h).toFixed(1)} L${(p.x + h * 0.4).toFixed(1)},${p.y.toFixed(1)} Z" fill="${shade}" stroke="${MOUNTAIN_STROKE}" stroke-width="1.5" opacity="0.9" />`;
+    },
+  },
+  geometry: {
+    central: renderShaleFormation,
+    scatterCount: 5,
+    scatter: (p, seed) => renderShaleSlab(p.x, p.y, 16 + pseudoRandom(seed) * 8, 20 + pseudoRandom(seed + 1) * 14, (pseudoRandom(seed + 2) - 0.5) * 40, SHALE_SHADES[seed % SHALE_SHADES.length]),
+  },
+  functions: {
+    central: renderSpireFormation,
+    scatterCount: 8,
+    scatter: (p, seed) => renderPurpleTree(p.x, p.y, 28 + pseudoRandom(seed) * 16, SPIRE_SHADES[seed % SPIRE_SHADES.length]),
+  },
+  numstats: {
+    central: renderFlatsFormation,
+    scatterCount: 6,
+    scatter: (p, seed) => (seed % 2 === 0 ? renderGoldNugget(p.x, p.y, 9 + pseudoRandom(seed) * 6) : renderTallyMark(p.x, p.y, 22 + pseudoRandom(seed) * 10, 2 + Math.floor(pseudoRandom(seed + 1) * 3))),
+  },
+};
+
+// Scatters `count` small accents in the ring between a zone's own tight
+// node bbox and its shoreline (same idea as the old, since-removed
+// per-zone biomes — every position leans on a real gap in the layout
+// rather than a hardcoded coordinate, so it stays correct if skill
+// counts ever change) — but every one of them is the same rock/spire/
+// nugget the zone's own central motif is built from, at a smaller
+// scale, not an unrelated prop dropped in for texture.
+function renderZoneScatter(zoneId, bbox, seed, ringCap) {
+  const terrain = ZONE_TERRAIN[zoneId];
+  if (!terrain) return "";
+  const max = Math.min(85, ringCap);
+  const min = Math.min(50, max - 15);
+  if (max <= 0) return "";
+  const cx = (bbox.x0 + bbox.x1) / 2;
+  const cy = (bbox.y0 + bbox.y1) / 2;
+  const halfW = (bbox.x1 - bbox.x0) / 2;
+  const halfH = (bbox.y1 - bbox.y0) / 2;
+  return Array.from({ length: terrain.scatterCount }, (_, i) => {
+    const angle = (i / terrain.scatterCount) * Math.PI * 2 + (pseudoRandom(seed * 17 + i) - 0.5) * 0.9;
+    const pad = min + pseudoRandom(seed * 23 + i) * (max - min);
+    const x = cx + Math.cos(angle) * (halfW + pad);
+    const y = cy + Math.sin(angle) * (halfH + pad);
+    return terrain.scatter({ x, y }, seed * 31 + i + 1);
+  }).join("");
 }
 
 const DEFAULT_SHORE_PAD = 150;
@@ -498,7 +683,7 @@ function innerPadFor(outerPad) {
 // walkable region (buildIslandPolygons samples exactly these sand
 // paths), so two islands' padding overlapping doesn't just look wrong,
 // it silently erases the water between them as a barrier to movement.
-function renderIsland(bbox, fill, seed, outerPad = DEFAULT_SHORE_PAD) {
+function renderIsland(bbox, fill, seed, outerPad = DEFAULT_SHORE_PAD, centralMotif = renderMiniMountains) {
   const innerPad = innerPadFor(outerPad);
   const outerPts = organicIslandPoints(bbox, outerPad, seed);
   const innerPts = organicIslandPoints(bbox, innerPad, seed);
@@ -506,7 +691,7 @@ function renderIsland(bbox, fill, seed, outerPad = DEFAULT_SHORE_PAD) {
   return `
     <path d="${closedBlobPath(outerPts)}" fill="${SAND}" />
     <path d="${closedBlobPath(innerPts)}" fill="${fill}" />
-    ${renderMiniMountains(bbox, seed, headroom)}
+    ${centralMotif(bbox, seed, headroom)}
   `;
 }
 
@@ -631,7 +816,11 @@ function renderMathRegions(zoneGroups) {
     .map(({ zone }, i) => {
       const bbox = boxes[i];
       if (!bbox) return "";
-      return renderIsland(bbox, zone.fill, i + 1, pads[i]);
+      const seed = i + 1;
+      const terrain = ZONE_TERRAIN[zone.id];
+      const innerPad = innerPadFor(pads[i]);
+      const ringCap = Math.max(25, Math.min(innerPad.left, innerPad.right, innerPad.top, innerPad.bottom) - 10);
+      return renderIsland(bbox, zone.fill, seed, pads[i], terrain?.central) + renderZoneScatter(zone.id, bbox, seed, ringCap);
     })
     .join("");
 
