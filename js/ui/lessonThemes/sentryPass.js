@@ -1,68 +1,106 @@
 // Who's There?'s own theme (see lessonTerrain.js for the shared engine
-// every lesson-path theme renders through) — mountain zones and sandy
-// clearing zones alternate all the way down the whole scene (not a
-// single mountain block giving way to one strip at the end, the way
-// Comma Sense does it): you cross a jagged range, drop into a clearing,
-// then climb into another range, over and over. Every range has one
-// deliberate low gap (a saddle) with a little watchtower standing
-// guard right in the notch — the mountain itself asking "who's there?"
-// of anyone crossing through, again and again. A narrow sliver of sea
-// hugs the same edge the whole way down, in every clearing (never
-// alternating sides, never wide enough to compete with the mountains
-// or reach the trail's own band) — coast with mountains, not a beach
-// scene with mountains as an afterthought.
-import { COL_W, clamp, jaggedBandPath, renderTrailPath } from "../lessonTerrain.js";
+// every lesson-path theme renders through) — one continuous jagged
+// mountain wall along the right edge, the same technique as Time
+// Traveler and Number Match, not a repeating alternation of separate
+// mountain/clearing blocks (an earlier version alternated every 480
+// units, which read as arbitrary — mountain, clearing, mountain,
+// clearing, with no reason for the rhythm). The wall carries one
+// deliberate low gap — a saddle — with a little watchtower standing
+// guard right in the notch, the mountain itself asking "who's there?"
+// of anyone crossing through. Past that gap the wall gradually recedes
+// into a small clearing at the very bottom, the one open stretch in
+// the whole scene. A narrow sliver of sea runs the entire length along
+// the opposite edge — coast with mountains, one coherent scene rather
+// than patchwork zones.
+import { COL_W, clamp, jaggedBandPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
 
-const BAND = { min: 60, max: COL_W - 60 };
-const ZONE_H = 480;
-const WATER_EDGE_MAX = 42;
+const WATER_BAND = { min: -40, max: 65 };
+const BAND = { min: 225, max: COL_W - 90 };
+const PASS_Y_FRACTION = 0.48;
+const PASS_HALF_WIDTH = 130;
+const RECEDE_START_FRACTION = 0.8;
 
-function computeZones(totalHeight) {
-  const zones = [];
-  let y = 0;
-  let i = 0;
-  while (y < totalHeight) {
-    const h = Math.min(ZONE_H, totalHeight - y);
-    zones.push({ y, h, type: i % 2 === 0 ? "mountain" : "clearing" });
-    y += h;
-    i++;
-  }
-  return zones;
+// The wall's inner (trail-facing) edge — a jagged silhouette like Time
+// Traveler's, but with two deliberate modifications baked into its
+// depth profile: a saddle dip (the pass) partway down, and a long taper
+// to near-nothing over the final stretch (the mountain gradually
+// giving way to a small clearing at the very bottom).
+function computeWallEdge(totalHeight) {
+  const steps = Math.max(45, Math.round(totalHeight / 40));
+  const passY = totalHeight * PASS_Y_FRACTION;
+  const recedeStart = totalHeight * RECEDE_START_FRACTION;
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const y = (totalHeight / steps) * i;
+    const wobble =
+      44 * Math.sin(i * 0.4 + 0.6) +
+      27 * Math.sin(i * 1.05 + 1.9) +
+      17 * Math.sin(i * 2.3 + 0.8) +
+      10 * Math.sin(i * 5.2 + 2.4);
+    let depth = clamp(58 + wobble, 16, 88);
+    const passDist = Math.abs(y - passY);
+    if (passDist < PASS_HALF_WIDTH) {
+      const t = 1 - passDist / PASS_HALF_WIDTH;
+      depth = depth * (1 - t) + 20 * t;
+    }
+    if (y > recedeStart) {
+      const t = clamp((y - recedeStart) / (totalHeight - recedeStart), 0, 1);
+      depth *= 1 - t;
+    }
+    return { y, depth };
+  });
 }
 
-// A jagged range confined to one zone, with one peak pulled way down
-// into a saddle — the pass the watchtower sits in.
-function computeRange(zoneTop, zoneBottom) {
-  const peaks = 5;
-  const passIndex = 2;
-  const step = COL_W / peaks;
-  const pts = [{ x: -20, y: zoneBottom }];
-  for (let i = 0; i < peaks; i++) {
-    const peakX = step * i + step * 0.5;
-    const isPass = i === passIndex;
-    const zoneH = zoneBottom - zoneTop;
-    const peakY = isPass
-      ? zoneBottom - zoneH * 0.35
-      : clamp(zoneBottom - zoneH * (0.55 + (i % 3) * 0.14), zoneTop + 15, zoneBottom - zoneH * 0.3);
-    pts.push({ x: peakX, y: peakY });
-    pts.push({ x: step * (i + 1), y: zoneBottom - zoneH * (0.18 + (i % 2) * 0.1) });
-  }
-  pts.push({ x: COL_W + 20, y: zoneBottom });
-  return { pts, passX: step * passIndex + step * 0.5, passY: zoneBottom - (zoneBottom - zoneTop) * 0.35 };
-}
-
-function renderRange(pts, zoneBottom) {
-  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
-  const fillPath = `${line} L${COL_W + 20},${zoneBottom} L-20,${zoneBottom} Z`;
-  const snowCaps = pts
-    .filter((_, i) => i % 2 === 1)
-    .map((p) => `<path d="M${p.x - 15},${p.y + 20} L${p.x},${p.y} L${p.x + 15},${p.y + 20} L${p.x + 7},${p.y + 15} L${p.x},${p.y + 22} L${p.x - 7},${p.y + 15} Z" fill="#eef2ea" opacity="0.85" />`)
-    .join("");
+function renderWallFadeDefs() {
   return `
-    <path d="${fillPath}" fill="#8c8270" />
-    <path d="${line}" fill="none" stroke="#6b6353" stroke-width="3" opacity="0.6" />
-    ${snowCaps}
+    <defs>
+      <linearGradient id="sentryPassWallFade" x1="${COL_W}" y1="0" x2="${COL_W - 70}" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#ab9f86" stop-opacity="1" />
+        <stop offset="100%" stop-color="#ab9f86" stop-opacity="0" />
+      </linearGradient>
+      <linearGradient id="sentryPassWaterDepth" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#2e4e5c" />
+        <stop offset="100%" stop-color="#5f95a8" />
+      </linearGradient>
+    </defs>
   `;
+}
+
+function renderWall(edge) {
+  const line = edge.map((e, i) => `${i === 0 ? "M" : "L"}${COL_W - e.depth},${e.y}`).join(" ");
+  const fillPath = `${line} L${COL_W + 40},${edge[edge.length - 1].y} L${COL_W + 40},0 Z`;
+  return `<path d="${fillPath}" fill="#8c8270" stroke="#6b6353" stroke-width="2" opacity="0.95" />`;
+}
+
+function renderWallOuterFade(totalHeight) {
+  return `<rect x="${COL_W - 70}" y="0" width="70" height="${totalHeight}" fill="url(#sentryPassWallFade)" />`;
+}
+
+// Snow-capped ridge silhouettes recurring up the wall wherever it's
+// tall enough to carry one (skipped near the pass and the receding
+// tail, where the wall itself is too shallow).
+function computeRidges(edge, totalHeight) {
+  const count = Math.max(4, Math.round(totalHeight / 480));
+  const ridges = [];
+  for (let i = 0; i < count; i++) {
+    const y = ((i + 0.5) / count) * totalHeight;
+    const nearest = edge.reduce((best, e) => (Math.abs(e.y - y) < Math.abs(best.y - y) ? e : best));
+    if (nearest.depth > 45) ridges.push({ y: nearest.y, depth: nearest.depth });
+  }
+  return ridges;
+}
+
+function renderRidgeCluster(y, depth) {
+  const cx = COL_W - depth - 30;
+  const step = 46;
+  const h = 40;
+  const line = `M${cx - step - 16},${y} L${cx - step},${y - h} L${cx - step / 2},${y - h * 0.6} L${cx},${y - h * 1.15} L${cx + step / 2},${y - h * 0.6} L${cx + step},${y - h} L${cx + step + 16},${y}`;
+  const cap = [cx - step, cx, cx + step]
+    .map((px, i) => {
+      const py = i === 1 ? y - h * 1.15 : y - h;
+      return `<path d="M${px - 8},${py + 11} L${px},${py} L${px + 8},${py + 11} Z" fill="#eef2ea" opacity="0.85" />`;
+    })
+    .join("");
+  return `<path d="${line} Z" fill="#948a78" stroke="#6b6353" stroke-width="2" />${cap}`;
 }
 
 // A little sentry post right in the notch of the pass, challenging
@@ -77,105 +115,98 @@ function renderWatchtower(x, y) {
   `;
 }
 
-// A narrow, consistent sliver of sea along the left edge of a clearing
-// zone — well clear of the trail's own band (BAND.min is 60; this
-// never reaches past WATER_EDGE_MAX, 42), so the trail never crosses
-// it. Same edge, every clearing, the whole way down.
-function computeZoneShore(zoneY, zoneH, seed) {
-  const steps = Math.max(14, Math.round(zoneH / 40));
-  const mid = 24;
-  const pts = [];
-  for (let i = 0; i <= steps; i++) {
-    const localY = (zoneH / steps) * i;
-    const edgeFalloff = clamp(Math.min(localY / 70, (zoneH - localY) / 70), 0, 1);
-    const envelope = 0.3 + 0.7 * edgeFalloff;
-    const wobble = 16 * Math.sin(i * 0.5 + seed) + 8 * Math.sin(i * 1.3 + seed * 1.7);
-    pts.push({ y: zoneY + localY, edge: clamp(mid + envelope * wobble, 8, WATER_EDGE_MAX) });
-  }
-  return pts;
-}
-
-function renderZoneWater(shore) {
-  const band = jaggedBandPath(
-    shore.map((s) => ({ x: -40, y: s.y })),
-    shore.map((s) => ({ x: s.edge, y: s.y }))
-  );
-  const foamLine = shore.map((s, i) => `${i === 0 ? "M" : "L"}${s.edge},${s.y}`).join(" ");
-  return `
-    <path d="${band}" fill="url(#sentryPassWaterDepth)" opacity="0.9" />
-    <path d="${foamLine}" stroke="#eef2ea" stroke-width="2.5" fill="none" opacity="0.4" stroke-linecap="round" />
-  `;
-}
-
-function renderDefs() {
-  return `
-    <defs>
-      <linearGradient id="sentryPassWaterDepth" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#2e4e5c" />
-        <stop offset="100%" stop-color="#5f95a8" />
-      </linearGradient>
-    </defs>
-  `;
-}
-
-function computeFoothillRocks(zoneBottom) {
-  return [0.16, 0.4, 0.62, 0.88].map((f, i) => ({
-    x: f * COL_W,
-    y: zoneBottom - 5 - (i % 2) * 9,
-    r: 18 + (i % 3) * 6,
+function computeScree(positions, totalHeight) {
+  const count = Math.max(10, Math.round(totalHeight / 210));
+  return Array.from({ length: count }, (_, i) => ({
+    y: ((i + 0.5) / count) * totalHeight,
+    side: i % 2 === 0 ? 1 : -1,
+    r: 7 + (i % 4) * 4,
   }));
 }
 
-function renderFoothillRock({ x, y, r }) {
-  return `<path d="M${x - r},${y} L${x - r * 0.4},${y - r} L${x + r * 0.5},${y - r * 0.7} L${x + r},${y} Z" fill="#9c9280" stroke="#7a7260" stroke-width="2" />`;
+function renderScree(positions, totalHeight) {
+  return computeScree(positions, totalHeight)
+    .map(({ y, side, r }) => {
+      const nearest = nearestPosition(positions, y);
+      const x = clamp(nearest.x + side * (55 + r), BAND.min + 15, BAND.max - 15);
+      return `<circle cx="${x}" cy="${y}" r="${r}" fill="#9c9280" stroke="#7a7260" stroke-width="2" />`;
+    })
+    .join("");
+}
+
+// A narrow, quiet sliver of sea along the left edge — same technique
+// as Time Traveler, running the entire height rather than confined to
+// any one zone.
+function computeShore(totalHeight) {
+  const steps = Math.max(36, Math.round(totalHeight / 48));
+  const mid = 22;
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const y = (totalHeight / steps) * i;
+    const edgeFalloff = clamp(Math.min(y / 130, (totalHeight - y) / 130), 0, 1);
+    const envelope = 0.35 + 0.65 * edgeFalloff;
+    const wobble = 16 * Math.sin(i * 0.31 + 1.1) + 9 * Math.sin(i * 0.83 + 0.4) + 5 * Math.sin(i * 1.9 + 2.3);
+    const edge = mid + envelope * wobble;
+    return { y, left: WATER_BAND.min, right: clamp(edge, 8, WATER_BAND.max) };
+  });
+}
+
+function renderWater(shore) {
+  const band = jaggedBandPath(
+    shore.map((s) => ({ x: s.left, y: s.y })),
+    shore.map((s) => ({ x: s.right, y: s.y }))
+  );
+  const foamLine = shore.map((s, i) => `${i === 0 ? "M" : "L"}${s.right},${s.y}`).join(" ");
+  return `
+    <path d="${band}" fill="url(#sentryPassWaterDepth)" opacity="0.7" />
+    <path d="${foamLine}" stroke="#eef2ea" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round" />
+  `;
 }
 
 const MOUNTAIN_EMOJI = ["🐐", "🦅"];
-const CLEARING_EMOJI = ["🐚", "🦀"];
+const CLEARING_EMOJI = ["🌼", "🦋"];
 
-function renderDecorations(positions, zones) {
+function renderDecorations(positions, edge) {
   return positions
     .filter((_, i) => i % 2 === 1)
     .map((p, i) => {
-      const zone = zones.find((z) => p.y >= z.y && p.y < z.y + z.h) || zones[zones.length - 1];
+      const nearest = edge.reduce((best, e) => (Math.abs(e.y - p.y) < Math.abs(best.y - p.y) ? e : best));
       const side = p.x < (BAND.min + BAND.max) / 2 ? 1 : -1;
       const dx = clamp(p.x + side * 58, BAND.min + 15, BAND.max - 10);
-      const emoji = zone.type === "clearing" ? CLEARING_EMOJI[i % CLEARING_EMOJI.length] : MOUNTAIN_EMOJI[i % MOUNTAIN_EMOJI.length];
+      const emoji = nearest.depth < 30 ? CLEARING_EMOJI[i % CLEARING_EMOJI.length] : MOUNTAIN_EMOJI[i % MOUNTAIN_EMOJI.length];
       return `<text x="${dx}" y="${p.y - 12}" font-size="23" text-anchor="middle">${emoji}</text>`;
     })
     .join("");
 }
 
 function renderScene(positions, totalHeight, bossName) {
-  const zones = computeZones(totalHeight);
-  const grounds = zones
-    .map((z) => `<rect x="0" y="${z.y}" width="${COL_W}" height="${z.h}" fill="${z.type === "mountain" ? "#ab9f86" : "#d8c896"}" />`)
+  const edge = computeWallEdge(totalHeight);
+  const passY = totalHeight * PASS_Y_FRACTION;
+  const passPoint = edge.reduce((best, e) => (Math.abs(e.y - passY) < Math.abs(best.y - passY) ? e : best));
+  const wall = renderWall(edge);
+  const ridges = computeRidges(edge, totalHeight)
+    .map((r) => renderRidgeCluster(r.y, r.depth))
     .join("");
-  const mountains = zones
-    .filter((z) => z.type === "mountain")
-    .map((z) => {
-      const range = computeRange(z.y, z.y + z.h);
-      const foothillRocks = computeFoothillRocks(z.y + z.h).map(renderFoothillRock).join("");
-      return `${renderRange(range.pts, z.y + z.h)}<g>${foothillRocks}</g>${renderWatchtower(range.passX, range.passY)}`;
-    })
-    .join("");
-  const water = zones
-    .filter((z) => z.type === "clearing")
-    .map((z, i) => renderZoneWater(computeZoneShore(z.y, z.h, i * 1.9 + 0.6)))
-    .join("");
+  const scree = renderScree(positions, totalHeight);
+  const shore = computeShore(totalHeight);
+  const water = renderWater(shore);
+  const watchtower = renderWatchtower(COL_W - passPoint.depth - 8, passPoint.y);
   const last = positions[positions.length - 1];
   const bossClearing = `<circle cx="${last.x}" cy="${last.y}" r="86" fill="#efe4cf" stroke="#c9a668" stroke-width="4" />`;
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: watchtower-guarded mountain passes alternating with clearings, a narrow sliver of sea hugging one edge the whole way down, connecting every Who's There? lesson up to ${bossName}'s own clearing">
-      ${renderDefs()}
-      ${grounds}
+      aria-label="A close-up corner of Wordwood Isle: a mountain wall with one watchtower-guarded pass, receding into a small clearing near the bottom, a narrow sliver of sea along the opposite edge, connecting every Who's There? lesson up to ${bossName}'s own clearing">
+      ${renderWallFadeDefs()}
+      <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#ab9f86" />
+      <g>${scree}</g>
       ${water}
-      ${mountains}
+      ${wall}
+      ${ridges}
+      ${renderWallOuterFade(totalHeight)}
+      ${watchtower}
       ${bossClearing}
       <path d="${renderTrailPath(positions)}" stroke="#b98a52" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />
-      <g>${renderDecorations(positions, zones)}</g>
+      <g>${renderDecorations(positions, edge)}</g>
     </svg>
   `;
 }

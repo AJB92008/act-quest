@@ -1,19 +1,18 @@
 // Time Traveler's own theme (see lessonTerrain.js for the shared engine
 // every lesson-path theme renders through) — a mountain wall along the
-// RIGHT edge, coastal water along the left (same shoreline technique as
-// the isle's other coastal skills), the wall built slice by slice from
-// strata bands whose color shifts the whole way down: muted, weathered
-// tones near the top (the trail's earliest lessons), warmer
-// "present-day" tones through the middle, and vivid, almost unnaturally
-// saturated bands near the boss's clearing at the bottom — a visual pun
-// on verb tense, the same mountain literally showing its own past,
-// present, and future as you travel down it. The water itself carries
-// no part of that pun — it's plain coastal water, there so this
-// hillside skill reads as being on the coast like several of its
-// neighbors.
+// RIGHT edge, built slice by slice from strata bands whose color shifts
+// the whole way down: muted, weathered tones near the top (the trail's
+// earliest lessons), warmer "present-day" tones through the middle, and
+// vivid, almost unnaturally saturated bands near the boss's clearing at
+// the bottom — a visual pun on verb tense, the same mountain literally
+// showing its own past, present, and future as you travel down it. A
+// narrow, quiet sliver of sea runs along the left edge — just enough to
+// read as coastal without competing with the strata for attention (an
+// earlier version gave it a full, elaborate shoreline, which turned two
+// good ideas into one busy scene).
 import { COL_W, clamp, jaggedBandPath, nearestPosition, renderTrailPath } from "../lessonTerrain.js";
 
-const WATER_BAND = { min: -40, max: 210 };
+const WATER_BAND = { min: -40, max: 65 };
 const BAND = { min: 225, max: COL_W - 90 };
 
 const ANCIENT_BANDS = ["#8a8270", "#736b5a", "#5c564a"];
@@ -93,18 +92,14 @@ function renderOuterFadeOverlay(totalHeight) {
 
 function computeShore(totalHeight) {
   const steps = Math.max(36, Math.round(totalHeight / 48));
-  const mid = 100;
+  const mid = 22;
   return Array.from({ length: steps + 1 }, (_, i) => {
     const y = (totalHeight / steps) * i;
     const edgeFalloff = clamp(Math.min(y / 130, (totalHeight - y) / 130), 0, 1);
     const envelope = 0.35 + 0.65 * edgeFalloff;
-    const wobble =
-      56 * Math.sin(i * 0.33 + 0.7) +
-      33 * Math.sin(i * 0.88 + 1.9) +
-      20 * Math.sin(i * 1.95 + 0.5) +
-      11 * Math.sin(i * 4.3 + 1.6);
+    const wobble = 16 * Math.sin(i * 0.33 + 0.7) + 9 * Math.sin(i * 0.88 + 1.9) + 5 * Math.sin(i * 1.95 + 0.5);
     const edge = mid + envelope * wobble;
-    return { y, left: WATER_BAND.min, right: clamp(edge, 15, WATER_BAND.max) };
+    return { y, left: WATER_BAND.min, right: clamp(edge, 8, WATER_BAND.max) };
   });
 }
 
@@ -119,8 +114,8 @@ function renderWater(shore) {
   );
   const foamLine = shore.map((s, i) => `${i === 0 ? "M" : "L"}${s.right},${s.y}`).join(" ");
   return `
-    <path d="${band}" fill="url(#strataPeaksWaterDepth)" opacity="0.9" />
-    <path d="${foamLine}" stroke="#eef2ea" stroke-width="3" fill="none" opacity="0.45" stroke-linecap="round" />
+    <path d="${band}" fill="url(#strataPeaksWaterDepth)" opacity="0.7" />
+    <path d="${foamLine}" stroke="#eef2ea" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round" />
   `;
 }
 
@@ -182,7 +177,7 @@ function renderScene(positions, totalHeight, bossName) {
 
   return `
     <svg viewBox="0 0 ${COL_W} ${totalHeight}" xmlns="http://www.w3.org/2000/svg" class="lesson-terrain-svg" role="img"
-      aria-label="A close-up corner of Wordwood Isle: coastal water along one edge and a mountain wall along the other, its flanking rock strata visibly aging from weathered to vivid down its length, connecting every Time Traveler lesson up to ${bossName}'s own clearing">
+      aria-label="A close-up corner of Wordwood Isle: a mountain wall whose rock strata visibly age from weathered to vivid down its length, with a narrow sliver of sea along the opposite edge, connecting every Time Traveler lesson up to ${bossName}'s own clearing">
       ${renderDefs()}
       <rect x="0" y="0" width="${COL_W}" height="${totalHeight}" fill="#948a7a" />
       <g>${scree}</g>

@@ -31,19 +31,21 @@
 // trail line (a period is one definitive stop, echoed by the one
 // singular body of water too), and Case Closed gets a wide-open grassy
 // field (no water feature) with a suitcase abandoned in the grass (a
-// literal "case"). The hillside zone: Who's There? gets a
-// mountain-weighted scene, sandy clearings between ranges instead of
-// plains, and a narrow sliver of sea hugging the same edge the whole
-// way down (coast with mountains) with one deliberate low pass in
-// each range, guarded by a watchtower; Match Makers gets an
-// all-mountain valley lined with
+// literal "case"). The hillside zone: Who's There? gets one continuous
+// mountain wall (not alternating blocks) with one deliberate low pass
+// guarded by a watchtower, receding into a small clearing near the
+// bottom, and a narrow sliver of sea along the opposite edge the whole
+// way down (coast with mountains, one coherent scene); Match Makers
+// gets an all-mountain valley lined with
 // matching peak PAIRS, each pair sharing the same height and the same
 // colored pennant; Clear Antecedent gets an all-mountain scene where
 // the exact same landmark peak recurs, identical, with signposts
-// pointing back to it every time; Time Traveler gets coastal water
-// along one edge and a mountain wall along the other, whose cliff
-// strata visibly age from weathered to vivid down its length (the
-// mountain showing its own past, present, and future);
+// pointing back to it every time; Time Traveler gets a mountain wall
+// whose cliff strata visibly age from weathered to vivid down its
+// length (the mountain showing its own past, present, and future),
+// with only a narrow, quiet sliver of sea along the opposite edge —
+// enough to read as coastal without competing with the strata for
+// attention;
 // Number Match gets a plain all-mountain valley, same template as Match
 // Makers and Clear Antecedent, its walls topped with recurring ridge
 // silhouettes and foothill scree instead of any water feature;
