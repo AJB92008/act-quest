@@ -119,16 +119,23 @@ function jitterFor(id, maxX, maxY) {
 // A simple row-major grid inside a territory's own inset bounds —
 // verbatim the same layout mathHub.js's own gridPositions uses, so a
 // zone's nodes are guaranteed to sit inside its own territory by
-// construction rather than needing a containment check afterward. A
-// small per-skill jitter (see jitterFor) breaks up the otherwise
+// construction rather than needing a containment check afterward. For
+// 3+ skills the row count is floored at 3 regardless of width — a
+// 2-row grid puts everything at the very top and bottom edges with an
+// empty band between them — and rows fill as evenly as possible
+// (remainder spread across the first rows) rather than greedily
+// packing early rows full and leaving a later one empty. A small
+// per-skill jitter (see jitterFor) then breaks up the otherwise
 // perfectly uniform rows/columns.
 function gridPositions(territory) {
   const { skills, zone, x0, y0, x1, y1 } = territory;
   const n = skills.length;
   const width = x1 - x0;
   const height = y1 - y0;
-  const cols = Math.max(1, Math.min(n, Math.round(width / 220)));
-  const rows = Math.ceil(n / cols);
+  const prefCols = Math.max(1, Math.min(n, Math.round(width / 220)));
+  let rows = n ? Math.ceil(n / prefCols) : 0;
+  if (n >= 3 && rows < 3) rows = 3;
+  const cols = rows ? Math.ceil(n / rows) : prefCols;
   const insetX = Math.min(115, width * 0.22);
   const insetY = Math.min(115, height * 0.22);
   const innerX0 = x0 + insetX;
@@ -142,7 +149,7 @@ function gridPositions(territory) {
   const positions = [];
   let idx = 0;
   for (let row = 0; row < rows; row++) {
-    const itemsInRow = Math.min(cols, n - idx);
+    const itemsInRow = Math.floor(n / rows) + (row < n % rows ? 1 : 0);
     const y = rows > 1 ? innerY0 + (row / (rows - 1)) * (innerY1 - innerY0) : (innerY0 + innerY1) / 2;
     for (let c = 0; c < itemsInRow; c++) {
       const x = itemsInRow > 1 ? innerX0 + (c / (itemsInRow - 1)) * (innerX1 - innerX0) : (innerX0 + innerX1) / 2;

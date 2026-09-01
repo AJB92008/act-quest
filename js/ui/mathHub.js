@@ -156,22 +156,43 @@ function jitterFor(id, maxX, maxY) {
   return { dx: (hx - Math.floor(hx) - 0.5) * 2 * maxX, dy: (hy - Math.floor(hy) - 0.5) * 2 * maxY };
 }
 
+// Root Cause's own grid slot (rightmost column, middle row) sits right
+// where Algebra's territory causeway attaches to Geometry's, so its
+// marker visually sat on top of the crossing. Moving it to the very
+// front of the fill order lands it in row 0's first column — a real
+// corner (top-left) via the grid's own math, not a special-cased
+// position — pushing every other Algebra skill's slot along by one.
+const ROOT_CAUSE_ID = "ma-alg2";
+
+function orderForCornerPlacement(skills) {
+  const pinned = skills.find((s) => s.id === ROOT_CAUSE_ID);
+  if (!pinned) return skills;
+  return [pinned, ...skills.filter((s) => s.id !== ROOT_CAUSE_ID)];
+}
+
 // A simple row-major grid *inside* a territory's own inset bounds — every
 // node's (x, y) is a convex combination of that territory's own inner
 // corners, so containment holds by construction rather than needing a
-// separate "does this fit" check afterward. Column count adapts to the
-// territory's own width (roughly one column per 220px) so a narrow
-// territory gets a tall single column instead of cramming into 3 wide
-// ones, and a wide one spreads out instead of stacking unnecessarily.
-// A small per-skill jitter (see jitterFor) breaks up the otherwise
-// perfectly uniform rows/columns.
+// separate "does this fit" check afterward. Column count starts from the
+// territory's own width (roughly one column per 220px), but for 3+
+// skills the row count is floored at 3 regardless of width — a 2-row
+// grid puts everything at the very top and bottom edges with an empty
+// band between them (exactly what a wide, few-skill territory like
+// Geometry or Functions used to do); a 3rd row guarantees something
+// occupies the middle. Rows fill as evenly as possible (remainder spread
+// across the first rows) rather than greedily packing early rows full
+// and leaving a later one empty. A small per-skill jitter (see
+// jitterFor) then breaks up the otherwise perfectly uniform result.
 function gridPositions(territory) {
-  const { skills, zone, x0, y0, x1, y1 } = territory;
+  const { skills: rawSkills, zone, x0, y0, x1, y1 } = territory;
+  const skills = orderForCornerPlacement(rawSkills);
   const n = skills.length;
   const width = x1 - x0;
   const height = y1 - y0;
-  const cols = Math.max(1, Math.min(n, Math.round(width / 220)));
-  const rows = Math.ceil(n / cols);
+  const prefCols = Math.max(1, Math.min(n, Math.round(width / 220)));
+  let rows = n ? Math.ceil(n / prefCols) : 0;
+  if (n >= 3 && rows < 3) rows = 3;
+  const cols = rows ? Math.ceil(n / rows) : prefCols;
   const insetX = Math.min(115, width * 0.22);
   const insetY = Math.min(115, height * 0.22);
   const innerX0 = x0 + insetX;
@@ -185,7 +206,7 @@ function gridPositions(territory) {
   const positions = [];
   let idx = 0;
   for (let row = 0; row < rows; row++) {
-    const itemsInRow = Math.min(cols, n - idx);
+    const itemsInRow = Math.floor(n / rows) + (row < n % rows ? 1 : 0);
     const y = rows > 1 ? innerY0 + (row / (rows - 1)) * (innerY1 - innerY0) : (innerY0 + innerY1) / 2;
     for (let c = 0; c < itemsInRow; c++) {
       const x = itemsInRow > 1 ? innerX0 + (c / (itemsInRow - 1)) * (innerX1 - innerX0) : (innerX0 + innerX1) / 2;
