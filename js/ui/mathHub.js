@@ -267,6 +267,37 @@ function buildLayout(territories) {
   return territories.flatMap(gridPositions);
 }
 
+// hubWorld.js's shared CENTER constant is just the raw world midpoint —
+// safe as a spawn point on Wordwood Isle's one continuous landmass, but
+// Numeria Peaks is an archipelago with open water between islands, and
+// nothing guarantees CENTER lands on any of them. It didn't: with equal
+// territory widths (see computeTerritories above), the Geometry/Functions
+// boundary sits exactly at CENTER.x, so the avatar spawned in the water
+// gap between them — walkable-region checks failed in every direction at
+// once, reading as "stuck." Spawning at the centroid of whichever zone's
+// own node cluster is horizontally closest to world center instead means
+// the spawn point is the average of real, walkable node positions inside
+// one actual island, not a coordinate that happens to land there.
+function computeSpawnPoint(layout) {
+  const byZone = new Map();
+  for (const p of layout) {
+    if (!byZone.has(p.zone)) byZone.set(p.zone, []);
+    byZone.get(p.zone).push(p);
+  }
+  let best = null;
+  let bestDist = Infinity;
+  for (const pts of byZone.values()) {
+    const cx = pts.reduce((sum, p) => sum + p.x, 0) / pts.length;
+    const cy = pts.reduce((sum, p) => sum + p.y, 0) / pts.length;
+    const dist = Math.abs(cx - CENTER.x);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = { x: cx, y: cy };
+    }
+  }
+  return best || CENTER;
+}
+
 // A full-bleed ocean, edge to edge across all of WORLD_W x WORLD_H, so
 // there is no seam anywhere the camera's own clamped panning could ever
 // expose (see hubWorld.js's wireMovement: the camera never shows past
@@ -736,7 +767,7 @@ export function renderMathHub(root, navigate, subject) {
     viewportEl: root.querySelector("#hubViewport"),
     hintEl: root.querySelector("#hubHint"),
     joystickEl: root.querySelector("#hubJoystick"),
-    spawn: { x: CENTER.x, y: CENTER.y },
+    spawn: computeSpawnPoint(layout),
     isWalkable,
     targets: [
       { x: BOSS_POS.x, y: BOSS_POS.y, radius: BOSS_TRIGGER_RADIUS, gate: () => allMastered, onArrive: () => goTo("bossQuiz", { subjectId: subject.id }) },
