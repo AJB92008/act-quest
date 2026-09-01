@@ -101,10 +101,27 @@ function computeTerritories(subject) {
   });
 }
 
+// A deterministic per-skill nudge off the raw grid point — same skill,
+// same nudge, every render (a real RNG would make nodes visibly jump
+// around on every re-render), just enough that the layout reads as
+// hand-placed rather than machine-uniform. Caller scales it to that
+// grid's own spacing, so it never comes close to overlapping a
+// neighboring node even in a cramped, many-skill territory. Verbatim
+// the same helper mathHub.js's own gridPositions uses.
+function jitterFor(id, maxX, maxY) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 100000;
+  const hx = (Math.sin(h) * 43758.5453) % 1;
+  const hy = (Math.sin(h * 1.37 + 4.1) * 12543.789) % 1;
+  return { dx: (hx - Math.floor(hx) - 0.5) * 2 * maxX, dy: (hy - Math.floor(hy) - 0.5) * 2 * maxY };
+}
+
 // A simple row-major grid inside a territory's own inset bounds —
 // verbatim the same layout mathHub.js's own gridPositions uses, so a
 // zone's nodes are guaranteed to sit inside its own territory by
-// construction rather than needing a containment check afterward.
+// construction rather than needing a containment check afterward. A
+// small per-skill jitter (see jitterFor) breaks up the otherwise
+// perfectly uniform rows/columns.
 function gridPositions(territory) {
   const { skills, zone, x0, y0, x1, y1 } = territory;
   const n = skills.length;
@@ -118,6 +135,10 @@ function gridPositions(territory) {
   const innerX1 = x1 - insetX;
   const innerY0 = y0 + insetY;
   const innerY1 = y1 - insetY;
+  const colSpacing = cols > 1 ? (innerX1 - innerX0) / (cols - 1) : innerX1 - innerX0;
+  const rowSpacing = rows > 1 ? (innerY1 - innerY0) / (rows - 1) : innerY1 - innerY0;
+  const jitterX = Math.min(20, Math.max(0, colSpacing) * 0.25);
+  const jitterY = Math.min(20, Math.max(0, rowSpacing) * 0.25);
   const positions = [];
   let idx = 0;
   for (let row = 0; row < rows; row++) {
@@ -125,7 +146,10 @@ function gridPositions(territory) {
     const y = rows > 1 ? innerY0 + (row / (rows - 1)) * (innerY1 - innerY0) : (innerY0 + innerY1) / 2;
     for (let c = 0; c < itemsInRow; c++) {
       const x = itemsInRow > 1 ? innerX0 + (c / (itemsInRow - 1)) * (innerX1 - innerX0) : (innerX0 + innerX1) / 2;
-      positions.push({ item: skills[idx], zone, x, y, dockX: x, dockY: y + 34 });
+      const { dx, dy } = jitterFor(skills[idx].id, jitterX, jitterY);
+      const jx = x + dx;
+      const jy = y + dy;
+      positions.push({ item: skills[idx], zone, x: jx, y: jy, dockX: jx, dockY: jy + 34 });
       idx++;
     }
   }
