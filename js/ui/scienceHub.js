@@ -116,6 +116,18 @@ function jitterFor(id, maxX, maxY) {
   return { dx: (hx - Math.floor(hx) - 0.5) * 2 * maxX, dy: (hy - Math.floor(hy) - 0.5) * 2 * maxY };
 }
 
+// Every causeway attaches at a zone's own bbox — its horizontal edges
+// at its own vertical CENTER (cy), the same cy every row's y is
+// interpolated between. Whichever row lands exactly at that center
+// height is therefore the one at risk of a causeway running straight
+// through it, true both for a middle row that reaches the true
+// left/right edges and for a single-column zone whose one item per row
+// is already "at the edge" by definition (only y separates rows
+// there). Nudging that one row's y off the shared center clears it in
+// either layout shape. Verbatim the same fix mathHub.js's own
+// gridPositions uses.
+const CAUSEWAY_Y_CLEARANCE = 80;
+
 // A simple row-major grid inside a territory's own inset bounds —
 // verbatim the same layout mathHub.js's own gridPositions uses, so a
 // zone's nodes are guaranteed to sit inside its own territory by
@@ -146,11 +158,14 @@ function gridPositions(territory) {
   const rowSpacing = rows > 1 ? (innerY1 - innerY0) / (rows - 1) : innerY1 - innerY0;
   const jitterX = Math.min(20, Math.max(0, colSpacing) * 0.25);
   const jitterY = Math.min(20, Math.max(0, rowSpacing) * 0.25);
+  const causewayRow = rows >= 3 && rows % 2 === 1 ? (rows - 1) / 2 : -1;
+  const causewayShift = Math.min(CAUSEWAY_Y_CLEARANCE, rowSpacing * 0.4);
   const positions = [];
   let idx = 0;
   for (let row = 0; row < rows; row++) {
     const itemsInRow = Math.floor(n / rows) + (row < n % rows ? 1 : 0);
-    const y = rows > 1 ? innerY0 + (row / (rows - 1)) * (innerY1 - innerY0) : (innerY0 + innerY1) / 2;
+    const baseY = rows > 1 ? innerY0 + (row / (rows - 1)) * (innerY1 - innerY0) : (innerY0 + innerY1) / 2;
+    const y = row === causewayRow ? baseY + causewayShift : baseY;
     for (let c = 0; c < itemsInRow; c++) {
       const x = itemsInRow > 1 ? innerX0 + (c / (itemsInRow - 1)) * (innerX1 - innerX0) : (innerX0 + innerX1) / 2;
       const { dx, dy } = jitterFor(skills[idx].id, jitterX, jitterY);

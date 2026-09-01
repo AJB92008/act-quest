@@ -170,6 +170,24 @@ function orderForCornerPlacement(skills) {
   return [pinned, ...skills.filter((s) => s.id !== ROOT_CAUSE_ID)];
 }
 
+// Every causeway (renderMathRegions/renderCauseway) attaches at a
+// zone's own bbox — its horizontal edges (x0/x1) at its own vertical
+// CENTER (cy), the same cy every row's y is interpolated between (the
+// island's own shoreline is drawn tight around that same bbox, so this
+// is also "solid ground" for the same reason). Whichever row lands
+// exactly at that center height is therefore the one at risk of a
+// causeway running straight through it — true for a middle row that
+// reaches the true left/right edges (Geometry's old 2-2-2), but just as
+// true for a single-column zone whose one item per row is already
+// "at the edge" by definition (Stats' 1-1-1, where every row's x is
+// identical, so only y separates them). Nudging that one row's y off
+// the shared center — never its neighbors, which stay exactly where
+// the causeway math expects solid ground — clears it in every layout
+// shape without needing to reason about which specific skill lands
+// there (that's still handled once, explicitly, by
+// orderForCornerPlacement above, for Root Cause's own corner).
+const CAUSEWAY_Y_CLEARANCE = 80;
+
 // A simple row-major grid *inside* a territory's own inset bounds — every
 // node's (x, y) is a convex combination of that territory's own inner
 // corners, so containment holds by construction rather than needing a
@@ -203,11 +221,14 @@ function gridPositions(territory) {
   const rowSpacing = rows > 1 ? (innerY1 - innerY0) / (rows - 1) : innerY1 - innerY0;
   const jitterX = Math.min(20, Math.max(0, colSpacing) * 0.25);
   const jitterY = Math.min(20, Math.max(0, rowSpacing) * 0.25);
+  const causewayRow = rows >= 3 && rows % 2 === 1 ? (rows - 1) / 2 : -1;
+  const causewayShift = Math.min(CAUSEWAY_Y_CLEARANCE, rowSpacing * 0.4);
   const positions = [];
   let idx = 0;
   for (let row = 0; row < rows; row++) {
     const itemsInRow = Math.floor(n / rows) + (row < n % rows ? 1 : 0);
-    const y = rows > 1 ? innerY0 + (row / (rows - 1)) * (innerY1 - innerY0) : (innerY0 + innerY1) / 2;
+    const baseY = rows > 1 ? innerY0 + (row / (rows - 1)) * (innerY1 - innerY0) : (innerY0 + innerY1) / 2;
+    const y = row === causewayRow ? baseY + causewayShift : baseY;
     for (let c = 0; c < itemsInRow; c++) {
       const x = itemsInRow > 1 ? innerX0 + (c / (itemsInRow - 1)) * (innerX1 - innerX0) : (innerX0 + innerX1) / 2;
       const { dx, dy } = jitterFor(skills[idx].id, jitterX, jitterY);
@@ -222,6 +243,28 @@ function gridPositions(territory) {
 
 function buildLayout(territories) {
   return territories.flatMap(gridPositions);
+}
+
+// The same "nearest topic island to the boss" pick renderMathRegions'
+// own causewaysMarkup makes (by cx, the closest to BOSS_POS.x), and the
+// same bottom-center anchor point (cx, y1) its causeway actually starts
+// from — recomputed here from the raw layout, one level up, so the
+// custom bossBridge below can start its own dark path from that same
+// real island edge instead of hubWorld.js's own generic default (a
+// straight line from the world's shared CENTER, which for this
+// archipelago's layout happens to land inside Geometry's own territory
+// and cuts across its nodes on the way down).
+function computeNearestBossAnchor(layout) {
+  const boxes = ZONES.map((zone) => layout.filter((p) => p.zone === zone))
+    .map((points) => {
+      if (!points.length) return null;
+      const xs = points.map((p) => p.x);
+      const ys = points.map((p) => p.y);
+      return { cx: (Math.min(...xs) + Math.max(...xs)) / 2, y1: Math.max(...ys) };
+    })
+    .filter(Boolean);
+  if (!boxes.length) return null;
+  return boxes.reduce((best, b) => (Math.abs(b.cx - BOSS_POS.x) < Math.abs(best.cx - BOSS_POS.x) ? b : best));
 }
 
 // A full-bleed ocean, edge to edge across all of WORLD_W x WORLD_H, so
@@ -818,12 +861,19 @@ export function renderMathHub(root, navigate, subject) {
   const boss = getBossMonster(subject.id, gameState.level);
   const bossStateClass = bossCleared ? "is-cleared" : allMastered ? "is-unlocked" : "is-locked";
 
+  const bossAnchor = computeNearestBossAnchor(layout);
+
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
       "Numeria Peaks, an archipelago of separate mountainous islands floating in open water — algebra, geometry, functions, and number & stats — each with its own trail of math skills, plus a dark path south to the boss's own island",
     landmass: renderMathLandmass,
     regionShapes: renderMathRegions,
     trails: renderMathTrails,
+    bossBridge: bossAnchor
+      ? () =>
+          `<path d="M${bossAnchor.cx},${bossAnchor.y1} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#3b2a22" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.8" />` +
+          `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="118" fill="#2c211c" opacity="0.22" />`
+      : undefined,
   });
 
   root.innerHTML = `
