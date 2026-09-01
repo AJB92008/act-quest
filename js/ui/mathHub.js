@@ -412,7 +412,23 @@ function organicIslandPoints(bbox, pad, seed, n = 48) {
 // toward a peak = lit, falling = shadowed) give it real dimension
 // instead of reading as a flat 2D silhouette.
 function renderMiniMountains(bbox, seed, headroom = 150) {
-  const w = bbox.x1 - bbox.x0;
+  // Floored the same way organicIslandPoints already floors its own
+  // halfW, and for the same reason: a single-column zone's tight node
+  // bbox is only as wide as its per-skill jitter spread (Goldtally
+  // Flats, 3 skills forced into one column by gridPositions, measured
+  // ~11px wide) — using that raw width collapsed the whole mountain
+  // range down to a barely-visible sliver while every wider, multi-
+  // column zone got a full one, the exact "one island looks unfinished"
+  // this floor exists to prevent. 250 is picked to land in the same
+  // ~150px painted-width range those other islands' ranges land in
+  // (w * 0.6 is the horizontal spread below), not an arbitrary number.
+  const w = Math.max(250, bbox.x1 - bbox.x0);
+  // Centered on the bbox's own midpoint rather than offset from x0 —
+  // for a normal (unfloored) w those are the same anchor (x0 + 0.5w ==
+  // (x0+x1)/2), but once w is floored above they diverge: anchoring on
+  // x0 would push the whole range off to one side instead of centering
+  // it over the zone's actual nodes.
+  const cx = (bbox.x0 + bbox.x1) / 2;
   // NODE_CLEARANCE clears the topmost node's own 23px circle radius
   // plus a visible margin, measured from that node's *center* (bbox.y0)
   // — not just from bbox.y0 itself, which would still let the mountain's
@@ -425,7 +441,7 @@ function renderMiniMountains(bbox, seed, headroom = 150) {
   const baseY = bottomY - faceDrop;
   const peakCount = 2 + (seed % 2);
   const pts = Array.from({ length: peakCount * 2 + 1 }, (_, i) => {
-    const x = bbox.x0 + w * 0.2 + (i / (peakCount * 2)) * w * 0.6;
+    const x = cx - w * 0.3 + (i / (peakCount * 2)) * w * 0.6;
     const isPeak = i % 2 === 1;
     const jitter = pseudoRandom(seed * 53 + i);
     // Peak multiplier tops out at 1.0 (0.7 + 0.3), never higher — so the
