@@ -1541,6 +1541,25 @@ input[type="password"] {
   box-shadow: 0 0 0 4px #ffd25f, 0 10px 20px rgba(0, 0, 0, 0.35);
 }
 
+/* Numeria Peaks only (.ridge-scene, mathHub.js's own screen class) — a
+   flat colored circle in the same visual language as its own skill
+   markers, not the dark vignette background every other hub's boss
+   marker still uses unchanged. Matches the flat-illustration style the
+   rest of this hub already uses everywhere else. */
+.ridge-scene.hub-island-screen .hub-boss-marker {
+  background: var(--island-color, #4a4358);
+  box-shadow: 0 0 0 4px #efe4cf, 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.ridge-scene.hub-island-screen .hub-boss-marker.is-locked {
+  filter: grayscale(1) brightness(0.85);
+  box-shadow: 0 0 0 4px #d8cfba, 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.ridge-scene.hub-island-screen .hub-boss-marker.is-cleared {
+  box-shadow: 0 0 0 4px #ffd25f, 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
 .hub-boss-crown,
 .hub-boss-lock {
   position: absolute;

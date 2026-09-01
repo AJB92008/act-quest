@@ -20,10 +20,11 @@
 // generic "cap the region near its centroid" rule can't reliably contain
 // (some markers ended up outside their own zone's supposed region).
 // Instead, this file tiles the walkable width into four explicit,
-// non-overlapping rectangular *territories* (widths proportional to each
-// zone's own skill count) purely to decide node placement — each zone's
-// nodes sit on a simple grid inside its own territory's inset bounds, so
-// every node is guaranteed to sit inside its own zone by construction.
+// non-overlapping rectangular *territories* — equal width regardless of
+// skill count, so a light zone doesn't read as an afterthought next to a
+// dense one — purely to decide node placement — each zone's nodes sit
+// on a simple grid inside its own territory's inset bounds, so every
+// node is guaranteed to sit inside its own zone by construction.
 // The *visible* island shapes are then drawn separately (renderIsland),
 // tightly around each zone's actual node cluster rather than around the
 // full territory column, which is what leaves open water between
@@ -56,12 +57,34 @@ const SKILL_TRIGGER_RADIUS = 58;
 // so there's no icon clutter), so the field still needs to exist as an
 // empty array rather than being left off entirely.
 const ZONES = [
-  { id: "algebra", name: "Ironroot Algebra", categories: ["algebra"], fill: "#a8785f", decorations: [] },
-  { id: "geometry", name: "Shalefoot Geometry", categories: ["geometry"], fill: "#7d93a8", decorations: [] },
-  { id: "functions", name: "Skyline Functions", categories: ["functions"], fill: "#8b7fc4", decorations: [] },
-  { id: "numstats", name: "Goldtally Flats", categories: ["numquant", "stats"], fill: "#b99a5c", decorations: [] },
+  { id: "algebra", name: "Ironroot Algebra", categories: ["algebra"], fill: "#a8785f", description: "Algebra", decorations: [] },
+  { id: "geometry", name: "Shalefoot Geometry", categories: ["geometry"], fill: "#7d93a8", description: "Geometry", decorations: [] },
+  { id: "functions", name: "Skyline Functions", categories: ["functions"], fill: "#8b7fc4", description: "Functions", decorations: [] },
+  { id: "numstats", name: "Goldtally Flats", categories: ["numquant", "stats"], fill: "#b99a5c", description: "Number & Stats", decorations: [] },
 ];
 const BOSS_FILL = "#4a4358";
+
+// Same legend islandHub.js's own Wordwood Isle uses — a swatch per
+// zone naming what it actually covers, since the island *names*
+// (Ironroot Algebra, Shalefoot Geometry...) don't say that on their own.
+function renderLegend() {
+  return `
+    <div class="hub-legend" aria-hidden="true">
+      <p class="hub-legend-title">Island regions</p>
+      ${ZONES.map(
+        (zone) => `
+        <div class="hub-legend-row">
+          <span class="hub-legend-swatch" style="background:${zone.fill}"></span>
+          <span>
+            <span class="hub-legend-name">${zone.name}</span><br>
+            <span class="hub-legend-desc">${zone.description}</span>
+          </span>
+        </div>
+      `
+      ).join("")}
+    </div>
+  `;
+}
 
 // The four topic territories tile the top band of the walkable width;
 // the boss gets its own reserved band below them, offset enough to leave
@@ -116,21 +139,20 @@ function buildIslandPolygons(root) {
   });
 }
 
-// Splits the walkable width into one column per zone, sized by how many
-// of that zone's skills it actually holds (a 6-skill zone gets a wider
-// column than a 3-skill one), so box size is a deliberate reflection of
-// content instead of an emergent side effect of marker math.
+// Splits the walkable width into one EQUAL-width column per zone — skill
+// count still drives each zone's own internal grid (row/column count,
+// node spacing), but the island itself is sized the same regardless of
+// whether it holds 3 skills or 6, so a light zone doesn't read as an
+// afterthought floating in extra space next to a dense one.
 function computeTerritories(subject) {
   const zoneSkills = ZONES.map((zone) => subject.skills.filter((s) => zone.categories.includes(s.reportingCategory)));
-  const total = zoneSkills.reduce((sum, s) => sum + s.length, 0);
   const fullWidth = WORLD_W - WALK_MARGIN * 2;
-  let cursor = WALK_MARGIN;
+  const colWidth = fullWidth / ZONES.length;
   return ZONES.map((zone, i) => {
     const isFirst = i === 0;
     const isLast = i === ZONES.length - 1;
-    const rawX0 = cursor;
-    const rawX1 = isLast ? WORLD_W - WALK_MARGIN : cursor + (zoneSkills[i].length / total) * fullWidth;
-    cursor = rawX1;
+    const rawX0 = WALK_MARGIN + i * colWidth;
+    const rawX1 = WALK_MARGIN + (i + 1) * colWidth;
     return {
       zone,
       skills: zoneSkills[i],
@@ -234,7 +256,7 @@ function gridPositions(territory) {
       const { dx, dy } = jitterFor(skills[idx].id, jitterX, jitterY);
       const jx = x + dx;
       const jy = y + dy;
-      positions.push({ item: skills[idx], zone, x: jx, y: jy, dockX: jx, dockY: jy + 34 });
+      positions.push({ item: skills[idx], zone, x: jx, y: jy, dockX: jx, dockY: jy + 34, row });
       idx++;
     }
   }
@@ -243,28 +265,6 @@ function gridPositions(territory) {
 
 function buildLayout(territories) {
   return territories.flatMap(gridPositions);
-}
-
-// The same "nearest topic island to the boss" pick renderMathRegions'
-// own causewaysMarkup makes (by cx, the closest to BOSS_POS.x), and the
-// same bottom-center anchor point (cx, y1) its causeway actually starts
-// from — recomputed here from the raw layout, one level up, so the
-// custom bossBridge below can start its own dark path from that same
-// real island edge instead of hubWorld.js's own generic default (a
-// straight line from the world's shared CENTER, which for this
-// archipelago's layout happens to land inside Geometry's own territory
-// and cuts across its nodes on the way down).
-function computeNearestBossAnchor(layout) {
-  const boxes = ZONES.map((zone) => layout.filter((p) => p.zone === zone))
-    .map((points) => {
-      if (!points.length) return null;
-      const xs = points.map((p) => p.x);
-      const ys = points.map((p) => p.y);
-      return { cx: (Math.min(...xs) + Math.max(...xs)) / 2, y1: Math.max(...ys) };
-    })
-    .filter(Boolean);
-  if (!boxes.length) return null;
-  return boxes.reduce((best, b) => (Math.abs(b.cx - BOSS_POS.x) < Math.abs(best.cx - BOSS_POS.x) ? b : best));
 }
 
 // A full-bleed ocean, edge to edge across all of WORLD_W x WORLD_H, so
@@ -368,22 +368,39 @@ function organicIslandPoints(bbox, pad, seed, n = 48) {
   });
 }
 
-// A small range of 2-3 jagged peaks sitting inside an island's own upper
-// area — Numeria Peaks' mountain motif, shrunk down to "one small range
-// per island" instead of one ridge spanning the whole former landmass,
-// so it stays part of each island's own terrain instead of a world-scale
-// backdrop hidden behind a flat color panel. Alternating light/dark
-// slope faces (rising toward a peak = lit, falling = shadowed) give it
-// real dimension instead of reading as a flat 2D silhouette.
-function renderMiniMountains(bbox, seed) {
+// A small range of 2-3 jagged peaks sitting entirely ABOVE an island's
+// own tight node bbox — in the shoreline padding between the topmost
+// node row and the sand ring, not inside the bbox itself. An earlier
+// version anchored the range partway *into* the bbox (22% down from its
+// own top), which is exactly where the top node row and its connector
+// line already are — the "mountain in front of the path" look that read
+// as a z-index bug. `headroom` (the actual clearance above the topmost
+// node — see renderIsland) both positions and sizes the range so it
+// fits in whatever room is actually available instead of a fixed
+// height that might not be. Alternating light/dark slope faces (rising
+// toward a peak = lit, falling = shadowed) give it real dimension
+// instead of reading as a flat 2D silhouette.
+function renderMiniMountains(bbox, seed, headroom = 150) {
   const w = bbox.x1 - bbox.x0;
-  const baseY = bbox.y0 + (bbox.y1 - bbox.y0) * 0.22;
+  // NODE_CLEARANCE clears the topmost node's own 23px circle radius
+  // plus a visible margin, measured from that node's *center* (bbox.y0)
+  // — not just from bbox.y0 itself, which would still let the mountain's
+  // bottom edge cut into the node's own circle.
+  const NODE_CLEARANCE = 45;
+  const bottomY = bbox.y0 - NODE_CLEARANCE;
+  const budget = Math.max(35, Math.min(100, headroom - NODE_CLEARANCE));
+  const faceDrop = budget * 0.2;
+  const peakH = budget * 0.8;
+  const baseY = bottomY - faceDrop;
   const peakCount = 2 + (seed % 2);
   const pts = Array.from({ length: peakCount * 2 + 1 }, (_, i) => {
     const x = bbox.x0 + w * 0.2 + (i / (peakCount * 2)) * w * 0.6;
     const isPeak = i % 2 === 1;
     const jitter = pseudoRandom(seed * 53 + i);
-    const y = isPeak ? baseY - 46 - jitter * 34 : baseY + jitter * 10;
+    // Peak multiplier tops out at 1.0 (0.7 + 0.3), never higher — so the
+    // highest point a peak can reach is exactly baseY - peakH, which by
+    // construction (faceDrop + peakH === budget) never exceeds headroom.
+    const y = isPeak ? baseY - peakH * (0.7 + jitter * 0.3) : baseY + jitter * (faceDrop * 0.3);
     return { x, y };
   });
   let faces = "";
@@ -391,10 +408,10 @@ function renderMiniMountains(bbox, seed) {
     const a = pts[i];
     const b = pts[i + 1];
     const shade = b.y < a.y ? "rgba(255,255,255,0.24)" : "rgba(20,15,35,0.22)";
-    faces += `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)} L${b.x.toFixed(1)},${(b.y + 60).toFixed(1)} L${a.x.toFixed(1)},${(a.y + 60).toFixed(1)} Z" fill="${shade}" />`;
+    faces += `<path d="M${a.x.toFixed(1)},${a.y.toFixed(1)} L${b.x.toFixed(1)},${b.y.toFixed(1)} L${b.x.toFixed(1)},${(b.y + faceDrop).toFixed(1)} L${a.x.toFixed(1)},${(a.y + faceDrop).toFixed(1)} Z" fill="${shade}" />`;
   }
   const top = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const base = `L${pts[pts.length - 1].x.toFixed(1)},${(baseY + 60).toFixed(1)} L${pts[0].x.toFixed(1)},${(baseY + 60).toFixed(1)} Z`;
+  const base = `L${pts[pts.length - 1].x.toFixed(1)},${(baseY + faceDrop).toFixed(1)} L${pts[0].x.toFixed(1)},${(baseY + faceDrop).toFixed(1)} Z`;
   return `<path d="${top} ${base}" fill="#8b81a8" />${faces}`;
 }
 
@@ -438,237 +455,12 @@ function renderIsland(bbox, fill, seed, outerPad = DEFAULT_SHORE_PAD) {
   const innerPad = innerPadFor(outerPad);
   const outerPts = organicIslandPoints(bbox, outerPad, seed);
   const innerPts = organicIslandPoints(bbox, innerPad, seed);
+  const headroom = typeof innerPad === "number" ? innerPad : innerPad.top;
   return `
     <path d="${closedBlobPath(outerPts)}" fill="${SAND}" />
     <path d="${closedBlobPath(innerPts)}" fill="${fill}" />
-    ${renderMiniMountains(bbox, seed)}
+    ${renderMiniMountains(bbox, seed, headroom)}
   `;
-}
-
-// A handful of bigger, hand-drawn, one-off set pieces scattered in the
-// open water — a lighthouse, a shipwreck, a couple of buoys, a few gulls
-// — purely decorative texture, deliberately NOT the same idea as the
-// small repeated topic-icon emoji that got tried and rejected twice
-// earlier: each of these is a distinct drawn shape appearing once, not a
-// repeated icon set. Every position leans on a real gap in the layout
-// (the space between two neighboring islands' own node clusters, or the
-// open flanks beside the boss island) rather than a hardcoded world
-// coordinate, so it stays correct if the zones' own skill counts ever
-// change.
-function renderLighthouse(x, y) {
-  return `
-    <ellipse cx="${x}" cy="${y + 34}" rx="24" ry="8" fill="rgba(20,15,35,0.22)" />
-    <path d="M${x - 15},${y + 30} L${x - 8},${y - 36} L${x + 8},${y - 36} L${x + 15},${y + 30} Z" fill="#e8e2d0" stroke="#8a8060" stroke-width="2" />
-    <rect x="${x - 8}" y="${y - 6}" width="16" height="7" fill="#c94a3f" />
-    <rect x="${x - 8}" y="${y + 9}" width="16" height="7" fill="#c94a3f" />
-    <path d="M${x - 10},${y - 36} L${x},${y - 50} L${x + 10},${y - 36} Z" fill="#5c4a3a" />
-    <circle cx="${x}" cy="${y - 40}" r="4" fill="#ffe9a8" />
-  `;
-}
-
-function renderShipwreck(x, y) {
-  return `
-    <ellipse cx="${x}" cy="${y + 10}" rx="44" ry="11" fill="rgba(20,15,35,0.2)" />
-    <path d="M${x - 40},${y} Q${x},${y + 20} ${x + 38},${y - 2} L${x + 32},${y + 11} Q${x - 4},${y + 24} ${x - 36},${y + 9} Z" fill="#6b5233" stroke="#4a3a26" stroke-width="2" />
-    <line x1="${x - 4}" y1="${y - 2}" x2="${x}" y2="${y - 30}" stroke="#4a3a26" stroke-width="3" />
-    <path d="M${x},${y - 30} L${x + 18},${y - 18} L${x},${y - 12} Z" fill="#d8cba8" opacity="0.85" />
-  `;
-}
-
-function renderBuoy(x, y, seed) {
-  const bob = pseudoRandom(seed) * 6 - 3;
-  return `
-    <ellipse cx="${x}" cy="${y + 13}" rx="11" ry="4" fill="rgba(20,15,35,0.2)" />
-    <path d="M${x - 7},${(y + 7 + bob).toFixed(1)} Q${x},${(y - 14 + bob).toFixed(1)} ${x + 7},${(y + 7 + bob).toFixed(1)} Z" fill="#c94a3f" stroke="#7a2a22" stroke-width="1.5" />
-    <circle cx="${x}" cy="${(y - 12 + bob).toFixed(1)}" r="3.5" fill="#f0e4c0" />
-  `;
-}
-
-function renderGull(x, y) {
-  return `<path d="M${x - 13},${y} Q${x - 6},${y - 7} ${x},${y} Q${x + 6},${y - 7} ${x + 13},${y}" stroke="#332a3d" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.75" />`;
-}
-
-function renderWaterScenery(islandBoxes) {
-  let out = "";
-  for (let i = 0; i < islandBoxes.length - 1; i++) {
-    const gapX = (islandBoxes[i].x1 + islandBoxes[i + 1].x0) / 2;
-    const gapY = Math.max(islandBoxes[i].cy, islandBoxes[i + 1].cy) + 130;
-    if (i === 0) out += renderLighthouse(gapX, gapY);
-    else if (i === 1) out += renderShipwreck(gapX, gapY - 70);
-    else out += renderBuoy(gapX, gapY, i + 5);
-  }
-  out += renderGull(340, 250);
-  out += renderGull(1080, 210);
-  out += renderGull(1850, 290);
-  return out;
-}
-
-// Each topic island now gets its own full biome instead of one single
-// landmark — a denser scatter of several *varied* hand-drawn pieces (a
-// couple of different shapes/colors per biome, each individually seeded
-// so no two instances match exactly) rather than one repeated icon,
-// following the same "no identical repeats" bar the rest of this app's
-// terrain art already holds itself to. `ringPositions` scatters that
-// many points in the open ring between an island's own tight node bbox
-// and its shoreline (see renderIsland's own pad) — outside the bbox at
-// every angle, so decorations never land on top of a node or its label.
-function ringPositions(bbox, count, seedBase, minPad = 55, maxPad = 90) {
-  const cx = (bbox.x0 + bbox.x1) / 2;
-  const cy = (bbox.y0 + bbox.y1) / 2;
-  const halfW = (bbox.x1 - bbox.x0) / 2;
-  const halfH = (bbox.y1 - bbox.y0) / 2;
-  return Array.from({ length: count }, (_, i) => {
-    const angle = (i / count) * Math.PI * 2 + (pseudoRandom(seedBase * 17 + i) - 0.5) * 0.9;
-    const pad = minPad + pseudoRandom(seedBase * 23 + i) * (maxPad - minPad);
-    return {
-      x: cx + Math.cos(angle) * (halfW + pad),
-      y: cy + Math.sin(angle) * (halfH + pad),
-      seed: seedBase * 31 + i + 1,
-    };
-  });
-}
-
-// Ironroot Algebra — a proper mountain area: several extra peak clusters
-// beyond the one every island already gets from renderMiniMountains,
-// scattered around the shoreline instead of confined to one range, plus
-// loose scree. Snow caps are seeded per-cluster (not every peak), and
-// height/width both vary, so no two clusters read as the same stamp.
-function renderPeakCluster(x, y, seed) {
-  const h = 32 + pseudoRandom(seed) * 24;
-  const w = 18 + pseudoRandom(seed + 1) * 12;
-  const snow = pseudoRandom(seed + 2) > 0.45;
-  return `
-    <ellipse cx="${x}" cy="${y + 3}" rx="${(w * 1.15).toFixed(1)}" ry="${(w * 0.3).toFixed(1)}" fill="rgba(20,15,35,0.18)" />
-    <path d="M${(x - w).toFixed(1)},${y} L${x},${(y - h).toFixed(1)} L${(x + w).toFixed(1)},${y} Z" fill="#8b81a8" />
-    <path d="M${(x - w * 0.5).toFixed(1)},${(y - h * 0.55).toFixed(1)} L${x},${(y - h).toFixed(1)} L${(x + w * 0.5).toFixed(1)},${(y - h * 0.55).toFixed(1)} L${(x + w * 0.28).toFixed(1)},${(y - h * 0.38).toFixed(1)} L${x},${(y - h * 0.72).toFixed(1)} L${(x - w * 0.28).toFixed(1)},${(y - h * 0.38).toFixed(1)} Z"
-      fill="${snow ? "#f0ecf8" : "#6f6690"}" opacity="${snow ? 0.9 : 0.5}" />
-  `;
-}
-
-function renderScree(x, y, seed) {
-  const r = 5 + (seed % 3) * 2;
-  return `<circle cx="${x}" cy="${y}" r="${r}" fill="#7a7192" opacity="0.65" />`;
-}
-
-// Shalefoot Geometry — a village: a well as the one centerpiece, then
-// several houses with varied roof colors and a couple of body widths.
-function renderHouse(x, y, seed) {
-  const roof = ["#c94a3f", "#8a6a44", "#5a7a8f"][seed % 3];
-  const w = 22 + (seed % 3) * 4;
-  const h = 16;
-  return `
-    <ellipse cx="${x}" cy="${(y + h * 0.6).toFixed(1)}" rx="${(w * 0.7).toFixed(1)}" ry="5" fill="rgba(20,15,35,0.18)" />
-    <rect x="${(x - w / 2).toFixed(1)}" y="${(y - h * 0.1).toFixed(1)}" width="${w}" height="${h}" fill="#e8dcc0" stroke="#8a7a5c" stroke-width="1.5" />
-    <path d="M${(x - w / 2 - 4).toFixed(1)},${(y - h * 0.1).toFixed(1)} L${x},${(y - h * 0.9).toFixed(1)} L${(x + w / 2 + 4).toFixed(1)},${(y - h * 0.1).toFixed(1)} Z" fill="${roof}" stroke="#3a2a20" stroke-width="1.2" />
-    <rect x="${(x - 4).toFixed(1)}" y="${(y + h * 0.3).toFixed(1)}" width="8" height="${(h * 0.6).toFixed(1)}" fill="#4a3a2a" />
-  `;
-}
-
-function renderWell(x, y) {
-  return `
-    <ellipse cx="${x}" cy="${y + 10}" rx="14" ry="5" fill="rgba(20,15,35,0.18)" />
-    <ellipse cx="${x}" cy="${y + 4}" rx="12" ry="6" fill="#8a8a8a" stroke="#5a5a5a" stroke-width="1.5" />
-    <ellipse cx="${x}" cy="${y + 2}" rx="8" ry="4" fill="#3a5a6a" />
-    <line x1="${x - 11}" y1="${y - 2}" x2="${x - 11}" y2="${y - 16}" stroke="#5c4632" stroke-width="2" />
-    <line x1="${x + 11}" y1="${y - 2}" x2="${x + 11}" y2="${y - 16}" stroke="#5c4632" stroke-width="2" />
-    <line x1="${x - 11}" y1="${y - 16}" x2="${x + 11}" y2="${y - 16}" stroke="#5c4632" stroke-width="2" />
-  `;
-}
-
-// Skyline Functions — an enchanted forest: purple-canopied trees in a
-// couple of shapes (round and conical) and a small palette of purple
-// shades, each with one small glowing mote to sell "enchanted" rather
-// than just "purple."
-function renderPurpleTree(x, y, seed) {
-  const h = 32 + pseudoRandom(seed) * 22;
-  const canopy = ["#b39ddb", "#9575cd", "#7e57c2"][seed % 3];
-  const round = seed % 2 === 0;
-  const glowSide = seed % 2 === 0 ? 1 : -1;
-  return `
-    <ellipse cx="${x}" cy="${(y + 4).toFixed(1)}" rx="${(h * 0.3).toFixed(1)}" ry="${(h * 0.1).toFixed(1)}" fill="rgba(20,15,35,0.18)" />
-    <rect x="${x - 3}" y="${(y - h * 0.5).toFixed(1)}" width="6" height="${(h * 0.5).toFixed(1)}" fill="#4a3a5c" />
-    ${
-      round
-        ? `<circle cx="${x}" cy="${(y - h * 0.65).toFixed(1)}" r="${(h * 0.32).toFixed(1)}" fill="${canopy}" opacity="0.92" />`
-        : `<path d="M${(x - h * 0.28).toFixed(1)},${(y - h * 0.45).toFixed(1)} L${x},${(y - h * 1.05).toFixed(1)} L${(x + h * 0.28).toFixed(1)},${(y - h * 0.45).toFixed(1)} Z" fill="${canopy}" opacity="0.92" />`
-    }
-    <circle cx="${x + glowSide * 6}" cy="${(y - h * 0.7).toFixed(1)}" r="2.5" fill="#ffe9ff" opacity="0.85" />
-  `;
-}
-
-// Goldtally Flats — a desert: two cactus shapes (a saguaro with arms,
-// a round barrel cactus), plus a bare rock or two and a faint dune
-// ripple in the sand underfoot.
-function renderSaguaro(x, y, seed) {
-  const h = 28 + pseudoRandom(seed) * 18;
-  const flip = seed % 2 === 0 ? 1 : -1;
-  return `
-    <ellipse cx="${x}" cy="${y + 4}" rx="11" ry="4" fill="rgba(60,45,20,0.18)" />
-    <rect x="${x - 6}" y="${(y - h).toFixed(1)}" width="12" height="${h.toFixed(1)}" rx="5" fill="#6b8a5a" />
-    <rect x="${(x + flip * 4).toFixed(1)}" y="${(y - h * 0.6).toFixed(1)}" width="7" height="${(h * 0.32).toFixed(1)}" rx="3.5" fill="#6b8a5a" />
-    <rect x="${(x - flip * 4 - 7).toFixed(1)}" y="${(y - h * 0.45).toFixed(1)}" width="7" height="${(h * 0.28).toFixed(1)}" rx="3.5" fill="#5c7a4c" />
-  `;
-}
-
-function renderBarrelCactus(x, y, seed) {
-  const r = 11 + pseudoRandom(seed) * 5;
-  return `
-    <ellipse cx="${x}" cy="${(y + r * 0.3).toFixed(1)}" rx="${(r * 1.1).toFixed(1)}" ry="${(r * 0.35).toFixed(1)}" fill="rgba(60,45,20,0.16)" />
-    <ellipse cx="${x}" cy="${y}" rx="${r.toFixed(1)}" ry="${(r * 0.85).toFixed(1)}" fill="#7a9a5f" />
-    <ellipse cx="${(x - r * 0.3).toFixed(1)}" cy="${(y - r * 0.2).toFixed(1)}" rx="${(r * 0.35).toFixed(1)}" ry="${(r * 0.5).toFixed(1)}" fill="#8fae70" opacity="0.7" />
-  `;
-}
-
-function renderDesertRock(x, y, seed) {
-  const w = 15 + (seed % 3) * 4;
-  return `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${(w * 0.55).toFixed(1)}" fill="#a89060" stroke="#7a6540" stroke-width="1.5" />`;
-}
-
-// Each biome's own default ring (min, max) — unchanged from before — is
-// clamped against `ringCap` (renderMathRegions' own measure of how much
-// room actually exists before the *interior* fill gives way to sand on
-// this island's tightest side). On an island with plenty of clearance
-// ringCap is generous and every biome renders exactly as before; on one
-// squeezed by a close neighbor, the ring pulls in so decorations still
-// land on solid ground instead of scattering out past a shrunk shoreline
-// into open water.
-const ISLAND_BIOMES = {
-  // A denser mountain range: renderMiniMountains already draws one
-  // cluster near the top of every island — these fill the rest of the
-  // ring with more, so Ironroot Algebra reads as *the* mountainous one.
-  algebra: (bbox, seedBase, ringCap) => {
-    const max = Math.min(90, ringCap);
-    const min = Math.min(55, max - 15);
-    return ringPositions(bbox, 6, seedBase, min, max)
-      .map((p, i) => (i % 3 !== 2 ? renderPeakCluster(p.x, p.y, p.seed) : renderScree(p.x, p.y, p.seed)))
-      .join("");
-  },
-  geometry: (bbox, seedBase, ringCap) => {
-    const max = Math.min(90, ringCap);
-    const min = Math.min(55, max - 15);
-    return ringPositions(bbox, 6, seedBase, min, max)
-      .map((p, i) => (i === 0 ? renderWell(p.x, p.y) : renderHouse(p.x, p.y, p.seed)))
-      .join("");
-  },
-  functions: (bbox, seedBase, ringCap) => {
-    const max = Math.min(90, ringCap);
-    const min = Math.min(55, max - 15);
-    return ringPositions(bbox, 7, seedBase, min, max)
-      .map((p) => renderPurpleTree(p.x, p.y, p.seed))
-      .join("");
-  },
-  numstats: (bbox, seedBase, ringCap) => {
-    const max = Math.min(80, ringCap);
-    const min = Math.min(45, max - 15);
-    return ringPositions(bbox, 6, seedBase, min, max)
-      .map((p, i) => (i % 3 === 0 ? renderBarrelCactus(p.x, p.y, p.seed) : i % 3 === 1 ? renderSaguaro(p.x, p.y, p.seed) : renderDesertRock(p.x, p.y, p.seed)))
-      .join("");
-  },
-};
-
-function renderIslandBiome(zoneId, bbox, seedBase, ringCap) {
-  const renderer = ISLAND_BIOMES[zoneId];
-  return renderer ? renderer(bbox, seedBase, ringCap) : "";
 }
 
 function renderWatchtower(x, y) {
@@ -788,34 +580,55 @@ function renderMathRegions(zoneGroups) {
       : []),
   ].join("");
 
-  const water = renderWaterScenery(boxes.filter(Boolean));
   const islands = zoneGroups
     .map(({ zone }, i) => {
       const bbox = boxes[i];
       if (!bbox) return "";
-      const innerPad = innerPadFor(pads[i]);
-      const ringCap = Math.max(25, Math.min(innerPad.left, innerPad.right, innerPad.top, innerPad.bottom) - 10);
-      return renderIsland(bbox, zone.fill, i + 1, pads[i]) + renderIslandBiome(zone.id, bbox, i + 1, ringCap);
+      return renderIsland(bbox, zone.fill, i + 1, pads[i]);
     })
     .join("");
 
   const bossIsland =
     renderIsland(bossBbox, BOSS_FILL, 99, { left: DEFAULT_SHORE_PAD, right: DEFAULT_SHORE_PAD, top: bossPadTop, bottom: DEFAULT_SHORE_PAD }) +
     renderWatchtower(bossBbox.x0 + 55, (bossBbox.y0 + bossBbox.y1) / 2 + 20);
-  return water + causewaysMarkup + islands + bossIsland;
+  return causewaysMarkup + islands + bossIsland;
 }
 
-// Each zone's own nodes get connected in the same order they were placed
-// (row by row through that zone's own grid) — a path winding through
-// just that zone's own lessons, not one radiating from the world's
-// shared CENTER (which would cut across other zones' own territories
-// here, unlike Wordwood Isle's round island where every zone fans out
-// from that same center anyway).
+// A boustrophedon ("as the ox plows") ordering: row 0 left-to-right, row
+// 1 right-to-left, row 2 left-to-right again, and so on — the classic
+// non-crossing way to visit a grid with one continuous line. Connecting
+// rows in raw placement order instead (every row scanned the same
+// direction) means the line has to jump all the way back across to the
+// far column at every row change, crossing itself on the way — visible
+// as an X/zigzag rather than one clean path.
+function serpentineOrder(points) {
+  const rows = new Map();
+  for (const p of points) {
+    if (!rows.has(p.row)) rows.set(p.row, []);
+    rows.get(p.row).push(p);
+  }
+  const rowIndices = [...rows.keys()].sort((a, b) => a - b);
+  const ordered = [];
+  rowIndices.forEach((r, i) => {
+    const rowPts = rows.get(r).sort((a, b) => a.x - b.x);
+    if (i % 2 === 1) rowPts.reverse();
+    ordered.push(...rowPts);
+  });
+  return ordered;
+}
+
+// Each zone's own nodes get connected in serpentine (boustrophedon)
+// order — a single non-crossing line winding through just that zone's
+// own lessons, not one radiating from the world's shared CENTER (which
+// would cut across other zones' own territories here, unlike Wordwood
+// Isle's round island where every zone fans out from that same center
+// anyway).
 function renderMathTrails(zoneGroups) {
   return zoneGroups
     .map(({ points }) => {
       if (points.length < 2) return "";
-      const d = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+      const ordered = serpentineOrder(points);
+      const d = ordered.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
       return `<path d="${d}" stroke="#5c4a3a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14" fill="none" opacity="0.85" />`;
     })
     .join("");
@@ -861,19 +674,22 @@ export function renderMathHub(root, navigate, subject) {
   const boss = getBossMonster(subject.id, gameState.level);
   const bossStateClass = bossCleared ? "is-cleared" : allMastered ? "is-unlocked" : "is-locked";
 
-  const bossAnchor = computeNearestBossAnchor(layout);
-
+  // No dashed bossBridge line — the sand causeway (renderMathRegions'
+  // own causewaysMarkup) already connects the nearest topic island
+  // straight to the boss's own island; a second, differently-styled dark
+  // dashed path drawn on top of that real bridge read as redundant
+  // clutter rather than a deliberate "final approach" cue. Passing an
+  // empty-returning function (not simply omitting the option) is
+  // required — hubWorld.js's own default, used whenever bossBridge is
+  // left out entirely, is its own generic dashed line from the world's
+  // shared spawn point, which is the exact thing being removed here.
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
-      "Numeria Peaks, an archipelago of separate mountainous islands floating in open water — algebra, geometry, functions, and number & stats — each with its own trail of math skills, plus a dark path south to the boss's own island",
+      "Numeria Peaks, an archipelago of separate mountainous islands floating in open water — algebra, geometry, functions, and number & stats — each with its own trail of math skills, connected by sand causeways down to the boss's own island",
     landmass: renderMathLandmass,
     regionShapes: renderMathRegions,
     trails: renderMathTrails,
-    bossBridge: bossAnchor
-      ? () =>
-          `<path d="M${bossAnchor.cx},${bossAnchor.y1} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#3b2a22" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.8" />` +
-          `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="118" fill="#2c211c" opacity="0.22" />`
-      : undefined,
+    bossBridge: () => "",
   });
 
   root.innerHTML = `
@@ -884,6 +700,7 @@ export function renderMathHub(root, navigate, subject) {
       <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD (or the joystick) across the islands — every trail leads to a skill</p>
       <div class="hub-viewport" id="hubViewport">
         <button class="hub-fullscreen-btn" id="hubFullscreenBtn" type="button" aria-label="Enter fullscreen">⛶</button>
+        ${renderLegend()}
         ${joystickHTML("hubJoystick")}
         <div class="hub-world" id="hubWorld" style="width:${WORLD_W}px;height:${WORLD_H}px;">
           ${sceneSvg}
