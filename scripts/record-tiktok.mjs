@@ -20,14 +20,14 @@
 //      output (e.g. "MacBook Air Speakers"). Leave its name containing
 //      "Multi-Output" (the default already does — this script looks for
 //      that name to confirm it's active).
-//   3. System Settings -> Sound -> Output -> select that Multi-Output
-//      Device. This is what lets the spoken TTS answer reach both your
-//      speakers (so you can hear it live) and BlackHole (so ffmpeg can
-//      record it) at the same time. Leave it selected between runs —
-//      switch back to your normal output only when you're not recording
-//      and want quieter/simpler routing.
-//   This script checks step 3 is in place before every run and refuses to
-//   record silently if it isn't (pass --force to record picture-only).
+// That's it — the script switches your system audio output to that
+// Multi-Output Device itself for the duration of a run (via the
+// `SwitchAudioSource` CLI, `brew install switchaudio-osx` if missing) and
+// always switches it back to whatever you were using before when it's
+// done, on error, or on Ctrl+C — a Multi-Output Device left as the active
+// output otherwise makes the system volume keys stop working (macOS
+// doesn't expose a single controllable volume for an aggregate device),
+// so this script never leaves it selected longer than it has to.
 //
 // USAGE:
 //   node scripts/record-tiktok.mjs --list [--test act]
@@ -226,23 +226,92 @@ function getDefaultOutputDeviceName() {
   return null;
 }
 
-function preflightAudioRouting(force) {
-  const outputName = getDefaultOutputDeviceName();
-  const ok = outputName && /blackhole|multi-output/i.test(outputName);
-  if (ok) return;
-  const msg =
-    `\nSystem audio output is currently "${outputName ?? "unknown"}", not routed through BlackHole/a Multi-Output Device.\n` +
-    `The spoken TTS answer won't be captured — clips would come out silent.\n\n` +
-    `One-time fix:\n` +
-    `  1. Open Audio MIDI Setup.app\n` +
-    `  2. "+" -> "Create Multi-Output Device" -> check "BlackHole 2ch" and your normal output\n` +
-    `  3. System Settings -> Sound -> Output -> select that Multi-Output Device\n\n` +
-    `Then re-run. Or pass --force to record picture-only, no audio.\n`;
-  if (force) {
-    console.warn(msg);
-    return;
+function hasCommand(cmd) {
+  try {
+    execFileSync("which", [cmd], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
   }
-  throw new Error(msg);
+}
+
+function listOutputDevices() {
+  try {
+    return execFileSync("SwitchAudioSource", ["-a", "-t", "output"])
+      .toString()
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function getCurrentOutputDevice() {
+  try {
+    return execFileSync("SwitchAudioSource", ["-c"]).toString().trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function setOutputDevice(name) {
+  execFileSync("SwitchAudioSource", ["-s", name]);
+}
+
+const NO_MULTI_OUTPUT_SETUP_MSG =
+  `\nNo Multi-Output Device found (needed so the spoken TTS answer can be captured).\n\n` +
+  `One-time fix:\n` +
+  `  1. Open Audio MIDI Setup.app\n` +
+  `  2. "+" -> "Create Multi-Output Device" -> check "BlackHole 2ch" and your normal output\n\n` +
+  `Then re-run. Or pass --force to record picture-only, no audio.\n`;
+
+// Switches system audio output to the Multi-Output Device for the
+// duration of a recording run and hands back a restore() function that
+// puts it back to whatever it was before — called from a `finally` and
+// from SIGINT/SIGTERM handlers, so a Ctrl+C mid-batch can't strand the
+// system on a device whose volume keys don't work (see header comment).
+function beginRecordingAudioRoute(force) {
+  if (!hasCommand("SwitchAudioSource")) {
+    // No CLI to switch devices for us — fall back to just checking
+    // whatever's already selected, same as before this existed.
+    const outputName = getDefaultOutputDeviceName();
+    const ok = outputName && /blackhole|multi-output/i.test(outputName);
+    if (!ok) {
+      const msg = `${NO_MULTI_OUTPUT_SETUP_MSG}\n(Install \`brew install switchaudio-osx\` so this script can switch it for you automatically.)\n`;
+      if (force) console.warn(msg);
+      else throw new Error(msg);
+    }
+    return () => {};
+  }
+
+  const devices = listOutputDevices();
+  const multiOutputName = devices.find((d) => /multi-output/i.test(d));
+  if (!multiOutputName) {
+    if (force) {
+      console.warn(NO_MULTI_OUTPUT_SETUP_MSG);
+      return () => {};
+    }
+    throw new Error(NO_MULTI_OUTPUT_SETUP_MSG);
+  }
+
+  const original = getCurrentOutputDevice();
+  if (original !== multiOutputName) {
+    console.log(`Switching system audio output to "${multiOutputName}" for recording...`);
+    setOutputDevice(multiOutputName);
+  }
+
+  let restored = false;
+  return () => {
+    if (restored || !original || original === multiOutputName) return;
+    restored = true;
+    try {
+      setOutputDevice(original);
+      console.log(`Restored system audio output to "${original}".`);
+    } catch {
+      console.warn(`Could not restore system audio output to "${original}" — check System Settings -> Sound -> Output.`);
+    }
+  };
 }
 
 function buildFilename({ testId, subjectId, skillIds, index }) {
@@ -376,6 +445,14 @@ async function main() {
 
   const server = startDevServer();
   let browser;
+  let restoreAudioOutput = () => {};
+  const onSignal = (signal) => {
+    restoreAudioOutput();
+    process.exit(signal === "SIGINT" ? 130 : 143);
+  };
+  process.on("SIGINT", () => onSignal("SIGINT"));
+  process.on("SIGTERM", () => onSignal("SIGTERM"));
+
   try {
     await waitForServer(`${BASE_URL}/`, 15000);
     browser = await chromium.launch({
@@ -405,7 +482,7 @@ async function main() {
     if (blackHoleIdx === null && !args.force) {
       throw new Error("BlackHole 2ch not found by ffmpeg. Install with: brew install blackhole-2ch (or pass --force to record picture-only).");
     }
-    preflightAudioRouting(args.force);
+    restoreAudioOutput = beginRecordingAudioRoute(args.force);
 
     const outDir = args.out ? path.resolve(args.out.replace(/^~/, os.homedir())) : DEFAULT_OUT_DIR;
     mkdirSync(outDir, { recursive: true });
@@ -426,6 +503,7 @@ async function main() {
     }
     console.log(`\n${succeeded}/${args.count} clip(s) saved to ${outDir}`);
   } finally {
+    restoreAudioOutput();
     if (browser) await browser.close();
     server.kill();
   }
