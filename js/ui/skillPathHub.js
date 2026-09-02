@@ -85,9 +85,26 @@
 // of things; and Final Five gets one continuous wall carrying exactly
 // five numbered peaks, each taller and darker than the last, right up
 // to the boss's own clearing — the ACT's own toughest final stretch,
-// getting harder one peak at a time. Add a new skill here (plus one
-// line in skillPath.js's dispatch) rather than writing a whole new
-// file — that's the point of the shared engine.
+// getting harder one peak at a time. Numeria Peaks' own Shalefoot
+// Geometry zone: Angle Anchor gets a valley anchored at intervals by a
+// real square-on-each-side Pythagorean proof (an actual a²+b²=c²
+// picture, not an icon) plus smaller angle-tick marks between them;
+// Round Trip gets a valley where the trail itself breaks off through a
+// real stone ring and back at every stop, a genuine loop rather than a
+// circle drawn nearby; Triangle Mastery gets a valley floor scattered
+// with crystal shards cut into a different triangle type at every
+// stop — right, equilateral, isosceles, scalene — fluency across all
+// of them rather than one shape repeated; Shape Shifter gets a valley
+// where the same landmark polygon reappears with a different vertex
+// count every time (a square, then a pentagon, a hexagon, and on);
+// Angle & Arc gets a valley where a real stone circle and a genuine
+// secant line (drawn from two actual points on the circle's own
+// circumference, not eyeballed) cross at every stop; and Solid Ground
+// gets a valley planted with a different real 3D solid at every
+// stop — a cube, a cylinder, a cone, a sphere — each shaded with real
+// faces so it reads as a volume, not a flat icon. Add a new skill here
+// (plus one line in skillPath.js's dispatch) rather than writing a
+// whole new file — that's the point of the shared engine.
 import { renderLessonTerrainPath } from "./lessonTerrain.js";
 import { plainsTheme } from "./lessonThemes/plains.js";
 import { jungleTheme } from "./lessonThemes/jungle.js";
@@ -119,6 +136,12 @@ import { archCrossingTheme } from "./lessonThemes/archCrossing.js";
 import { minersCacheTheme } from "./lessonThemes/minersCache.js";
 import { rootCavernTheme } from "./lessonThemes/rootCavern.js";
 import { fivePeaksTheme } from "./lessonThemes/fivePeaks.js";
+import { pythagoreanAnchorTheme } from "./lessonThemes/pythagoreanAnchor.js";
+import { roundTripLoopTheme } from "./lessonThemes/roundTripLoop.js";
+import { triangleGalleryTheme } from "./lessonThemes/triangleGallery.js";
+import { shapeShifterTheme } from "./lessonThemes/shapeShifter.js";
+import { angleArcTheme } from "./lessonThemes/angleArc.js";
+import { solidGroundGeoTheme } from "./lessonThemes/solidGroundGeo.js";
 
 export const LESSON_THEMES = {
   "en-idioms": plainsTheme,
@@ -151,6 +174,12 @@ export const LESSON_THEMES = {
   "ma-toolbox": minersCacheTheme,
   "ma-alg2": rootCavernTheme,
   "ma-finalfive": fivePeaksTheme,
+  "ma-angles": pythagoreanAnchorTheme,
+  "ma-circles": roundTripLoopTheme,
+  "ma-trianglemastery": triangleGalleryTheme,
+  "ma-polygons": shapeShifterTheme,
+  "ma-linescircles": angleArcTheme,
+  "ma-volume": solidGroundGeoTheme,
 };
 
 export function renderThemedLessonPath(root, navigate, params) {
