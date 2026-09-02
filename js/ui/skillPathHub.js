@@ -118,9 +118,22 @@
 // Trailhead opens at a real trailhead signpost planted at the very
 // first lesson, threaded the rest of the way by a real sine wave and
 // marked at intervals by a circle split into its four quadrants, each
-// carrying its own sign. Add a new skill here (plus one line in
-// skillPath.js's dispatch) rather than writing a whole new file —
-// that's the point of the shared engine.
+// carrying its own sign. Numeria Peaks' own Goldtally Flats zone keeps
+// its hub map's own low-profile identity here too — no rock walls, no
+// forest canopy, just open flat gold-flecked ground with cracked-earth
+// texture, the same "Flats" logic the hub's own nugget-and-tally motif
+// already follows. Power Surge gets a nugget cluster whose own count
+// doubles at every stop (two, then four, then eight, then sixteen — an
+// actual exponential surge, not a fixed pile) plus real lightning-
+// shaped cracks in the dry earth; Odds & Ends gets a genuinely varied
+// assortment at every stop — a die, a coin, a tally mark, never the
+// same one twice in a row — "odds" and "ends" both at once; and Number
+// Detective gets a real footprint trail alongside the path, numbered
+// evidence tags (circled if the number's prime) planted at intervals,
+// and one magnifying glass over the biggest piece of evidence. Add a
+// new skill here (plus one line in skillPath.js's dispatch) rather
+// than writing a whole new file — that's the point of the shared
+// engine.
 import { renderLessonTerrainPath } from "./lessonTerrain.js";
 import { plainsTheme } from "./lessonThemes/plains.js";
 import { jungleTheme } from "./lessonThemes/jungle.js";
@@ -162,6 +175,9 @@ import { coordinateForestTheme } from "./lessonThemes/coordinateForest.js";
 import { graphArchitectForestTheme } from "./lessonThemes/graphArchitectForest.js";
 import { gridLogForestTheme } from "./lessonThemes/gridLogForest.js";
 import { trigTrailheadTheme } from "./lessonThemes/trigTrailhead.js";
+import { powerSurgeFlatsTheme } from "./lessonThemes/powerSurgeFlats.js";
+import { oddsEndsFlatsTheme } from "./lessonThemes/oddsEndsFlats.js";
+import { numberDetectiveFlatsTheme } from "./lessonThemes/numberDetectiveFlats.js";
 
 export const LESSON_THEMES = {
   "en-idioms": plainsTheme,
@@ -204,6 +220,9 @@ export const LESSON_THEMES = {
   "ma-conics": graphArchitectForestTheme,
   "ma-matrixlog": gridLogForestTheme,
   "ma-trig": trigTrailheadTheme,
+  "ma-exponents": powerSurgeFlatsTheme,
+  "ma-stats": oddsEndsFlatsTheme,
+  "ma-numbersense": numberDetectiveFlatsTheme,
 };
 
 export function renderThemedLessonPath(root, navigate, params) {
