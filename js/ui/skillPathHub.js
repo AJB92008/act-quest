@@ -102,9 +102,25 @@
 // circumference, not eyeballed) cross at every stop; and Solid Ground
 // gets a valley planted with a different real 3D solid at every
 // stop — a cube, a cylinder, a cone, a sphere — each shaded with real
-// faces so it reads as a volume, not a flat icon. Add a new skill here
-// (plus one line in skillPath.js's dispatch) rather than writing a
-// whole new file — that's the point of the shared engine.
+// faces so it reads as a volume, not a flat icon. Numeria Peaks' own
+// Skyline Functions zone flips its own hub map's balance: the hub
+// itself leads with spires and treats purple trees as a secondary
+// accent, but every one of these four lesson paths leads with a real
+// purple forest instead, the spires only a faint distant skyline above
+// the canopy. Coordinate Compass gets that forest laid over a faint
+// coordinate grid, a compass rose at intervals, and small plotted-point
+// markers along the trail itself; Graph Architect gets trees planted
+// into real conic shapes rather than scattered at random — a circle, an
+// ellipse, a parabola's own arc, built from trees instead of drawn;
+// Grid & Log gets trees arranged into an actual row-by-column grid
+// between real matrix brackets at some stops, and a real logarithmic
+// spiral (r = ae^(bθ)) growing through the trees at others; and Trig
+// Trailhead opens at a real trailhead signpost planted at the very
+// first lesson, threaded the rest of the way by a real sine wave and
+// marked at intervals by a circle split into its four quadrants, each
+// carrying its own sign. Add a new skill here (plus one line in
+// skillPath.js's dispatch) rather than writing a whole new file —
+// that's the point of the shared engine.
 import { renderLessonTerrainPath } from "./lessonTerrain.js";
 import { plainsTheme } from "./lessonThemes/plains.js";
 import { jungleTheme } from "./lessonThemes/jungle.js";
@@ -142,6 +158,10 @@ import { triangleGalleryTheme } from "./lessonThemes/triangleGallery.js";
 import { shapeShifterTheme } from "./lessonThemes/shapeShifter.js";
 import { angleArcTheme } from "./lessonThemes/angleArc.js";
 import { solidGroundGeoTheme } from "./lessonThemes/solidGroundGeo.js";
+import { coordinateForestTheme } from "./lessonThemes/coordinateForest.js";
+import { graphArchitectForestTheme } from "./lessonThemes/graphArchitectForest.js";
+import { gridLogForestTheme } from "./lessonThemes/gridLogForest.js";
+import { trigTrailheadTheme } from "./lessonThemes/trigTrailhead.js";
 
 export const LESSON_THEMES = {
   "en-idioms": plainsTheme,
@@ -180,6 +200,10 @@ export const LESSON_THEMES = {
   "ma-polygons": shapeShifterTheme,
   "ma-linescircles": angleArcTheme,
   "ma-volume": solidGroundGeoTheme,
+  "ma-coordinate": coordinateForestTheme,
+  "ma-conics": graphArchitectForestTheme,
+  "ma-matrixlog": gridLogForestTheme,
+  "ma-trig": trigTrailheadTheme,
 };
 
 export function renderThemedLessonPath(root, navigate, params) {
