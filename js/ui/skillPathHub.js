@@ -67,7 +67,25 @@
 // light, dune color, AND the water itself all shift once from warm
 // sunrise gold to cool dusk purple down its whole length, with a tuning
 // dial recurring along the trail (matching tone consistently, retuned
-// deliberately rather than at random). Add a new skill here (plus one
+// deliberately rather than at random). Numeria Peaks' own Ironroot
+// Algebra zone: Line Crossing gets an Ironroot valley crossed again and
+// again by the same dead-straight diagonal line, the same slope every
+// time, each crossing spanned by a plank bridge (linear — a constant
+// rate of change, unlike every wandering trail/wall edge elsewhere);
+// Curve Ball gets two actual parabolic ridgelines sweeping wall to
+// wall, their genuine intersection points (solved algebraically, not
+// guessed) each marked with a boulder — up to two per pair, the same
+// as a real quadratic system; Algebra Toolkit gets a mining valley
+// worked with a different tool at every stop (pickaxe, crate, ore
+// cart, lantern, coiled rope) rather than one repeated prop, a toolkit
+// holding several different tools rather than five of the same one;
+// Root Cause goes underground into a mine cavern threaded with the
+// peaks' own roots reaching down from above and braced by wooden shaft
+// supports, digging past the surface for what's actually at the root
+// of things; and Final Five gets one continuous wall carrying exactly
+// five numbered peaks, each taller and darker than the last, right up
+// to the boss's own clearing — the ACT's own toughest final stretch,
+// getting harder one peak at a time. Add a new skill here (plus one
 // line in skillPath.js's dispatch) rather than writing a whole new
 // file — that's the point of the shared engine.
 import { renderLessonTerrainPath } from "./lessonTerrain.js";
@@ -96,6 +114,11 @@ import { causewayTheme } from "./lessonThemes/causeway.js";
 import { vistaPeakTheme } from "./lessonThemes/vistaPeak.js";
 import { barrensTheme } from "./lessonThemes/barrens.js";
 import { duneShiftTheme } from "./lessonThemes/duneShift.js";
+import { faultLineTheme } from "./lessonThemes/faultLine.js";
+import { archCrossingTheme } from "./lessonThemes/archCrossing.js";
+import { minersCacheTheme } from "./lessonThemes/minersCache.js";
+import { rootCavernTheme } from "./lessonThemes/rootCavern.js";
+import { fivePeaksTheme } from "./lessonThemes/fivePeaks.js";
 
 export const LESSON_THEMES = {
   "en-idioms": plainsTheme,
@@ -123,6 +146,11 @@ export const LESSON_THEMES = {
   "en-macrologic": vistaPeakTheme,
   "en-concision": barrensTheme,
   "en-tone": duneShiftTheme,
+  "ma-linear": faultLineTheme,
+  "ma-quadratics": archCrossingTheme,
+  "ma-toolbox": minersCacheTheme,
+  "ma-alg2": rootCavernTheme,
+  "ma-finalfive": fivePeaksTheme,
 };
 
 export function renderThemedLessonPath(root, navigate, params) {
