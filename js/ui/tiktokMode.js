@@ -89,8 +89,17 @@ function speak(text, onEnd) {
 // `explain` (see data/tiktokExplanations.js) without ever touching the
 // data lessons/quizzes/boss quizzes actually use — falls back to the
 // original explain for anything not (yet) rewritten there.
+//
+// Keyed by the question's own text, EXCEPT for passage-based questions
+// (Reading/Science/R&W), which share generic stems like "Which choice
+// best states the main idea of the passage?" across many different
+// passages within one skill — for those, the key is prefixed with
+// `${passageId}::` to disambiguate, since q.q alone collides.
+function explainKey(q) {
+  return q.passageId ? `${q.passageId}::${q.q}` : q.q;
+}
 function explainFor(q) {
-  return TIKTOK_EXPLANATIONS[q.skillId]?.[q.q] || q.explain;
+  return TIKTOK_EXPLANATIONS[q.skillId]?.[explainKey(q)] || q.explain;
 }
 
 // Reads the question (and passage) out loud before the reveal countdown
