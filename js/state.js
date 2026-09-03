@@ -428,7 +428,7 @@ export class GameState {
       return { ok: false, error: "That doesn't look like a valid save file (not valid JSON)." };
     }
     if (!parsed || typeof parsed !== "object" || !parsed.avatar || !parsed.skillProgress) {
-      return { ok: false, error: "That file doesn't look like an Acto's ACT Quest save." };
+      return { ok: false, error: "That file doesn't look like a PrepQuest save." };
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
     this.data = this._load();

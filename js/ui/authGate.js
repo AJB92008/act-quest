@@ -135,7 +135,7 @@ export function renderAuthGate(root, navigate) {
 
   root.innerHTML = `
     <main class="screen avatar-screen auth-gate-screen">
-      <h1>Welcome to Acto's ACT Quest!</h1>
+      <h1>Welcome to PrepQuest!</h1>
       <p class="avatar-subtitle">Create a free account so your monster and progress can follow you to any device, or skip for now and play as a guest.</p>
       <div class="dash-history-card auth-gate-card" data-gate-card></div>
     </main>

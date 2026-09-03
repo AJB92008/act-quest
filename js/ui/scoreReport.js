@@ -319,7 +319,7 @@ function scoreDetailsHTML(sections) {
   return `
     <details class="score-section-details" open>
       <summary class="score-section-heading">My Score Details</summary>
-      <p class="score-caption">Category percentages reflect accuracy on Acto's ACT Quest practice questions, not an official ACT readiness placement.</p>
+      <p class="score-caption">Category percentages reflect accuracy on PrepQuest practice questions, not an official ACT readiness placement.</p>
       ${panels}
     </details>
   `;
@@ -380,7 +380,7 @@ function reportCardHTML(data, { shared }) {
 
   return `
     <div class="results-card score-report-card">
-      <p class="score-disclaimer">Not for official use. This is a practice report from Acto's ACT Quest, not an official ACT score.</p>
+      <p class="score-disclaimer">Not for official use. This is a practice report from PrepQuest, not an official ACT score.</p>
       <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 120 })}</div>
       <h1>${escapeHtml(data.name)}'s Score Report</h1>
       <p class="lesson-blurb">${shared ? "Shared, read-only snapshot" : "Live report"} &mdash; generated ${formatDate(data.generatedAt)}</p>
@@ -427,7 +427,7 @@ function reportCardHTML(data, { shared }) {
 
       ${compositeScore != null ? ncrcPanelHTML(compositeScore) : ""}
 
-      ${shared ? `<p class="results-flag results-flag-muted">This is a shared snapshot from Acto's ACT Quest, not a live view &mdash; it won't update as the player keeps practicing.</p>` : ""}
+      ${shared ? `<p class="results-flag results-flag-muted">This is a shared snapshot from PrepQuest, not a live view &mdash; it won't update as the player keeps practicing.</p>` : ""}
     </div>
   `;
 }
@@ -485,7 +485,7 @@ export function renderSharedReport(root, encoded) {
         <div class="results-card">
           <h1>Invalid Report Link</h1>
           <p class="lesson-paragraph">This link looks corrupted or incomplete.</p>
-          <a class="btn-primary lesson-start-btn" href="${location.origin}${location.pathname}">Go to Acto's ACT Quest</a>
+          <a class="btn-primary lesson-start-btn" href="${location.origin}${location.pathname}">Go to PrepQuest</a>
         </div>
       </main>
     `;
@@ -497,7 +497,7 @@ export function renderSharedReport(root, encoded) {
       ${reportCardHTML(data, { shared: true })}
       <div class="results-actions no-print">
         <button class="btn-primary" data-print>🖨️ Print / Save as PDF</button>
-        <a class="btn-secondary" href="${location.origin}${location.pathname}">Play Acto's ACT Quest</a>
+        <a class="btn-secondary" href="${location.origin}${location.pathname}">Play PrepQuest</a>
       </div>
     </main>
   `;

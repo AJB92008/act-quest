@@ -1,4 +1,4 @@
-# Acto's ACT Quest
+# PrepQuest
 
 [![Tests](https://github.com/AJB92008/act-quest/actions/workflows/tests.yml/badge.svg)](https://github.com/AJB92008/act-quest/actions/workflows/tests.yml)
 

@@ -2,7 +2,7 @@
   "name": "act-quest",
   "private": true,
   "version": "1.0.0",
-  "description": "Acto's ACT Quest — a build-step-free static app. This package.json exists only for CI tooling (running the browser test suite headlessly); the app itself ships with no bundler, framework, or dependencies.",
+  "description": "PrepQuest — a build-step-free static app. This package.json exists only for CI tooling (running the browser test suite headlessly); the app itself ships with no bundler, framework, or dependencies.",
   "scripts": {
     "test": "node scripts/run-tests.mjs",
     "record-tiktok": "node scripts/record-tiktok.mjs"
