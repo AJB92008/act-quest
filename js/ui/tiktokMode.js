@@ -90,24 +90,25 @@ function speak(text, onEnd) {
 // data lessons/quizzes/boss quizzes actually use — falls back to the
 // original explain for anything not (yet) rewritten there.
 //
-// Keyed by the question's own text, EXCEPT for passage/stimulus-based
-// questions (Reading/Science/R&W), which need a disambiguating prefix —
-// q.q alone collides for these, in one of two ways depending on the
-// subject's data shape:
-//   - ACT Reading/Science: many questions share one passage/stimulus,
-//     referenced by id (q.passageId or q.stimulusId); the generic
-//     question stem ("Which choice best states the main idea...") then
-//     repeats verbatim across every different passage in the skill.
-//   - SAT/PSAT R&W: the inverse shape — one question per passage, with
-//     the full passage text inlined directly on the question (q.passage,
-//     no id at all) and literally the same stem reused for EVERY
-//     question in the skill, so q.q alone doesn't just collide, it's
-//     the same key for the entire bank.
-// Prefer an id when present (shorter, stable keys); fall back to the
-// full inline passage text when that's all a question carries.
+// Composite key built in three layers, each added only when present:
+//   1. A passage/stimulus disambiguator — q.passageId or q.stimulusId
+//      (ACT Reading/Science: many questions share one passage/stimulus,
+//      and a generic stem like "Which choice best states the main
+//      idea..." repeats verbatim across every different one in the
+//      skill) or the full inline q.passage text (SAT/PSAT R&W: one
+//      passage per question with no id, and literally the same stem
+//      reused for EVERY question in the skill).
+//   2. The question's own q.q text.
+//   3. q.choices, joined — added ALWAYS, for every skill, because some
+//      skills (found first in ma-numbersense) reuse a fully generic stem
+//      like "Which of the following numbers is prime?" across multiple,
+//      otherwise-unrelated questions whose only distinguishing content
+//      lives in the answer choices, not the stem or any passage.
 function explainKey(q) {
   const stimulusKey = q.passageId ?? q.stimulusId ?? q.passage;
-  return stimulusKey ? `${stimulusKey}::${q.q}` : q.q;
+  const base = stimulusKey ? `${stimulusKey}::${q.q}` : q.q;
+  const choicesKey = Array.isArray(q.choices) ? q.choices.join("|") : "";
+  return choicesKey ? `${base}::${choicesKey}` : base;
 }
 function explainFor(q) {
   return TIKTOK_EXPLANATIONS[q.skillId]?.[explainKey(q)] || q.explain;
