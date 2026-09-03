@@ -18,13 +18,18 @@
 // `q` text (two identical questions would collide on the same key) — if it
 // does, that skill needs a different disambiguation strategy.
 //
-// Passage-based skills (Reading/Science/R&W) are the case that needs one:
-// their `q` field is often a generic, reusable stem ("Which choice best
-// states the main idea of the passage?") repeated verbatim across many
-// different passages in the same skill, so plain q-text keying collides.
-// For any question with a `passageId` field, the key is instead
-// `${passageId}::${q}` — see `explainKey()` in tiktokMode.js, which builds
-// this same composite key at lookup time.
+// Passage/stimulus-based skills (Reading/Science/R&W) are the case that
+// needs one, in one of two shapes:
+//   - ACT Reading/Science: many questions share one passage/stimulus by
+//     id (`passageId` or `stimulusId`), and the generic question stem
+//     repeats verbatim across every different passage in the skill.
+//   - SAT/PSAT R&W: one question per passage, the full passage text
+//     inlined directly on the question (`passage`, no id), and the
+//     exact same stem reused for literally every question in the skill.
+// The key is `${passageId ?? stimulusId ?? passage}::${q}` — see
+// `explainKey()` in tiktokMode.js, which builds this same key at lookup
+// time (preferring the id when present, falling back to the full inline
+// passage text otherwise).
 export const TIKTOK_EXPLANATIONS = {
   "ma-linear": {
     "Solve for x: 3x + 7 = 22": "First, get the x term alone: subtract 7 from both sides, so 3x equals 15. Then divide both sides by 3, and you're left with x equals 5.",

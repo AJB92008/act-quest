@@ -90,13 +90,24 @@ function speak(text, onEnd) {
 // data lessons/quizzes/boss quizzes actually use — falls back to the
 // original explain for anything not (yet) rewritten there.
 //
-// Keyed by the question's own text, EXCEPT for passage-based questions
-// (Reading/Science/R&W), which share generic stems like "Which choice
-// best states the main idea of the passage?" across many different
-// passages within one skill — for those, the key is prefixed with
-// `${passageId}::` to disambiguate, since q.q alone collides.
+// Keyed by the question's own text, EXCEPT for passage/stimulus-based
+// questions (Reading/Science/R&W), which need a disambiguating prefix —
+// q.q alone collides for these, in one of two ways depending on the
+// subject's data shape:
+//   - ACT Reading/Science: many questions share one passage/stimulus,
+//     referenced by id (q.passageId or q.stimulusId); the generic
+//     question stem ("Which choice best states the main idea...") then
+//     repeats verbatim across every different passage in the skill.
+//   - SAT/PSAT R&W: the inverse shape — one question per passage, with
+//     the full passage text inlined directly on the question (q.passage,
+//     no id at all) and literally the same stem reused for EVERY
+//     question in the skill, so q.q alone doesn't just collide, it's
+//     the same key for the entire bank.
+// Prefer an id when present (shorter, stable keys); fall back to the
+// full inline passage text when that's all a question carries.
 function explainKey(q) {
-  return q.passageId ? `${q.passageId}::${q.q}` : q.q;
+  const stimulusKey = q.passageId ?? q.stimulusId ?? q.passage;
+  return stimulusKey ? `${stimulusKey}::${q.q}` : q.q;
 }
 function explainFor(q) {
   return TIKTOK_EXPLANATIONS[q.skillId]?.[explainKey(q)] || q.explain;
