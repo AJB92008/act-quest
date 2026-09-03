@@ -1,6 +1,6 @@
 # PrepQuest
 
-[![Tests](https://github.com/AJB92008/act-quest/actions/workflows/tests.yml/badge.svg)](https://github.com/AJB92008/act-quest/actions/workflows/tests.yml)
+[![Tests](https://github.com/AJB92008/prepquest/actions/workflows/tests.yml/badge.svg)](https://github.com/AJB92008/prepquest/actions/workflows/tests.yml)
 
 A "Teach Your Monster to Read"-style game for studying the ACT: customize a
 monster companion, explore a world map with one island per ACT section
