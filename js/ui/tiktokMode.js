@@ -80,18 +80,14 @@ function explainFor(q) {
   return TIKTOK_EXPLANATIONS[q.skillId]?.[q.bankIndex] || q.explain;
 }
 
-// Reads the question (and passage/choices, for a recording viewer who
-// isn't looking at the screen the whole time) out loud before the reveal
-// countdown starts, so a clip's narration walks through the problem, not
-// just the answer.
+// Reads the question (and passage) out loud before the reveal countdown
+// starts, so a clip's narration walks through the problem, not just the
+// answer. Deliberately doesn't read the answer choices — those are
+// already on screen the whole time, and reading four options aloud made
+// the narration long and repetitive.
 function speakQuestion(q, onEnd) {
   const passagePart = q.passage ? `${q.passage} ` : "";
-  let text = `${passagePart}${q.q}`;
-  if (!isWrittenQuestion(q)) {
-    const letters = ["A", "B", "C", "D"];
-    text += " " + q.choices.map((c, i) => `${letters[i]}: ${c}.`).join(" ");
-  }
-  speak(text, onEnd);
+  speak(`${passagePart}${q.q}`, onEnd);
 }
 
 // Read the correct answer and why it's correct out loud (Web Speech API —
