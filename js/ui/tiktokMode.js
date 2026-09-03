@@ -45,15 +45,28 @@ function availableVoices() {
   return "speechSynthesis" in window ? window.speechSynthesis.getVoices() : [];
 }
 
+const DEFAULT_VOICE_NAME = "Google US English";
+const DEFAULT_VOICE_LANG = "en-US";
+
 // Applies the saved voice preference (by voiceURI, since a
 // SpeechSynthesisVoice object itself can't be persisted to localStorage)
-// if it's still present in the browser's current voice list — falls back
-// to the browser default voice otherwise, which is always a safe no-op.
+// if it's still present in the browser's current voice list. With no
+// saved preference, defaults to "Google US English" (Chrome's own voice,
+// not a system one) rather than leaving it to whatever the browser picks
+// on its own — falls back to the plain browser default if that voice
+// isn't available on this machine/browser.
 function applyPreferredVoice(utterance) {
+  const voices = availableVoices();
   const uri = loadPreferredVoiceURI();
-  if (!uri) return;
-  const voice = availableVoices().find((v) => v.voiceURI === uri);
-  if (voice) utterance.voice = voice;
+  if (uri) {
+    const saved = voices.find((v) => v.voiceURI === uri);
+    if (saved) {
+      utterance.voice = saved;
+      return;
+    }
+  }
+  const fallback = voices.find((v) => v.name === DEFAULT_VOICE_NAME && v.lang === DEFAULT_VOICE_LANG) || voices.find((v) => v.name === DEFAULT_VOICE_NAME);
+  if (fallback) utterance.voice = fallback;
 }
 
 // `onEnd` fires once the utterance finishes — or immediately, if this

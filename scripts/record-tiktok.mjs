@@ -20,6 +20,16 @@
 //      output (e.g. "MacBook Air Speakers"). Leave its name containing
 //      "Multi-Output" (the default already does — this script looks for
 //      that name to confirm it's active).
+//   3. (Optional, for the "Google US English" voice specifically) Run
+//      once with --setup-profile. That opens real Google Chrome (not
+//      Playwright's bundled Chromium — "Google US English" and friends
+//      are a Chrome-account feature, unavailable in a disposable/signed-
+//      out browser) to a dedicated profile just for this recorder, and
+//      waits for you to sign into Chrome with your Google account in
+//      that window. That profile persists on disk (PROFILE_DIR below),
+//      so every run after reuses it silently — a normal run without
+//      --setup-profile never blocks on this, it just falls back to a
+//      different voice if you skip this step.
 // That's it — the script switches your system audio output to that
 // Multi-Output Device itself for the duration of a run (via the
 // `SwitchAudioSource` CLI, `brew install switchaudio-osx` if missing) and
@@ -44,7 +54,7 @@
 import { chromium } from "playwright";
 import { spawn, execFileSync } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, rmSync, readdirSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
@@ -55,11 +65,13 @@ const PORT = 8935;
 const BASE_URL = `http://localhost:${PORT}`;
 const DEFAULT_OUT_DIR = path.join(os.homedir(), "Desktop", "tiktok-clips", "Unposted");
 const POSTED_DIR = path.join(os.homedir(), "Desktop", "tiktok-clips", "Posted");
+const PROFILE_DIR = path.join(os.homedir(), ".prepquest-recorder-chrome-profile");
 const MAX_CLIP_MS = 90_000; // safety cap in case a speech "end" event never fires (question + 10s countdown + answer narration, back to back)
 const SPEAK_EVENTS_PER_CLIP = 2; // TikTok Mode speaks the question, then (after reveal) the answer
 const TRAILING_BUFFER_MS = 700; // avoid an abrupt cut right as speech ends
 const VIDEO_WIDTH = 1080;
 const VIDEO_HEIGHT = 1920;
+const DEFAULT_VOICE_NAME = "Google US English";
 
 function parseArgs(argv) {
   const args = { count: 1, test: "act" };
@@ -91,6 +103,9 @@ function parseArgs(argv) {
       case "--force":
         args.force = true;
         break;
+      case "--setup-profile":
+        args.setupProfile = true;
+        break;
       case "--help":
       case "-h":
         args.help = true;
@@ -111,9 +126,10 @@ Record TikTok Mode clips.
   --subject <id|name>     Subject to pull questions from
   --skills <a,b,c|all>    Skill ids/names to draw from, or "all"
   --count <n>             Number of clips to generate (default: 1)
-  --voice <text>          Substring match against a voice name (default: browser default)
+  --voice <text>          Substring match against a voice name (default: Google US English, once the profile is signed in)
   --out <dir>             Output folder (default: ~/Desktop/tiktok-clips/Unposted)
   --force                 Record even if system audio isn't routed through BlackHole (picture only)
+  --setup-profile         Sign into Chrome for the "Google US English" voice (waits up to 5 min; a normal run never blocks on this)
 
 Examples:
   node scripts/record-tiktok.mjs --list
@@ -150,6 +166,13 @@ async function fetchCatalog(page, testId) {
       playable: mod.isSubjectPlayable(s),
       skills: (s.skills || []).map((sk) => ({ id: sk.id, name: sk.name })),
     }));
+  }, testId);
+}
+
+async function fetchTestName(page, testId) {
+  return page.evaluate(async (testId) => {
+    const mod = await import("/js/data/tests.js");
+    return mod.TESTS.find((t) => t.id === testId)?.name || testId;
   }, testId);
 }
 
@@ -315,11 +338,99 @@ function beginRecordingAudioRoute(force) {
   };
 }
 
-function buildFilename({ testId, subjectId, skillIds, index }) {
-  const ts = new Date().toISOString().replace(/[:.]/g, "-");
-  const shown = skillIds.slice(0, 2).join("+");
-  const skillsPart = skillIds.length > 2 ? `${shown}+${skillIds.length - 2}more` : shown;
-  return `tiktok_${testId}_${subjectId}_${skillsPart}_${ts}_${index}.mp4`;
+async function hasGoogleUSEnglishVoice(page) {
+  return page.evaluate((voiceName) => new Promise((resolve) => {
+    const check = () => resolve(window.speechSynthesis.getVoices().some((v) => v.name === voiceName));
+    if (window.speechSynthesis.getVoices().length) check();
+    else {
+      window.speechSynthesis.onvoiceschanged = check;
+      setTimeout(check, 3000); // in case 'voiceschanged' never fires
+    }
+  }), DEFAULT_VOICE_NAME);
+}
+
+// "Google US English" (and friends) are a Chrome-account network feature,
+// not something a fresh/signed-out browser profile has access to — so
+// this recorder keeps its own persistent Chrome profile (PROFILE_DIR)
+// instead of a disposable one. A normal run never blocks on this: it does
+// one quick check and, if the voice isn't there yet, just proceeds with
+// whatever fallback voice the app picks (see tiktokMode.js's own
+// default). Only when --setup-profile is explicitly passed does this
+// open a sign-in page and poll in the background for the voice to
+// appear — you sign into Chrome by hand in the window that opens, at
+// your own pace, and it picks up automatically once detected. Nothing
+// beyond that sign-in step is automated — this script never touches your
+// Google credentials itself.
+const PROFILE_SETUP_TIMEOUT_MS = 5 * 60 * 1000;
+const PROFILE_SETUP_POLL_MS = 5000;
+
+async function ensureProfileReady(context, { force }) {
+  const pollPage = await context.newPage();
+  try {
+    await pollPage.goto("https://example.com");
+    const alreadyOk = await hasGoogleUSEnglishVoice(pollPage);
+    if (!force) {
+      if (!alreadyOk) console.log(`Note: "${DEFAULT_VOICE_NAME}" isn't set up yet — using a fallback voice this run. Pass --setup-profile to sign in.\n`);
+      return;
+    }
+    if (alreadyOk) return;
+
+    const signInPage = await context.newPage();
+    await signInPage.goto("chrome://settings/people");
+    console.log(
+      `\nOne-time setup: sign into Chrome with your Google account in the window that just opened.\n` +
+        `This dedicated profile (not your everyday Chrome) is what lets the recorder use "${DEFAULT_VOICE_NAME}" — every run after this reuses it automatically.\n` +
+        `Waiting up to 5 minutes for that to finish — take your time, this continues on its own once it's detected.\n`
+    );
+
+    const deadline = Date.now() + PROFILE_SETUP_TIMEOUT_MS;
+    let ok = false;
+    while (Date.now() < deadline) {
+      await pollPage.reload();
+      ok = await hasGoogleUSEnglishVoice(pollPage);
+      if (ok) break;
+      await sleep(PROFILE_SETUP_POLL_MS);
+    }
+    console.log(
+      ok
+        ? `"${DEFAULT_VOICE_NAME}" is available — you're all set.\n`
+        : `Didn't detect "${DEFAULT_VOICE_NAME}" after waiting — continuing with a fallback voice. Re-run with --setup-profile any time to retry.\n`
+    );
+    await signInPage.close();
+  } finally {
+    await pollPage.close();
+  }
+}
+
+function sanitizeLabel(name) {
+  return name.replace(/[\/\\:]/g, "-").trim();
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Clips are named "<Test> <Subject> <N>.mp4" (e.g. "ACT Math 1.mp4"),
+// numbered per test+subject rather than per run — so a second batch for
+// the same subject picks up where the last one left off instead of
+// restarting at 1 and colliding with clips already sitting in Unposted
+// or already moved into Posted.
+function findNextClipNumber(dirs, label) {
+  const pattern = new RegExp(`^${escapeRegExp(label)} (\\d+)\\.mp4$`);
+  let max = 0;
+  for (const dir of dirs) {
+    let entries = [];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    for (const name of entries) {
+      const m = name.match(pattern);
+      if (m) max = Math.max(max, Number(m[1]));
+    }
+  }
+  return max + 1;
 }
 
 function muxAndConvert({ videoPath, audioPath, outPath, trimSeconds, hasAudio }) {
@@ -333,15 +444,16 @@ function muxAndConvert({ videoPath, audioPath, outPath, trimSeconds, hasAudio })
   execFileSync("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
 }
 
-async function recordOneClip({ browser, testId, subjectId, skillIds, blackHoleIdx, outDir, index, voiceQuery }) {
-  const workDir = path.join(os.tmpdir(), `tiktok-rec-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 7)}`);
+// `context` is the one shared, persistent-profile browser context (see
+// PROFILE_DIR / ensureProfileReady) — its recordVideo directory was fixed
+// once at launch, so every clip's raw video lands there under a
+// Playwright-generated name; this cleans its own file up after muxing
+// rather than clearing the whole (shared, cross-run) directory.
+async function recordOneClip({ context, testId, subjectId, skillIds, blackHoleIdx, outPath, voiceQuery }) {
+  const workDir = path.join(os.tmpdir(), `tiktok-rec-audio-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
   mkdirSync(workDir, { recursive: true });
 
-  const contextCreatedAt = Date.now();
-  const context = await browser.newContext({
-    viewport: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT },
-    recordVideo: { dir: workDir, size: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT } },
-  });
+  const pageCreatedAt = Date.now();
   const page = await context.newPage();
 
   // TikTok Mode now speaks twice per question cycle — the question, then
@@ -368,7 +480,7 @@ async function recordOneClip({ browser, testId, subjectId, skillIds, blackHoleId
   });
 
   let ffmpegAudio = null;
-  let contextClosed = false;
+  let pageClosed = false;
   const audioPath = path.join(workDir, "audio.wav");
 
   try {
@@ -422,21 +534,21 @@ async function recordOneClip({ browser, testId, subjectId, skillIds, blackHoleId
       if (process.env.TIKTOK_DEBUG) console.error("[debug] audio ffmpeg closed");
     }
 
-    await context.close();
-    contextClosed = true;
-    if (process.env.TIKTOK_DEBUG) console.error("[debug] context closed");
+    await page.close(); // finalizes this page's video without touching the shared context
+    pageClosed = true;
+    if (process.env.TIKTOK_DEBUG) console.error("[debug] page closed");
     const rawVideoPath = await page.video().path();
     if (process.env.TIKTOK_DEBUG) console.error("[debug] video path resolved:", rawVideoPath);
-    const trimSeconds = Math.max(0, (cardShownAt - contextCreatedAt) / 1000);
+    const trimSeconds = Math.max(0, (cardShownAt - pageCreatedAt) / 1000);
 
-    const outPath = path.join(outDir, buildFilename({ testId, subjectId, skillIds, index }));
     muxAndConvert({ videoPath: rawVideoPath, audioPath, outPath, trimSeconds, hasAudio: !!ffmpegAudio });
+    rmSync(rawVideoPath, { force: true });
     return outPath;
   } finally {
     if (ffmpegAudio && !ffmpegAudio.killed) ffmpegAudio.kill("SIGKILL");
-    if (!contextClosed) {
+    if (!pageClosed) {
       try {
-        await context.close();
+        await page.close();
       } catch {
         // already closed
       }
@@ -453,7 +565,9 @@ async function main() {
   }
 
   const server = startDevServer();
-  let browser;
+  const videoDir = path.join(os.tmpdir(), `prepquest-recorder-videos-${Date.now()}`);
+  mkdirSync(videoDir, { recursive: true });
+  let context;
   let restoreAudioOutput = () => {};
   const onSignal = (signal) => {
     restoreAudioOutput();
@@ -464,14 +578,23 @@ async function main() {
 
   try {
     await waitForServer(`${BASE_URL}/`, 15000);
-    browser = await chromium.launch({
+    // Real Google Chrome (not Playwright's bundled Chromium) in a
+    // dedicated, persistent profile — see PROFILE_DIR and the header
+    // comment. Persistent context = a single BrowserContext reused across
+    // every page/clip in this run (and across future runs), which is
+    // also what lets the one-time Chrome sign-in stick around.
+    context = await chromium.launchPersistentContext(PROFILE_DIR, {
       headless: false,
+      channel: "chrome",
+      viewport: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT },
+      recordVideo: { dir: videoDir, size: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT } },
       args: ["--window-size=480,860", "--window-position=40,40"],
     });
 
-    const bootstrapPage = await browser.newPage();
+    const bootstrapPage = await context.newPage();
     await bootstrapPage.goto(`${BASE_URL}/?dev=1`);
     const catalog = await fetchCatalog(bootstrapPage, args.test);
+    const testName = await fetchTestName(bootstrapPage, args.test);
     await bootstrapPage.close();
 
     if (args.list) {
@@ -493,17 +616,28 @@ async function main() {
     }
     restoreAudioOutput = beginRecordingAudioRoute(args.force);
 
+    await ensureProfileReady(context, { force: !!args.setupProfile });
+
     const outDir = args.out ? path.resolve(args.out.replace(/^~/, os.homedir())) : DEFAULT_OUT_DIR;
     mkdirSync(outDir, { recursive: true });
     mkdirSync(POSTED_DIR, { recursive: true });
 
-    console.log(`\nRecording ${args.count} clip(s) — ${subject.name} (${skillIds.length} skill${skillIds.length === 1 ? "" : "s"}) -> ${outDir}\n`);
+    // "<Test> <Subject> <N>.mp4" — numbered per test+subject across runs
+    // (see findNextClipNumber), not restarted at 1 every time, so a later
+    // batch for the same subject continues the sequence instead of
+    // colliding with clips already in Unposted or moved into Posted.
+    const label = sanitizeLabel(`${testName} ${subject.name}`);
+    const startNumber = findNextClipNumber([outDir, POSTED_DIR], label);
+
+    console.log(`\nRecording ${args.count} clip(s) — ${label} ${startNumber}${args.count > 1 ? `-${startNumber + args.count - 1}` : ""} -> ${outDir}\n`);
 
     let succeeded = 0;
-    for (let i = 1; i <= args.count; i++) {
-      process.stdout.write(`  [${i}/${args.count}] recording... `);
+    for (let i = 0; i < args.count; i++) {
+      const number = startNumber + i;
+      const outPath = path.join(outDir, `${label} ${number}.mp4`);
+      process.stdout.write(`  [${i + 1}/${args.count}] recording "${label} ${number}"... `);
       try {
-        const outPath = await recordOneClip({ browser, testId: args.test, subjectId: subject.id, skillIds, blackHoleIdx, outDir, index: i, voiceQuery: args.voice });
+        await recordOneClip({ context, testId: args.test, subjectId: subject.id, skillIds, blackHoleIdx, outPath, voiceQuery: args.voice });
         console.log(`done -> ${path.basename(outPath)}`);
         succeeded++;
       } catch (err) {
@@ -513,7 +647,8 @@ async function main() {
     console.log(`\n${succeeded}/${args.count} clip(s) saved to ${outDir}`);
   } finally {
     restoreAudioOutput();
-    if (browser) await browser.close();
+    if (context) await context.close();
+    rmSync(videoDir, { recursive: true, force: true });
     server.kill();
   }
 }
