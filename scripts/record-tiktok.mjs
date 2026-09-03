@@ -15,12 +15,7 @@
 // ONE-TIME SETUP (macOS), needed once per machine:
 //   1. BlackHole 2ch installed (`brew install blackhole-2ch` if missing —
 //      this script checks and tells you).
-//   2. Open Audio MIDI Setup.app -> "+" (bottom left) -> "Create
-//      Multi-Output Device" -> check both "BlackHole 2ch" and your normal
-//      output (e.g. "MacBook Air Speakers"). Leave its name containing
-//      "Multi-Output" (the default already does — this script looks for
-//      that name to confirm it's active).
-//   3. (Optional, for the "Google US English" voice specifically) Run
+//   2. (Optional, for the "Google US English" voice specifically) Run
 //      once with --setup-profile. That opens real Google Chrome (not
 //      Playwright's bundled Chromium — "Google US English" and friends
 //      are a Chrome-account feature, unavailable in a disposable/signed-
@@ -30,14 +25,14 @@
 //      so every run after reuses it silently — a normal run without
 //      --setup-profile never blocks on this, it just falls back to a
 //      different voice if you skip this step.
-// That's it — the script switches your system audio output to that
-// Multi-Output Device itself for the duration of a run (via the
-// `SwitchAudioSource` CLI, `brew install switchaudio-osx` if missing) and
-// always switches it back to whatever you were using before when it's
-// done, on error, or on Ctrl+C — a Multi-Output Device left as the active
-// output otherwise makes the system volume keys stop working (macOS
-// doesn't expose a single controllable volume for an aggregate device),
-// so this script never leaves it selected longer than it has to.
+// That's it — no Multi-Output Device needed (see beginRecordingAudioRoute
+// for why: it introduced audible artifacts in testing). The script
+// switches system audio output straight to solo BlackHole 2ch itself for
+// the duration of a run (via the `SwitchAudioSource` CLI, `brew install
+// switchaudio-osx` if missing) and always switches it back to whatever
+// you were using before when it's done, on error, or on Ctrl+C — you
+// won't hear the TTS live during a run, which is fine for something
+// automated you're not sitting and listening to.
 //
 // USAGE:
 //   node scripts/record-tiktok.mjs --list [--test act]
@@ -283,26 +278,34 @@ function setOutputDevice(name) {
   execFileSync("SwitchAudioSource", ["-s", name]);
 }
 
-const NO_MULTI_OUTPUT_SETUP_MSG =
-  `\nNo Multi-Output Device found (needed so the spoken TTS answer can be captured).\n\n` +
-  `One-time fix:\n` +
-  `  1. Open Audio MIDI Setup.app\n` +
-  `  2. "+" -> "Create Multi-Output Device" -> check "BlackHole 2ch" and your normal output\n\n` +
-  `Then re-run. Or pass --force to record picture-only, no audio.\n`;
+const NO_BLACKHOLE_OUTPUT_MSG =
+  `\nBlackHole 2ch isn't in your list of output devices (needed so the spoken TTS answer can be captured).\n\n` +
+  `One-time fix: \`brew install blackhole-2ch\`, then re-run. Or pass --force to record picture-only, no audio.\n`;
 
-// Switches system audio output to the Multi-Output Device for the
-// duration of a recording run and hands back a restore() function that
-// puts it back to whatever it was before — called from a `finally` and
-// from SIGINT/SIGTERM handlers, so a Ctrl+C mid-batch can't strand the
-// system on a device whose volume keys don't work (see header comment).
+// Switches system audio output straight to solo "BlackHole 2ch" (not a
+// Multi-Output Device combining it with real speakers) for the duration
+// of a recording run, and hands back a restore() function that puts it
+// back to whatever it was before — called from a `finally` and from
+// SIGINT/SIGTERM handlers, so a Ctrl+C mid-batch can't strand the system
+// on a device whose volume keys don't work (see header comment).
+//
+// A Multi-Output Device was tried first, but real-world testing found
+// it introduces audible broadband noise/artifacts into the capture —
+// visible as energy filling almost the entire spectrum in a spectrogram,
+// not present when capturing from BlackHole alone — from real (if
+// small) clock drift between BlackHole's virtual clock and the
+// speakers' hardware clock, even with Drift Correction enabled. Solo
+// BlackHole has just one clock, so there's nothing to drift against;
+// the tradeoff is you won't hear the TTS live while a batch records —
+// not a loss for an automated run you're not sitting and listening to.
 function beginRecordingAudioRoute(force) {
   if (!hasCommand("SwitchAudioSource")) {
     // No CLI to switch devices for us — fall back to just checking
     // whatever's already selected, same as before this existed.
     const outputName = getDefaultOutputDeviceName();
-    const ok = outputName && /blackhole|multi-output/i.test(outputName);
+    const ok = outputName && /blackhole/i.test(outputName);
     if (!ok) {
-      const msg = `${NO_MULTI_OUTPUT_SETUP_MSG}\n(Install \`brew install switchaudio-osx\` so this script can switch it for you automatically.)\n`;
+      const msg = `${NO_BLACKHOLE_OUTPUT_MSG}\n(Install \`brew install switchaudio-osx\` so this script can switch it for you automatically.)\n`;
       if (force) console.warn(msg);
       else throw new Error(msg);
     }
@@ -310,24 +313,24 @@ function beginRecordingAudioRoute(force) {
   }
 
   const devices = listOutputDevices();
-  const multiOutputName = devices.find((d) => /multi-output/i.test(d));
-  if (!multiOutputName) {
+  const blackHoleName = devices.find((d) => /^blackhole/i.test(d));
+  if (!blackHoleName) {
     if (force) {
-      console.warn(NO_MULTI_OUTPUT_SETUP_MSG);
+      console.warn(NO_BLACKHOLE_OUTPUT_MSG);
       return () => {};
     }
-    throw new Error(NO_MULTI_OUTPUT_SETUP_MSG);
+    throw new Error(NO_BLACKHOLE_OUTPUT_MSG);
   }
 
   const original = getCurrentOutputDevice();
-  if (original !== multiOutputName) {
-    console.log(`Switching system audio output to "${multiOutputName}" for recording...`);
-    setOutputDevice(multiOutputName);
+  if (original !== blackHoleName) {
+    console.log(`Switching system audio output to "${blackHoleName}" for recording (you won't hear it live — see header comment)...`);
+    setOutputDevice(blackHoleName);
   }
 
   let restored = false;
   return () => {
-    if (restored || !original || original === multiOutputName) return;
+    if (restored || !original || original === blackHoleName) return;
     restored = true;
     try {
       setOutputDevice(original);
