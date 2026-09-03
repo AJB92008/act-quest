@@ -513,18 +513,27 @@ async function recordOneClip({ context, testId, subjectId, skillIds, blackHoleId
       await page.click(`[data-skill-check="${skillId}"]`);
     }
     if (process.env.TIKTOK_DEBUG) console.error("[debug] checked skills");
-    await page.click("[data-start-tiktok]");
-    if (process.env.TIKTOK_DEBUG) console.error("[debug] clicked start");
-    await page.waitForSelector(".tiktok-card", { timeout: 15000 });
-    if (process.env.TIKTOK_DEBUG) console.error("[debug] card shown");
-    const cardShownAt = Date.now();
-
+    // Audio capture is spawned BEFORE the click that triggers narration, not
+    // after the card appears: ffmpeg's avfoundation device has real startup
+    // latency (~1-1.3s observed) before it's actually writing samples, and
+    // TikTok Mode starts speaking the question the instant the card renders.
+    // Spawning after the card appeared meant that startup latency silently
+    // ate the first ~1-1.3s of every question's narration. Starting here
+    // instead costs a beat of near-silence before narration begins (audio's
+    // own t=0 leads video's post-trim t=0 by roughly ffmpeg's startup time),
+    // which is harmless given this recorder is already "good enough sync,
+    // not frame-accurate" by design.
     if (blackHoleIdx !== null) {
       ffmpegAudio = spawn("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-f", "avfoundation", "-i", `:${blackHoleIdx}`, audioPath], {
         stdio: "ignore",
       });
     }
-    if (process.env.TIKTOK_DEBUG) console.error("[debug] audio capture started, waiting for speech end or timeout");
+    await page.click("[data-start-tiktok]");
+    if (process.env.TIKTOK_DEBUG) console.error("[debug] clicked start");
+    await page.waitForSelector(".tiktok-card", { timeout: 15000 });
+    if (process.env.TIKTOK_DEBUG) console.error("[debug] card shown");
+    const cardShownAt = Date.now();
+    if (process.env.TIKTOK_DEBUG) console.error("[debug] audio capture already running, waiting for speech end or timeout");
 
     await Promise.race([speechEnded, sleep(MAX_CLIP_MS)]);
     if (process.env.TIKTOK_DEBUG) console.error("[debug] race resolved");

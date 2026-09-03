@@ -90,7 +90,7 @@ function speak(text, onEnd) {
 // data lessons/quizzes/boss quizzes actually use — falls back to the
 // original explain for anything not (yet) rewritten there.
 function explainFor(q) {
-  return TIKTOK_EXPLANATIONS[q.skillId]?.[q.bankIndex] || q.explain;
+  return TIKTOK_EXPLANATIONS[q.skillId]?.[q.q] || q.explain;
 }
 
 // Reads the question (and passage) out loud before the reveal countdown
@@ -284,8 +284,8 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
           pool = [];
           for (const skillId of selectedSkillIds) {
             const skill = subject.skills.find((s) => s.id === skillId);
-            getFullBank(skillId).forEach((q, bankIndex) =>
-              pool.push({ ...q, skillId, bankIndex, skillName: skill.name, subjectName: subject.name, subjectIcon: subject.icon })
+            getFullBank(skillId).forEach((q) =>
+              pool.push({ ...q, skillId, skillName: skill.name, subjectName: subject.name, subjectIcon: subject.icon })
             );
           }
           pool = shuffled(pool);

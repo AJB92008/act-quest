@@ -5,261 +5,271 @@
 // the app. Every entry here carries the exact same math as the base
 // bank's own `explain` field (js/data/questions/<file>.js); this only
 // changes how it's explained out loud, never the answer or the numbers.
-// Keyed by skill id -> array index within that skill's question bank,
-// matching bank order position-for-position. A skill/index with no entry
-// here just falls back to the base bank's own `explain` — see
-// tiktokMode.js's `explainFor()`.
+//
+// Keyed by skill id -> exact question text (the bank's `q` field),
+// NOT array index. This is deliberate: index-keying breaks silently if a
+// question bank is ever reordered, edited, or has entries inserted/removed —
+// every downstream explanation would attach to the wrong question with no
+// error. Text-keying fails safe instead: a changed/missing question text
+// just falls through to the base bank's own `explain`, same as a skill
+// with no overlay at all — see tiktokMode.js's `explainFor()`.
+//
+// Before adding entries for a new skill, verify its bank has no duplicate
+// `q` text (two identical questions would collide on the same key) — if it
+// does, that skill needs a different disambiguation strategy.
 export const TIKTOK_EXPLANATIONS = {
-  "ma-linear": [
-    // 0: Solve for x: 3x + 7 = 22
-    "First, get the x term alone: subtract 7 from both sides, so 3x equals 15. Then divide both sides by 3, and you're left with x equals 5.",
-    // 1: Solve for x: 2(x - 4) = 3x + 1
-    "Distribute the 2 first: 2x minus 8 equals 3x plus 1. Now gather the x's on one side and the numbers on the other — subtracting 2x and 1 from both sides gives negative 9 equals x.",
-    // 2: Which value of x satisfies 5x - 3 < 2x + 9?
-    "Move the x's to one side and the numbers to the other: subtract 2x and add 3 to both sides, and you get 3x is less than 12. Divide by 3 — since that's a positive number, the inequality doesn't flip — and x is less than 4. The only choice under 4 is x equals 3.",
-    // 3: If y = 2x - 3, what is y when x = 5?
-    "Just plug in 5 for x: 2 times 5 is 10, minus 3 leaves 7.",
-    // 4: A line passes through (0, 4) and (2, 10). What is its slope?
-    "Slope is rise over run: the y-values go from 4 to 10, a rise of 6, while x goes from 0 to 2, a run of 2. 6 divided by 2 gives a slope of 3.",
-    // 5: slope -2 through (0, 5)
-    "Slope-intercept form is y equals m x plus b, where m is the slope and b is the y-intercept. Here the slope is negative 2 and the line crosses the y-axis at 5, so the equation is y equals negative 2x plus 5.",
-    // 6: Solve for x: (x + 3)/2 = 4
-    "Clear the fraction first by multiplying both sides by 2: x plus 3 equals 8. Subtract 3, and x equals 5.",
-    // 7: If 4x + 2y = 12 and x = 1, what is y?
-    "Substitute x equals 1: 4 times 1 is 4, so 4 plus 2y equals 12. Subtract 4 to get 2y equals 8, then divide by 2 — y equals 4.",
-    // 8: Solve for x: 4x - 9 = 2x + 11
-    "Subtract 2x from both sides to gather the x's: 2x minus 9 equals 11. Add 9 to both sides — 2x equals 20 — then divide by 2 to get x equals 10.",
-    // 9: Solve for x: 7 - 2x = 3x - 8
-    "Add 2x to both sides and add 8 to both sides to collect everything: 15 equals 5x. Divide by 5, and x equals 3.",
-    // 10: Which value of x satisfies 3x + 4 > 5x - 2?
-    "Subtract 3x and add 2 to both sides: 6 is greater than 2x. Divide by 2 — a positive number, so the direction stays the same — and x is less than 3. Only x equals 1 fits that.",
-    // 11: If y = -3x + 7, what is y when x = -2?
-    "Plug in negative 2 for x: negative 3 times negative 2 is positive 6, and 6 plus 7 is 13.",
-    // 12: slope through (-1, -2) and (3, 10)
-    "Subtract the y-values: 10 minus negative 2 is 12. Subtract the x-values: 3 minus negative 1 is 4. 12 divided by 4 gives a slope of 3.",
-    // 13: slope 4 through (0, -3)
-    "The slope is 4 and the y-intercept is negative 3, so drop them straight into y equals m x plus b: y equals 4x minus 3.",
-    // 14: Solve for x: (2x - 5)/3 = 7
-    "Multiply both sides by 3 to clear the fraction: 2x minus 5 equals 21. Add 5 to get 2x equals 26, then divide by 2 — x equals 13.",
-    // 15: Solve for x: 5x - 8 = 27
-    "Add 8 to both sides: 5x equals 35. Divide by 5, and x equals 7.",
-    // 16: Solve for x: 3(2x + 1) = 5x + 10
-    "Distribute the 3: 6x plus 3 equals 5x plus 10. Subtract 5x and 3 from both sides, and you're left with x equals 7.",
-    // 17: Which value of x satisfies 4x + 5 ≤ 2x + 17?
-    "Subtract 2x and 5 from both sides: 2x is less than or equal to 12. Divide by 2, and x is less than or equal to 6 — which matches the choice x equals 6 exactly.",
-    // 18: If y = -4x + 9, what is y when x = 3?
-    "Substitute 3 for x: negative 4 times 3 is negative 12, and negative 12 plus 9 is negative 3.",
-    // 19: slope through (1, 2) and (5, 14)
-    "The y-values rise from 2 to 14, a change of 12. The x-values run from 1 to 5, a change of 4. 12 over 4 is a slope of 3.",
-    // 20: slope 5 through (0, -2)
-    "Slope 5, y-intercept negative 2 — plug those straight into y equals m x plus b to get y equals 5x minus 2.",
-    // 21: Solve for x: (3x - 6)/3 = 5
-    "Multiply both sides by 3 first: 3x minus 6 equals 15. Add 6 to get 3x equals 21, then divide by 3 — x equals 7.",
-    // 22: If 3x + 5y = 20 and x = 5, what is y?
-    "Plug in x equals 5: 3 times 5 is 15, so 15 plus 5y equals 20. Subtract 15 to get 5y equals 5, then divide by 5 — y equals 1.",
-    // 23: Solve for x: 9x - 4 = 5x + 20
-    "Subtract 5x and add 4 to both sides: 4x equals 24. Divide by 4, and x equals 6.",
-    // 24: Solve for x: 10 - 3x = 4x - 4
-    "Add 3x and 4 to both sides to gather everything: 14 equals 7x. Divide by 7, and x equals 2.",
-    // 25: Solve for x: 6x - 11 = 25
-    "Add 11 to both sides: 6x equals 36. Divide by 6, and x equals 6.",
-    // 26: Solve for x: 3(x + 5) = 2x + 21
-    "Distribute the 3: 3x plus 15 equals 2x plus 21. Subtract 2x and 15 from both sides, and x equals 6.",
-    // 27: Which value of x satisfies 2x + 9 > 5x - 6?
-    "Subtract 2x and add 6 to both sides: 15 is greater than 3x. Divide by 3, and x is less than 5 — the only choice below 5 is x equals 4.",
-    // 28: If y = 5x + 2, what is y when x = -3?
-    "Plug in negative 3: 5 times negative 3 is negative 15, and negative 15 plus 2 is negative 13.",
-    // 29: slope through (1, 5) and (4, 17)
-    "The y-values go from 5 to 17, up 12. The x-values go from 1 to 4, over 3. 12 divided by 3 gives a slope of 4.",
-    // 30: slope -3 through (0, 8)
-    "Slope negative 3 and y-intercept 8 slot directly into y equals m x plus b, giving y equals negative 3x plus 8.",
-    // 31: Solve for x: (x - 2)/5 = 3
-    "Multiply both sides by 5: x minus 2 equals 15. Add 2, and x equals 17.",
-    // 32: If 3x + 4y = 24 and x = 4, what is y?
-    "Substitute x equals 4: 3 times 4 is 12, so 12 plus 4y equals 24. Subtract 12 to get 4y equals 12, then divide by 4 — y equals 3.",
-    // 33: Solve for x: 6x - 5 = 3x + 16
-    "Subtract 3x and add 5 to both sides: 3x equals 21. Divide by 3, and x equals 7.",
-    // 34: Solve for x: 9 - 4x = 2x - 9
-    "Add 4x and 9 to both sides: 18 equals 6x. Divide by 6, and x equals 3.",
-    // 35: Which value of x satisfies 4x - 3 < 7x + 9?
-    "Subtract 4x and 9 from both sides: negative 12 is less than 3x. Divide by 3, and negative 4 is less than x — meaning x is greater than negative 4. The only choice above that is x equals negative 3.",
-    // 36: If y = -2x + 9, what is y when x = 4?
-    "Plug in 4: negative 2 times 4 is negative 8, and negative 8 plus 9 is 1.",
-    // 37: slope through (-3, -5) and (1, 3)
-    "The y-values run from negative 5 to 3, a change of 8. The x-values run from negative 3 to 1, a change of 4. 8 over 4 gives a slope of 2.",
-    // 38: slope 6 through (0, -4)
-    "With slope 6 and y-intercept negative 4, y equals m x plus b becomes y equals 6x minus 4.",
-    // 39: Solve for x: (4x + 1)/3 = 7
-    "Multiply both sides by 3: 4x plus 1 equals 21. Subtract 1 to get 4x equals 20, then divide by 4 — x equals 5.",
-    // 40: Solve for x: 7x - 12 = 30
-    "Add 12 to both sides: 7x equals 42. Divide by 7, and x equals 6.",
-    // 41: Solve for x: 4(2x - 1) = 5x + 8
-    "Distribute the 4: 8x minus 4 equals 5x plus 8. Subtract 5x and add 4 to both sides, and 3x equals 12 — so x equals 4.",
-    // 42: Which value of x satisfies 5x + 7 ≥ 2x + 22?
-    "Subtract 2x and 7 from both sides: 3x is greater than or equal to 15. Divide by 3, and x is greater than or equal to 5 — exactly matching x equals 5.",
-    // 43: If y = -5x + 14, what is y when x = 2?
-    "Plug in 2: negative 5 times 2 is negative 10, and negative 10 plus 14 is 4.",
-    // 44: slope through (2, -1) and (6, 11)
-    "The y-values climb from negative 1 to 11, a rise of 12. The x-values run from 2 to 6, a run of 4. 12 over 4 is a slope of 3.",
-    // 45: slope -7 through (0, 3)
-    "Slope negative 7, y-intercept 3 — straight into y equals m x plus b gives y equals negative 7x plus 3.",
-    // 46: Solve for x: (3x - 9)/6 = 2
-    "Multiply both sides by 6: 3x minus 9 equals 12. Add 9 to get 3x equals 21, then divide by 3 — x equals 7.",
-    // 47: If 2x + 5y = 29 and x = 2, what is y?
-    "Substitute x equals 2: 2 times 2 is 4, so 4 plus 5y equals 29. Subtract 4 to get 5y equals 25, then divide by 5 — y equals 5.",
-    // 48: Solve for x: 8x - 3 = 5x + 18
-    "Subtract 5x and add 3 to both sides: 3x equals 21. Divide by 3, and x equals 7.",
-    // 49: Solve for x: 11 - 2x = 5x - 3
-    "Add 2x and 3 to both sides: 14 equals 7x. Divide by 7, and x equals 2.",
-    // 50: Solve for x: 4x + 11 = 39
-    "Subtract 11 from both sides: 4x equals 28. Divide by 4, and x equals 7.",
-    // 51: Solve for x: 6x - 5 = 37
-    "Add 5 to both sides: 6x equals 42. Divide by 6, and x equals 7.",
-    // 52: Solve for x: 9x + 14 = 77
-    "Subtract 14 from both sides: 9x equals 63. Divide by 9, and x equals 7.",
-    // 53: Solve for x: 3x - 8 = 22
-    "Add 8 to both sides: 3x equals 30. Divide by 3, and x equals 10.",
-    // 54: Solve for x: 7x + 19 = 61
-    "Subtract 19 from both sides: 7x equals 42. Divide by 7, and x equals 6.",
-    // 55: Solve for x: 8x - 13 = 51
-    "Add 13 to both sides: 8x equals 64. Divide by 8, and x equals 8.",
-    // 56: Solve for x: 5x + 3 = 2x + 15
-    "Subtract 2x and 3 from both sides: 3x equals 12. Divide by 3, and x equals 4.",
-    // 57: Solve for x: 6x - 4 = 3x + 11
-    "Subtract 3x and add 4 to both sides: 3x equals 15. Divide by 3, and x equals 5.",
-    // 58: Solve for x: 7x + 2 = 4x + 20
-    "Subtract 4x and 2 from both sides: 3x equals 18. Divide by 3, and x equals 6.",
-    // 59: Solve for x: 8x - 7 = 3x + 13
-    "Subtract 3x and add 7 to both sides: 5x equals 20. Divide by 5, and x equals 4.",
-    // 60: Solve for x: 9x + 5 = 4x + 25
-    "Subtract 4x and 5 from both sides: 5x equals 20. Divide by 5, and x equals 4.",
-    // 61: Solve for x: 6x - 9 = 2x + 15
-    "Subtract 2x and add 9 to both sides: 4x equals 24. Divide by 4, and x equals 6.",
-    // 62: Solve for x: 3(x + 4) = 2x + 17
-    "Distribute the 3: 3x plus 12 equals 2x plus 17. Subtract 2x and 12 from both sides, and x equals 5.",
-    // 63: Solve for x: 2(x - 5) = 3x + 4
-    "Distribute the 2: 2x minus 10 equals 3x plus 4. Subtract 2x and 4 from both sides, and negative 14 equals x.",
-    // 64: Solve for x: 4(x + 3) = 2x + 22
-    "Distribute the 4: 4x plus 12 equals 2x plus 22. Subtract 2x and 12 from both sides, and 2x equals 10 — so x equals 5.",
-    // 65: Solve for x: 5(x - 2) = 3x - 4
-    "Distribute the 5: 5x minus 10 equals 3x minus 4. Subtract 3x and add 10 to both sides, and 2x equals 6 — so x equals 3.",
-    // 66: Solve for x: 3(x + 7) = 2x + 25
-    "Distribute the 3: 3x plus 21 equals 2x plus 25. Subtract 2x and 21 from both sides, and x equals 4.",
-    // 67: Solve for x: 6(x - 1) = 4x + 9
-    "Distribute the 6: 6x minus 6 equals 4x plus 9. Subtract 4x and add 6 to both sides, and 2x equals 15 — so x equals 15 over 2.",
-    // 68: Which value of x satisfies 6x + 1 < 3x + 19?
-    "Subtract 3x and 1 from both sides: 3x is less than 18. Divide by 3, and x is less than 6 — only x equals 4 fits.",
-    // 69: Which value of x satisfies 7x + 4 > 3x - 8?
-    "Subtract 3x and 4 from both sides: 4x is greater than negative 12. Divide by 4, and x is greater than negative 3 — only x equals negative 2 fits.",
-    // 70: Which value of x satisfies 5x - 3 < 2x + 15?
-    "Subtract 2x and add 3 to both sides: 3x is less than 18. Divide by 3, and x is less than 6 — only x equals 4 works.",
-    // 71: Which value of x satisfies 7x + 4 ≤ 3x + 28?
-    "Subtract 3x and 4 from both sides: 4x is less than or equal to 24. Divide by 4, and x is less than or equal to 6 — x equals 4 satisfies that.",
-    // 72: Which value of x satisfies 8x - 6 ≥ 5x + 9?
-    "Subtract 5x and add 6 to both sides: 3x is greater than or equal to 15. Divide by 3, and x is greater than or equal to 5 — matching x equals 5 exactly.",
-    // 73: Which value of x satisfies 9x - 3 > 6x - 3?
-    "Subtract 6x and add 3 to both sides: 3x is greater than 0. Divide by 3, and x is greater than 0 — the only positive choice is x equals 1.",
-    // 74: If y = 3x - 8, what is y when x = 6?
-    "Plug in 6: 3 times 6 is 18, and 18 minus 8 is 10.",
-    // 75: If y = -4x + 11, what is y when x = 3?
-    "Plug in 3: negative 4 times 3 is negative 12, and negative 12 plus 11 is negative 1.",
-    // 76: If y = 5x - 2, what is y when x = -3?
-    "Plug in negative 3: 5 times negative 3 is negative 15, and negative 15 minus 2 is negative 17.",
-    // 77: If y = -2x + 7, what is y when x = 5?
-    "Plug in 5: negative 2 times 5 is negative 10, and negative 10 plus 7 is negative 3.",
-    // 78: If y = 6x + 1, what is y when x = -4?
-    "Plug in negative 4: 6 times negative 4 is negative 24, and negative 24 plus 1 is negative 23.",
-    // 79: If y = -5x - 3, what is y when x = -2?
-    "Plug in negative 2: negative 5 times negative 2 is positive 10, and 10 minus 3 is 7.",
-    // 80: slope through (0, 3) and (4, 19)
-    "The y-values rise from 3 to 19, a change of 16. The x-values run from 0 to 4, a change of 4. 16 divided by 4 gives a slope of 4.",
-    // 81: slope through (-2, -6) and (2, 10)
-    "The y-values go from negative 6 to 10, a rise of 16. The x-values go from negative 2 to 2, a run of 4. 16 over 4 is a slope of 4.",
-    // 82: slope through (1, 4) and (6, 29)
-    "The y-values climb from 4 to 29, a rise of 25. The x-values run from 1 to 6, a run of 5. 25 divided by 5 gives a slope of 5.",
-    // 83: slope through (-3, 8) and (1, -4)
-    "The y-values fall from 8 to negative 4, a change of negative 12. The x-values run from negative 3 to 1, a change of 4. Negative 12 over 4 gives a slope of negative 3.",
-    // 84: slope through (2, 1) and (7, 26)
-    "The y-values rise from 1 to 26, a change of 25. The x-values run from 2 to 7, a change of 5. 25 divided by 5 is a slope of 5.",
-    // 85: slope 8 through (0, -6)
-    "Slope 8, y-intercept negative 6 — plug straight into y equals m x plus b for y equals 8x minus 6.",
-    // 86: slope -9 through (0, 4)
-    "Slope negative 9, y-intercept 4 — that's y equals negative 9x plus 4.",
-    // 87: slope 2 through (0, -11)
-    "Slope 2, y-intercept negative 11 — giving y equals 2x minus 11.",
-    // 88: slope -6 through (0, 13)
-    "Slope negative 6, y-intercept 13 — that's y equals negative 6x plus 13.",
-    // 89: slope 10 through (0, -5)
-    "Slope 10, y-intercept negative 5 — giving y equals 10x minus 5.",
-    // 90: Solve for x: (3x + 7)/4 = 10
-    "Multiply both sides by 4: 3x plus 7 equals 40. Subtract 7 to get 3x equals 33, then divide by 3 — x equals 11.",
-    // 91: Solve for x: (5x - 2)/3 = 11
-    "Multiply both sides by 3: 5x minus 2 equals 33. Add 2 to get 5x equals 35, then divide by 5 — x equals 7.",
-    // 92: Solve for x: (2x + 9)/5 = 7
-    "Multiply both sides by 5: 2x plus 9 equals 35. Subtract 9 to get 2x equals 26, then divide by 2 — x equals 13.",
-    // 93: Solve for x: (4x - 11)/3 = 3
-    "Multiply both sides by 3: 4x minus 11 equals 9. Add 11 to get 4x equals 20, then divide by 4 — x equals 5.",
-    // 94: Solve for x: (6x + 5)/4 = 8
-    "Multiply both sides by 4: 6x plus 5 equals 32. Subtract 5 to get 6x equals 27, then divide by 6 — x equals 9 over 2.",
-    // 95: If 5x + 2y = 28 and x = 2, what is y?
-    "Substitute x equals 2: 5 times 2 is 10, so 10 plus 2y equals 28. Subtract 10 to get 2y equals 18, then divide by 2 — y equals 9.",
-    // 96: If 3x + 4y = 35 and x = 5, what is y?
-    "Substitute x equals 5: 3 times 5 is 15, so 15 plus 4y equals 35. Subtract 15 to get 4y equals 20, then divide by 4 — y equals 5.",
-    // 97: If 6x + 3y = 39 and x = 4, what is y?
-    "Substitute x equals 4: 6 times 4 is 24, so 24 plus 3y equals 39. Subtract 24 to get 3y equals 15, then divide by 3 — y equals 5.",
-    // 98: If 2x + 5y = 41 and x = 3, what is y?
-    "Substitute x equals 3: 2 times 3 is 6, so 6 plus 5y equals 41. Subtract 6 to get 5y equals 35, then divide by 5 — y equals 7.",
-    // 99: If 7x + 2y = 45 and x = 3, what is y?
-    "Substitute x equals 3: 7 times 3 is 21, so 21 plus 2y equals 45. Subtract 21 to get 2y equals 24, then divide by 2 — y equals 12.",
-    // 100: taxi $5 flat + $3/mile = $23
-    "Set up the equation: 5 plus 3 times the miles equals 23. Subtract 5 to get 3 times miles equals 18, then divide by 3 — 6 miles.",
-    // 101: gym $25 sign-up + $15/month = $130
-    "Set up the equation: 25 plus 15 times the months equals 130. Subtract 25 to get 15 times months equals 105, then divide by 15 — 7 months.",
-    // 102: slope 3 through (2, 5)
-    "Use point-slope form: y minus 5 equals 3 times x minus 2. Distribute the 3 to get y minus 5 equals 3x minus 6, then add 5 to both sides — y equals 3x minus 1.",
-    // 103: slope -2 through (-1, 4)
-    "Use point-slope form: y minus 4 equals negative 2 times x plus 1. Distribute to get y minus 4 equals negative 2x minus 2, then add 4 to both sides — y equals negative 2x plus 2.",
-    // 104: x-intercept of 3x + 4y = 24
-    "The x-intercept is where the line crosses the x-axis, so y equals 0. Plug that in: 3x equals 24, so x equals 8 — the point is 8, 0.",
-    // 105: y-intercept of 5x - 2y = 20
-    "The y-intercept is where the line crosses the y-axis, so x equals 0. Plug that in: negative 2y equals 20, so y equals negative 10 — the point is 0, negative 10.",
-    // 106: parallel to y = 4x - 7
-    "Parallel lines always have the exact same slope, so a line parallel to this one also has slope 4 — no extra math needed.",
-    // 107: perpendicular to 2x + 3y = 9
-    "First rewrite line k in slope-intercept form: y equals negative two-thirds x plus 3, so its slope is negative two-thirds. A perpendicular line's slope is the negative reciprocal — flip it and switch the sign — giving three-halves.",
-    // 108: system x + y = 10, x - y = 4, find x
-    "Add the two equations together and the y's cancel out: 2x equals 14. Divide by 2, and x equals 7.",
-    // 109: system 2x + y = 13, x - y = 2, find y
-    "From the second equation, x equals y plus 2. Substitute that into the first: 2 times y plus 2, plus y, equals 13 — which simplifies to 3y equals 9, so y equals 3.",
-    // 110: f(x) = 3x - 5, f(4)
-    "Plug 4 in for x: 3 times 4 is 12, minus 5 leaves 7.",
-    // 111: f(x) = 2x + 9, f(x) = 21, find x
-    "Set the function equal to 21: 2x plus 9 equals 21. Subtract 9 to get 2x equals 12, then divide by 2 — x equals 6.",
-    // 112: direct variation, y = 15 at x = 3, find y at x = 8
-    "Find the constant of variation first: 15 divided by 3 is 5. Multiply that constant by the new x-value: 5 times 8 is 40.",
-    // 113: apples, 4 apples = $6, find 10 apples
-    "Find the price per apple: 6 dollars divided by 4 is a dollar fifty each. Multiply by 10 apples, and the total is 15 dollars.",
-    // 114: table x = 1..4, y = 5, 8, 11, 14, find slope
-    "Look at how y changes each time x goes up by 1: from 5 to 8 is a jump of 3, and it keeps jumping by 3 the whole way — so the slope is 3.",
-    // 115: plant 10cm week 1, 22cm week 3, find growth rate
-    "The plant grew from 10 to 22 centimeters, a change of 12, over 2 weeks, from week 1 to week 3. 12 divided by 2 gives a growth rate of 6 centimeters per week.",
-    // 116: |2x - 3| = 9, positive solution
-    "Absolute value splits into two cases: 2x minus 3 equals 9, or 2x minus 3 equals negative 9. The first gives x equals 6, the second gives x equals negative 3 — the positive one is 6.",
-    // 117: |x + 4| = 10, sum of solutions
-    "Absolute value gives two cases: x plus 4 equals 10, or x plus 4 equals negative 10. That's x equals 6 or x equals negative 14. Add those two solutions together: 6 plus negative 14 is negative 8.",
-    // 118: y = 2x + 3 and y = -x + 9, find intersection x
-    "Set the two equations equal to each other since that's where they meet: 2x plus 3 equals negative x plus 9. Add x and subtract 3 from both sides — 3x equals 6 — so x equals 2.",
-    // 119: C = 500 + 2x, sells for $7, break even
-    "Break-even means cost equals revenue, so set 500 plus 2x equal to 7x. Subtract 2x from both sides: 500 equals 5x. Divide by 5, and x equals 100 items.",
-    // 120: slope -4 through (3, -2), find y-intercept
-    "Start from y equals negative 4x plus b, then plug in the point: negative 2 equals negative 4 times 3, plus b. That's negative 2 equals negative 12 plus b, so b equals 10.",
-    // 121: odometer 130mi at 2PM, 310mi at 5PM, find speed
-    "From 2 PM to 5 PM is 3 hours, and the odometer went from 130 to 310 miles — a distance of 180 miles. 180 divided by 3 hours gives a speed of 60 miles per hour.",
-    // 122: pencils $0.50, pens $1.25 x4, total $8, find pencils
-    "The 4 pens cost 1.25 times 4, which is 5 dollars. That leaves 8 minus 5, or 3 dollars, for pencils. At 50 cents each, 3 dollars buys 6 pencils.",
-    // 123: parallel to y = -3x + 2 through (0, 7)
-    "Parallel lines share the same slope, so this line also has slope negative 3. Since it passes through (0, 7), its y-intercept is 7 — giving y equals negative 3x plus 7.",
-    // 124: perpendicular to y = (1/2)x - 4 through (0, -1)
-    "A perpendicular slope is the negative reciprocal of the original — flip one-half and switch the sign to get negative 2. With a y-intercept of negative 1, the equation is y equals negative 2x minus 1.",
-  ],
+  "ma-linear": {
+    "Solve for x: 3x + 7 = 22": "First, get the x term alone: subtract 7 from both sides, so 3x equals 15. Then divide both sides by 3, and you're left with x equals 5.",
+    "Solve for x: 2(x - 4) = 3x + 1": "Distribute the 2 first: 2x minus 8 equals 3x plus 1. Now gather the x's on one side and the numbers on the other — subtracting 2x and 1 from both sides gives negative 9 equals x.",
+    "Which value of x satisfies 5x - 3 < 2x + 9?": "Move the x's to one side and the numbers to the other: subtract 2x and add 3 to both sides, and you get 3x is less than 12. Divide by 3 — since that's a positive number, the inequality doesn't flip — and x is less than 4. The only choice under 4 is x equals 3.",
+    "If y = 2x - 3, what is y when x = 5?": "Just plug in 5 for x: 2 times 5 is 10, minus 3 leaves 7.",
+    "A line passes through (0, 4) and (2, 10). What is its slope?": "Slope is rise over run: the y-values go from 4 to 10, a rise of 6, while x goes from 0 to 2, a run of 2. 6 divided by 2 gives a slope of 3.",
+    "What is the equation, in slope-intercept form, of a line with slope -2 that passes through (0, 5)?": "Slope-intercept form is y equals m x plus b, where m is the slope and b is the y-intercept. Here the slope is negative 2 and the line crosses the y-axis at 5, so the equation is y equals negative 2x plus 5.",
+    "Solve for x: (x + 3)/2 = 4": "Clear the fraction first by multiplying both sides by 2: x plus 3 equals 8. Subtract 3, and x equals 5.",
+    "If 4x + 2y = 12 and x = 1, what is y?": "Substitute x equals 1: 4 times 1 is 4, so 4 plus 2y equals 12. Subtract 4 to get 2y equals 8, then divide by 2 — y equals 4.",
+    "Solve for x: 4x - 9 = 2x + 11": "Subtract 2x from both sides to gather the x's: 2x minus 9 equals 11. Add 9 to both sides — 2x equals 20 — then divide by 2 to get x equals 10.",
+    "Solve for x: 7 - 2x = 3x - 8": "Add 2x to both sides and add 8 to both sides to collect everything: 15 equals 5x. Divide by 5, and x equals 3.",
+    "Which value of x satisfies 3x + 4 > 5x - 2?": "Subtract 3x and add 2 to both sides: 6 is greater than 2x. Divide by 2 — a positive number, so the direction stays the same — and x is less than 3. Only x equals 1 fits that.",
+    "If y = -3x + 7, what is y when x = -2?": "Plug in negative 2 for x: negative 3 times negative 2 is positive 6, and 6 plus 7 is 13.",
+    "A line passes through (-1, -2) and (3, 10). What is its slope?": "Subtract the y-values: 10 minus negative 2 is 12. Subtract the x-values: 3 minus negative 1 is 4. 12 divided by 4 gives a slope of 3.",
+    "What is the equation, in slope-intercept form, of a line with slope 4 that passes through (0, -3)?": "The slope is 4 and the y-intercept is negative 3, so drop them straight into y equals m x plus b: y equals 4x minus 3.",
+    "Solve for x: (2x - 5)/3 = 7": "Multiply both sides by 3 to clear the fraction: 2x minus 5 equals 21. Add 5 to get 2x equals 26, then divide by 2 — x equals 13.",
+    "Solve for x: 5x - 8 = 27": "Add 8 to both sides: 5x equals 35. Divide by 5, and x equals 7.",
+    "Solve for x: 3(2x + 1) = 5x + 10": "Distribute the 3: 6x plus 3 equals 5x plus 10. Subtract 5x and 3 from both sides, and you're left with x equals 7.",
+    "Which value of x satisfies 4x + 5 ≤ 2x + 17?": "Subtract 2x and 5 from both sides: 2x is less than or equal to 12. Divide by 2, and x is less than or equal to 6 — which matches the choice x equals 6 exactly.",
+    "If y = -4x + 9, what is y when x = 3?": "Substitute 3 for x: negative 4 times 3 is negative 12, and negative 12 plus 9 is negative 3.",
+    "A line passes through (1, 2) and (5, 14). What is its slope?": "The y-values rise from 2 to 14, a change of 12. The x-values run from 1 to 5, a change of 4. 12 over 4 is a slope of 3.",
+    "What is the equation, in slope-intercept form, of a line with slope 5 that passes through (0, -2)?": "Slope 5, y-intercept negative 2 — plug those straight into y equals m x plus b to get y equals 5x minus 2.",
+    "Solve for x: (3x - 6)/3 = 5": "Multiply both sides by 3 first: 3x minus 6 equals 15. Add 6 to get 3x equals 21, then divide by 3 — x equals 7.",
+    "If 3x + 5y = 20 and x = 5, what is y?": "Plug in x equals 5: 3 times 5 is 15, so 15 plus 5y equals 20. Subtract 15 to get 5y equals 5, then divide by 5 — y equals 1.",
+    "Solve for x: 9x - 4 = 5x + 20": "Subtract 5x and add 4 to both sides: 4x equals 24. Divide by 4, and x equals 6.",
+    "Solve for x: 10 - 3x = 4x - 4": "Add 3x and 4 to both sides to gather everything: 14 equals 7x. Divide by 7, and x equals 2.",
+    "Solve for x: 6x - 11 = 25": "Add 11 to both sides: 6x equals 36. Divide by 6, and x equals 6.",
+    "Solve for x: 3(x + 5) = 2x + 21": "Distribute the 3: 3x plus 15 equals 2x plus 21. Subtract 2x and 15 from both sides, and x equals 6.",
+    "Which value of x satisfies 2x + 9 > 5x - 6?": "Subtract 2x and add 6 to both sides: 15 is greater than 3x. Divide by 3, and x is less than 5 — the only choice below 5 is x equals 4.",
+    "If y = 5x + 2, what is y when x = -3?": "Plug in negative 3: 5 times negative 3 is negative 15, and negative 15 plus 2 is negative 13.",
+    "A line passes through (1, 5) and (4, 17). What is its slope?": "The y-values go from 5 to 17, up 12. The x-values go from 1 to 4, over 3. 12 divided by 3 gives a slope of 4.",
+    "What is the equation, in slope-intercept form, of a line with slope -3 that passes through (0, 8)?": "Slope negative 3 and y-intercept 8 slot directly into y equals m x plus b, giving y equals negative 3x plus 8.",
+    "Solve for x: (x - 2)/5 = 3": "Multiply both sides by 5: x minus 2 equals 15. Add 2, and x equals 17.",
+    "If 3x + 4y = 24 and x = 4, what is y?": "Substitute x equals 4: 3 times 4 is 12, so 12 plus 4y equals 24. Subtract 12 to get 4y equals 12, then divide by 4 — y equals 3.",
+    "Solve for x: 6x - 5 = 3x + 16": "Subtract 3x and add 5 to both sides: 3x equals 21. Divide by 3, and x equals 7.",
+    "Solve for x: 9 - 4x = 2x - 9": "Add 4x and 9 to both sides: 18 equals 6x. Divide by 6, and x equals 3.",
+    "Which value of x satisfies 4x - 3 < 7x + 9?": "Subtract 4x and 9 from both sides: negative 12 is less than 3x. Divide by 3, and negative 4 is less than x — meaning x is greater than negative 4. The only choice above that is x equals negative 3.",
+    "If y = -2x + 9, what is y when x = 4?": "Plug in 4: negative 2 times 4 is negative 8, and negative 8 plus 9 is 1.",
+    "A line passes through (-3, -5) and (1, 3). What is its slope?": "The y-values run from negative 5 to 3, a change of 8. The x-values run from negative 3 to 1, a change of 4. 8 over 4 gives a slope of 2.",
+    "What is the equation, in slope-intercept form, of a line with slope 6 that passes through (0, -4)?": "With slope 6 and y-intercept negative 4, y equals m x plus b becomes y equals 6x minus 4.",
+    "Solve for x: (4x + 1)/3 = 7": "Multiply both sides by 3: 4x plus 1 equals 21. Subtract 1 to get 4x equals 20, then divide by 4 — x equals 5.",
+    "Solve for x: 7x - 12 = 30": "Add 12 to both sides: 7x equals 42. Divide by 7, and x equals 6.",
+    "Solve for x: 4(2x - 1) = 5x + 8": "Distribute the 4: 8x minus 4 equals 5x plus 8. Subtract 5x and add 4 to both sides, and 3x equals 12 — so x equals 4.",
+    "Which value of x satisfies 5x + 7 ≥ 2x + 22?": "Subtract 2x and 7 from both sides: 3x is greater than or equal to 15. Divide by 3, and x is greater than or equal to 5 — exactly matching x equals 5.",
+    "If y = -5x + 14, what is y when x = 2?": "Plug in 2: negative 5 times 2 is negative 10, and negative 10 plus 14 is 4.",
+    "A line passes through (2, -1) and (6, 11). What is its slope?": "The y-values climb from negative 1 to 11, a rise of 12. The x-values run from 2 to 6, a run of 4. 12 over 4 is a slope of 3.",
+    "What is the equation, in slope-intercept form, of a line with slope -7 that passes through (0, 3)?": "Slope negative 7, y-intercept 3 — straight into y equals m x plus b gives y equals negative 7x plus 3.",
+    "Solve for x: (3x - 9)/6 = 2": "Multiply both sides by 6: 3x minus 9 equals 12. Add 9 to get 3x equals 21, then divide by 3 — x equals 7.",
+    "If 2x + 5y = 29 and x = 2, what is y?": "Substitute x equals 2: 2 times 2 is 4, so 4 plus 5y equals 29. Subtract 4 to get 5y equals 25, then divide by 5 — y equals 5.",
+    "Solve for x: 8x - 3 = 5x + 18": "Subtract 5x and add 3 to both sides: 3x equals 21. Divide by 3, and x equals 7.",
+    "Solve for x: 11 - 2x = 5x - 3": "Add 2x and 3 to both sides: 14 equals 7x. Divide by 7, and x equals 2.",
+    "Solve for x: 4x + 11 = 39": "Subtract 11 from both sides: 4x equals 28. Divide by 4, and x equals 7.",
+    "Solve for x: 6x - 5 = 37": "Add 5 to both sides: 6x equals 42. Divide by 6, and x equals 7.",
+    "Solve for x: 9x + 14 = 77": "Subtract 14 from both sides: 9x equals 63. Divide by 9, and x equals 7.",
+    "Solve for x: 3x - 8 = 22": "Add 8 to both sides: 3x equals 30. Divide by 3, and x equals 10.",
+    "Solve for x: 7x + 19 = 61": "Subtract 19 from both sides: 7x equals 42. Divide by 7, and x equals 6.",
+    "Solve for x: 8x - 13 = 51": "Add 13 to both sides: 8x equals 64. Divide by 8, and x equals 8.",
+    "Solve for x: 5x + 3 = 2x + 15": "Subtract 2x and 3 from both sides: 3x equals 12. Divide by 3, and x equals 4.",
+    "Solve for x: 6x - 4 = 3x + 11": "Subtract 3x and add 4 to both sides: 3x equals 15. Divide by 3, and x equals 5.",
+    "Solve for x: 7x + 2 = 4x + 20": "Subtract 4x and 2 from both sides: 3x equals 18. Divide by 3, and x equals 6.",
+    "Solve for x: 8x - 7 = 3x + 13": "Subtract 3x and add 7 to both sides: 5x equals 20. Divide by 5, and x equals 4.",
+    "Solve for x: 9x + 5 = 4x + 25": "Subtract 4x and 5 from both sides: 5x equals 20. Divide by 5, and x equals 4.",
+    "Solve for x: 6x - 9 = 2x + 15": "Subtract 2x and add 9 to both sides: 4x equals 24. Divide by 4, and x equals 6.",
+    "Solve for x: 3(x + 4) = 2x + 17": "Distribute the 3: 3x plus 12 equals 2x plus 17. Subtract 2x and 12 from both sides, and x equals 5.",
+    "Solve for x: 2(x - 5) = 3x + 4": "Distribute the 2: 2x minus 10 equals 3x plus 4. Subtract 2x and 4 from both sides, and negative 14 equals x.",
+    "Solve for x: 4(x + 3) = 2x + 22": "Distribute the 4: 4x plus 12 equals 2x plus 22. Subtract 2x and 12 from both sides, and 2x equals 10 — so x equals 5.",
+    "Solve for x: 5(x - 2) = 3x - 4": "Distribute the 5: 5x minus 10 equals 3x minus 4. Subtract 3x and add 10 to both sides, and 2x equals 6 — so x equals 3.",
+    "Solve for x: 3(x + 7) = 2x + 25": "Distribute the 3: 3x plus 21 equals 2x plus 25. Subtract 2x and 21 from both sides, and x equals 4.",
+    "Solve for x: 6(x - 1) = 4x + 9": "Distribute the 6: 6x minus 6 equals 4x plus 9. Subtract 4x and add 6 to both sides, and 2x equals 15 — so x equals 15 over 2.",
+    "Which value of x satisfies 6x + 1 < 3x + 19?": "Subtract 3x and 1 from both sides: 3x is less than 18. Divide by 3, and x is less than 6 — only x equals 4 fits.",
+    "Which value of x satisfies 7x + 4 > 3x - 8?": "Subtract 3x and 4 from both sides: 4x is greater than negative 12. Divide by 4, and x is greater than negative 3 — only x equals negative 2 fits.",
+    "Which value of x satisfies 5x - 3 < 2x + 15?": "Subtract 2x and add 3 to both sides: 3x is less than 18. Divide by 3, and x is less than 6 — only x equals 4 works.",
+    "Which value of x satisfies 7x + 4 ≤ 3x + 28?": "Subtract 3x and 4 from both sides: 4x is less than or equal to 24. Divide by 4, and x is less than or equal to 6 — x equals 4 satisfies that.",
+    "Which value of x satisfies 8x - 6 ≥ 5x + 9?": "Subtract 5x and add 6 to both sides: 3x is greater than or equal to 15. Divide by 3, and x is greater than or equal to 5 — matching x equals 5 exactly.",
+    "Which value of x satisfies 9x - 3 > 6x - 3?": "Subtract 6x and add 3 to both sides: 3x is greater than 0. Divide by 3, and x is greater than 0 — the only positive choice is x equals 1.",
+    "If y = 3x - 8, what is y when x = 6?": "Plug in 6: 3 times 6 is 18, and 18 minus 8 is 10.",
+    "If y = -4x + 11, what is y when x = 3?": "Plug in 3: negative 4 times 3 is negative 12, and negative 12 plus 11 is negative 1.",
+    "If y = 5x - 2, what is y when x = -3?": "Plug in negative 3: 5 times negative 3 is negative 15, and negative 15 minus 2 is negative 17.",
+    "If y = -2x + 7, what is y when x = 5?": "Plug in 5: negative 2 times 5 is negative 10, and negative 10 plus 7 is negative 3.",
+    "If y = 6x + 1, what is y when x = -4?": "Plug in negative 4: 6 times negative 4 is negative 24, and negative 24 plus 1 is negative 23.",
+    "If y = -5x - 3, what is y when x = -2?": "Plug in negative 2: negative 5 times negative 2 is positive 10, and 10 minus 3 is 7.",
+    "A line passes through (0, 3) and (4, 19). What is its slope?": "The y-values rise from 3 to 19, a change of 16. The x-values run from 0 to 4, a change of 4. 16 divided by 4 gives a slope of 4.",
+    "A line passes through (-2, -6) and (2, 10). What is its slope?": "The y-values go from negative 6 to 10, a rise of 16. The x-values go from negative 2 to 2, a run of 4. 16 over 4 is a slope of 4.",
+    "A line passes through (1, 4) and (6, 29). What is its slope?": "The y-values climb from 4 to 29, a rise of 25. The x-values run from 1 to 6, a run of 5. 25 divided by 5 gives a slope of 5.",
+    "A line passes through (-3, 8) and (1, -4). What is its slope?": "The y-values fall from 8 to negative 4, a change of negative 12. The x-values run from negative 3 to 1, a change of 4. Negative 12 over 4 gives a slope of negative 3.",
+    "A line passes through (2, 1) and (7, 26). What is its slope?": "The y-values rise from 1 to 26, a change of 25. The x-values run from 2 to 7, a change of 5. 25 divided by 5 is a slope of 5.",
+    "What is the equation, in slope-intercept form, of a line with slope 8 that passes through (0, -6)?": "Slope 8, y-intercept negative 6 — plug straight into y equals m x plus b for y equals 8x minus 6.",
+    "What is the equation, in slope-intercept form, of a line with slope -9 that passes through (0, 4)?": "Slope negative 9, y-intercept 4 — that's y equals negative 9x plus 4.",
+    "What is the equation, in slope-intercept form, of a line with slope 2 that passes through (0, -11)?": "Slope 2, y-intercept negative 11 — giving y equals 2x minus 11.",
+    "What is the equation, in slope-intercept form, of a line with slope -6 that passes through (0, 13)?": "Slope negative 6, y-intercept 13 — that's y equals negative 6x plus 13.",
+    "What is the equation, in slope-intercept form, of a line with slope 10 that passes through (0, -5)?": "Slope 10, y-intercept negative 5 — giving y equals 10x minus 5.",
+    "Solve for x: (3x + 7)/4 = 10": "Multiply both sides by 4: 3x plus 7 equals 40. Subtract 7 to get 3x equals 33, then divide by 3 — x equals 11.",
+    "Solve for x: (5x - 2)/3 = 11": "Multiply both sides by 3: 5x minus 2 equals 33. Add 2 to get 5x equals 35, then divide by 5 — x equals 7.",
+    "Solve for x: (2x + 9)/5 = 7": "Multiply both sides by 5: 2x plus 9 equals 35. Subtract 9 to get 2x equals 26, then divide by 2 — x equals 13.",
+    "Solve for x: (4x - 11)/3 = 3": "Multiply both sides by 3: 4x minus 11 equals 9. Add 11 to get 4x equals 20, then divide by 4 — x equals 5.",
+    "Solve for x: (6x + 5)/4 = 8": "Multiply both sides by 4: 6x plus 5 equals 32. Subtract 5 to get 6x equals 27, then divide by 6 — x equals 9 over 2.",
+    "If 5x + 2y = 28 and x = 2, what is y?": "Substitute x equals 2: 5 times 2 is 10, so 10 plus 2y equals 28. Subtract 10 to get 2y equals 18, then divide by 2 — y equals 9.",
+    "If 3x + 4y = 35 and x = 5, what is y?": "Substitute x equals 5: 3 times 5 is 15, so 15 plus 4y equals 35. Subtract 15 to get 4y equals 20, then divide by 4 — y equals 5.",
+    "If 6x + 3y = 39 and x = 4, what is y?": "Substitute x equals 4: 6 times 4 is 24, so 24 plus 3y equals 39. Subtract 24 to get 3y equals 15, then divide by 3 — y equals 5.",
+    "If 2x + 5y = 41 and x = 3, what is y?": "Substitute x equals 3: 2 times 3 is 6, so 6 plus 5y equals 41. Subtract 6 to get 5y equals 35, then divide by 5 — y equals 7.",
+    "If 7x + 2y = 45 and x = 3, what is y?": "Substitute x equals 3: 7 times 3 is 21, so 21 plus 2y equals 45. Subtract 21 to get 2y equals 24, then divide by 2 — y equals 12.",
+    "A taxi charges a $5 flat fee plus $3 per mile. If a ride costs $23 total, how many miles was the ride?": "Set up the equation: 5 plus 3 times the miles equals 23. Subtract 5 to get 3 times miles equals 18, then divide by 3 — 6 miles.",
+    "A gym charges a $25 sign-up fee plus $15 per month. If a member has paid $130 in total, how many months has the membership lasted?": "Set up the equation: 25 plus 15 times the months equals 130. Subtract 25 to get 15 times months equals 105, then divide by 15 — 7 months.",
+    "A line has slope 3 and passes through the point (2, 5). What is the equation of the line in slope-intercept form?": "Use point-slope form: y minus 5 equals 3 times x minus 2. Distribute the 3 to get y minus 5 equals 3x minus 6, then add 5 to both sides — y equals 3x minus 1.",
+    "A line has slope -2 and passes through the point (-1, 4). What is the equation of the line in slope-intercept form?": "Use point-slope form: y minus 4 equals negative 2 times x plus 1. Distribute to get y minus 4 equals negative 2x minus 2, then add 4 to both sides — y equals negative 2x plus 2.",
+    "What is the x-intercept of the line 3x + 4y = 24?": "The x-intercept is where the line crosses the x-axis, so y equals 0. Plug that in: 3x equals 24, so x equals 8 — the point is 8, 0.",
+    "What is the y-intercept of the line 5x - 2y = 20?": "The y-intercept is where the line crosses the y-axis, so x equals 0. Plug that in: negative 2y equals 20, so y equals negative 10 — the point is 0, negative 10.",
+    "Line k has equation y = 4x - 7. A line parallel to line k has what slope?": "Parallel lines always have the exact same slope, so a line parallel to this one also has slope 4 — no extra math needed.",
+    "Line k has equation 2x + 3y = 9. What is the slope of a line perpendicular to line k?": "First rewrite line k in slope-intercept form: y equals negative two-thirds x plus 3, so its slope is negative two-thirds. A perpendicular line's slope is the negative reciprocal — flip it and switch the sign — giving three-halves.",
+    "Solve the system of equations: x + y = 10 and x - y = 4. What is the value of x?": "Add the two equations together and the y's cancel out: 2x equals 14. Divide by 2, and x equals 7.",
+    "Solve the system of equations: 2x + y = 13 and x - y = 2. What is the value of y?": "From the second equation, x equals y plus 2. Substitute that into the first: 2 times y plus 2, plus y, equals 13 — which simplifies to 3y equals 9, so y equals 3.",
+    "If f(x) = 3x - 5, what is f(4)?": "Plug 4 in for x: 3 times 4 is 12, minus 5 leaves 7.",
+    "If f(x) = 2x + 9 and f(x) = 21, what is the value of x?": "Set the function equal to 21: 2x plus 9 equals 21. Subtract 9 to get 2x equals 12, then divide by 2 — x equals 6.",
+    "y varies directly with x. If y = 15 when x = 3, what is y when x = 8?": "Find the constant of variation first: 15 divided by 3 is 5. Multiply that constant by the new x-value: 5 times 8 is 40.",
+    "The cost of apples varies directly with the number purchased. If 4 apples cost $6, how much do 10 apples cost?": "Find the price per apple: 6 dollars divided by 4 is a dollar fifty each. Multiply by 10 apples, and the total is 15 dollars.",
+    "A linear function has these values: x = 1, 2, 3, 4 and y = 5, 8, 11, 14. What is the slope of the line?": "Look at how y changes each time x goes up by 1: from 5 to 8 is a jump of 3, and it keeps jumping by 3 the whole way — so the slope is 3.",
+    "A plant's height is recorded as 10 cm at week 1 and 22 cm at week 3. Assuming linear growth, what is its growth rate per week?": "The plant grew from 10 to 22 centimeters, a change of 12, over 2 weeks, from week 1 to week 3. 12 divided by 2 gives a growth rate of 6 centimeters per week.",
+    "What is the positive solution to |2x - 3| = 9?": "Absolute value splits into two cases: 2x minus 3 equals 9, or 2x minus 3 equals negative 9. The first gives x equals 6, the second gives x equals negative 3 — the positive one is 6.",
+    "What is the sum of all solutions to |x + 4| = 10?": "Absolute value gives two cases: x plus 4 equals 10, or x plus 4 equals negative 10. That's x equals 6 or x equals negative 14. Add those two solutions together: 6 plus negative 14 is negative 8.",
+    "Line A is y = 2x + 3 and line B is y = -x + 9. At what x-value do the lines intersect?": "Set the two equations equal to each other since that's where they meet: 2x plus 3 equals negative x plus 9. Add x and subtract 3 from both sides — 3x equals 6 — so x equals 2.",
+    "A company's cost to produce x items is C = 500 + 2x dollars. Each item sells for $7. How many items must be sold to break even (cost equals revenue)?": "Break-even means cost equals revenue, so set 500 plus 2x equal to 7x. Subtract 2x from both sides: 500 equals 5x. Divide by 5, and x equals 100 items.",
+    "A line with slope -4 passes through the point (3, -2). What is its y-intercept?": "Start from y equals negative 4x plus b, then plug in the point: negative 2 equals negative 4 times 3, plus b. That's negative 2 equals negative 12 plus b, so b equals 10.",
+    "A car's odometer reads 130 miles at 2:00 PM and 310 miles at 5:00 PM. Assuming the car travels at a constant speed during this interval, what is that speed, in miles per hour?": "From 2 PM to 5 PM is 3 hours, and the odometer went from 130 to 310 miles — a distance of 180 miles. 180 divided by 3 hours gives a speed of 60 miles per hour.",
+    "Pencils cost $0.50 each and pens cost $1.25 each. Maria buys some pencils and 4 pens, spending $8.00 in total. How many pencils did she buy?": "The 4 pens cost 1.25 times 4, which is 5 dollars. That leaves 8 minus 5, or 3 dollars, for pencils. At 50 cents each, 3 dollars buys 6 pencils.",
+    "Which linear equation is parallel to y = -3x + 2 and passes through (0, 7)?": "Parallel lines share the same slope, so this line also has slope negative 3. Since it passes through (0, 7), its y-intercept is 7 — giving y equals negative 3x plus 7.",
+    "Which linear equation is perpendicular to y = (1/2)x - 4 and passes through (0, -1)?": "A perpendicular slope is the negative reciprocal of the original — flip one-half and switch the sign to get negative 2. With a y-intercept of negative 1, the equation is y equals negative 2x minus 1.",
+  },
+  "ma-exponents": {
+    "Simplify: x^3 · x^5": "When you multiply the same base, you add the exponents — 3 plus 5 is 8, so the answer is x to the 8th power.",
+    "Simplify: (x^4)^3": "When you raise a power to another power, you multiply the exponents — 4 times 3 is 12, so the answer is x to the 12th power.",
+    "Simplify: x^9 / x^4": "When you divide the same base, you subtract the exponents — 9 minus 4 is 5, so the answer is x to the 5th power.",
+    "What is the value of 2^-3?": "A negative exponent just means you flip it into a reciprocal: 2 to the negative 3 becomes 1 over 2 to the 3rd power, which is 1 over 8.",
+    "Simplify: √50": "Break 50 into a perfect square times a leftover factor: 50 is 25 times 2, and the square root of 25 is 5. So the square root of 50 simplifies to 5 times the square root of 2.",
+    "Write 6,400,000 in scientific notation.": "To write this in scientific notation, move the decimal point until only one nonzero digit is in front — that takes 6 places, landing on 6.4. Since you moved it 6 places, the power of ten is 6, giving 6.4 times 10 to the 6th power.",
+    "Simplify: (3x^2y)(2xy^3)": "Multiply the coefficients out front — 3 times 2 is 6 — then handle each variable separately: add up the x exponents to get x to the 3rd, and add up the y exponents to get y to the 4th. Put it all together: 6x^3y^4.",
+    "What is x if 2^x = 32?": "Think about what power 2 needs to reach 32: 2 to the 5th is 32, so x equals 5.",
+    "Simplify: y^7 / y^2": "When you divide the same base, you subtract the exponents — 7 minus 2 is 5, so the answer is y to the 5th power.",
+    "Simplify: (2x^3)^4": "Raise each factor inside the parentheses to the 4th power separately: 2 to the 4th is 16, and x to the 3rd, raised to the 4th, multiplies its exponent to x to the 12th. Put those together and you get 16x^12.",
+    "What is the value of 3^-2?": "A negative exponent just means you flip it into a reciprocal: 3 to the negative 2 becomes 1 over 3 to the 2nd power, which is 1 over 9.",
+    "Simplify: √72": "Break 72 into a perfect square times a leftover factor: 72 is 36 times 2, and the square root of 36 is 6. So the square root of 72 simplifies to 6 times the square root of 2.",
+    "Write 0.00045 in scientific notation.": "To write this in scientific notation, move the decimal point to the right until only one nonzero digit is in front — that takes 4 places. Moving right means the exponent is negative, so it's 4.5 times 10 to the negative 4th power.",
+    "Simplify: (4x^3y^2)(3x^2y)": "Multiply the coefficients out front — 4 times 3 is 12 — then handle each variable separately: add up the x exponents to get x to the 5th, and add up the y exponents to get y to the 3rd. Put it all together: 12x^5y^3.",
+    "What is x if 3^x = 81?": "Think about what power 3 needs to reach 81: 3 to the 4th is 81, so x equals 4.",
+    "Simplify: y^6 · y^3": "When you multiply the same base, you add the exponents — 6 plus 3 is 9, so the answer is y to the 9th power.",
+    "Simplify: (y^5)^2": "When you raise a power to another power, you multiply the exponents — 5 times 2 is 10, so the answer is y to the 10th power.",
+    "Simplify: x^11 / x^5": "When you divide the same base, you subtract the exponents — 11 minus 5 is 6, so the answer is x to the 6th power.",
+    "What is the value of 5^-2?": "A negative exponent just means you flip it into a reciprocal: 5 to the negative 2 becomes 1 over 5 to the 2nd power, which is 1 over 25.",
+    "Simplify: √98": "Break 98 into a perfect square times a leftover factor: 98 is 49 times 2, and the square root of 49 is 7. So the square root of 98 simplifies to 7 times the square root of 2.",
+    "Write 92,000 in scientific notation.": "To write this in scientific notation, move the decimal point until only one nonzero digit is in front — that takes 4 places, landing on 9.2. Since you moved it 4 places, the power of ten is 4, giving 9.2 times 10 to the 4th power.",
+    "Simplify: (5x^2y^3)(4xy^2)": "Multiply the coefficients out front — 5 times 4 is 20 — then handle each variable separately: add up the x exponents to get x to the 3rd, and add up the y exponents to get y to the 5th. Put it all together: 20x^3y^5.",
+    "What is x if 5^x = 125?": "Think about what power 5 needs to reach 125: 5 to the 3rd is 125, so x equals 3.",
+    "Simplify: y^10 / y^3": "When you divide the same base, you subtract the exponents — 10 minus 3 is 7, so the answer is y to the 7th power.",
+    "Simplify: (3x^4)^2": "Raise each factor inside the parentheses to the 2nd power separately: 3 to the 2nd is 9, and x to the 4th, raised to the 2nd, multiplies its exponent to x to the 8th. Put those together and you get 9x^8.",
+    "Simplify: x^6 · x^2": "When you multiply the same base, you add the exponents — 6 plus 2 is 8, so the answer is x to the 8th power.",
+    "Simplify: (x^5)^4": "When you raise a power to another power, you multiply the exponents — 5 times 4 is 20, so the answer is x to the 20th power.",
+    "Simplify: x^12 / x^5": "When you divide the same base, you subtract the exponents — 12 minus 5 is 7, so the answer is x to the 7th power.",
+    "What is the value of 4^-2?": "A negative exponent just means you flip it into a reciprocal: 4 to the negative 2 becomes 1 over 4 to the 2nd power, which is 1 over 16.",
+    "Simplify: √48": "Break 48 into a perfect square times a leftover factor: 48 is 16 times 3, and the square root of 16 is 4. So the square root of 48 simplifies to 4 times the square root of 3.",
+    "Write 3,200,000 in scientific notation.": "To write this in scientific notation, move the decimal point until only one nonzero digit is in front — that takes 6 places, landing on 3.2. Since you moved it 6 places, the power of ten is 6, giving 3.2 times 10 to the 6th power.",
+    "Simplify: (5x^3y^2)(2x^4y)": "Multiply the coefficients out front — 5 times 2 is 10 — then handle each variable separately: add up the x exponents to get x to the 7th, and add up the y exponents to get y to the 3rd. Put it all together: 10x^7y^3.",
+    "What is x if 2^x = 64?": "Think about what power 2 needs to reach 64: 2 to the 6th is 64, so x equals 6.",
+    "Simplify: y^9 · y^4": "When you multiply the same base, you add the exponents — 9 plus 4 is 13, so the answer is y to the 13th power.",
+    "Simplify: (3y^2)^3": "Raise each factor inside the parentheses to the 3rd power separately: 3 to the 3rd is 27, and y to the 2nd, raised to the 3rd, multiplies its exponent to y to the 6th. Put those together and you get 27y^6.",
+    "What is the value of 6^-2?": "A negative exponent just means you flip it into a reciprocal: 6 to the negative 2 becomes 1 over 6 to the 2nd power, which is 1 over 36.",
+    "Simplify: √200": "Break 200 into a perfect square times a leftover factor: 200 is 100 times 2, and the square root of 100 is 10. So the square root of 200 simplifies to 10 times the square root of 2.",
+    "Write 0.0000078 in scientific notation.": "To write this in scientific notation, move the decimal point to the right until only one nonzero digit is in front — that takes 6 places. Moving right means the exponent is negative, so it's 7.8 times 10 to the negative 6th power.",
+    "Simplify: (6x^4y^3)(2xy^5)": "Multiply the coefficients out front — 6 times 2 is 12 — then handle each variable separately: add up the x exponents to get x to the 5th, and add up the y exponents to get y to the 8th. Put it all together: 12x^5y^8.",
+    "What is x if 4^x = 256?": "Think about what power 4 needs to reach 256: 4 to the 4th is 256, so x equals 4.",
+    "Simplify: y^14 / y^6": "When you divide the same base, you subtract the exponents — 14 minus 6 is 8, so the answer is y to the 8th power.",
+    "Simplify: (x^6)^5": "When you raise a power to another power, you multiply the exponents — 6 times 5 is 30, so the answer is x to the 30th power.",
+    "Simplify: x^7 · x^8": "When you multiply the same base, you add the exponents — 7 plus 8 is 15, so the answer is x to the 15th power.",
+    "What is the value of 10^-3?": "A negative exponent just means you flip it into a reciprocal: 10 to the negative 3 becomes 1 over 10 to the 3rd power, which is 1 over 1000.",
+    "Simplify: √180": "Break 180 into a perfect square times a leftover factor: 180 is 36 times 5, and the square root of 36 is 6. So the square root of 180 simplifies to 6 times the square root of 5.",
+    "Write 540,000,000 in scientific notation.": "To write this in scientific notation, move the decimal point until only one nonzero digit is in front — that takes 8 places, landing on 5.4. Since you moved it 8 places, the power of ten is 8, giving 5.4 times 10 to the 8th power.",
+    "Simplify: (7x^2y^4)(3x^3y^2)": "Multiply the coefficients out front — 7 times 3 is 21 — then handle each variable separately: add up the x exponents to get x to the 5th, and add up the y exponents to get y to the 6th. Put it all together: 21x^5y^6.",
+    "What is x if 6^x = 216?": "Think about what power 6 needs to reach 216: 6 to the 3rd is 216, so x equals 3.",
+    "Simplify: y^15 / y^9": "When you divide the same base, you subtract the exponents — 15 minus 9 is 6, so the answer is y to the 6th power.",
+    "Simplify: (2x^5)^3": "Raise each factor inside the parentheses to the 3rd power separately: 2 to the 3rd is 8, and x to the 5th, raised to the 3rd, multiplies its exponent to x to the 15th. Put those together and you get 8x^15.",
+    "Simplify: x^4 · x^6": "When you multiply the same base, you add the exponents — 4 plus 6 is 10, so the answer is x to the 10th power.",
+    "Simplify: y^5 · y^7": "When you multiply the same base, you add the exponents — 5 plus 7 is 12, so the answer is y to the 12th power.",
+    "Simplify: x^3 · x^9": "When you multiply the same base, you add the exponents — 3 plus 9 is 12, so the answer is x to the 12th power.",
+    "Simplify: y^6 · y^8": "When you multiply the same base, you add the exponents — 6 plus 8 is 14, so the answer is y to the 14th power.",
+    "Simplify: x^7 · x^5": "When you multiply the same base, you add the exponents — 7 plus 5 is 12, so the answer is x to the 12th power.",
+    "Simplify: y^2 · y^11": "When you multiply the same base, you add the exponents — 2 plus 11 is 13, so the answer is y to the 13th power.",
+    "Simplify: (x^3)^5": "When you raise a power to another power, you multiply the exponents — 3 times 5 is 15, so the answer is x to the 15th power.",
+    "Simplify: (y^4)^4": "When you raise a power to another power, you multiply the exponents — 4 times 4 is 16, so the answer is y to the 16th power.",
+    "Simplify: (x^6)^3": "When you raise a power to another power, you multiply the exponents — 6 times 3 is 18, so the answer is x to the 18th power.",
+    "Simplify: (y^2)^7": "When you raise a power to another power, you multiply the exponents — 2 times 7 is 14, so the answer is y to the 14th power.",
+    "Simplify: (x^4)^6": "When you raise a power to another power, you multiply the exponents — 4 times 6 is 24, so the answer is x to the 24th power.",
+    "Simplify: (y^7)^2": "When you raise a power to another power, you multiply the exponents — 7 times 2 is 14, so the answer is y to the 14th power.",
+    "Simplify: x^10 / x^3": "When you divide the same base, you subtract the exponents — 10 minus 3 is 7, so the answer is x to the 7th power.",
+    "Simplify: y^14 / y^5": "When you divide the same base, you subtract the exponents — 14 minus 5 is 9, so the answer is y to the 9th power.",
+    "Simplify: x^13 / x^6": "When you divide the same base, you subtract the exponents — 13 minus 6 is 7, so the answer is x to the 7th power.",
+    "Simplify: y^9 / y^2": "When you divide the same base, you subtract the exponents — 9 minus 2 is 7, so the answer is y to the 7th power.",
+    "Simplify: x^16 / x^7": "When you divide the same base, you subtract the exponents — 16 minus 7 is 9, so the answer is x to the 9th power.",
+    "Simplify: y^11 / y^4": "When you divide the same base, you subtract the exponents — 11 minus 4 is 7, so the answer is y to the 7th power.",
+    "What is the value of 2^-4?": "A negative exponent just means you flip it into a reciprocal: 2 to the negative 4 becomes 1 over 2 to the 4th power, which is 1 over 16.",
+    "What is the value of 3^-3?": "A negative exponent just means you flip it into a reciprocal: 3 to the negative 3 becomes 1 over 3 to the 3rd power, which is 1 over 27.",
+    "What is the value of 5^-3?": "A negative exponent just means you flip it into a reciprocal: 5 to the negative 3 becomes 1 over 5 to the 3rd power, which is 1 over 125.",
+    "What is the value of 4^-3?": "A negative exponent just means you flip it into a reciprocal: 4 to the negative 3 becomes 1 over 4 to the 3rd power, which is 1 over 64.",
+    "What is the value of 7^-2?": "A negative exponent just means you flip it into a reciprocal: 7 to the negative 2 becomes 1 over 7 to the 2nd power, which is 1 over 49.",
+    "What is the value of 9^-2?": "A negative exponent just means you flip it into a reciprocal: 9 to the negative 2 becomes 1 over 9 to the 2nd power, which is 1 over 81.",
+    "Simplify: √75": "Break 75 into a perfect square times a leftover factor: 75 is 25 times 3, and the square root of 25 is 5. So the square root of 75 simplifies to 5 times the square root of 3.",
+    "Simplify: √90": "Break 90 into a perfect square times a leftover factor: 90 is 9 times 10, and the square root of 9 is 3. So the square root of 90 simplifies to 3 times the square root of 10.",
+    "Simplify: √128": "Break 128 into a perfect square times a leftover factor: 128 is 64 times 2, and the square root of 64 is 8. So the square root of 128 simplifies to 8 times the square root of 2.",
+    "Simplify: √112": "Break 112 into a perfect square times a leftover factor: 112 is 16 times 7, and the square root of 16 is 4. So the square root of 112 simplifies to 4 times the square root of 7.",
+    "Simplify: √150": "Break 150 into a perfect square times a leftover factor: 150 is 25 times 6, and the square root of 25 is 5. So the square root of 150 simplifies to 5 times the square root of 6.",
+    "Simplify: √245": "Break 245 into a perfect square times a leftover factor: 245 is 49 times 5, and the square root of 49 is 7. So the square root of 245 simplifies to 7 times the square root of 5.",
+    "Write 7,300,000 in scientific notation.": "To write this in scientific notation, move the decimal point until only one nonzero digit is in front — that takes 6 places, landing on 7.3. Since you moved it 6 places, the power of ten is 6, giving 7.3 times 10 to the 6th power.",
+    "Write 450,000 in scientific notation.": "To write this in scientific notation, move the decimal point until only one nonzero digit is in front — that takes 5 places, landing on 4.5. Since you moved it 5 places, the power of ten is 5, giving 4.5 times 10 to the 5th power.",
+    "Write 81,000,000 in scientific notation.": "To write this in scientific notation, move the decimal point until only one nonzero digit is in front — that takes 7 places, landing on 8.1. Since you moved it 7 places, the power of ten is 7, giving 8.1 times 10 to the 7th power.",
+    "Write 2,600,000 in scientific notation.": "To write this in scientific notation, move the decimal point until only one nonzero digit is in front — that takes 6 places, landing on 2.6. Since you moved it 6 places, the power of ten is 6, giving 2.6 times 10 to the 6th power.",
+    "Write 930,000,000 in scientific notation.": "To write this in scientific notation, move the decimal point until only one nonzero digit is in front — that takes 8 places, landing on 9.3. Since you moved it 8 places, the power of ten is 8, giving 9.3 times 10 to the 8th power.",
+    "Write 0.00062 in scientific notation.": "To write this in scientific notation, move the decimal point to the right until only one nonzero digit is in front — that takes 4 places. Moving right means the exponent is negative, so it's 6.2 times 10 to the negative 4th power.",
+    "Write 0.0000091 in scientific notation.": "To write this in scientific notation, move the decimal point to the right until only one nonzero digit is in front — that takes 6 places. Moving right means the exponent is negative, so it's 9.1 times 10 to the negative 6th power.",
+    "Write 0.00073 in scientific notation.": "To write this in scientific notation, move the decimal point to the right until only one nonzero digit is in front — that takes 4 places. Moving right means the exponent is negative, so it's 7.3 times 10 to the negative 4th power.",
+    "Write 0.000000058 in scientific notation.": "To write this in scientific notation, move the decimal point to the right until only one nonzero digit is in front — that takes 8 places. Moving right means the exponent is negative, so it's 5.8 times 10 to the negative 8th power.",
+    "Write 0.0044 in scientific notation.": "To write this in scientific notation, move the decimal point to the right until only one nonzero digit is in front — that takes 3 places. Moving right means the exponent is negative, so it's 4.4 times 10 to the negative 3rd power.",
+    "Simplify: (2x^3y^4)(5x^2y)": "Multiply the coefficients out front — 2 times 5 is 10 — then handle each variable separately: add up the x exponents to get x to the 5th, and add up the y exponents to get y to the 5th. Put it all together: 10x^5y^5.",
+    "Simplify: (6xy^5)(3x^3y^2)": "Multiply the coefficients out front — 6 times 3 is 18 — then handle each variable separately: add up the x exponents to get x to the 4th, and add up the y exponents to get y to the 7th. Put it all together: 18x^4y^7.",
+    "Simplify: (4x^4y^2)(2x^3y^3)": "Multiply the coefficients out front — 4 times 2 is 8 — then handle each variable separately: add up the x exponents to get x to the 7th, and add up the y exponents to get y to the 5th. Put it all together: 8x^7y^5.",
+    "Simplify: (5x^2y^3)(3x^4y^4)": "Multiply the coefficients out front — 5 times 3 is 15 — then handle each variable separately: add up the x exponents to get x to the 6th, and add up the y exponents to get y to the 7th. Put it all together: 15x^6y^7.",
+    "What is x if 3^x = 2187?": "Think about what power 3 needs to reach 2187: 3 to the 7th is 2187, so x equals 7.",
+    "What is x if 2^x = 512?": "Think about what power 2 needs to reach 512: 2 to the 9th is 512, so x equals 9.",
+    "What is x if 5^x = 625?": "Think about what power 5 needs to reach 625: 5 to the 4th is 625, so x equals 4.",
+    "Simplify: (2x^4)^3": "Raise each factor inside the parentheses to the 3rd power separately: 2 to the 3rd is 8, and x to the 4th, raised to the 3rd, multiplies its exponent to x to the 12th. Put those together and you get 8x^12.",
+    "Simplify: (3x^2)^4": "Raise each factor inside the parentheses to the 4th power separately: 3 to the 4th is 81, and x to the 2nd, raised to the 4th, multiplies its exponent to x to the 8th. Put those together and you get 81x^8.",
+    "Simplify: (4x^3)^2": "Raise each factor inside the parentheses to the 2nd power separately: 4 to the 2nd is 16, and x to the 3rd, raised to the 2nd, multiplies its exponent to x to the 6th. Put those together and you get 16x^6.",
+    "What is the value of 7^0?": "Any nonzero number to the power of 0 always equals 1 — that's just one of the rules of exponents. So 7 to the 0 is 1, no calculation needed.",
+    "Simplify: 5x^3y^0": "Anything to the power of 0 is 1, so y to the 0 is just 1. That leaves 5x cubed times 1, which is simply 5x cubed.",
+    "What is the value of 8^(1/3)?": "A fractional exponent like one-third means you're taking a root — specifically the cube root. The cube root of 8 is 2, since 2 times 2 times 2 is 8.",
+    "What is the value of 16^(3/4)?": "A fractional exponent like three-fourths means take a root, then raise to a power — the denominator is the root and the numerator is the power. The fourth root of 16 is 2, since 2 to the 4th is 16. Then raise that 2 to the 3rd power: 2 times 2 times 2 is 8.",
+    "What is the value of 27^(-1/3)?": "A negative fractional exponent combines two moves: the fraction means take a root, and the negative sign means flip it into a reciprocal. The cube root of 27 is 3, and flipping that gives 1 over 3.",
+    "Simplify: x^-3 · x^5": "Even with a negative exponent, the rule for multiplying like bases still applies — just add the exponents. Negative 3 plus 5 is 2, so the answer is x squared.",
+    "Simplify, writing the answer with positive exponents only: x^-4y^2": "A negative exponent means move that factor to the bottom of a fraction as its positive version: x to the negative 4 becomes 1 over x to the 4th. The y squared stays right where it is on top, giving y squared over x to the 4th.",
+    "Simplify: (x^-2y^3)/(x^3y^-1)": "Divide the x's and y's separately, subtracting exponents as you go. For x: negative 2 minus 3 is negative 5. For y: 3 minus negative 1 is 4. That gives x to the negative 5 times y to the 4th — and since the x term has a negative exponent, it moves to the bottom, leaving y to the 4th over x to the 5th.",
+    "What is (3 × 10^4)(2 × 10^3) written in scientific notation?": "Multiply the coefficients in front — 3 times 2 is 6 — and since the powers of ten are being multiplied, add their exponents: 4 plus 3 is 7. That gives 6 times 10 to the 7th.",
+    "What is (8 × 10^7)/(4 × 10^3) written in scientific notation?": "Divide the coefficients in front — 8 divided by 4 is 2 — and since the powers of ten are being divided, subtract their exponents: 7 minus 3 is 4. That gives 2 times 10 to the 4th.",
+    "What is 3.2 × 10^-3 written in standard decimal form?": "A negative exponent on a power of ten means the decimal point moves to the left — and the size of the exponent, 3, tells you how many places. Sliding the decimal in 3.2 left three places gives 0.0032.",
+    "Simplify: √3 · √12": "When you multiply two square roots, you can combine them under one root first: the square root of 3 times the square root of 12 is the square root of 3 times 12, which is 36. And the square root of 36 is a clean 6.",
+    "Simplify: 3√2 + 5√2": "Since both terms already have the exact same root, the square root of 2, you can just add their front coefficients like combining like terms: 3 plus 5 is 8, giving 8 times the square root of 2.",
+    "Simplify: √8 + √18": "Before you can combine these, break each radical down to see if they share a common root. The square root of 8 simplifies to 2 times the square root of 2, and the square root of 18 simplifies to 3 times the square root of 2. Now that they match, add the coefficients: 2 plus 3 is 5, giving 5 times the square root of 2.",
+    "Simplify: 6/√3": "You can't leave a square root in the denominator, so multiply the top and bottom by the square root of 3 to clear it out. That turns it into 6 times the square root of 3, all over 3 — and 6 over 3 simplifies to 2, leaving 2 times the square root of 3.",
+    "What is the cube root of 125?": "Think about what number, cubed, gives you 125. 5 times 5 times 5 is 125, so the cube root of 125 is 5.",
+    "What is the value of -2^4?": "Order of operations matters here — the exponent applies only to the 2, not to the negative sign in front of it. So this means take 2 to the 4th, which is 16, and then make it negative: negative 16.",
+    "What is the value of (-2)^4?": "Here the negative sign is inside the parentheses, so it gets raised to the power along with the 2. Multiplying negative 2 by itself four times: a negative times a negative is positive, and that pattern holds all the way through, so the final answer comes out positive — 16.",
+    "Solve for x: 2^(x+1) = 16": "Rewrite 16 as a power of 2 first: 16 is 2 to the 4th. Since the bases now match, the exponents themselves must be equal, so x plus 1 equals 4. Subtract 1 from both sides, and x equals 3.",
+    "Solve for x: 3^(2x) = 81": "Rewrite 81 as a power of 3: 81 is 3 to the 4th. With matching bases, the exponents must be equal, so 2x equals 4. Divide by 2, and x equals 2.",
+    "A bacteria culture doubles every hour. If it starts with 50 bacteria, how many are there after 4 hours?": "Doubling every hour is repeated multiplication by 2, so after 4 hours you multiply the starting amount by 2 to the 4th power. 2 to the 4th is 16, and 50 times 16 is 800 bacteria.",
+    "A radioactive sample has a half-life of 3 years and starts at 240 grams. How many grams remain after 9 years?": "Figure out how many half-lives have passed: 9 years divided by a 3-year half-life is 3 half-lives. Each half-life cuts the amount in half, so multiply 240 by one-half, three times — or equivalently, by one-half to the 3rd power. That's 240 divided by 8, which is 30 grams.",
+    "An investment of $2000 grows at 10% annual interest, compounded annually. What is its value after 2 years?": "Compounding annually for 2 years means multiplying by 1.1 twice, or 1.1 squared. 1.1 squared is 1.21, and 2000 times 1.21 is 2420 dollars.",
+    "Solve for x: x^(1/2) = 7": "A one-half power is the same as a square root, so to undo it, square both sides instead. Squaring 7 gives 49, so x equals 49.",
+    "What is the fourth root of 81?": "Think about what number, raised to the 4th power, gives you 81. 3 to the 4th is 81, so the fourth root of 81 is 3.",
+  },
 };
