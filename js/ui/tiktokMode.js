@@ -9,6 +9,7 @@
 import { getTestSubjects, getSubject, isSubjectPlayable, TESTS } from "../data/tests.js";
 import { preloadSubject, getFullBank } from "../data/questions/index.js";
 import { isWrittenQuestion } from "./writtenAnswer.js";
+import { TIKTOK_EXPLANATIONS } from "../data/tiktokExplanations.js";
 
 const TIKTOK_COLOR = "#25f4ee";
 const TIKTOK_BG = "#0a0a0f";
@@ -55,12 +56,42 @@ function applyPreferredVoice(utterance) {
   if (voice) utterance.voice = voice;
 }
 
-function speak(text) {
-  if (!("speechSynthesis" in window)) return;
+// `onEnd` fires once the utterance finishes — or immediately, if this
+// browser has no speech support at all — so callers can sequence what
+// happens next (e.g. don't start the reveal countdown until the question
+// has actually finished being read).
+function speak(text, onEnd) {
+  if (!("speechSynthesis" in window)) {
+    onEnd?.();
+    return;
+  }
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   applyPreferredVoice(utter);
+  if (onEnd) utter.addEventListener("end", onEnd, { once: true });
   window.speechSynthesis.speak(utter);
+}
+
+// TikTok Mode-only narration text is layered on top of the base bank's
+// `explain` (see data/tiktokExplanations.js) without ever touching the
+// data lessons/quizzes/boss quizzes actually use — falls back to the
+// original explain for anything not (yet) rewritten there.
+function explainFor(q) {
+  return TIKTOK_EXPLANATIONS[q.skillId]?.[q.bankIndex] || q.explain;
+}
+
+// Reads the question (and passage/choices, for a recording viewer who
+// isn't looking at the screen the whole time) out loud before the reveal
+// countdown starts, so a clip's narration walks through the problem, not
+// just the answer.
+function speakQuestion(q, onEnd) {
+  const passagePart = q.passage ? `${q.passage} ` : "";
+  let text = `${passagePart}${q.q}`;
+  if (!isWrittenQuestion(q)) {
+    const letters = ["A", "B", "C", "D"];
+    text += " " + q.choices.map((c, i) => `${letters[i]}: ${c}.`).join(" ");
+  }
+  speak(text, onEnd);
 }
 
 // Read the correct answer and why it's correct out loud (Web Speech API —
@@ -73,7 +104,7 @@ function speakAnswer(q) {
   const answerPart = isWrittenQuestion(q)
     ? `The correct answer is ${q.answer}.`
     : `The correct answer is ${String.fromCharCode(65 + q.answer)}: ${q.choices[q.answer]}`.replace(/[.!?]$/, "") + ".";
-  speak(`${answerPart} ${q.explain}`);
+  speak(`${answerPart} ${explainFor(q)}`);
 }
 
 // Voices load asynchronously in some browsers (notably Chrome on first
@@ -104,8 +135,16 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
   let pool = [];
   let current = null;
   let revealed = false;
+  let narratingQuestion = false;
   let countdown = REVEAL_SECONDS;
   let countdownTimer = null;
+  // Bumped whenever the current question cycle is abandoned (exit,
+  // change topic, or a fresh pickNext) — an in-flight speakQuestion
+  // onEnd callback checks this before starting the countdown, so
+  // stopSpeaking()'s cancel() (which itself fires an 'end' event) can't
+  // resurrect a countdown for a question the viewer already navigated
+  // away from.
+  let cycleId = 0;
 
   function stopCountdown() {
     if (countdownTimer) {
@@ -236,7 +275,9 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
           pool = [];
           for (const skillId of selectedSkillIds) {
             const skill = subject.skills.find((s) => s.id === skillId);
-            getFullBank(skillId).forEach((q) => pool.push({ ...q, skillName: skill.name, subjectName: subject.name, subjectIcon: subject.icon }));
+            getFullBank(skillId).forEach((q, bankIndex) =>
+              pool.push({ ...q, skillId, bankIndex, skillName: skill.name, subjectName: subject.name, subjectIcon: subject.icon })
+            );
           }
           pool = shuffled(pool);
           pickNext();
@@ -248,13 +289,22 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
   function pickNext() {
     stopCountdown();
     stopSpeaking();
+    cycleId++;
     if (pool.length === 0) {
       renderPicker();
       return;
     }
+    const myCycle = cycleId;
     current = pool.pop();
     revealed = false;
+    narratingQuestion = true;
     renderCard();
+    speakQuestion(current, () => {
+      if (cycleId !== myCycle) return; // abandoned this cycle mid-narration
+      narratingQuestion = false;
+      renderCard();
+      startCountdown();
+    });
   }
 
   function renderCard() {
@@ -262,12 +312,14 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
     const written = isWrittenQuestion(q);
     const passageHTML = q.passage ? `<p class="tiktok-passage">${q.passage}</p>` : "";
 
-    const revealPromptHTML = `<div class="tiktok-tap-reveal" data-countdown>⏱ Revealing in ${countdown}s…</div>`;
+    const revealPromptHTML = narratingQuestion
+      ? `<div class="tiktok-tap-reveal" data-countdown>🔊 Reading question…</div>`
+      : `<div class="tiktok-tap-reveal" data-countdown>⏱ Revealing in ${countdown}s…</div>`;
 
     let answerAreaHTML;
     if (written) {
       answerAreaHTML = revealed
-        ? `<div class="tiktok-reveal"><span class="tiktok-reveal-label">Answer</span><p class="tiktok-answer-value">${q.answer}</p><p class="tiktok-explain">${q.explain}</p></div>`
+        ? `<div class="tiktok-reveal"><span class="tiktok-reveal-label">Answer</span><p class="tiktok-answer-value">${q.answer}</p><p class="tiktok-explain">${explainFor(q)}</p></div>`
         : revealPromptHTML;
     } else {
       const choicesHTML = q.choices
@@ -275,7 +327,7 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
         .join("");
       answerAreaHTML = `
         <div class="tiktok-choices">${choicesHTML}</div>
-        ${revealed ? `<div class="tiktok-reveal"><p class="tiktok-explain">${q.explain}</p></div>` : revealPromptHTML}
+        ${revealed ? `<div class="tiktok-reveal"><p class="tiktok-explain">${explainFor(q)}</p></div>` : revealPromptHTML}
       `;
     }
 
@@ -298,17 +350,18 @@ export function renderTiktokMode(root, navigate, { testId = "act" } = {}) {
     `;
 
     root.querySelector("[data-exit]").addEventListener("click", () => {
+      cycleId++;
       stopCountdown();
       stopSpeaking();
       navigate("map");
     });
     root.querySelector("[data-settings]").addEventListener("click", () => {
+      cycleId++;
       stopCountdown();
       stopSpeaking();
       renderPicker();
     });
     root.querySelector("[data-next]").addEventListener("click", () => pickNext());
-    if (!revealed) startCountdown();
   }
 
   preloadSubject(subjectId).then(renderPicker);

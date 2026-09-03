@@ -55,7 +55,8 @@ const PORT = 8935;
 const BASE_URL = `http://localhost:${PORT}`;
 const DEFAULT_OUT_DIR = path.join(os.homedir(), "Desktop", "tiktok-clips", "Unposted");
 const POSTED_DIR = path.join(os.homedir(), "Desktop", "tiktok-clips", "Posted");
-const MAX_CLIP_MS = 45_000; // safety cap in case the speech "end" event never fires
+const MAX_CLIP_MS = 90_000; // safety cap in case a speech "end" event never fires (question + 10s countdown + answer narration, back to back)
+const SPEAK_EVENTS_PER_CLIP = 2; // TikTok Mode speaks the question, then (after reveal) the answer
 const TRAILING_BUFFER_MS = 700; // avoid an abrupt cut right as speech ends
 const VIDEO_WIDTH = 1080;
 const VIDEO_HEIGHT = 1920;
@@ -343,11 +344,19 @@ async function recordOneClip({ browser, testId, subjectId, skillIds, blackHoleId
   });
   const page = await context.newPage();
 
+  // TikTok Mode now speaks twice per question cycle — the question, then
+  // (after the reveal) the answer — so this waits for the SECOND "end"
+  // event, not the first, or it'd stop recording right after the
+  // question narration and cut the reveal off entirely.
   let resolveSpeechEnd;
   const speechEnded = new Promise((res) => {
     resolveSpeechEnd = res;
   });
-  await page.exposeFunction("__tiktokRecorderSpeechEnd", () => resolveSpeechEnd());
+  let speechEndCount = 0;
+  await page.exposeFunction("__tiktokRecorderSpeechEnd", () => {
+    speechEndCount++;
+    if (speechEndCount >= SPEAK_EVENTS_PER_CLIP) resolveSpeechEnd();
+  });
   await page.addInitScript(() => {
     if (!window.speechSynthesis || window.__tiktokRecorderPatched) return;
     window.__tiktokRecorderPatched = true;
