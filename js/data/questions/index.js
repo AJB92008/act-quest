@@ -56,7 +56,7 @@ const BANK_SIZE_OVERRIDES = {
   "en-idioms": 131,
   "en-verbalphrases": 131,
   "en-fragments": 131,
-  "en-parallel": 105,
+  "en-parallel": 131,
   "en-modifiers": 105,
   "en-transitions": 105,
   "en-concision": 105,
