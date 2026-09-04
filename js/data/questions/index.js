@@ -37,6 +37,7 @@ const BANK_SIZE_OVERRIDES = {
   // ACT Math skills extended with a bonus lesson's worth of hand-written
   // questions on top of the original 100.
   "ma-matrixlog": 125,
+  "ma-trig": 125,
   "en-commas": 105,
   "en-apostrophes": 105,
   "en-colons": 105,
