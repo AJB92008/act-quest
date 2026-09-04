@@ -34,6 +34,9 @@ export const BOSS_LESSON_SIZE = 15;
 // getLessonCount can still answer correctly without loading anything.
 // Anything not listed here is assumed to be the standard 100.
 const BANK_SIZE_OVERRIDES = {
+  // ACT Math skills extended with a bonus lesson's worth of hand-written
+  // questions on top of the original 100.
+  "ma-matrixlog": 125,
   "en-commas": 105,
   "en-apostrophes": 105,
   "en-colons": 105,
