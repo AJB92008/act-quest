@@ -129,7 +129,7 @@ test("a question the player has consistently aced can move INTO lesson 1 even if
 
   // The last lesson holds the heuristic's "hardest" questions; pick one and
   // give it a flawless personal record.
-  const lastLessonIndex = Math.ceil(100 / 5) - 1; // ma-linear has no bonus lessons -> 20 lessons
+  const lastLessonIndex = Math.ceil(125 / 5) - 1; // ma-linear has a bonus lesson's worth of extra content -> 25 lessons
   const target = getLessonQuestions("ma-linear", lastLessonIndex, { getQuestionStat })[0].bankIndex;
   for (let i = 0; i < 4; i++) gs.recordQuestionAnswer("ma-linear", target, true);
 
