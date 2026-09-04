@@ -38,6 +38,7 @@ const BANK_SIZE_OVERRIDES = {
   // questions on top of the original 100.
   "ma-matrixlog": 125,
   "ma-trig": 125,
+  "ma-finalfive": 125,
   "en-commas": 105,
   "en-apostrophes": 105,
   "en-colons": 105,
