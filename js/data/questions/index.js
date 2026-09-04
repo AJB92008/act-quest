@@ -48,7 +48,7 @@ const BANK_SIZE_OVERRIDES = {
   "en-subobjpronouns": 105,
   "en-thatwho": 105,
   "en-pronounagreement": 105,
-  "en-ambiguous": 105,
+  "en-ambiguous": 131,
   "en-verbtense": 105,
   "en-svagreement": 131,
   "en-comparisons": 131,
