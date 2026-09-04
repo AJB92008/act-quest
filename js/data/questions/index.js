@@ -59,7 +59,7 @@ const BANK_SIZE_OVERRIDES = {
   "en-parallel": 131,
   "en-modifiers": 131,
   "en-transitions": 105,
-  "en-concision": 105,
+  "en-concision": 131,
   "en-tone": 105,
   "re-mainidea": 140,
   "re-detail": 140,
