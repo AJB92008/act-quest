@@ -17,12 +17,15 @@
 //
 // Unlike Numeria Peaks, this archipelago's islands aren't the avatar's
 // only walkable ground — there's no point-in-polygon collision here, so
-// the amber "energy field" between islands (renderScienceBackdrop) is
-// just as walkable as the islands themselves, the same open-world model
-// Wordwood Isle/Athenaeum Reef use. That's a deliberate scope cut, not
-// an oversight: it means no causeways are needed to keep foot travel
-// between islands possible, since there's no water to block it in the
-// first place.
+// the open water between islands (renderScienceBackdrop) is just as
+// walkable as the islands themselves, the same open-world model
+// Wordwood Isle/Athenaeum Reef use. The sand causeways between islands
+// (renderCauseway, called from renderScienceRegions) are therefore pure
+// visual dressing, not load-bearing the way Numeria Peaks' own causeways
+// are (that hub's real point-in-polygon collision means removing one of
+// its causeways would actually cut off travel) — here they exist so open
+// water doesn't ask the player to walk across the sea in-character, not
+// because the game would otherwise strand them.
 //
 // One landmark, unlike Numeria Peaks' none: ACT Science Background
 // Knowledge (Science's own reference lesson, reachable from the plain
@@ -238,26 +241,30 @@ function safeShorePad(gap) {
   return Math.max(MIN_SHORE_PAD, Math.min(DEFAULT_SHORE_PAD, (gap / 2 - WATER_GUTTER) / MAX_BULGE));
 }
 
-// A full-bleed amber "energy field" behind the islands — Lab
-// Archipelago's own equivalent of mathHub.js's open-water backdrop
-// (renderMathLandmass), tuned to Science's own amber brand color instead
-// of forcing this hub into the same blue-water palette every other
-// subject's hub already uses. The faint grid overlay (graph paper, not
-// ripples) nods at Data Deck without needing its own decoration.
+// A full-bleed ocean behind the islands, edge to edge across all of
+// WORLD_W x WORLD_H so there's no seam anywhere the camera's clamped
+// panning could expose (see hubWorld.js's wireMovement) — Lab
+// Archipelago's own copy of mathHub.js's renderMathLandmass, same blue
+// open-water family (matching .lab-scene's own CSS gradient in
+// style.css) rather than Science's old amber "energy field," so both
+// archipelago-style hubs read as the same kind of place. Kept as
+// Science's own copy rather than an import from mathHub.js, same
+// "no cross-hub sharing" reasoning this file's own header comment gives.
 function renderScienceBackdrop() {
   return `
     <defs>
-      <radialGradient id="labField" cx="50%" cy="38%" r="75%">
-        <stop offset="0%" stop-color="#fff3d6" />
-        <stop offset="55%" stop-color="#e0a34a" />
-        <stop offset="100%" stop-color="#3d2a12" />
+      <radialGradient id="scienceOcean" cx="50%" cy="38%" r="75%">
+        <stop offset="0%" stop-color="#c9e2e6" />
+        <stop offset="55%" stop-color="#5f8fa8" />
+        <stop offset="100%" stop-color="#28405c" />
       </radialGradient>
-      <pattern id="labGrid" width="90" height="90" patternUnits="userSpaceOnUse">
-        <path d="M0 0 H90 M0 0 V90" stroke="rgba(255,255,255,0.16)" stroke-width="1.5" fill="none" />
+      <pattern id="scienceOceanRipple" width="420" height="130" patternUnits="userSpaceOnUse">
+        <path d="M0 40 Q105 20 210 40 T420 40" stroke="rgba(255,255,255,0.28)" stroke-width="2" fill="none" />
+        <path d="M0 90 Q105 68 210 90 T420 90" stroke="rgba(255,255,255,0.16)" stroke-width="2" fill="none" />
       </pattern>
     </defs>
-    <rect x="0" y="0" width="${WORLD_W}" height="${WORLD_H}" fill="url(#labField)" />
-    <rect x="0" y="0" width="${WORLD_W}" height="${WORLD_H}" fill="url(#labGrid)" opacity="0.5" />
+    <rect x="0" y="0" width="${WORLD_W}" height="${WORLD_H}" fill="url(#scienceOcean)" />
+    <rect x="0" y="0" width="${WORLD_W}" height="${WORLD_H}" fill="url(#scienceOceanRipple)" opacity="0.5" />
   `;
 }
 
@@ -442,11 +449,38 @@ function renderIslandBiome(zoneId, bbox, seedBase, ringCap) {
   return renderer ? renderer(bbox, seedBase, ringCap) : "";
 }
 
+// A plain sand strip between two shoreline points — this file's own
+// copy of mathHub.js's renderCauseway (same construction: a rectangle
+// perpendicular to the ax,ay->bx,by line, half `width` to each side),
+// kept local rather than imported for the same "no cross-hub sharing"
+// reasoning this file's own header comment gives. Purely decorative
+// here (see this file's own header comment on why, unlike Numeria
+// Peaks' causeways, removing one wouldn't strand anyone) — drawn before
+// the islands themselves so each end tucks under that island's own
+// shoreline sand ring instead of leaving a visible seam past its edge.
+function renderCauseway(ax, ay, bx, by, width = 56) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = (-dy / len) * (width / 2);
+  const ny = (dx / len) * (width / 2);
+  const d = [
+    `M${(ax + nx).toFixed(1)},${(ay + ny).toFixed(1)}`,
+    `L${(bx + nx).toFixed(1)},${(by + ny).toFixed(1)}`,
+    `L${(bx - nx).toFixed(1)},${(by - ny).toFixed(1)}`,
+    `L${(ax - nx).toFixed(1)},${(ay - ny).toFixed(1)}`,
+    "Z",
+  ].join(" ");
+  return `<path d="${d}" fill="${SAND}" />`;
+}
+
 // The three islands, spaced apart with shoreline padding shrunk (only on
 // the side facing a neighbor) so they never overlap — see safeShorePad
-// above. No causeways and no boss island (compare mathHub.js's own
-// renderMathRegions): this hub's open water is walkable ground, and the
-// boss sits on hubWorld.js's own default dark clearing.
+// above. No boss island here (compare mathHub.js's own renderMathRegions):
+// this hub's open water is walkable ground regardless, and the boss
+// still sits on hubWorld.js's own default dark clearing — but a sand
+// causeway between each adjacent pair of islands now connects them, so
+// the crossing itself doesn't read as walking on open water.
 function renderScienceRegions(zoneGroups) {
   const boxes = zoneGroups.map(({ points }) => {
     if (!points.length) return null;
@@ -466,7 +500,13 @@ function renderScienceRegions(zoneGroups) {
     return { left: safeShorePad(leftGap), right: safeShorePad(rightGap), top: DEFAULT_SHORE_PAD, bottom: DEFAULT_SHORE_PAD };
   });
 
-  return zoneGroups
+  // Every zone shares the same TOP_BAND, so `box.x1/x0, box.cy` sits
+  // exactly at each island's own widest point on the side facing its
+  // neighbor — same guarantee mathHub.js's own causewaysMarkup relies on.
+  const presentBoxes = boxes.filter(Boolean);
+  const causewaysMarkup = presentBoxes.slice(0, -1).map((box, i) => renderCauseway(box.x1, box.cy, presentBoxes[i + 1].x0, presentBoxes[i + 1].cy)).join("");
+
+  const islands = zoneGroups
     .map(({ zone }, i) => {
       const bbox = boxes[i];
       if (!bbox) return "";
@@ -475,6 +515,8 @@ function renderScienceRegions(zoneGroups) {
       return renderIsland(bbox, zone.fill, i + 1, pads[i]) + renderIslandBiome(zone.id, bbox, i + 1, ringCap);
     })
     .join("");
+
+  return causewaysMarkup + islands;
 }
 
 // Each zone's own nodes get connected in the order they were placed,
@@ -550,7 +592,7 @@ export function renderScienceHub(root, navigate, subject) {
 
   const sceneSvg = renderWorldSvg(layout, {
     ariaLabel:
-      "Lab Archipelago, an archipelago of separate islands floating over an amber energy field — a data deck, a field station, and an observatory ridge — each with its own trail of science skills, plus a dark path south to the boss's own clearing",
+      "Lab Archipelago, an archipelago of separate islands floating in open water — a data deck, a field station, and an observatory ridge — connected by sand causeways, each with its own trail of science skills, plus a dark path south to the boss's own clearing",
     landmass: renderScienceBackdrop,
     regionShapes: renderScienceRegions,
     trails: renderScienceTrails,

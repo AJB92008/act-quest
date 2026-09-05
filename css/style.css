@@ -735,16 +735,18 @@ input[type="password"] {
 }
 
 /* Lab Archipelago (ACT Science's own hub, scienceHub.js) — same idea
-   again, tuned toward a warm amber lab-light instead of any of the
-   other three hubs' own blue-green water, matching Science's own amber
-   brand color instead of forcing it into the same ocean palette every
-   other subject's hub already uses. */
+   again, now sharing Numeria Peaks' own open-water blue-gray family
+   (rather than the amber "energy field" this used to be) so the two
+   archipelago-style hubs read as the same kind of place; matched to
+   mathHub.js's own .ridge-scene values below rather than left to drift
+   independently, since "same family" only holds if the two are kept in
+   sync by design, not by coincidence. */
 .lab-scene {
-  background: radial-gradient(ellipse 90% 75% at 50% 38%, #fff3d6 0%, #e0a34a 48%, #3d2a12 100%);
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #c9e2e6 0%, #5f8fa8 48%, #28405c 100%);
 }
 
 :root[data-theme="dark"] .lab-scene {
-  background: radial-gradient(ellipse 90% 75% at 50% 38%, #4a3a1e 0%, #2c2210 48%, #0a0703 100%);
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #2c4652 0%, #182c38 48%, #060d13 100%);
 }
 
 .lab-scene > * {
@@ -755,21 +757,21 @@ input[type="password"] {
 .lab-scene .back-btn,
 .lab-scene .map-subtitle,
 .lab-scene .island-heading-blurb {
-  color: rgba(40, 28, 10, 0.72);
+  color: rgba(15, 32, 40, 0.72);
 }
 
 .lab-scene .back-btn:hover {
-  color: rgba(40, 28, 10, 0.95);
+  color: rgba(15, 32, 40, 0.95);
 }
 
 :root[data-theme="dark"] .lab-scene .back-btn,
 :root[data-theme="dark"] .lab-scene .map-subtitle,
 :root[data-theme="dark"] .lab-scene .island-heading-blurb {
-  color: rgba(240, 230, 210, 0.75);
+  color: rgba(222, 236, 240, 0.75);
 }
 
 :root[data-theme="dark"] .lab-scene .back-btn:hover {
-  color: rgba(240, 230, 210, 0.95);
+  color: rgba(222, 236, 240, 0.95);
 }
 
 /* Centers a .node-area-blob on just the button, not the taller
@@ -1289,18 +1291,18 @@ input[type="password"] {
   background: radial-gradient(ellipse 90% 75% at 50% 38%, #315a67 0%, #1b3540 48%, #081419 100%);
 }
 
-/* Lab Archipelago's own amber field clashes hard against the shared
-   blue-water default above (English's and Math's own scenes are close
-   enough to that default that neither needed this override) — matched
-   to .lab-scene's own gradient stops so fullscreen mode (which hides
-   .lab-scene itself, per the comment above) doesn't flash back to blue
-   water around Science's amber islands. */
+/* Lab Archipelago now shares Numeria Peaks' own open-water family (see
+   .lab-scene above) closely enough that the shared blue-water default
+   just above would already be a fine match on its own — kept as an
+   explicit override anyway, matched to .lab-scene's own gradient stops
+   exactly, so fullscreen mode (which hides .lab-scene itself, per the
+   comment above) can't drift out of sync with it later. */
 .lab-scene .hub-viewport {
-  background: radial-gradient(ellipse 90% 75% at 50% 38%, #fff3d6 0%, #e0a34a 48%, #3d2a12 100%);
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #c9e2e6 0%, #5f8fa8 48%, #28405c 100%);
 }
 
 :root[data-theme="dark"] .lab-scene .hub-viewport {
-  background: radial-gradient(ellipse 90% 75% at 50% 38%, #4a3a1e 0%, #2c2210 48%, #0a0703 100%);
+  background: radial-gradient(ellipse 90% 75% at 50% 38%, #2c4652 0%, #182c38 48%, #060d13 100%);
 }
 
 .hub-viewport:fullscreen {
