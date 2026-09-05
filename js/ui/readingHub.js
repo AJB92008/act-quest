@@ -51,14 +51,38 @@ const RING = { center: { x: 1100, y: 650 }, ringRadius: 230, lobeRadius: 230 };
 // computeLobeLayout/renderLobeIsland in hubWorld.js), starting straight
 // up from the ring's own center and going clockwise; every skill stays
 // in the exact same zone it's always been in regardless of how this
-// array is ordered.
+// array is ordered. `description` is what the legend shows for each zone
+// — computeLobeLayout splits Reading's 10 skills into these 5 zones by
+// plain index order (2 per zone), not by reportingCategory, so each
+// description below just names whatever those two skills actually are
+// (see js/data/skills.js's reading skill list), same reasoning as
+// islandHub.js's own zone descriptions.
 const ZONES = [
-  { id: "stacks", name: "Coral Stacks", fill: "#7fd9c4", decorations: ["🪸", "📚", "🐠"] },
-  { id: "tidepool", name: "Tide Pool Terrace", fill: "#a7e0d8", decorations: ["🌊", "🦀", "🐚"] },
-  { id: "lighthouse", name: "Lighthouse Point", fill: "#e8d29a", decorations: ["🧭", "⛵", "🐟"] },
-  { id: "archive", name: "Sunken Archive", fill: "#6fb8c9", decorations: ["📜", "🐙", "🦑"] },
-  { id: "driftwood", name: "Driftwood Cove", fill: "#c9a887", decorations: ["🪵", "🐬", "🐳"] },
+  { id: "stacks", name: "Coral Stacks", fill: "#7fd9c4", description: "Main ideas & key details", decorations: ["🪸", "📚", "🐠"] },
+  { id: "tidepool", name: "Tide Pool Terrace", fill: "#a7e0d8", description: "Sequence & comparison", decorations: ["🌊", "🦀", "🐚"] },
+  { id: "lighthouse", name: "Lighthouse Point", fill: "#e8d29a", description: "Cause/effect & vocabulary", decorations: ["🧭", "⛵", "🐟"] },
+  { id: "archive", name: "Sunken Archive", fill: "#6fb8c9", description: "Generalizing & author's craft", decorations: ["📜", "🐙", "🦑"] },
+  { id: "driftwood", name: "Driftwood Cove", fill: "#c9a887", description: "Claims & multiple texts", decorations: ["🪵", "🐬", "🐳"] },
 ];
+
+function renderLegend() {
+  return `
+    <div class="hub-legend" aria-hidden="true">
+      <p class="hub-legend-title">Island regions</p>
+      ${ZONES.map(
+        (zone) => `
+        <div class="hub-legend-row">
+          <span class="hub-legend-swatch" style="background:${zone.fill}"></span>
+          <span>
+            <span class="hub-legend-name">${zone.name}</span><br>
+            <span class="hub-legend-desc">${zone.description}</span>
+          </span>
+        </div>
+      `
+      ).join("")}
+    </div>
+  `;
+}
 
 function renderSkillMarker({ item: skill, x, y }, subject) {
   const progress = gameState.getSkillProgress(skill.id);
@@ -118,6 +142,7 @@ export function renderReadingHub(root, navigate, subject) {
       <p class="map-subtitle hub-hint" id="hubHint">🧭 Walk your monster with WASD (or the joystick) through the stacks, tide pool, lighthouse, archive, and cove — every trail leads to a skill</p>
       <div class="hub-viewport" id="hubViewport">
         <button class="hub-fullscreen-btn" id="hubFullscreenBtn" type="button" aria-label="Enter fullscreen">⛶</button>
+        ${renderLegend()}
         ${joystickHTML("hubJoystick")}
         <div class="hub-world" id="hubWorld" style="width:${WORLD_W}px;height:${WORLD_H}px;">
           ${sceneSvg}
