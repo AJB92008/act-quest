@@ -1105,14 +1105,44 @@ input[type="password"] {
 /* Same visual language as the island nodes above (circular icon + colored
    ring + label below) so these read as part of the map instead of a
    bolted-on settings menu, just laid out in a static row instead of
-   scattered along the path. */
+   scattered along the path. Two labeled groups (Practice Modes, Test Day)
+   rather than one flat row of 8, so it reads as organized rather than
+   items just tacked on as they were added. */
+.map-shortcuts-group {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.map-shortcuts-group:first-of-type {
+  margin-top: 22px;
+}
+
+.map-shortcuts-group:last-of-type {
+  margin-bottom: 20px;
+}
+
+.map-shortcuts-group + .map-shortcuts-group {
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.map-shortcuts-label {
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 4px;
+}
+
 .map-shortcuts-row {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 30px;
-  max-width: 640px;
-  margin: 22px auto 34px;
+  margin: 0 0 14px;
 }
 
 .map-shortcut {

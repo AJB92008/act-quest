@@ -66,3 +66,27 @@ test("clicking the Score Report shortcut navigates with this planet's own testId
   assertEqual(navigated.screen, "scoreReport");
   assertEqual(navigated.params.testId, "sat");
 });
+
+test("the shortcuts row is split into two labeled groups: Practice Modes and Test Day", () => {
+  freshGameState();
+  const root = document.createElement("div");
+  renderWorldMap(root, () => {}, { testId: "act" });
+  const labels = [...root.querySelectorAll(".map-shortcuts-label")].map((l) => l.textContent);
+  assertTrue(labels.some((l) => l.includes("Practice Modes")));
+  assertTrue(labels.some((l) => l.includes("Test Day")));
+  // Practice Modes group comes first in the DOM, Test Day second.
+  const groups = [...root.querySelectorAll(".map-shortcuts-group")];
+  assertTrue(groups[0].textContent.includes("Practice Modes"));
+  assertTrue(groups[1].textContent.includes("Test Day"));
+});
+
+test("the Test Day shortcuts share this planet's own color instead of their own fixed colors", () => {
+  freshGameState();
+  const root = document.createElement("div");
+  renderWorldMap(root, () => {}, { testId: "sat" });
+  const practiceTestBtn = root.querySelector('[data-shortcut="practiceTest"]');
+  const scoreReportBtn = root.querySelector('[data-shortcut="scoreReport"]');
+  const satColor = "#2a9d8f"; // SAT's own color, data/tests.js
+  assertTrue(practiceTestBtn.getAttribute("style").includes(satColor));
+  assertTrue(scoreReportBtn.getAttribute("style").includes(satColor));
+});

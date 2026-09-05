@@ -50,18 +50,39 @@ const SHORTCUTS = [
 // Practice Test behind them (see each test's practiceTest config in
 // data/tests.js) — State Assessments has none yet, so these simply don't
 // apply there. Writing is further gated on supportsWriting (ACT only —
-// the real SAT dropped its essay in 2021, PSAT never had one). Own colors,
-// distinct from SHORTCUTS above and from each other.
+// the real SAT dropped its essay in 2021, PSAT never had one). These
+// render in *this planet's own* color (see the "Test Day" group below),
+// not a color of their own, so no color/bg fields here.
 function scoreShortcutsFor(test) {
   if (!test.practiceTest) return [];
   const shortcuts = [
-    { screen: "practiceTest", icon: "📝", name: "Practice Test", blurb: "A full-length, timed test", color: "#0891b2", bg: "#e5f7fa" },
-    { screen: "scoreReport", icon: "📄", name: "Score Report", blurb: "Your latest score, shareable", color: "#be185d", bg: "#fce8f1" },
+    { screen: "practiceTest", icon: "📝", name: "Practice Test", blurb: "A full-length, timed test" },
+    { screen: "scoreReport", icon: "📄", name: "Score Report", blurb: "Your latest score, shareable" },
   ];
   if (test.practiceTest.supportsWriting) {
-    shortcuts.splice(1, 0, { screen: "essay", icon: "✍️", name: "Writing", blurb: "Optional essay practice", color: "#a16207", bg: "#fdf6e3" });
+    shortcuts.splice(1, 0, { screen: "essay", icon: "✍️", name: "Writing", blurb: "Optional essay practice" });
   }
   return shortcuts;
+}
+
+// Shared markup for both shortcut groups below — `color`/`bg` are passed
+// explicitly per group (the 5 practice shortcuts keep their own distinct
+// colors; the Test Day trio all share this planet's own color) rather than
+// read off `s` itself, so one render path works for both.
+function shortcutButtonHTML(s, color, bg, badge = "") {
+  return `
+    <button class="map-shortcut" data-shortcut="${s.screen}" style="--island-color:${color};--island-bg:${bg}">
+      <span class="map-island-node map-shortcut-node">
+        <span class="map-island-ring" style="--ring-pct:100%"></span>
+        <span class="map-island-icon">${s.icon}</span>
+        ${badge}
+      </span>
+      <span class="map-island-label">
+        <h3>${s.name}</h3>
+        <p class="map-island-place">${s.blurb}</p>
+      </span>
+    </button>
+  `;
 }
 
 export function renderWorldMap(root, navigate, { testId } = {}) {
@@ -128,25 +149,10 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
   // they only appear once at least one planet has real content (isReady),
   // same gate this screen itself uses to decide "real path" vs. "coming
   // soon" banner.
-  const shortcuts =
-    isReady
-      ? [...SHORTCUTS, ...scoreShortcutsFor(test)].map((s) => {
-          const badge = s.screen === "reviewQueue" && reviewQueueDueCount > 0 ? `<span class="map-shortcut-badge">${reviewQueueDueCount}</span>` : "";
-          return `
-            <button class="map-shortcut" data-shortcut="${s.screen}" style="--island-color:${s.color};--island-bg:${s.bg}">
-              <span class="map-island-node map-shortcut-node">
-                <span class="map-island-ring" style="--ring-pct:100%"></span>
-                <span class="map-island-icon">${s.icon}</span>
-                ${badge}
-              </span>
-              <span class="map-island-label">
-                <h3>${s.name}</h3>
-                <p class="map-island-place">${s.blurb}</p>
-              </span>
-            </button>
-          `;
-        }).join("")
-      : "";
+  const practiceShortcutsHTML = isReady
+    ? SHORTCUTS.map((s) => shortcutButtonHTML(s, s.color, s.bg, s.screen === "reviewQueue" && reviewQueueDueCount > 0 ? `<span class="map-shortcut-badge">${reviewQueueDueCount}</span>` : "")).join("")
+    : "";
+  const testDayShortcutsHTML = isReady ? scoreShortcutsFor(test).map((s) => shortcutButtonHTML(s, test.color, test.bg)).join("") : "";
 
   const homeStateName = activeTestId === "stateAssessments" ? getState(gameState.homeState)?.name : null;
 
@@ -184,7 +190,26 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
           : `${test.planetName} (${test.name}) &mdash; pick a planet to begin the path.`
       }</p>
       ${!isReady ? `<p class="map-coming-soon-banner">🚧 ${test.name} content is still being built &mdash; pick a planet below to see what's planned.</p>` : ""}
-      ${shortcuts ? `<div class="map-shortcuts-row">${shortcuts}</div>` : ""}
+      ${
+        practiceShortcutsHTML
+          ? `
+            <div class="map-shortcuts-group">
+              <p class="map-shortcuts-label">Practice Modes</p>
+              <div class="map-shortcuts-row">${practiceShortcutsHTML}</div>
+            </div>
+          `
+          : ""
+      }
+      ${
+        testDayShortcutsHTML
+          ? `
+            <div class="map-shortcuts-group">
+              <p class="map-shortcuts-label">🏆 Test Day</p>
+              <div class="map-shortcuts-row">${testDayShortcutsHTML}</div>
+            </div>
+          `
+          : ""
+      }
       <div class="map-path-container" style="height:${totalHeight}px">
         ${isOceanScene ? "" : `<div class="map-planet-circle"></div>`}
         ${renderPathSvg(positions, totalHeight, { color: test.color })}
