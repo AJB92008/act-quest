@@ -32,6 +32,7 @@ import {
   renderWorldSvg,
   renderLobeIsland,
   organicRingPoints,
+  RIBBON_SAND,
   wireMovement,
   wireFullscreenToggle,
   joystickHTML,
@@ -131,14 +132,15 @@ function renderSkillMarker({ item: skill, x, y }, subject) {
 // — the dashed glow trail on its own still crossed open water, which
 // reads as walking on water rather than an actual route. Built the same
 // "two wobbled edges, closed into one path" way lessonTerrain.js's own
-// river bands are (jaggedBandPath), just filled as dark weathered rock
-// (the islet's own fill/stroke tones) rather than water or bright sand,
-// so it reads as the islet's own material reaching up to meet the reef
-// rather than a 6th cheerful zone. Spans well past both the sand
-// shore's own outer reach and the islet's own shadow radius on purpose
-// — generous overlap on both ends means no visible seam, without having
-// to keep this in exact lockstep with renderLobeIsland's own baseRadius
-// math over in hubWorld.js.
+// river bands are (jaggedBandPath), filled as the same sand as the
+// reef's own shore (RIBBON_SAND) rather than dark rock, so the crossing
+// reads as a natural extension of the beach rather than a separate dark
+// structure — the dashed trail and the islet itself are what mark it as
+// leading somewhere serious, not the ground underfoot. Spans well past
+// both the sand shore's own outer reach and the islet's own shadow
+// radius on purpose — generous overlap on both ends means no visible
+// seam, without having to keep this in exact lockstep with
+// renderLobeIsland's own baseRadius math over in hubWorld.js.
 function renderLandBridge() {
   const topY = 1000;
   const bottomY = 1320;
@@ -154,7 +156,7 @@ function renderLandBridge() {
     leftPts.push({ x: cx - halfWidth + wobble, y });
     rightPts.push({ x: cx + halfWidth + wobble, y });
   }
-  return `<path d="${jaggedBandPath(leftPts, rightPts)}" fill="#2a1c2b" stroke="#4a2f3a" stroke-width="3" opacity="0.96" />`;
+  return `<path d="${jaggedBandPath(leftPts, rightPts)}" fill="${RIBBON_SAND}" stroke="#c9a668" stroke-width="3" opacity="0.98" />`;
 }
 
 // A small dark islet for the boss to actually stand on, built from the
@@ -208,11 +210,11 @@ function renderBossPathGlow() {
       `;
     })
     .join("");
-  // Glowing teal instead of the old plain dark stroke — against open
-  // water a dark line still stood out fine, but against the land
-  // bridge's own dark rock it would nearly vanish. Reads as a trail of
-  // glowing markers pressed into the causeway's surface.
-  const path = `<path d="M${RING.center.x},${RING.center.y} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#5fcfc0" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.6" />`;
+  // Plain dark stroke, same as every other hub's boss path — reads
+  // clearly against the sand-colored land bridge, and keeps this the
+  // one visibly "more serious" dark path on the map, same as before the
+  // land bridge existed.
+  const path = `<path d="M${RING.center.x},${RING.center.y} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#3b2523" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.85" />`;
   // Land bridge and path drawn before the islet so the causeway's own
   // tail end and the trail's last dashes read as running up to and
   // disappearing under the rock, not scribbled across its surface.
