@@ -1111,19 +1111,19 @@ input[type="password"] {
 .map-shortcuts-group {
   max-width: 640px;
   margin: 0 auto;
+  /* padding, not margin, for the space after a group — margin here would
+     collapse straight through into the next group's own top spacing
+     (verified via getBoundingClientRect: an intended ~28px gap was
+     actually rendering as 14px), silently undoing whatever gap is set. */
+  padding-bottom: 30px;
 }
 
 .map-shortcuts-group:first-of-type {
-  margin-top: 22px;
-}
-
-.map-shortcuts-group:last-of-type {
-  margin-bottom: 20px;
+  margin-top: 30px;
 }
 
 .map-shortcuts-group + .map-shortcuts-group {
-  margin-top: 8px;
-  padding-top: 20px;
+  padding-top: 30px;
   border-top: 1px solid var(--border);
 }
 
@@ -1134,15 +1134,15 @@ input[type="password"] {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin: 0 0 4px;
+  margin: 0 0 16px;
 }
 
 .map-shortcuts-row {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 30px;
-  margin: 0 0 14px;
+  gap: 36px 40px;
+  margin: 0;
 }
 
 .map-shortcut {
