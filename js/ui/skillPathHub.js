@@ -149,11 +149,13 @@
 // physically merging into one wider current partway down, the trail
 // itself crossing right at the confluence — two separate things
 // becoming one, rendered literally. Tide Pool Terrace gets its own
-// pair: Time Order gets a literal cascade — a chain of pools connected
-// by spill-channels, each a little larger than the last, water only
-// ever flowing one direction; Side by Side gets a pool sitting right
-// next to another pool at every stop, each holding different contents,
-// built to be read as a pair rather than individually. Lighthouse
+// pair: Time Order gets the moon's own real phases, in their real
+// order, one per stop against a night sky — new, crescent, quarter,
+// gibbous, full, and back — the one sequence every player already
+// knows by heart, and the actual real-world cause of tides in the
+// first place; Side by Side gets a pool sitting right next to another
+// pool at every stop, each holding different contents, built to be
+// read as a pair rather than individually. Lighthouse
 // Point: Cause & Effect gets a rock struck by breaking spray at every
 // stop — cause and effect drawn as one inseparable unit — under a
 // lighthouse standing over the whole scene as the one fixed thing every
@@ -220,7 +222,7 @@ import { reefCrownTheme } from "./lessonThemes/reefCrown.js";
 import { coralMosaicTheme } from "./lessonThemes/coralMosaic.js";
 import { driftwoodLockerTheme } from "./lessonThemes/driftwoodLocker.js";
 import { confluenceCoveTheme } from "./lessonThemes/confluenceCove.js";
-import { tidalCascadeTheme } from "./lessonThemes/tidalCascade.js";
+import { moonSequenceTheme } from "./lessonThemes/moonSequence.js";
 import { twinTidepoolsTheme } from "./lessonThemes/twinTidepools.js";
 import { beaconSweepTheme } from "./lessonThemes/beaconSweep.js";
 import { tidelineGlossaryTheme } from "./lessonThemes/tidelineGlossary.js";
@@ -275,7 +277,7 @@ export const LESSON_THEMES = {
   "re-detail": coralMosaicTheme,
   "re-claims": driftwoodLockerTheme,
   "re-integrate": confluenceCoveTheme,
-  "re-sequence": tidalCascadeTheme,
+  "re-sequence": moonSequenceTheme,
   "re-compare": twinTidepoolsTheme,
   "re-causeeffect": beaconSweepTheme,
   "re-vocab": tidelineGlossaryTheme,
