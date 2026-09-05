@@ -200,11 +200,6 @@ function renderBossIsletVeins() {
 function renderBossPathGlow() {
   const dx = BOSS_POS.x - RING.center.x;
   const dy = BOSS_POS.y - RING.center.y;
-  const midX = RING.center.x + dx / 2;
-  const midY = RING.center.y + dy / 2;
-  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-  const len = Math.hypot(dx, dy) || 1;
-  const mist = `<ellipse cx="${midX}" cy="${midY}" rx="${len / 2 + 60}" ry="90" fill="#04202a" opacity="0.26" transform="rotate(${angle} ${midX} ${midY})" />`;
   const orbs = [0.22, 0.48, 0.74]
     .map((f) => {
       const ox = RING.center.x + dx * f;
@@ -223,7 +218,7 @@ function renderBossPathGlow() {
   // Land bridge and path drawn before the islet so the causeway's own
   // tail end and the trail's last dashes read as running up to and
   // disappearing under the rock, not scribbled across its surface.
-  return mist + renderLandBridge() + path + renderBossIslet() + renderBossIsletVeins() + orbs;
+  return renderLandBridge() + path + renderBossIslet() + renderBossIsletVeins() + orbs;
 }
 
 function renderBossMarker(boss, bossStateClass, subject) {
