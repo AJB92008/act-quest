@@ -89,6 +89,7 @@ export function renderAuthGate(root, navigate) {
       <p class="backup-status" id="gateAuthStatus" hidden></p>
       <button class="btn-ghost" data-gate-skip>Skip for now</button>
       <p class="auth-gate-legal">By creating an account you agree to our <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+      <p class="auth-gate-legal">PrepQuest is not affiliated with, endorsed by, or sponsored by ACT, Inc. or the College Board.</p>
     `;
   }
 
