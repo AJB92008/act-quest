@@ -22,6 +22,7 @@ import { monsterSVG } from "./monster.js";
 import { getBossMonster } from "../data/bossMonsters.js";
 import { getLessonCount } from "../data/questions/index.js";
 import { glowVars } from "./pathTrail.js";
+import { closedBlobPath } from "./lessonTerrain.js";
 import {
   BOSS_POS,
   BOSS_TRIGGER_RADIUS,
@@ -30,6 +31,7 @@ import {
   computeLobeLayout,
   renderWorldSvg,
   renderLobeIsland,
+  organicRingPoints,
   wireMovement,
   wireFullscreenToggle,
   joystickHTML,
@@ -119,6 +121,39 @@ function renderSkillMarker({ item: skill, x, y }, subject) {
 // renderBossBridgeMist/renderBossBridgeTorches there), just themed to
 // the reef, and folding in the default lair glow ourselves since
 // supplying a custom `bossBridge` to renderWorldSvg replaces that too.
+// A small dark islet for the boss to actually stand on, built from the
+// exact same organicRingPoints/closedBlobPath technique every reef lobe
+// already uses (see hubWorld.js's own renderLobeIsland) — just dark
+// coral and jagged rock instead of a bright zone fill, so the boss
+// reads as standing on its own scrap of land like every other zone
+// instead of floating over open water. Seeds (401/402) are arbitrary
+// fixed constants, not derived from anything — they only need to be
+// stable across renders, the same reasoning renderLobeIsland's own
+// `seed` argument follows.
+function renderBossIslet() {
+  const shadow = organicRingPoints(BOSS_POS, 152, 401, 22, [-0.1, 0.16]);
+  const rock = organicRingPoints(BOSS_POS, 104, 402, 16, [-0.14, 0.12]);
+  return `
+    <path d="${closedBlobPath(shadow)}" fill="#0d1b1f" opacity="0.92" />
+    <path d="${closedBlobPath(rock)}" fill="#2a1c2b" stroke="#4a2f3a" stroke-width="3" />
+  `;
+}
+
+// Glowing bioluminescent veins across the islet's own rock, echoing the
+// path's own glow orbs so the boss's lair reads as part of the same
+// underwater light rather than a separate effect.
+function renderBossIsletVeins() {
+  return [0, 1, 2, 3, 4]
+    .map((i) => {
+      const a = (i / 5) * Math.PI * 2 + 0.4;
+      const r = 55 + (i % 2) * 22;
+      const vx = BOSS_POS.x + Math.cos(a) * r;
+      const vy = BOSS_POS.y + Math.sin(a) * r;
+      return `<circle cx="${vx}" cy="${vy}" r="${5 + (i % 2) * 2}" fill="#7fe8d9" opacity="0.5" />`;
+    })
+    .join("");
+}
+
 function renderBossPathGlow() {
   const dx = BOSS_POS.x - RING.center.x;
   const dy = BOSS_POS.y - RING.center.y;
@@ -127,7 +162,6 @@ function renderBossPathGlow() {
   const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
   const len = Math.hypot(dx, dy) || 1;
   const mist = `<ellipse cx="${midX}" cy="${midY}" rx="${len / 2 + 60}" ry="90" fill="#04202a" opacity="0.26" transform="rotate(${angle} ${midX} ${midY})" />`;
-  const lair = `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="118" fill="#04222c" opacity="0.3" />`;
   const orbs = [0.22, 0.48, 0.74]
     .map((f) => {
       const ox = RING.center.x + dx * f;
@@ -139,7 +173,9 @@ function renderBossPathGlow() {
     })
     .join("");
   const path = `<path d="M${RING.center.x},${RING.center.y} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#0d2a33" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.85" />`;
-  return mist + lair + orbs + path;
+  // Path drawn before the islet so its tail end reads as running up to
+  // and disappearing under the rock, not scribbled across its surface.
+  return mist + path + renderBossIslet() + renderBossIsletVeins() + orbs;
 }
 
 function renderBossMarker(boss, bossStateClass, subject) {
