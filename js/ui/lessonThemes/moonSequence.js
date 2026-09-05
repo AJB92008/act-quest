@@ -2,17 +2,20 @@
 // skill (see lessonTerrain.js for the shared engine every lesson-path
 // theme renders through). Time Order is about following a passage's own
 // sequence of events, so the scene leans on the one sequence everyone
-// already knows by heart: the moon's real phases, in their real order,
-// one at every stop — new, waxing crescent, first quarter, waxing
-// gibbous, full, waning gibbous, last quarter, waning crescent — lit
-// against a night sky over the reef. Not an arbitrary substitute motif
-// either: tides (the whole reason this zone is tide *pools*) are caused
-// by the moon in the first place.
+// already knows by heart: the moon's real phases, in their real order —
+// new, waxing crescent, first quarter, waxing gibbous, full, waning
+// gibbous, last quarter, waning crescent — lit against a night sky over
+// the reef. Not an arbitrary substitute motif either: tides (the whole
+// reason this zone is tide *pools*) are caused by the moon in the first
+// place. One moon every other lesson, sitting directly on the trail
+// itself (beads on a string) rather than a moon at every single stop
+// zigzagged to alternating sides — see renderMoons' own comment for why
+// that first pass read as confusing rather than as a clean sequence.
 //
 // Replaces an earlier version of this theme (a chain of pools connected
 // by spill-channels) that didn't work visually even after fixing a real
 // rendering bug in it — a different concept entirely, not a patch.
-import { COL_W, clamp, renderTrailPath } from "../lessonTerrain.js";
+import { COL_W, renderTrailPath } from "../lessonTerrain.js";
 
 const BAND = { min: 100, max: COL_W - 100 };
 const MOON_LIT = "#f3ecd6";
@@ -53,31 +56,32 @@ function renderMoon(cx, cy, r, phaseIndex) {
   `;
 }
 
-// One moon per lesson, cycling through the 8 phases in order — a skill
-// with more than 8 lessons just starts a fresh lunar cycle, same as a
-// real calendar would.
+// One moon every other lesson, not every single one — the first pass
+// put a moon (each a different phase, zigzagged to alternating sides of
+// the trail) at *every* lesson, which was two things changing on every
+// single stop at once — position and appearance — with no rest between
+// them, plus an awkward not-quite-second-cycle for any skill whose
+// lesson count doesn't divide evenly into 8. Halving the count and
+// sitting each moon directly on the trail itself (beads on a string,
+// not a separate zigzag layered on top of it) leaves exactly one thing
+// changing from stop to stop: the phase.
 function renderMoons(positions) {
-  const mid = (BAND.min + BAND.max) / 2;
   return positions
-    .map((p, i) => {
-      const side = p.x < mid ? 1 : -1;
-      const x = clamp(p.x + side * 75, 45, COL_W - 45);
-      return renderMoon(x, p.y, 26, i);
-    })
+    .filter((_, i) => i % 2 === 0)
+    .map((p, i) => renderMoon(p.x, p.y, 30, i))
     .join("");
 }
 
-// A scattered, non-repeating starfield — deterministic (no Math.random,
-// same reasoning every other theme's "ambient" scatter uses) but with
-// enough spread in position/size/opacity that it doesn't read as a
-// tiled pattern.
+// A light, sparse scatter — enough to read as "night sky" without
+// competing with the moons themselves for attention. Deterministic (no
+// Math.random, same reasoning every other theme's ambient scatter uses).
 function renderStars(totalHeight) {
-  const count = Math.max(30, Math.round((totalHeight / COL_W) * 40));
+  const count = Math.max(14, Math.round((totalHeight / COL_W) * 16));
   return Array.from({ length: count }, (_, i) => {
     const y = (i * 191) % totalHeight;
     const x = (i * 137) % COL_W;
-    const r = 1 + (i % 3) * 0.6;
-    const opacity = (0.4 + ((i * 13) % 60) / 100).toFixed(2);
+    const r = 1 + (i % 2) * 0.5;
+    const opacity = (0.3 + ((i * 13) % 40) / 100).toFixed(2);
     return `<circle cx="${x}" cy="${y}" r="${r}" fill="${MOON_LIT}" opacity="${opacity}" />`;
   }).join("");
 }
