@@ -147,3 +147,27 @@ git config core.hooksPath .githooks
 same commit. `.git/hooks` itself is never tracked by git, which is why
 this lives in `.githooks/` and needs that one manual `core.hooksPath`
 config per clone instead of working automatically.
+
+## Legal
+
+- `privacy.html` / `terms.html` — the app's Privacy Policy and Terms of
+  Service, linked from the auth gate (`js/ui/authGate.js`) and the
+  site-wide footer (`index.html`). Templates, not attorney-drafted — have
+  counsel review before relying on them commercially.
+- `js/ui/authGate.js` age-gates account creation at 13+ (COPPA) —
+  birthdate is checked client-side only and never stored or transmitted;
+  guest play (no account) collects no personal information at any age.
+- `firestore.rules` / `firebase.json` / `.firebaserc` — Firestore security
+  rules restricting each player's cloud save (`saves/{uid}`) to that
+  player's own authenticated uid, with a default-deny fallback for
+  everything else. These are the source of truth going forward; deploy a
+  change with (after `npm install -g firebase-tools` and `firebase login`
+  once per machine):
+  ```
+  firebase deploy --only firestore:rules
+  ```
+  If the rules currently live only in the Firebase console and haven't
+  been deployed from this repo yet, run that once to make the console
+  match what's committed here.
+- `LICENSE` — all-rights-reserved proprietary notice (no open-source
+  license is granted on this repository, even though it's public).

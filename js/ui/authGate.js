@@ -23,6 +23,25 @@ function nextScreenAfterGate(navigate) {
   else navigate("avatarCreator", { onboarding: true });
 }
 
+// COPPA: creating an account collects an email address (personal
+// information) from whoever fills out the form, so *creating* one is
+// gated at 13+ — playing as a guest (no form, no email, just the
+// anonymous Firebase uid initCloudSync() already set up silently) stays
+// open to any age since it collects nothing personal. The birthdate itself
+// is never sent anywhere or stored (not to Firestore, not to
+// localStorage) — it only exists in memory long enough for this one
+// client-side age check, so a signup attempt adds zero PII beyond the
+// email/password already required.
+function isAtLeast13(dateStr) {
+  const dob = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(dob.getTime())) return false;
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const monthDiff = now.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate())) age--;
+  return age >= 13;
+}
+
 export function renderAuthGate(root, navigate) {
   function cardInnerHTML() {
     const status = getCloudStatus();
@@ -59,6 +78,9 @@ export function renderAuthGate(root, navigate) {
         <input type="email" id="gateEmailInput" name="email" placeholder="Email" required autocomplete="email" />
         <label class="visually-hidden" for="gatePasswordInput">Password (6+ characters)</label>
         <input type="password" id="gatePasswordInput" name="password" placeholder="Password (6+ characters)" required minlength="6" autocomplete="new-password" />
+        <label class="visually-hidden" for="gateBirthdateInput">Birthdate (required to create an account — you must be 13 or older)</label>
+        <input type="date" id="gateBirthdateInput" name="birthdate" placeholder="Birthdate" autocomplete="bday" max="${new Date().toISOString().slice(0, 10)}" />
+        <p class="auth-gate-hint">You must be 13 or older to create an account. Younger players can still play as a guest below.</p>
         <div class="results-actions">
           <button type="submit" class="btn-primary" data-gate-action="signUp">Create Account</button>
           <button type="button" class="btn-secondary" data-gate-action="signIn">I Already Have One</button>
@@ -66,6 +88,7 @@ export function renderAuthGate(root, navigate) {
       </form>
       <p class="backup-status" id="gateAuthStatus" hidden></p>
       <button class="btn-ghost" data-gate-skip>Skip for now</button>
+      <p class="auth-gate-legal">By creating an account you agree to our <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>
     `;
   }
 
@@ -108,6 +131,12 @@ export function renderAuthGate(root, navigate) {
         status.hidden = false;
         status.className = "backup-status is-error";
         status.textContent = "Enter a valid email and a password of at least 6 characters.";
+        return;
+      }
+      if (action === "signUp" && !isAtLeast13(form.birthdate.value)) {
+        status.hidden = false;
+        status.className = "backup-status is-error";
+        status.textContent = "You must be 13 or older to create an account. Use “Skip for now” to play as a guest instead.";
         return;
       }
       status.hidden = false;

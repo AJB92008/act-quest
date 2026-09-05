@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// Every player's save lives at saves/{uid} (see js/cloudSync.js's
+// saveDocRef) — a signed-in user (including an anonymous Firebase
+// Authentication session, which every visitor gets automatically) may
+// only read or write their own document. Everything else is denied by
+// default so a new collection added later doesn't accidentally end up
+// world-readable/writable just because no rule mentioned it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /saves/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
