@@ -12,6 +12,7 @@ import { GameState, gameState } from "../js/state.js";
 import { SUBJECTS } from "../js/data/skills.js";
 import { computeTrail, totalHeightFor } from "../js/ui/lessonTerrain.js";
 import { LESSON_THEMES, renderThemedLessonPath } from "../js/ui/skillPathHub.js";
+import { moonSequenceTheme } from "../js/ui/lessonThemes/moonSequence.js";
 import { test, assertEqual, assertTrue } from "./assert.js";
 
 function freshGameState() {
@@ -70,4 +71,35 @@ test("each Coral Stacks / Driftwood Cove / Tide Pool / Lighthouse / Sunken Archi
   const themeObjects = READING_SKILL_IDS.map((id) => LESSON_THEMES[id]);
   const uniqueThemes = new Set(themeObjects);
   assertEqual(uniqueThemes.size, READING_SKILL_IDS.length, "expected every Reading skill to have its own distinct theme, not a shared/reused one");
+});
+
+// Regression for a real bug: moonSequenceTheme placed a moon at every
+// other lesson (i % 2 === 0) with no regard for where the boss/champion
+// stop actually was — for an odd multiple of 5 lessons (5, 15, 25 — a
+// real, reachable bank size, not a hypothetical), the boss's own index
+// lands on an even number and a moon rendered directly on top of its
+// clearing. `renderScene` doesn't touch gameState at all, so this checks
+// every count directly rather than depending on today's real bank sizes
+// happening to include a vulnerable one.
+test("moonSequenceTheme never places a moon on top of the boss/champion clearing, at any lesson count", () => {
+  [5, 10, 15, 20, 25, 28].forEach((count) => {
+    const positions = computeTrail(count, moonSequenceTheme.trailBand);
+    const totalHeight = totalHeightFor(count);
+    const svgString = moonSequenceTheme.renderScene(positions, totalHeight, "The Reef Archivist");
+    const root = document.createElement("div");
+    root.innerHTML = svgString;
+    const boss = root.querySelector('circle[r="86"]');
+    const bossX = Number(boss.getAttribute("cx"));
+    const bossY = Number(boss.getAttribute("cy"));
+    // Every moon's own dark base/lit-overlay/clip-shape circles share
+    // their moon's exact (cx, cy) — a real overlap means at least one
+    // circle sits within a couple pixels of the boss's own center.
+    const collision = [...root.querySelectorAll("circle")].some((c) => {
+      if (c === boss) return false;
+      const dx = Math.abs(Number(c.getAttribute("cx")) - bossX);
+      const dy = Math.abs(Number(c.getAttribute("cy")) - bossY);
+      return dx < 5 && dy < 5;
+    });
+    assertTrue(!collision, `expected no moon to sit on the boss clearing at lesson count ${count}`);
+  });
 });

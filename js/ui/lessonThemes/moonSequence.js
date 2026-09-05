@@ -64,10 +64,16 @@ function renderMoon(cx, cy, r, phaseIndex) {
 // lesson count doesn't divide evenly into 8. Halving the count and
 // sitting each moon directly on the trail itself (beads on a string,
 // not a separate zigzag layered on top of it) leaves exactly one thing
-// changing from stop to stop: the phase.
+// changing from stop to stop: the phase. The boss/champion stop (always
+// the last position) is explicitly excluded regardless of parity —
+// `i % 2 === 0` alone would put a moon there too whenever the lesson
+// count happens to be an odd multiple of 5 (a 5, 15, or 25-lesson
+// skill's boss sits at an even index), rendering right on top of the
+// champion's own clearing.
 function renderMoons(positions) {
+  const bossIndex = positions.length - 1;
   return positions
-    .filter((_, i) => i % 2 === 0)
+    .filter((_, i) => i % 2 === 0 && i !== bossIndex)
     .map((p, i) => renderMoon(p.x, p.y, 30, i))
     .join("");
 }
