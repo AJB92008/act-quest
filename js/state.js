@@ -66,7 +66,7 @@ export function scoreFromAccuracy(accuracy) {
   return Math.max(1, Math.min(36, Math.round(1 + accuracy * 35)));
 }
 
-function scoreFromAccuracyInRange(accuracy, min, max) {
+export function scoreFromAccuracyInRange(accuracy, min, max) {
   return Math.max(min, Math.min(max, Math.round(min + accuracy * (max - min))));
 }
 
@@ -178,6 +178,40 @@ const COMPOSITE_PERCENTILES = [
 export function percentileForComposite(score) {
   const clamped = Math.max(1, Math.min(36, Math.round(score)));
   return COMPOSITE_PERCENTILES[clamped - 1];
+}
+
+// SAT/PSAT have no hand-tuned lookup table like ACT's COMPOSITE_PERCENTILES
+// above (College Board re-norms and publishes its own real percentile
+// tables periodically, and copying one verbatim would be the exact
+// "copied from a real published table" problem this app's own scoring
+// deliberately avoids everywhere else — see SECTION_CURVE_SHAPE/
+// ACT_SCORE_TABLES above). Same shape/spirit instead: a logistic curve
+// over that test's own composite range, tuned to land roughly near
+// publicly-known benchmark points (SAT ~1200 -> mid-70s percentile, ~1000
+// -> low-40s, ~1600 -> 99th) without claiming to reproduce any single
+// year's real table.
+const PERCENTILE_CURVE_SHAPE = { sat: { p0: 0.54, k: 7 }, psat: { p0: 0.54, k: 7 } };
+
+function percentileFromNormalized(norm, p0, k) {
+  const logistic = (p) => 1 / (1 + Math.exp(-k * (p - p0)));
+  const lo = logistic(0);
+  const hi = logistic(1);
+  return Math.round(1 + ((logistic(norm) - lo) / (hi - lo)) * 98);
+}
+
+/** Composite score -> approximate national percentile for any test with a
+ * practiceTest config: ACT uses the real hand-tuned table above; SAT/PSAT
+ * use PERCENTILE_CURVE_SHAPE's approximation over their own composite
+ * range. Returns null for a test with neither (State Assessments, or an
+ * unrecognized id) so callers can tell "no percentile for this test"
+ * apart from an actual score. */
+export function percentileForTestScore(testId, score) {
+  if (testId === "act") return percentileForComposite(score);
+  const shape = PERCENTILE_CURVE_SHAPE[testId];
+  const range = getTest(testId)?.practiceTest?.compositeRange;
+  if (!shape || !range) return null;
+  const norm = (score - range.min) / (range.max - range.min);
+  return Math.max(1, Math.min(99, percentileFromNormalized(norm, shape.p0, shape.k)));
 }
 
 function defaultSave() {

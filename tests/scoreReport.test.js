@@ -6,9 +6,16 @@
 // craft one and send it to someone else), and decodeReportPayload used to
 // pass whatever it decoded straight through to the renderer with no
 // escaping or type checking at all.
-import { GameState, gameState } from "../js/state.js";
-import { encodeReportPayload, decodeReportPayload, buildReportPayload, renderSharedReport } from "../js/ui/scoreReport.js";
+import { GameState, gameState, percentileForTestScore } from "../js/state.js";
+import { encodeReportPayload, decodeReportPayload, buildReportPayload, renderSharedReport, renderScoreReport } from "../js/ui/scoreReport.js";
 import { test, assertEqual, assertTrue } from "./assert.js";
+
+function freshGameState() {
+  localStorage.removeItem("act-quest-save-v1");
+  const fresh = new GameState();
+  gameState.data = fresh.data;
+  return gameState;
+}
 
 test("encodeReportPayload/decodeReportPayload round-trips valid data through to the same sanitized shape", () => {
   const original = { name: "Alex", predictedScore: 24, latestTest: null, essayBest: 8, masteredCount: 5, totalSkills: 59 };
@@ -125,4 +132,87 @@ test("buildReportPayload picks up a recorded practice test composite and essay b
   const payload = buildReportPayload();
   assertEqual(payload.latestTest.composite, 24);
   assertEqual(payload.essayBest, 8);
+});
+
+// --- multi-test (SAT/PSAT) Score Report support ---
+
+test("percentileForTestScore('act', ...) delegates to the real ACT lookup table", () => {
+  assertEqual(percentileForTestScore("act", 30), 95);
+  assertEqual(percentileForTestScore("act", 36), 100);
+  assertEqual(percentileForTestScore("act", 1), 1);
+});
+
+test("percentileForTestScore approximates SAT/PSAT with a monotonic curve over each test's own range", () => {
+  assertEqual(percentileForTestScore("sat", 400), 1);
+  assertEqual(percentileForTestScore("sat", 1600), 99);
+  assertTrue(percentileForTestScore("sat", 1200) > percentileForTestScore("sat", 1000), "a higher SAT score must never score a lower percentile");
+  assertEqual(percentileForTestScore("psat", 320), 1);
+  assertEqual(percentileForTestScore("psat", 1520), 99);
+});
+
+test("percentileForTestScore returns null for a test with no percentile curve (State Assessments, or an unknown id)", () => {
+  assertEqual(percentileForTestScore("stateAssessments", 50), null);
+  assertEqual(percentileForTestScore("not-a-real-test", 50), null);
+});
+
+test("buildReportPayload('sat') is scoped to SAT: no essay (ACT-only), mastery counted from SAT's own subjects only", () => {
+  const gs = freshGameState();
+  gs.cheatSetSubjectMastered("sat-math", true);
+  gs.recordEssayResult({
+    promptId: "school-schedules",
+    wordCount: 300,
+    domainScores: { ideas: 4, development: 4, organization: 4, language: 4 },
+    totalScore: 8,
+    starsEarned: 0,
+    coinsEarned: 0,
+  });
+  const payload = buildReportPayload("sat");
+  assertEqual(payload.testId, "sat");
+  assertEqual(payload.essayBest, null, "SAT has no Writing section, even though this player has an ACT essay score");
+  assertTrue(payload.masteredCount > 0 && payload.masteredCount < payload.totalSkills, "expected sat-math mastered but not every SAT skill");
+  // The ACT report must not see SAT's mastered subject either.
+  assertEqual(buildReportPayload("act").masteredCount, 0);
+});
+
+test("buildReportPayload('act') keeps essayBest when the player has a real Writing score", () => {
+  const gs = freshGameState();
+  gs.recordEssayResult({
+    promptId: "school-schedules",
+    wordCount: 300,
+    domainScores: { ideas: 5, development: 5, organization: 5, language: 5 },
+    totalScore: 10,
+    starsEarned: 0,
+    coinsEarned: 0,
+  });
+  assertEqual(buildReportPayload("act").essayBest, 10);
+});
+
+test("decodeReportPayload falls back to 'act' for a testId with no practiceTest config, instead of trusting it far enough to crash", () => {
+  const encoded = encodeReportPayload({ testId: "stateAssessments", predictedScore: 20 });
+  const decoded = decodeReportPayload(encoded);
+  assertEqual(decoded.testId, "act");
+});
+
+test("decodeReportPayload clamps a SAT payload's scores to SAT's own 400-1600 range, not ACT's 1-36", () => {
+  const encoded = encodeReportPayload({ testId: "sat", predictedScore: 9999 });
+  const decoded = decodeReportPayload(encoded);
+  assertEqual(decoded.testId, "sat");
+  assertEqual(decoded.predictedScore, 1600);
+});
+
+test("renderScoreReport renders a distinct, correctly-labeled report for act/sat/psat with no crash", () => {
+  for (const testId of ["act", "sat", "psat"]) {
+    freshGameState();
+    const root = document.createElement("div");
+    renderScoreReport(root, () => {}, { testId });
+    const heading = root.querySelector("h1")?.textContent || "";
+    assertTrue(heading.includes(testId === "act" ? "ACT" : testId === "sat" ? "SAT" : "PSAT"), `expected ${testId}'s own name in the heading, got "${heading}"`);
+  }
+});
+
+test("renderScoreReport falls back to 'act' for an unrecognized/missing testId instead of crashing", () => {
+  freshGameState();
+  const root = document.createElement("div");
+  renderScoreReport(root, () => {}, { testId: "not-a-real-test" });
+  assertTrue(root.querySelector("h1").textContent.includes("ACT"));
 });

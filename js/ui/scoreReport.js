@@ -1,16 +1,24 @@
 // Score Report: a print/PDF-friendly summary (predicted or actual
 // composite + national percentile, latest Practice Test section
-// breakdown, best essay score, overall mastery) meant for a distinct
-// buyer persona from the player themselves — a parent or tutor who wants
-// a readable snapshot without opening the game and clicking around.
+// breakdown, best essay score on ACT, overall mastery) meant for a
+// distinct buyer persona from the player themselves — a parent or tutor
+// who wants a readable snapshot without opening the game and clicking
+// around. Works for any planet with a real full-length Practice Test
+// (ACT/SAT/PSAT — see each test's practiceTest config in data/tests.js);
+// State Assessments has none, so this screen is never reachable for it.
 //
-// Styled to echo the layout of a real ACT online score report (score
-// tiles, a section-score graph, per-category "ACT Readiness Range"
-// breakdowns, a milestone scale) since that's a format parents/tutors
-// already recognize — but every fact on it comes from this app's own
-// practice data, and it says so up front (see the disclaimer in
-// reportCardHTML). The "Quest Rank" milestone scale is explicitly game
-// flavor, not a claim about the real ACT NCRC credential.
+// Styled to echo the layout of a real standardized-test online score
+// report (score tiles, a section-score graph, per-category breakdowns, a
+// milestone scale) since that's a format parents/tutors already
+// recognize — but every fact on it comes from this app's own practice
+// data, and it says so up front (see the disclaimer in reportCardHTML).
+// ACT's report additionally echoes the real ACT's own "ACT Readiness
+// Range" category label and its National Career Readiness Certificate
+// milestone bands (Bronze/Silver/Gold/Platinum) — both explicitly labeled
+// as this app's own game flavor, not the real ACT credential. SAT/PSAT
+// reports use test-neutral wording for the same concepts instead, since
+// neither of those real credential names has anything to do with College
+// Board's tests.
 //
 // Two ways out, both zero-dependency since this is a static site with no
 // backend to host a real export or a real shareable link:
@@ -20,19 +28,42 @@
 //     an @media print stylesheet (css/style.css) that hides everything
 //     but the report card.
 //   - Share Link: encodes a small, self-contained snapshot of the report
-//     data as base64 JSON in a `?report=` URL param, so the link itself
-//     *is* the shared copy — no server, no login, no account needed to
-//     view it (see renderSharedReport() and the bootstrap check in
-//     main.js). It's a point-in-time snapshot, not a live view: whoever
-//     opens the link sees the data as of when it was copied, not this
-//     player's current progress.
-import { getSubject } from "../data/skills.js";
-import { gameState, percentileForComposite, scoreFromAccuracy } from "../state.js";
+//     data (including which planet it's for) as base64 JSON in a
+//     `?report=` URL param, so the link itself *is* the shared copy — no
+//     server, no login, no account needed to view it (see
+//     renderSharedReport() and the bootstrap check in main.js). It's a
+//     point-in-time snapshot, not a live view: whoever opens the link
+//     sees the data as of when it was copied, not this player's current
+//     progress.
+import { getSubject, getTest, getTestSubjects, TEST_IDS } from "../data/tests.js";
+import { gameState, percentileForTestScore, scoreFromAccuracyInRange } from "../state.js";
 import { hudHTML, wireHud, showToast } from "./hud.js";
 import { monsterSVG } from "./monster.js";
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// This test's own per-section score range — half the composite range for
+// a "sum" test (SAT/PSAT: each of 2 sections covers half the total), the
+// full composite range for an "average" test (ACT: every section is
+// already scored on the same 1-36 scale the composite is). Used for
+// clamping/scaling wherever a single section's score (not the composite)
+// needs a min/max to work with.
+function sectionRangeFor(test) {
+  const { compositeRange, compositeMethod, sections } = test.practiceTest;
+  return compositeMethod === "sum" ? { min: compositeRange.min / sections.length, max: compositeRange.max / sections.length } : compositeRange;
+}
+
+// Display order for a test's sections. Defaults to that test's own
+// practiceTest.sections order (SAT/PSAT: Reading & Writing, then Math —
+// the real digital test's own order), except ACT keeps its original,
+// already-shipped order here (Math, Science, English, Reading) so
+// generalizing this screen for SAT/PSAT doesn't reshuffle the one planet
+// that already had a real report.
+const SECTION_DISPLAY_ORDER = { act: ["math", "science", "english", "reading"] };
+function sectionOrderFor(test) {
+  return SECTION_DISPLAY_ORDER[test.id] || test.practiceTest.sections.map((s) => s.subjectId);
 }
 
 // Renders whatever a `?report=` link decodes to, and a `?report=` link is
@@ -44,9 +75,10 @@ function escapeHtml(s) {
 // once, so reportCardHTML() never has to trust its input either way: a
 // free-text field is a string capped at a sane length (still escaped at
 // render time too — defense in depth, not a substitute for it), and
-// anything that should be a number is actually clamped to one, so a
-// crafted payload can't smuggle markup through a field that's only ever
-// supposed to hold a score.
+// anything that should be a number is actually clamped to *that test's
+// own* real range, so a crafted payload can't smuggle markup through a
+// field that's only ever supposed to hold a score, or claim an
+// impossible score for the test it says it's for.
 function safeNum(v, { min = 0, max = 9999, fallback = null } = {}) {
   // Number(null) is 0, not NaN — without this check, a genuinely missing
   // value (no predicted score yet, no essay taken) would silently clamp to
@@ -68,36 +100,44 @@ function sanitizeCategoryBreakdown(raw) {
     total: safeNum(c?.total, { min: 0, max: 999, fallback: 0 }),
   }));
 }
-function sanitizePredictedSections(raw) {
+function sanitizePredictedSections(raw, range) {
   const arr = Array.isArray(raw) ? raw : [];
   return arr.slice(0, 8).map((s) => ({
     subjectId: safeStr(s?.subjectId, 20),
-    score: safeNum(s?.score, { min: 1, max: 36 }),
+    score: safeNum(s?.score, { min: range.min, max: range.max }),
   }));
 }
 function sanitizeReportData(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
+  // A hand-crafted link could name a real testId with no practiceTest at
+  // all (stateAssessments) or something nonexistent — fall back to ACT
+  // rather than trusting it far enough to read `.practiceTest` off it.
+  const testId = TEST_IDS.has(r.testId) && getTest(r.testId)?.practiceTest ? r.testId : "act";
+  const test = getTest(testId);
+  const compositeRange = test.practiceTest.compositeRange;
+  const sectionRange = sectionRangeFor(test);
   const rawSections = Array.isArray(r.latestTest?.sectionResults) ? r.latestTest.sectionResults : null;
   return {
+    testId,
     name: safeStr(r.name, 30, "Explorer"),
     generatedAt: safeNum(r.generatedAt, { min: 0, max: 99999999999999, fallback: Date.now() }),
-    predictedScore: safeNum(r.predictedScore, { min: 1, max: 36 }),
-    predictedSections: sanitizePredictedSections(r.predictedSections),
+    predictedScore: safeNum(r.predictedScore, { min: compositeRange.min, max: compositeRange.max }),
+    predictedSections: sanitizePredictedSections(r.predictedSections, sectionRange),
     latestTest:
       r.latestTest && rawSections
         ? {
-            composite: safeNum(r.latestTest.composite, { min: 1, max: 36, fallback: 1 }),
+            composite: safeNum(r.latestTest.composite, { min: compositeRange.min, max: compositeRange.max, fallback: compositeRange.min }),
             sectionResults: rawSections.slice(0, 8).map((s) => ({
               subjectId: safeStr(s?.subjectId, 20),
               label: safeStr(s?.label, 40, "Section"),
               correctCount: safeNum(s?.correctCount, { min: 0, max: 999, fallback: 0 }),
               totalCount: safeNum(s?.totalCount, { min: 0, max: 999, fallback: 0 }),
-              subscore: safeNum(s?.subscore, { min: 1, max: 36, fallback: 1 }),
+              subscore: safeNum(s?.subscore, { min: sectionRange.min, max: sectionRange.max, fallback: sectionRange.min }),
               categoryBreakdown: sanitizeCategoryBreakdown(s?.categoryBreakdown),
             })),
           }
         : null,
-    essayBest: safeNum(r.essayBest, { min: 2, max: 12 }),
+    essayBest: test.practiceTest.supportsWriting ? safeNum(r.essayBest, { min: 2, max: 12 }) : null,
     masteredCount: safeNum(r.masteredCount, { min: 0, max: 999, fallback: 0 }),
     totalSkills: safeNum(r.totalSkills, { min: 0, max: 999, fallback: 0 }),
   };
@@ -121,21 +161,34 @@ function decodeReportPayload(str) {
 // instead of a number built on a handful of lucky/unlucky guesses.
 const MIN_ATTEMPTS_FOR_SECTION_ESTIMATE = 20;
 
-function buildReportPayload() {
-  const predicted = gameState.getPredictedScore();
-  const history = gameState.getPracticeTestHistory();
+function buildReportPayload(testId = "act") {
+  const test = getTest(testId);
+  const predicted = gameState.getPredictedScore(testId);
+  const history = gameState.getPracticeTestHistory(testId);
   const latestTest = history.length > 0 ? history[history.length - 1] : null;
-  const overall = gameState.getOverallStats();
+  const sectionRange = sectionRangeFor(test);
   // Only meaningful when there's no full Practice Test yet (see
   // reportCardHTML) — a rough per-section estimate from lesson accuracy,
   // the same way predictedScore itself falls back to lesson accuracy.
-  const predictedSections = ["math", "science", "english", "reading"].map((subjectId) => {
+  const predictedSections = test.practiceTest.sections.map(({ subjectId }) => {
     const stats = gameState.getSubjectStats(subjectId);
-    const score = stats.attempts >= MIN_ATTEMPTS_FOR_SECTION_ESTIMATE && stats.accuracy != null ? scoreFromAccuracy(stats.accuracy) : null;
+    const score = stats.attempts >= MIN_ATTEMPTS_FOR_SECTION_ESTIMATE && stats.accuracy != null ? scoreFromAccuracyInRange(stats.accuracy, sectionRange.min, sectionRange.max) : null;
     return { subjectId, score };
   });
 
+  // Scoped to this planet's own subjects, not gameState.getOverallStats()'s
+  // cross-planet total — a SAT report showing ACT+PSAT mastery mixed in
+  // would be a meaningless number to the parent/tutor reading it.
+  let masteredCount = 0;
+  let totalSkills = 0;
+  getTestSubjects(testId).forEach((s) => {
+    const stats = gameState.getSubjectStats(s.id);
+    masteredCount += stats.masteredCount;
+    totalSkills += stats.totalSkills;
+  });
+
   return {
+    testId,
     name: gameState.data.createdName || "Explorer",
     generatedAt: Date.now(),
     predictedScore: predicted.score,
@@ -155,9 +208,9 @@ function buildReportPayload() {
           })),
         }
       : null,
-    essayBest: gameState.essayBest > 0 ? gameState.essayBest : null,
-    masteredCount: overall.masteredCount,
-    totalSkills: overall.totalSkills,
+    essayBest: test.practiceTest.supportsWriting && gameState.essayBest > 0 ? gameState.essayBest : null,
+    masteredCount,
+    totalSkills,
   };
 }
 
@@ -193,8 +246,11 @@ function predictedSectionsMap(data) {
   return map;
 }
 
-// STEM isn't one of the ACT's four sections — it's a fifth score the real
-// ACT reports as the average of Math and Science, rounded, same as here.
+// STEM isn't a section on any of these tests — it's a fifth score the
+// real ACT reports as the average of Math and Science, rounded. Only ACT
+// has a separate Science section to average in, so this (and every tile/
+// graph line that mentions it) is gated to test.id === "act" wherever
+// it's used below.
 function computeStemScore(sections) {
   const math = sections.math?.subscore;
   const science = sections.science?.subscore;
@@ -202,63 +258,58 @@ function computeStemScore(sections) {
   return Math.round((math + science) / 2);
 }
 
-// Order the real report's own score-graph description reads section
-// scores in, so the accessible text below the bars matches it exactly.
-const GRAPH_ORDER = [
-  ["math", "Math"],
-  ["science", "Science"],
-  ["english", "English"],
-  ["reading", "Reading"],
-];
-
-function graphDescription(data, sections, composite) {
-  const parts = [`Your ACT composite score is equal to ${composite}.`];
-  GRAPH_ORDER.forEach(([id, label]) => {
+function graphDescription(data, sections, composite, test) {
+  const parts = [`Your ${test.name} composite score is equal to ${composite}.`];
+  sectionOrderFor(test).forEach((id) => {
     const s = sections[id];
-    parts.push(`${label} section score is ${s ? s.subscore : "NA"}.`);
-    if (id === "science") {
+    const subject = getSubject(id);
+    parts.push(`${subject.name} section score is ${s ? s.subscore : "NA"}.`);
+    if (test.id === "act" && id === "science") {
       const stem = computeStemScore(sections);
       parts.push(`STEM score is ${stem != null ? stem : "NA"}.`);
     }
   });
-  parts.push(`Writing section score is ${data.essayBest != null ? data.essayBest : "NA"}.`);
+  if (test.practiceTest.supportsWriting) {
+    parts.push(`Writing section score is ${data.essayBest != null ? data.essayBest : "NA"}.`);
+  }
   return parts.join(" ");
 }
 
-function scoreGraphHTML(data, sections, composite) {
-  const bars = GRAPH_ORDER.map(([id, label]) => {
-    const s = sections[id];
-    if (!s) return "";
-    const subject = getSubject(id);
-    const pct = Math.round((s.subscore / 36) * 100);
-    return `
+function scoreGraphHTML(data, sections, composite, test) {
+  const range = sectionRangeFor(test);
+  const bars = sectionOrderFor(test)
+    .map((id) => {
+      const s = sections[id];
+      if (!s) return "";
+      const subject = getSubject(id);
+      const pct = Math.round(((s.subscore - range.min) / (range.max - range.min)) * 100);
+      return `
       <div class="score-graph-row" style="--island-color:${subject.colorDark}">
-        <span class="score-graph-label">${subject.icon} ${label}</span>
+        <span class="score-graph-label">${subject.icon} ${subject.name}</span>
         <div class="score-graph-track">
           <div class="score-graph-fill" style="width:${pct}%"></div>
         </div>
         <span class="score-graph-value">${s.subscore}</span>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
   return `
-    <div class="score-graph" role="img" aria-label="${escapeHtml(graphDescription(data, sections, composite))}">
+    <div class="score-graph" role="img" aria-label="${escapeHtml(graphDescription(data, sections, composite, test))}">
       ${bars}
     </div>
-    <p class="score-caption score-graph-desc">${escapeHtml(graphDescription(data, sections, composite))}</p>
+    <p class="score-caption score-graph-desc">${escapeHtml(graphDescription(data, sections, composite, test))}</p>
   `;
 }
 
-function scoreTilesHTML(sections, composite) {
-  const stem = computeStemScore(sections);
-  const tiles = [
-    { label: "STEM", value: stem, primary: true },
-    { label: "Composite", value: composite, primary: true },
-    { label: "Math", value: sections.math?.subscore, subjectId: "math" },
-    { label: "Science", value: sections.science?.subscore, subjectId: "science" },
-    { label: "English", value: sections.english?.subscore, subjectId: "english" },
-    { label: "Reading", value: sections.reading?.subscore, subjectId: "reading" },
-  ];
+function scoreTilesHTML(sections, composite, test) {
+  const tiles = [];
+  if (test.id === "act") tiles.push({ label: "STEM", value: computeStemScore(sections), primary: true });
+  tiles.push({ label: "Composite", value: composite, primary: true });
+  sectionOrderFor(test).forEach((id) => {
+    const subject = getSubject(id);
+    tiles.push({ label: subject.name, value: sections[id]?.subscore, subjectId: id });
+  });
   return `
     <div class="score-tile-grid">
       ${tiles
@@ -277,23 +328,23 @@ function scoreTilesHTML(sections, composite) {
   `;
 }
 
-// Real order the ACT's own report lists section detail panels in.
-const DETAIL_ORDER = ["math", "science", "english", "reading"];
-
-function scoreDetailsHTML(sections) {
-  const panels = DETAIL_ORDER.map((id) => {
-    const s = sections[id];
-    if (!s) return "";
-    const subject = getSubject(id);
-    // Math's real ACT breakdown includes "Integrating Essential Skills" and
-    // "Modeling" categories that cut across content areas — this app's
-    // questions aren't tagged for those, so Math shows its overall score
-    // only rather than a partial, misleading-looking category list.
-    const categories = id === "math" ? [] : s.categoryBreakdown || [];
-    const categoryRows = categories
-      .map((c) => {
-        const pct = c.total > 0 ? Math.round((c.correct / c.total) * 100) : 0;
-        return `
+function scoreDetailsHTML(sections, test) {
+  const panels = sectionOrderFor(test)
+    .map((id) => {
+      const s = sections[id];
+      if (!s) return "";
+      const subject = getSubject(id);
+      // Math's real ACT breakdown includes "Integrating Essential Skills" and
+      // "Modeling" categories that cut across content areas — this app's ACT
+      // questions aren't tagged for those, so ACT's Math shows its overall
+      // score only rather than a partial, misleading-looking category list.
+      // SAT/PSAT Math (a different subjectId, "sat-math"/"psat-math") isn't
+      // affected by this literal-string check.
+      const categories = id === "math" ? [] : s.categoryBreakdown || [];
+      const categoryRows = categories
+        .map((c) => {
+          const pct = c.total > 0 ? Math.round((c.correct / c.total) * 100) : 0;
+          return `
           <div class="score-category-row">
             <div class="score-category-row-label">
               <span>${escapeHtml(c.name)}</span>
@@ -304,63 +355,78 @@ function scoreDetailsHTML(sections) {
             </div>
           </div>
         `;
-      })
-      .join("");
-    return `
+        })
+        .join("");
+      return `
       <div class="score-detail-panel" style="--island-color:${subject.colorDark};--island-bg:${subject.bg}">
         <div class="score-detail-header">
           <span class="score-detail-score">${s.subscore}</span>
           <span class="score-detail-name">${subject.icon} ${subject.name}</span>
         </div>
-        ${categoryRows ? `<p class="score-caption">ACT Readiness Range</p>${categoryRows}` : ""}
+        ${categoryRows ? `<p class="score-caption">${test.id === "act" ? "ACT Readiness Range" : "Category Breakdown"}</p>${categoryRows}` : ""}
       </div>
     `;
-  }).join("");
+    })
+    .join("");
   return `
     <details class="score-section-details" open>
       <summary class="score-section-heading">My Score Details</summary>
-      <p class="score-caption">Category percentages reflect accuracy on PrepQuest practice questions, not an official ACT readiness placement.</p>
+      <p class="score-caption">Category percentages reflect accuracy on PrepQuest practice questions, not an official ${test.name} readiness placement.</p>
       ${panels}
     </details>
   `;
 }
 
-const NCRC_TIERS = [
-  { name: "Bronze", min: 1 },
-  { name: "Silver", min: 15 },
-  { name: "Gold", min: 22 },
-  { name: "Platinum", min: 29 },
+// Fractions of the way from a test's composite min to max, chosen so
+// applying them to ACT's own 1-36 range reproduces exactly the tier
+// thresholds this screen always used (Bronze 1, Silver 15, Gold 22,
+// Platinum 29) — generalizing the tier math to any composite range
+// without changing ACT's own already-shipped numbers at all.
+const RANK_TIER_FRACTIONS = [
+  { name: "Bronze", frac: 0 },
+  { name: "Silver", frac: 0.4 },
+  { name: "Gold", frac: 0.6 },
+  { name: "Platinum", frac: 0.8 },
 ];
 
-function ncrcTierForScore(score) {
-  let tier = NCRC_TIERS[0];
-  for (const t of NCRC_TIERS) {
-    if (score >= t.min) tier = t;
-  }
-  return tier;
+function rankTiersForTest(test) {
+  const { min, max } = test.practiceTest.compositeRange;
+  const step = test.practiceTest.scoreStep;
+  return RANK_TIER_FRACTIONS.map((t) => ({ name: t.name, min: Math.round((min + t.frac * (max - min)) / step) * step }));
 }
 
-/** A game-flavored milestone scale echoing the real ACT NCRC's
- * Bronze/Silver/Gold/Platinum bands and 1-36-style bar — explicitly
- * labeled as in-game flavor (not the real credential, which is scored
- * off a separate WorkKeys assessment this app has nothing to do with). */
-function ncrcPanelHTML(compositeScore) {
-  const score = Math.max(1, Math.min(36, Math.round(compositeScore)));
-  const tier = ncrcTierForScore(score);
-  const nextTier = NCRC_TIERS[NCRC_TIERS.indexOf(tier) + 1];
-  const pct = Math.round((score / 36) * 100);
+/** A game-flavored milestone scale. On ACT it echoes the real ACT
+ * National Career Readiness Certificate's Bronze/Silver/Gold/Platinum
+ * bands, explicitly labeled as in-game flavor, not the real credential
+ * (which is scored off a separate WorkKeys assessment this app has
+ * nothing to do with). SAT/PSAT get the same Bronze/Silver/Gold/Platinum
+ * shape, scaled to their own composite range, but described in
+ * test-neutral terms — neither College Board test has an NCRC
+ * equivalent, so nothing here claims one does. */
+function rankPanelHTML(compositeScore, test) {
+  const { min, max } = test.practiceTest.compositeRange;
+  const score = Math.max(min, Math.min(max, Math.round(compositeScore)));
+  const tiers = rankTiersForTest(test);
+  let tier = tiers[0];
+  for (const t of tiers) if (score >= t.min) tier = t;
+  const nextTier = tiers[tiers.indexOf(tier) + 1];
+  const pct = Math.round(((score - min) / (max - min)) * 100);
   return `
     <section class="ncrc-panel">
       <h2 class="score-section-heading">🏅 Quest Rank Progress</h2>
-      <p class="score-caption">A game milestone scale inspired by the ACT National Career Readiness Certificate&trade; &mdash; not the official credential, which is scored separately.</p>
+      <p class="score-caption">${
+        test.id === "act"
+          ? `A game milestone scale inspired by the ACT National Career Readiness Certificate&trade; &mdash; not the official credential, which is scored separately.`
+          : `PrepQuest's own game milestone scale for ${test.name} progress &mdash; not an official College Board credential or rating.`
+      }</p>
       <p class="ncrc-your-score">Your Score: <strong>${score}</strong></p>
       <div class="ncrc-scale">
-        ${NCRC_TIERS.map((t) => `<span class="ncrc-tier${t === tier ? " is-current" : ""}">${t.name}</span>`).join("")}
+        ${tiers.map((t) => `<span class="ncrc-tier${t === tier ? " is-current" : ""}">${t.name}</span>`).join("")}
       </div>
       <div class="ncrc-progress-track">
         <div class="ncrc-progress-fill" style="width:${pct}%"></div>
       </div>
-      <div class="ncrc-scale-endpoints"><span>1</span><span>36</span></div>
+      <div class="ncrc-scale-endpoints"><span>${min}</span><span>${max}</span></div>
       <p class="lesson-paragraph">${
         nextTier
           ? `You're at <strong>${tier.name}</strong> rank and making progress toward <strong>${nextTier.name}</strong>!`
@@ -371,18 +437,22 @@ function ncrcPanelHTML(compositeScore) {
 }
 
 function reportCardHTML(data, { shared }) {
+  const test = getTest(data.testId) || getTest("act");
   const hasFullTest = !!data.latestTest;
   const sections = hasFullTest ? sectionsBySubject(data) : predictedSectionsMap(data);
   const hasSectionScores = Object.keys(sections).length > 0;
   const compositeScore = data.latestTest?.composite ?? data.predictedScore;
-  const scoreLabel = hasFullTest ? "Practice Test Composite" : "Predicted ACT Score";
-  const percentile = compositeScore != null ? percentileForComposite(compositeScore) : null;
+  const scoreLabel = hasFullTest ? "Practice Test Composite" : `Predicted ${test.name} Score`;
+  const percentile = compositeScore != null ? percentileForTestScore(test.id, compositeScore) : null;
+  const range = test.practiceTest.compositeRange;
+  const sectionRange = sectionRangeFor(test);
+  const sectionNames = sectionOrderFor(test).map((id) => getSubject(id).name);
 
   return `
     <div class="results-card score-report-card">
-      <p class="score-disclaimer">Not for official use. This is a practice report from PrepQuest, not an official ACT score.</p>
+      <p class="score-disclaimer">Not for official use. This is a practice report from PrepQuest, not an official ${test.name} score.</p>
       <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 120 })}</div>
-      <h1>${escapeHtml(data.name)}'s Score Report</h1>
+      <h1>${escapeHtml(data.name)}'s ${test.name} Score Report</h1>
       <p class="lesson-blurb">${shared ? "Shared, read-only snapshot" : "Live report"} &mdash; generated ${formatDate(data.generatedAt)}</p>
 
       ${
@@ -391,9 +461,9 @@ function reportCardHTML(data, { shared }) {
           : `
             <details class="score-section-details" open>
               <summary class="score-section-heading">Score Information</summary>
-              ${hasSectionScores ? scoreTilesHTML(sections, compositeScore) : `<p class="results-score">${scoreLabel}: ${compositeScore} / 36</p>`}
-              <p class="results-flag results-flag-muted">Approximately the ${percentile}th percentile nationally.</p>
-              ${hasSectionScores ? scoreGraphHTML(data, sections, compositeScore) : ""}
+              ${hasSectionScores ? scoreTilesHTML(sections, compositeScore, test) : `<p class="results-score">${scoreLabel}: ${compositeScore} / ${range.max}</p>`}
+              ${percentile != null ? `<p class="results-flag results-flag-muted">Approximately the ${percentile}th percentile nationally.</p>` : ""}
+              ${hasSectionScores ? scoreGraphHTML(data, sections, compositeScore, test) : ""}
               ${
                 !hasFullTest && hasSectionScores
                   ? `<p class="score-caption">Section scores above are rough estimates from lesson accuracy, not a timed test &mdash; take a full-length Practice Test for real section scores.</p>`
@@ -401,44 +471,55 @@ function reportCardHTML(data, { shared }) {
               }
               <details class="score-info-detail">
                 <summary>What is Composite Score?</summary>
-                <p class="lesson-paragraph">Your Composite score is the average of your four section scores (English, Math, Reading, Science), rounded to the nearest whole number, on the ACT's 1&ndash;36 scale.</p>
-              </details>
-              <details class="score-info-detail">
-                <summary>Writing score information</summary>
                 <p class="lesson-paragraph">${
-                  data.essayBest != null
-                    ? `Your best Writing score is ${data.essayBest} / 12.`
-                    : "The Writing section is optional and scored separately on a 2&ndash;12 scale &mdash; it doesn't count toward your Composite. Write an essay from the Dashboard to earn a score here."
+                  test.practiceTest.compositeMethod === "average"
+                    ? `Your Composite score is the average of your ${sectionNames.length} section scores (${sectionNames.join(", ")}), rounded to the nearest whole number, on the ${test.name}'s ${range.min}&mdash;${range.max} scale.`
+                    : `Your Composite score is the sum of your ${sectionNames.join(" and ")} section scores (each ${Math.round(sectionRange.min)}&mdash;${Math.round(sectionRange.max)}), on the ${test.name}'s ${range.min}&mdash;${range.max} scale.`
                 }</p>
               </details>
+              ${
+                test.practiceTest.supportsWriting
+                  ? `
+                    <details class="score-info-detail">
+                      <summary>Writing score information</summary>
+                      <p class="lesson-paragraph">${
+                        data.essayBest != null
+                          ? `Your best Writing score is ${data.essayBest} / 12.`
+                          : "The Writing section is optional and scored separately on a 2&ndash;12 scale &mdash; it doesn't count toward your Composite. Write an essay from the Dashboard to earn a score here."
+                      }</p>
+                    </details>
+                  `
+                  : ""
+              }
             </details>
           `
       }
 
       ${
         hasFullTest
-          ? scoreDetailsHTML(sections)
+          ? scoreDetailsHTML(sections, test)
           : compositeScore != null
-          ? `<p class="lesson-paragraph score-caption">Take a full-length Practice Test to unlock a real per-category "ACT Readiness Range" breakdown.</p>`
+          ? `<p class="lesson-paragraph score-caption">Take a full-length Practice Test to unlock a real per-category breakdown.</p>`
           : ""
       }
 
-      <p class="lesson-paragraph">${data.masteredCount} / ${data.totalSkills} skills mastered across every subject.</p>
+      <p class="lesson-paragraph">${data.masteredCount} / ${data.totalSkills} skills mastered on ${test.name}.</p>
 
-      ${compositeScore != null ? ncrcPanelHTML(compositeScore) : ""}
+      ${compositeScore != null ? rankPanelHTML(compositeScore, test) : ""}
 
       ${shared ? `<p class="results-flag results-flag-muted">This is a shared snapshot from PrepQuest, not a live view &mdash; it won't update as the player keeps practicing.</p>` : ""}
     </div>
   `;
 }
 
-export function renderScoreReport(root, navigate) {
+export function renderScoreReport(root, navigate, { testId } = {}) {
+  const resolvedTestId = TEST_IDS.has(testId) && getTest(testId)?.practiceTest ? testId : "act";
   // Routed through the same sanitizer the shared-link path uses (not just
   // for consistency): gameState.data.createdName came from a plain
   // localStorage read, and while this app's own UI caps it at 20
   // characters, nothing stops someone from editing localStorage directly
   // and putting anything there instead.
-  const data = sanitizeReportData(buildReportPayload());
+  const data = sanitizeReportData(buildReportPayload(resolvedTestId));
 
   root.innerHTML = `
     ${hudHTML("dashboard")}
@@ -453,7 +534,7 @@ export function renderScoreReport(root, navigate) {
   `;
 
   wireHud(root, navigate);
-  root.querySelector("[data-back]").addEventListener("click", () => navigate("dashboard"));
+  root.querySelector("[data-back]").addEventListener("click", () => navigate("dashboard", { testId: resolvedTestId }));
   root.querySelector("[data-print]").addEventListener("click", () => window.print());
   root.querySelector("[data-share]").addEventListener("click", async () => {
     const encoded = encodeReportPayload(data);

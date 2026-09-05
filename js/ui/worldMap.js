@@ -46,6 +46,24 @@ const SHORTCUTS = [
   { screen: "drillBuilder", icon: "🎛️", name: "Custom Drill", blurb: "Pick your own skills", color: "#ff9f38", bg: "#fff4e6" },
 ];
 
+// Score-focused shortcuts: only for planets with a real full-length
+// Practice Test behind them (see each test's practiceTest config in
+// data/tests.js) — State Assessments has none yet, so these simply don't
+// apply there. Writing is further gated on supportsWriting (ACT only —
+// the real SAT dropped its essay in 2021, PSAT never had one). Own colors,
+// distinct from SHORTCUTS above and from each other.
+function scoreShortcutsFor(test) {
+  if (!test.practiceTest) return [];
+  const shortcuts = [
+    { screen: "practiceTest", icon: "📝", name: "Practice Test", blurb: "A full-length, timed test", color: "#0891b2", bg: "#e5f7fa" },
+    { screen: "scoreReport", icon: "📄", name: "Score Report", blurb: "Your latest score, shareable", color: "#be185d", bg: "#fce8f1" },
+  ];
+  if (test.practiceTest.supportsWriting) {
+    shortcuts.splice(1, 0, { screen: "essay", icon: "✍️", name: "Writing", blurb: "Optional essay practice", color: "#a16207", bg: "#fdf6e3" });
+  }
+  return shortcuts;
+}
+
 export function renderWorldMap(root, navigate, { testId } = {}) {
   // Arriving here *with* a testId (from the Solar System screen picking a
   // planet) switches the player's current planet; arriving without one
@@ -112,7 +130,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
   // soon" banner.
   const shortcuts =
     isReady
-      ? SHORTCUTS.map((s) => {
+      ? [...SHORTCUTS, ...scoreShortcutsFor(test)].map((s) => {
           const badge = s.screen === "reviewQueue" && reviewQueueDueCount > 0 ? `<span class="map-shortcut-badge">${reviewQueueDueCount}</span>` : "";
           return `
             <button class="map-shortcut" data-shortcut="${s.screen}" style="--island-color:${s.color};--island-bg:${s.bg}">

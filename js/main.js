@@ -59,7 +59,7 @@ const SCREENS = {
   practiceTest: (r, nav, params) => renderPracticeTest(r, nav, params),
   essay: (r, nav, params) => renderEssay(r, nav, params),
   mistakeJournal: (r, nav) => renderMistakeJournal(r, nav),
-  scoreReport: (r, nav) => renderScoreReport(r, nav),
+  scoreReport: (r, nav, params) => renderScoreReport(r, nav, params),
   statePicker: (r, nav, params) => renderStatePicker(r, nav, params),
   tiktokMode: (r, nav, params) => renderTiktokMode(r, nav, params),
 };
