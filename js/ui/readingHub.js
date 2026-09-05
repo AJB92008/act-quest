@@ -22,7 +22,7 @@ import { monsterSVG } from "./monster.js";
 import { getBossMonster } from "../data/bossMonsters.js";
 import { getLessonCount } from "../data/questions/index.js";
 import { glowVars } from "./pathTrail.js";
-import { closedBlobPath } from "./lessonTerrain.js";
+import { closedBlobPath, jaggedBandPath } from "./lessonTerrain.js";
 import {
   BOSS_POS,
   BOSS_TRIGGER_RADIUS,
@@ -121,6 +121,42 @@ function renderSkillMarker({ item: skill, x, y }, subject) {
 // renderBossBridgeMist/renderBossBridgeTorches there), just themed to
 // the reef, and folding in the default lair glow ourselves since
 // supplying a custom `bossBridge` to renderWorldSvg replaces that too.
+// Built from four pieces, assembled by renderBossPathGlow below:
+// renderLandBridge (a solid causeway so the route reads as walkable
+// ground, not open water), the dashed glow trail across its surface,
+// renderBossIslet (the boss's own scrap of land), and renderBossIsletVeins
+// (glowing accents tying the islet back to the same light as the trail).
+
+// A solid causeway connecting the reef's own shore to the boss's islet
+// — the dashed glow trail on its own still crossed open water, which
+// reads as walking on water rather than an actual route. Built the same
+// "two wobbled edges, closed into one path" way lessonTerrain.js's own
+// river bands are (jaggedBandPath), just filled as dark weathered rock
+// (the islet's own fill/stroke tones) rather than water or bright sand,
+// so it reads as the islet's own material reaching up to meet the reef
+// rather than a 6th cheerful zone. Spans well past both the sand
+// shore's own outer reach and the islet's own shadow radius on purpose
+// — generous overlap on both ends means no visible seam, without having
+// to keep this in exact lockstep with renderLobeIsland's own baseRadius
+// math over in hubWorld.js.
+function renderLandBridge() {
+  const topY = 1000;
+  const bottomY = 1320;
+  const cx = BOSS_POS.x;
+  const halfWidth = 60;
+  const steps = 7;
+  const leftPts = [];
+  const rightPts = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const y = topY + (bottomY - topY) * t;
+    const wobble = Math.sin(t * 8.4) * 9 + Math.sin(t * 3.1 + 1.2) * 5;
+    leftPts.push({ x: cx - halfWidth + wobble, y });
+    rightPts.push({ x: cx + halfWidth + wobble, y });
+  }
+  return `<path d="${jaggedBandPath(leftPts, rightPts)}" fill="#2a1c2b" stroke="#4a2f3a" stroke-width="3" opacity="0.96" />`;
+}
+
 // A small dark islet for the boss to actually stand on, built from the
 // exact same organicRingPoints/closedBlobPath technique every reef lobe
 // already uses (see hubWorld.js's own renderLobeIsland) — just dark
@@ -172,10 +208,15 @@ function renderBossPathGlow() {
       `;
     })
     .join("");
-  const path = `<path d="M${RING.center.x},${RING.center.y} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#0d2a33" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.85" />`;
-  // Path drawn before the islet so its tail end reads as running up to
-  // and disappearing under the rock, not scribbled across its surface.
-  return mist + path + renderBossIslet() + renderBossIsletVeins() + orbs;
+  // Glowing teal instead of the old plain dark stroke — against open
+  // water a dark line still stood out fine, but against the land
+  // bridge's own dark rock it would nearly vanish. Reads as a trail of
+  // glowing markers pressed into the causeway's surface.
+  const path = `<path d="M${RING.center.x},${RING.center.y} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#5fcfc0" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.6" />`;
+  // Land bridge and path drawn before the islet so the causeway's own
+  // tail end and the trail's last dashes read as running up to and
+  // disappearing under the rock, not scribbled across its surface.
+  return mist + renderLandBridge() + path + renderBossIslet() + renderBossIsletVeins() + orbs;
 }
 
 function renderBossMarker(boss, bossStateClass, subject) {
