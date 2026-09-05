@@ -108,7 +108,7 @@ function predictedScoreCardHTML(testId, test) {
   const isWide = predicted.score !== null && String(predicted.score).length > 2;
   return `
     <div class="dash-predictor-card dash-predictor-card--compact">
-      <div class="dash-predictor-score ${isWide ? "is-wide" : ""}">${predicted.score === null ? "?" : predicted.score}</div>
+      ${predicted.score === null ? "" : `<div class="dash-predictor-score ${isWide ? "is-wide" : ""}">${predicted.score}</div>`}
       <div class="dash-predictor-info">
         <strong>Predicted ${test.name} Score</strong>
         <p class="dash-monster-substat">${
@@ -459,7 +459,7 @@ export function renderDashboard(root, navigate, params = {}) {
         </div>
       </div>
       <div class="dash-predictor-card">
-        <div class="dash-predictor-score">${predicted.score === null ? "?" : predicted.score}</div>
+        ${predicted.score === null ? "" : `<div class="dash-predictor-score">${predicted.score}</div>`}
         <div class="dash-predictor-info">
           <strong>Predicted ACT Score</strong>
           <p class="dash-monster-substat">${
