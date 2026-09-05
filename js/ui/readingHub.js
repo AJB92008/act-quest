@@ -59,12 +59,21 @@ const RING = { center: { x: 1100, y: 650 }, ringRadius: 230, lobeRadius: 230 };
 // description below just names whatever those two skills actually are
 // (see js/data/skills.js's reading skill list), same reasoning as
 // islandHub.js's own zone descriptions.
+// Lighthouse Point and Driftwood Cove originally used #e8d29a and
+// #c9a887 — both close enough to hubWorld.js's own shared sand-base
+// color (RIBBON_SAND, #ecdfb8) that those two lobes were nearly
+// invisible against it, leaving the island reading as "two colorful
+// lobes and a lot of plain sand" instead of five distinct zones. Moved
+// to a saturated terracotta (a lighthouse's own warm red/rust, not
+// another pale tan) and a real weathered-wood brown (matching
+// driftwoodLocker.js's own PYLON_FILL, since it's the same material) —
+// both now read clearly against the sand and against each other.
 const ZONES = [
   { id: "stacks", name: "Coral Stacks", fill: "#7fd9c4", description: "Main ideas & key details", decorations: ["🪸", "📚", "🐠"] },
   { id: "tidepool", name: "Tide Pool Terrace", fill: "#a7e0d8", description: "Sequence & comparison", decorations: ["🌊", "🦀", "🐚"] },
-  { id: "lighthouse", name: "Lighthouse Point", fill: "#e8d29a", description: "Cause/effect & vocabulary", decorations: ["🧭", "⛵", "🐟"] },
+  { id: "lighthouse", name: "Lighthouse Point", fill: "#e0935f", description: "Cause/effect & vocabulary", decorations: ["🧭", "⛵", "🐟"] },
   { id: "archive", name: "Sunken Archive", fill: "#6fb8c9", description: "Generalizing & author's craft", decorations: ["📜", "🐙", "🦑"] },
-  { id: "driftwood", name: "Driftwood Cove", fill: "#c9a887", description: "Claims & multiple texts", decorations: ["🪵", "🐬", "🐳"] },
+  { id: "driftwood", name: "Driftwood Cove", fill: "#8a7259", description: "Claims & multiple texts", decorations: ["🪵", "🐬", "🐳"] },
 ];
 
 function renderLegend() {
@@ -102,6 +111,37 @@ function renderSkillMarker({ item: skill, x, y }, subject) {
   `;
 }
 
+// Reef-appropriate flourish for what was otherwise just a bare dark
+// dashed line across a lot of empty open water — bioluminescence, not
+// torchlight, since this route is underwater/open sea rather than a
+// wooden bridge. Same "sells the path as somewhere more serious" goal
+// islandHub.js's own mist+torches serve for its boss bridge (see
+// renderBossBridgeMist/renderBossBridgeTorches there), just themed to
+// the reef, and folding in the default lair glow ourselves since
+// supplying a custom `bossBridge` to renderWorldSvg replaces that too.
+function renderBossPathGlow() {
+  const dx = BOSS_POS.x - RING.center.x;
+  const dy = BOSS_POS.y - RING.center.y;
+  const midX = RING.center.x + dx / 2;
+  const midY = RING.center.y + dy / 2;
+  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+  const len = Math.hypot(dx, dy) || 1;
+  const mist = `<ellipse cx="${midX}" cy="${midY}" rx="${len / 2 + 60}" ry="90" fill="#04202a" opacity="0.26" transform="rotate(${angle} ${midX} ${midY})" />`;
+  const lair = `<circle cx="${BOSS_POS.x}" cy="${BOSS_POS.y}" r="118" fill="#04222c" opacity="0.3" />`;
+  const orbs = [0.22, 0.48, 0.74]
+    .map((f) => {
+      const ox = RING.center.x + dx * f;
+      const oy = RING.center.y + dy * f;
+      return `
+        <circle cx="${ox}" cy="${oy}" r="22" fill="#7fe8d9" opacity="0.2" />
+        <circle cx="${ox}" cy="${oy}" r="7" fill="#bdfaf0" opacity="0.92" />
+      `;
+    })
+    .join("");
+  const path = `<path d="M${RING.center.x},${RING.center.y} L${BOSS_POS.x},${BOSS_POS.y}" stroke="#0d2a33" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 16" fill="none" opacity="0.85" />`;
+  return mist + lair + orbs + path;
+}
+
 function renderBossMarker(boss, bossStateClass, subject) {
   const locked = bossStateClass === "is-locked";
   const cleared = bossStateClass === "is-cleared";
@@ -134,6 +174,7 @@ export function renderReadingHub(root, navigate, subject) {
       "Athenaeum Reef, five rounded reef lobes fused into one landmass around a shared center — coral stacks, a tide pool terrace, a lighthouse point, a sunken archive, and a driftwood cove — each with its own trail of reading skills, plus a dark path south to the boss lair",
     landmass: () => "",
     regionShapes: (zoneGroups) => renderLobeIsland(zoneGroups, { ringCenter: RING.center, ringRadius: RING.ringRadius, lobeRadius: RING.lobeRadius }),
+    bossBridge: () => renderBossPathGlow(),
   });
 
   root.innerHTML = `
