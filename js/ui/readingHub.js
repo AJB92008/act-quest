@@ -156,7 +156,12 @@ function renderLandBridge() {
     leftPts.push({ x: cx - halfWidth + wobble, y });
     rightPts.push({ x: cx + halfWidth + wobble, y });
   }
-  return `<path d="${jaggedBandPath(leftPts, rightPts)}" fill="${RIBBON_SAND}" stroke="#c9a668" stroke-width="3" opacity="0.98" />`;
+  // No stroke — same as every lobe and the shore itself (renderLobeIsland's
+  // own shore/lobe paths are plain flat fills with no outline). A stroke
+  // here would trace the bridge's own straight-ish edges as a fake seam
+  // cutting across the shore's real, borderless coastline wherever the
+  // two shapes overlap.
+  return `<path d="${jaggedBandPath(leftPts, rightPts)}" fill="${RIBBON_SAND}" />`;
 }
 
 // A small dark islet for the boss to actually stand on, built from the
