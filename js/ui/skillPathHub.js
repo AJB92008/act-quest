@@ -130,7 +130,19 @@
 // same one twice in a row — "odds" and "ends" both at once; and Number
 // Detective gets a real footprint trail alongside the path, numbered
 // evidence tags (circled if the number's prime) planted at intervals,
-// and one magnifying glass over the biggest piece of evidence. Add a
+// and one magnifying glass over the biggest piece of evidence. Athenaeum
+// Reef's own Coral Stacks zone (the reef's first two skills, see
+// readingHub.js's own ZONES) starts a matching pair of themes: Big
+// Picture gets one oversized coral crown formation the trail winds
+// around, with only a few small satellite corals kept well clear of it,
+// so that one central shape reads as unmissable the way a main idea
+// should; Detail Detective gets the deliberate opposite — no dominant
+// shape at all, just a dense sandy-floor mosaic of small anemones,
+// shells, and coral polyps covering the whole scene, rewarding a close
+// look the same way the skill itself does. The rest of the reef's
+// skills (Tide Pool Terrace, Lighthouse Point, Sunken Archive,
+// Driftwood Cove) don't have their own themes yet — see readingHub.js's
+// ZONES for what each of those covers. Add a
 // new skill here (plus one line in skillPath.js's dispatch) rather
 // than writing a whole new file — that's the point of the shared
 // engine.
@@ -178,6 +190,8 @@ import { trigTrailheadTheme } from "./lessonThemes/trigTrailhead.js";
 import { powerSurgeFlatsTheme } from "./lessonThemes/powerSurgeFlats.js";
 import { oddsEndsFlatsTheme } from "./lessonThemes/oddsEndsFlats.js";
 import { numberDetectiveFlatsTheme } from "./lessonThemes/numberDetectiveFlats.js";
+import { reefCrownTheme } from "./lessonThemes/reefCrown.js";
+import { coralMosaicTheme } from "./lessonThemes/coralMosaic.js";
 
 export const LESSON_THEMES = {
   "en-idioms": plainsTheme,
@@ -223,6 +237,8 @@ export const LESSON_THEMES = {
   "ma-exponents": powerSurgeFlatsTheme,
   "ma-stats": oddsEndsFlatsTheme,
   "ma-numbersense": numberDetectiveFlatsTheme,
+  "re-mainidea": reefCrownTheme,
+  "re-detail": coralMosaicTheme,
 };
 
 export function renderThemedLessonPath(root, navigate, params) {
