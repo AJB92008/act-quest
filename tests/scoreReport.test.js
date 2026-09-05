@@ -216,3 +216,96 @@ test("renderScoreReport falls back to 'act' for an unrecognized/missing testId i
   renderScoreReport(root, () => {}, { testId: "not-a-real-test" });
   assertTrue(root.querySelector("h1").textContent.includes("ACT"));
 });
+
+// --- Score Trend / Focus Areas / Pacing (deeper-insight report sections) ---
+
+test("buildReportPayload reflects a fresh player's empty scoreTrend/focusAreas/pacing", () => {
+  freshGameState();
+  const payload = buildReportPayload("act");
+  assertEqual(payload.scoreTrend.length, 0);
+  assertEqual(payload.focusAreas.length, 0);
+  assertEqual(payload.pacing.length, 0);
+});
+
+test("buildReportPayload picks up real practice test history as scoreTrend, in order", () => {
+  const gs = freshGameState();
+  [20, 24, 28].forEach((composite) => {
+    gs.recordPracticeTestResult({
+      sectionResults: [{ subjectId: "english", label: "English", correctCount: 50, totalCount: 75, subscore: composite }],
+      composite,
+      starsEarned: 0,
+      coinsEarned: 0,
+    });
+  });
+  const payload = buildReportPayload("act");
+  assertEqual(payload.scoreTrend.length, 3);
+  assertEqual(payload.scoreTrend[0].composite, 20);
+  assertEqual(payload.scoreTrend[2].composite, 28);
+});
+
+test("buildReportPayload's focusAreas resolves real skill names/icons for the player's weakest skills on that planet", () => {
+  const gs = freshGameState();
+  gs.data.skillProgress["en-commas"].attempts = 20;
+  gs.data.skillProgress["en-commas"].correct = 8; // 40% accuracy
+  const payload = buildReportPayload("act");
+  assertEqual(payload.focusAreas.length, 1);
+  assertEqual(payload.focusAreas[0].skillId, "en-commas");
+  assertEqual(payload.focusAreas[0].name, "Comma Sense");
+  assertEqual(payload.focusAreas[0].accuracy, 0.4);
+});
+
+test("buildReportPayload's pacing derives each section's budget from that test's own practiceTest config, not a hand-maintained table", () => {
+  const gs = freshGameState();
+  for (let i = 0; i < 5; i++) gs.recordPaceSample("english", 50); // slower than the real 36s/question budget
+  const payload = buildReportPayload("act");
+  const english = payload.pacing.find((p) => p.subjectId === "english");
+  assertTrue(!!english, "expected a pacing entry for english");
+  assertEqual(english.avgSeconds, 50);
+  assertEqual(english.budgetSeconds, 36); // 45 real minutes * 60 / 75 real questions
+});
+
+test("sanitizeReportData caps scoreTrend/focusAreas/pacing array lengths from a hand-crafted payload", () => {
+  const longTrend = Array.from({ length: 50 }, (_, i) => ({ date: i, composite: 20 }));
+  const longFocus = Array.from({ length: 50 }, (_, i) => ({ skillId: `s${i}`, name: `Skill ${i}`, accuracy: 0.5 }));
+  const longPacing = Array.from({ length: 50 }, (_, i) => ({ subjectId: `sub${i}`, avgSeconds: 40, budgetSeconds: 36 }));
+  const encoded = encodeReportPayload({ testId: "act", scoreTrend: longTrend, focusAreas: longFocus, pacing: longPacing });
+  const decoded = decodeReportPayload(encoded);
+  assertEqual(decoded.scoreTrend.length, 20);
+  assertEqual(decoded.focusAreas.length, 5);
+  assertEqual(decoded.pacing.length, 8);
+});
+
+test("sanitizeReportData clamps a SAT scoreTrend composite to SAT's own 400-1600 range, not ACT's 1-36", () => {
+  const encoded = encodeReportPayload({ testId: "sat", scoreTrend: [{ date: 1, composite: 9999 }] });
+  const decoded = decodeReportPayload(encoded);
+  assertEqual(decoded.scoreTrend[0].composite, 1600);
+});
+
+test("renderScoreReport shows Score Trend/Focus Areas/Pacing sections once there's real data behind them", () => {
+  const gs = freshGameState();
+  [20, 30].forEach((composite) =>
+    gs.recordPracticeTestResult({
+      sectionResults: [{ subjectId: "english", label: "English", correctCount: 50, totalCount: 75, subscore: composite }],
+      composite,
+      starsEarned: 0,
+      coinsEarned: 0,
+    })
+  );
+  gs.data.skillProgress["en-commas"].attempts = 20;
+  gs.data.skillProgress["en-commas"].correct = 8;
+  for (let i = 0; i < 5; i++) gs.recordPaceSample("english", 50);
+  const root = document.createElement("div");
+  renderScoreReport(root, () => {}, { testId: "act" });
+  assertTrue(!!root.querySelector(".score-trend-chart"), "expected a Score Trend chart once there are 2+ practice tests");
+  assertTrue(root.textContent.includes("Focus Areas"), "expected a Focus Areas section once a weak skill exists");
+  assertTrue(root.textContent.includes("Pacing"), "expected a Pacing section once pace samples exist");
+});
+
+test("renderScoreReport omits Score Trend/Focus Areas/Pacing sections for a fresh player instead of showing empty panels", () => {
+  freshGameState();
+  const root = document.createElement("div");
+  renderScoreReport(root, () => {}, { testId: "act" });
+  assertTrue(!root.querySelector(".score-trend-chart"));
+  assertTrue(!root.textContent.includes("Focus Areas"));
+  assertTrue(!root.textContent.includes("Pacing"));
+});

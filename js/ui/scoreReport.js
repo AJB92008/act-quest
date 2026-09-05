@@ -35,7 +35,7 @@
 //     point-in-time snapshot, not a live view: whoever opens the link
 //     sees the data as of when it was copied, not this player's current
 //     progress.
-import { getSubject, getTest, getTestSubjects, TEST_IDS } from "../data/tests.js";
+import { getSubject, getSkill, getTest, getTestSubjects, TEST_IDS } from "../data/tests.js";
 import { gameState, percentileForTestScore, scoreFromAccuracyInRange } from "../state.js";
 import { hudHTML, wireHud, showToast } from "./hud.js";
 import { monsterSVG } from "./monster.js";
@@ -64,6 +64,42 @@ function sectionRangeFor(test) {
 const SECTION_DISPLAY_ORDER = { act: ["math", "science", "english", "reading"] };
 function sectionOrderFor(test) {
   return SECTION_DISPLAY_ORDER[test.id] || test.practiceTest.sections.map((s) => s.subjectId);
+}
+
+// This section's own real per-question time budget on the real test —
+// derived from that test's own practiceTest.sections config (timeMinutes /
+// questionCount) rather than a separate hand-maintained table, so there's
+// only ever one place (data/tests.js) that can be wrong about a real
+// test's timing, for any planet.
+function paceBudgetSeconds(test, subjectId) {
+  const section = test.practiceTest.sections.find((s) => s.subjectId === subjectId);
+  return section ? Math.round((section.timeMinutes * 60) / section.questionCount) : null;
+}
+
+// The player's own lowest-accuracy skills on this planet (see
+// GameState.getWeakSkills) — testId is that method's *fourth* positional
+// argument, easy to get wrong, so it's passed explicitly and named here
+// rather than relying on default params lining up by accident.
+function focusAreasFor(testId) {
+  return gameState
+    .getWeakSkills(5, 5, 0.9, testId)
+    .map(({ id, accuracy }) => {
+      const resolved = getSkill(id);
+      return resolved ? { skillId: id, name: resolved.skill.name, subjectIcon: resolved.subject.icon, accuracy } : null;
+    })
+    .filter(Boolean);
+}
+
+// Average measured pace vs. this test's own real per-question time budget,
+// for every one of this test's sections the player has timed data for.
+function pacingFor(test) {
+  return test.practiceTest.sections
+    .map(({ subjectId }) => {
+      const stats = gameState.getPacingStats(subjectId);
+      const budgetSeconds = paceBudgetSeconds(test, subjectId);
+      return stats && budgetSeconds ? { subjectId, avgSeconds: stats.avgSeconds, budgetSeconds } : null;
+    })
+    .filter(Boolean);
 }
 
 // Renders whatever a `?report=` link decodes to, and a `?report=` link is
@@ -107,6 +143,32 @@ function sanitizePredictedSections(raw, range) {
     score: safeNum(s?.score, { min: range.min, max: range.max }),
   }));
 }
+// Capped at 20 to match GameState.recordPracticeTestResult's own history
+// cap — never more real data than the app itself keeps.
+function sanitizeScoreTrend(raw, range) {
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.slice(0, 20).map((s) => ({
+    date: safeNum(s?.date, { min: 0, max: 99999999999999, fallback: 0 }),
+    composite: safeNum(s?.composite, { min: range.min, max: range.max, fallback: range.min }),
+  }));
+}
+function sanitizeFocusAreas(raw) {
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.slice(0, 5).map((f) => ({
+    skillId: safeStr(f?.skillId, 60),
+    name: safeStr(f?.name, 60, "Skill"),
+    subjectIcon: safeStr(f?.subjectIcon, 8, "📘"),
+    accuracy: safeNum(f?.accuracy, { min: 0, max: 1, fallback: 0 }),
+  }));
+}
+function sanitizePacing(raw) {
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.slice(0, 8).map((p) => ({
+    subjectId: safeStr(p?.subjectId, 20),
+    avgSeconds: safeNum(p?.avgSeconds, { min: 0, max: 99999, fallback: 0 }),
+    budgetSeconds: safeNum(p?.budgetSeconds, { min: 1, max: 99999, fallback: 1 }),
+  }));
+}
 function sanitizeReportData(raw) {
   const r = raw && typeof raw === "object" ? raw : {};
   // A hand-crafted link could name a real testId with no practiceTest at
@@ -140,6 +202,9 @@ function sanitizeReportData(raw) {
     essayBest: test.practiceTest.supportsWriting ? safeNum(r.essayBest, { min: 2, max: 12 }) : null,
     masteredCount: safeNum(r.masteredCount, { min: 0, max: 999, fallback: 0 }),
     totalSkills: safeNum(r.totalSkills, { min: 0, max: 999, fallback: 0 }),
+    scoreTrend: sanitizeScoreTrend(r.scoreTrend, compositeRange),
+    focusAreas: sanitizeFocusAreas(r.focusAreas),
+    pacing: sanitizePacing(r.pacing),
   };
 }
 
@@ -211,6 +276,9 @@ function buildReportPayload(testId = "act") {
     essayBest: test.practiceTest.supportsWriting && gameState.essayBest > 0 ? gameState.essayBest : null,
     masteredCount,
     totalSkills,
+    scoreTrend: history.map((h) => ({ date: h.date, composite: h.composite })),
+    focusAreas: focusAreasFor(testId),
+    pacing: pacingFor(test),
   };
 }
 
@@ -436,6 +504,92 @@ function rankPanelHTML(compositeScore, test) {
   `;
 }
 
+// A visual bar in place of a bare number, so the percentile actually reads
+// as "most of the way across" rather than requiring the reader to know
+// what "78th percentile" looks like on its own.
+function percentileGaugeHTML(percentile) {
+  if (percentile == null) return "";
+  return `
+    <div class="percentile-gauge">
+      <div class="percentile-track">
+        <div class="percentile-fill" style="width:${percentile}%"></div>
+      </div>
+      <p class="results-flag results-flag-muted">Approximately the ${percentile}th percentile nationally.</p>
+    </div>
+  `;
+}
+
+// Same pure-SVG sparkline approach as the Dashboard's own Score History
+// chart (see scoreHistoryChart in ui/dashboard.js) — a fixed y-domain over
+// *this test's own* composite range (not a hardcoded 1-36) so the shape of
+// the line is comparable across sessions on any planet, not just ACT.
+function scoreTrendChartHTML(trend, range) {
+  if (trend.length < 2) return "";
+  const w = 300;
+  const h = 70;
+  const pad = 6;
+  const xFor = (i) => pad + (i / (trend.length - 1)) * (w - pad * 2);
+  const yFor = (score) => h - pad - ((score - range.min) / (range.max - range.min)) * (h - pad * 2);
+  const points = trend.map((r, i) => `${xFor(i)},${yFor(r.composite)}`).join(" ");
+  const dots = trend.map((r, i) => `<circle cx="${xFor(i)}" cy="${yFor(r.composite)}" r="3" fill="var(--purple)"/>`).join("");
+  return `
+    <section class="score-trend-panel">
+      <h2 class="score-section-heading">📈 Score Trend</h2>
+      <svg viewBox="0 0 ${w} ${h}" class="score-trend-chart" preserveAspectRatio="none" role="img" aria-label="Composite score trend across your last ${trend.length} practice tests, from ${trend[0].composite} to ${trend[trend.length - 1].composite}">
+        <polyline points="${points}" fill="none" stroke="var(--purple)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        ${dots}
+      </svg>
+      <p class="score-caption">Composite across your last ${trend.length} full-length Practice Tests.</p>
+    </section>
+  `;
+}
+
+function focusAreasHTML(focusAreas) {
+  if (focusAreas.length === 0) return "";
+  const rows = focusAreas
+    .map(
+      (f) => `
+      <div class="focus-area-row">
+        <span class="focus-area-label">${f.subjectIcon} ${escapeHtml(f.name)}</span>
+        <div class="score-category-track"><div class="score-category-fill" style="width:${Math.round(f.accuracy * 100)}%"></div></div>
+        <span class="focus-area-pct">${Math.round(f.accuracy * 100)}%</span>
+      </div>
+    `
+    )
+    .join("");
+  return `
+    <section class="focus-areas-panel">
+      <h2 class="score-section-heading">🎯 Focus Areas</h2>
+      <p class="score-caption">This player's lowest-accuracy skills so far &mdash; good candidates for extra review.</p>
+      ${rows}
+    </section>
+  `;
+}
+
+function pacingHTML(pacing, test) {
+  if (pacing.length === 0) return "";
+  const rows = pacing
+    .map((p) => {
+      const subject = getSubject(p.subjectId);
+      const overBudget = p.avgSeconds > p.budgetSeconds;
+      return `
+      <div class="pacing-row">
+        <span class="focus-area-label">${subject.icon} ${subject.name}</span>
+        <span class="pacing-value">${Math.round(p.avgSeconds)}s <span class="score-caption">avg vs. a ${p.budgetSeconds}s/question budget</span></span>
+        <span class="pacing-flag${overBudget ? "" : " pacing-flag-good"}">${overBudget ? "⏱️ Over pace" : "✓ On pace"}</span>
+      </div>
+    `;
+    })
+    .join("");
+  return `
+    <section class="pacing-panel">
+      <h2 class="score-section-heading">⏱️ Pacing</h2>
+      <p class="score-caption">Average time per question in timed lessons, compared to the real ${test.name}'s own per-question time budget.</p>
+      ${rows}
+    </section>
+  `;
+}
+
 function reportCardHTML(data, { shared }) {
   const test = getTest(data.testId) || getTest("act");
   const hasFullTest = !!data.latestTest;
@@ -451,9 +605,11 @@ function reportCardHTML(data, { shared }) {
   return `
     <div class="results-card score-report-card">
       <p class="score-disclaimer">Not for official use. This is a practice report from PrepQuest, not an official ${test.name} score.</p>
-      <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 120 })}</div>
-      <h1>${escapeHtml(data.name)}'s ${test.name} Score Report</h1>
-      <p class="lesson-blurb">${shared ? "Shared, read-only snapshot" : "Live report"} &mdash; generated ${formatDate(data.generatedAt)}</p>
+      <div class="score-report-banner" style="--island-color:${test.colorDark};--island-bg:${test.bg}">
+        <div class="results-monster">${monsterSVG(gameState.getDisplayAvatar(), { size: 120 })}</div>
+        <h1>${escapeHtml(data.name)}'s ${test.name} Score Report</h1>
+        <p class="lesson-blurb">${shared ? "Shared, read-only snapshot" : "Live report"} &mdash; generated ${formatDate(data.generatedAt)}</p>
+      </div>
 
       ${
         compositeScore == null
@@ -462,7 +618,7 @@ function reportCardHTML(data, { shared }) {
             <details class="score-section-details" open>
               <summary class="score-section-heading">Score Information</summary>
               ${hasSectionScores ? scoreTilesHTML(sections, compositeScore, test) : `<p class="results-score">${scoreLabel}: ${compositeScore} / ${range.max}</p>`}
-              ${percentile != null ? `<p class="results-flag results-flag-muted">Approximately the ${percentile}th percentile nationally.</p>` : ""}
+              ${percentileGaugeHTML(percentile)}
               ${hasSectionScores ? scoreGraphHTML(data, sections, compositeScore, test) : ""}
               ${
                 !hasFullTest && hasSectionScores
@@ -502,6 +658,10 @@ function reportCardHTML(data, { shared }) {
           ? `<p class="lesson-paragraph score-caption">Take a full-length Practice Test to unlock a real per-category breakdown.</p>`
           : ""
       }
+
+      ${scoreTrendChartHTML(data.scoreTrend, range)}
+      ${focusAreasHTML(data.focusAreas)}
+      ${pacingHTML(data.pacing, test)}
 
       <p class="lesson-paragraph">${data.masteredCount} / ${data.totalSkills} skills mastered on ${test.name}.</p>
 

@@ -50,7 +50,8 @@
 :root[data-theme="dark"] .stimulus-panel,
 :root[data-theme="dark"] .endless-best-tile,
 :root[data-theme="dark"] .score-tile,
-:root[data-theme="dark"] .score-detail-panel {
+:root[data-theme="dark"] .score-detail-panel,
+:root[data-theme="dark"] .score-report-banner {
   background: var(--card);
 }
 
@@ -4096,9 +4097,6 @@ button.drill-skill-row:hover {
   text-align: left;
 }
 
-.score-report-card > .results-monster,
-.score-report-card > h1,
-.score-report-card > .lesson-blurb,
 .score-report-card > .score-disclaimer {
   text-align: center;
 }
@@ -4111,6 +4109,28 @@ button.drill-skill-row:hover {
   border-radius: 10px;
   padding: 8px 12px;
   margin: 0 0 14px;
+}
+
+/* Per-test masthead (--island-color/--island-bg set inline from that
+   test's own colorDark/bg — act purple, sat teal, psat violet) so each
+   planet's report reads as distinctly its own instead of every test
+   sharing one generic purple header. */
+.score-report-banner {
+  text-align: center;
+  background: var(--island-bg, var(--surface-alt));
+  border: 1px solid var(--island-color, var(--border));
+  border-radius: var(--radius);
+  padding: 18px 16px 16px;
+  margin-bottom: 18px;
+}
+
+.score-report-banner h1 {
+  margin: 8px 0 4px;
+  color: var(--island-color, var(--ink));
+}
+
+:root[data-theme="dark"] .score-report-banner h1 {
+  color: var(--ink);
 }
 
 .score-section-details {
@@ -4343,6 +4363,82 @@ button.drill-skill-row:hover {
   margin-top: 4px;
 }
 
+.percentile-gauge {
+  margin: 10px 0 16px;
+}
+
+.percentile-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.percentile-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--purple), #9c8bff);
+}
+
+.score-trend-panel,
+.focus-areas-panel,
+.pacing-panel {
+  margin-top: 22px;
+}
+
+.score-trend-chart {
+  width: 100%;
+  height: 70px;
+  margin: 8px 0 2px;
+}
+
+.focus-area-row,
+.pacing-row {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.focus-area-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.focus-area-pct {
+  font-weight: 800;
+  color: var(--ink);
+  text-align: right;
+  min-width: 34px;
+}
+
+.pacing-value {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.pacing-flag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #b45309;
+  white-space: nowrap;
+}
+
+.pacing-flag-good {
+  color: #1c7c54;
+}
+
+@media (max-width: 640px) {
+  .focus-area-row,
+  .pacing-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
 @media (max-width: 640px) {
   .score-tile-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -4368,6 +4464,61 @@ button.drill-skill-row:hover {
   .score-report-card {
     box-shadow: none;
     border: 1px solid #ccc;
+  }
+
+  /* Force every collapsed <summary>/<details> section (Score Information,
+     What is Composite Score?, Writing score information, My Score
+     Details) open for print — a browser's print output reflects the DOM's
+     current open/closed state, so anything the reader hasn't clicked to
+     expand on screen would otherwise be silently missing from the PDF.
+     The <summary> itself stays visible too: it's the heading for the text
+     below it, not a toggle control once there's nothing left to click. */
+  .score-report-card details:not([open]) > *:not(summary) {
+    display: block !important;
+  }
+
+  /* Printing defaults to suppressing background colors/gradients — every
+     one of this report's bar fills (score/category/percentile/NCRC
+     progress) is a background-color, so without this override every bar
+     prints as an empty track and the graphs are pointless on paper. */
+  .score-report-card,
+  .score-report-card * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Force the light palette regardless of the viewer's current theme —
+     printing a dark-mode page as-is (light text on a dark background,
+     which most printers/PDF viewers render as dark text on a dark
+     background instead of inverting) would be unreadable on paper. */
+  :root,
+  :root[data-theme="dark"] {
+    --ink: #2b2b3a;
+    --paper: #fbfaff;
+    --card: #ffffff;
+    --surface-alt: #f1eeff;
+    --muted: #6b6b80;
+    --border: #e7e4f6;
+  }
+
+  /* Dark mode's body background is a literal-color radial-gradient (see
+     :root[data-theme="dark"] body above), not driven by --paper, so the
+     token overrides just above don't reach it on their own. */
+  :root[data-theme="dark"] body {
+    background: var(--paper) !important;
+  }
+
+  /* Keep each panel from being split across a page break wherever
+     possible, so a tile grid or graph row doesn't get sliced in half. */
+  .score-tile,
+  .score-graph-row,
+  .score-detail-panel,
+  .score-report-banner,
+  .ncrc-panel,
+  .score-trend-panel,
+  .focus-areas-panel,
+  .pacing-panel {
+    break-inside: avoid;
   }
 }
 
