@@ -31,11 +31,23 @@ function renderPool(x, y, r, seed) {
 
 // A curved spill-channel between two consecutive pools — the visual
 // throughline that makes this read as one connected cascade rather than
-// a scatter of unrelated pools.
+// a scatter of unrelated pools. The control point has to sit *off* the
+// straight line between a and b — a quadratic bezier's control point
+// exactly at the endpoints' own midpoint (a bug an earlier version of
+// this had) produces zero curvature, i.e. a plain straight line no
+// matter how curved it looks like it ought to be, since the curve's own
+// midpoint collapses onto the same point either way. Offsetting
+// perpendicular to a-b by a fraction of its length gives it real bulge.
 function renderChannel(a, b) {
-  const midX = (a.x + b.x) / 2;
-  const midY = (a.y + b.y) / 2;
-  return `<path d="M${a.x},${a.y} Q${midX},${midY} ${b.x},${b.y}" stroke="${POOL_EDGE}" stroke-width="8" fill="none" opacity="0.5" stroke-linecap="round" />`;
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const perpX = -dy / len;
+  const perpY = dx / len;
+  const bulge = clamp(len * 0.28, 16, 42);
+  const ctrlX = (a.x + b.x) / 2 + perpX * bulge;
+  const ctrlY = (a.y + b.y) / 2 + perpY * bulge;
+  return `<path d="M${a.x},${a.y} Q${ctrlX},${ctrlY} ${b.x},${b.y}" stroke="${POOL_EDGE}" stroke-width="8" fill="none" opacity="0.5" stroke-linecap="round" />`;
 }
 
 function renderPools(positions) {
