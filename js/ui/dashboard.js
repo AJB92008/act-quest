@@ -417,7 +417,6 @@ export function renderDashboard(root, navigate, params = {}) {
   const levelProgress = gameState.getLevelProgress();
   const evolutionStageName = gameState.getEvolutionStageName();
   const masteryPct = Math.round(gameState.getMasteryPct() * 100);
-  const predicted = gameState.getPredictedScore();
   const history = gameState.getPracticeTestHistory();
 
   // Which planet's subject breakdown (the rows + heatmap below) is showing
@@ -458,23 +457,7 @@ export function renderDashboard(root, navigate, params = {}) {
           <div class="progress-bar" role="progressbar" aria-valuenow="${Math.round(levelProgress.pct * 100)}" aria-valuemin="0" aria-valuemax="100" aria-label="Progress to level ${levelProgress.level + 1}"><div class="progress-fill" style="width:${Math.round(levelProgress.pct * 100)}%;background:var(--purple)"></div></div>
         </div>
       </div>
-      <div class="dash-predictor-card">
-        ${predicted.score === null ? "" : `<div class="dash-predictor-score">${predicted.score}</div>`}
-        <div class="dash-predictor-info">
-          <strong>Predicted ACT Score</strong>
-          <p class="dash-monster-substat">${
-            predicted.score === null
-              ? "Answer more questions in your lessons to see a rough estimate here."
-              : predicted.source === "practiceTest"
-              ? "Based on your most recent full-length practice test."
-              : "A rough estimate from your lesson accuracy. Take a full-length practice test for a stronger read."
-          }</p>
-          ${
-            predicted.score !== null
-              ? `<p class="dash-monster-substat">Approximately the ${percentileForComposite(predicted.score)}th percentile nationally.</p>`
-              : ""
-          }
-        </div>
+      <div class="dash-quick-actions">
         <button class="btn-secondary" data-practice-test>📝 Practice Test</button>
         <button class="btn-secondary" data-essay>✍️ Writing</button>
         <button class="btn-secondary" data-score-report>📄 Score Report</button>

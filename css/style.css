@@ -3349,6 +3349,13 @@ button.drill-skill-row:hover {
   font-size: 0.82rem;
 }
 
+.dash-quick-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
 .dash-predictor-card {
   display: flex;
   align-items: center;
