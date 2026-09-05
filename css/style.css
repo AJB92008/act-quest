@@ -834,9 +834,15 @@ input[type="password"] {
 
 .map-mascot {
   position: absolute;
-  top: -46px;
+  top: -58px;
   line-height: 0;
   animation: bob 2.4s ease-in-out infinite;
+  /* A light halo plus a dark contact shadow — not just one or the
+     other — since a player's own chosen body color could be anywhere
+     from near-white to near-black, and a planet's own background
+     (ACT's ocean, the reef's water) skews toward mid-toned blues/teals
+     that a same-toned monster can otherwise nearly vanish into. */
+  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.85)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
 }
 
 @keyframes bob {
@@ -1560,7 +1566,12 @@ input[type="password"] {
   z-index: 3;
   transform: translate(-50%, -60%);
   pointer-events: none;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
+  /* The dark contact shadow alone wasn't enough on a mid-toned
+     background close to the player's own chosen body color (e.g. the
+     default mint-green avatar against the reef's teal water) — a light
+     halo on top of it keeps the avatar visible regardless of that
+     color relationship, same fix as .map-mascot/.path-mascot. */
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.85)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
 }
 
 /* Reserves its own line of space at all times (no layout shift when it
@@ -1959,9 +1970,14 @@ input[type="password"] {
 
 .path-mascot {
   position: absolute;
-  top: -40px;
+  top: -50px;
   line-height: 0;
   animation: bob 2.4s ease-in-out infinite;
+  /* Same reasoning as .map-mascot's own filter: a light halo plus a
+     dark contact shadow so the mascot reads against any body color/
+     background combination, not just the ones that happen to contrast
+     well on their own. */
+  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.85)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
 }
 
 .node-circle {
@@ -3825,7 +3841,7 @@ button.drill-skill-row:hover {
   }
   .map-mascot,
   .path-mascot {
-    top: -34px;
+    top: -42px;
   }
   .map-island-node {
     width: 68px;

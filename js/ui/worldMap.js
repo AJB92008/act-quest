@@ -125,7 +125,7 @@ export function renderWorldMap(root, navigate, { testId } = {}) {
     const isCurrent = i === currentIndex;
     return `
       <div class="map-node-wrap" style="left:${x}%;top:${y}px;">
-        ${isCurrent ? `<div class="map-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 69 })}</div>` : ""}
+        ${isCurrent ? `<div class="map-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 86 })}</div>` : ""}
         <div class="node-anchor">
           <span class="node-area-blob node-area-blob-lg map-blob-shape-${(i % 4) + 1}" style="--blob-color:${subject.color}"></span>
           <button class="map-island-node" data-subject="${subject.id}" aria-label="${subject.name} planet: ${stat.masteredCount} of ${stat.totalSkills} islands mastered" style="--island-color:${subject.color};--island-bg:${subject.bg};--ring-pct:${pct}%">

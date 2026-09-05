@@ -90,7 +90,7 @@ export function renderIsland(root, navigate, { subjectId }) {
       const badge = !playable ? "🚧" : progress.mastered ? "✓" : String(i + 1);
       return `
         <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
-          ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 59 })}</div>` : ""}
+          ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 74 })}</div>` : ""}
           <div class="node-anchor">
             <span class="node-area-blob node-area-blob-md map-blob-shape-${(i % 4) + 1}" style="--blob-color:${subject.bg}"></span>
             <button class="node-circle ${stateClass}" data-skill="${skill.id}" ${playable ? "" : "disabled"}

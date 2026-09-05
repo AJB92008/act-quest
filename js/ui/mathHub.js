@@ -965,7 +965,7 @@ export function renderMathHub(root, navigate, subject) {
           ${sceneSvg}
           ${layout.map((p) => renderSkillMarker(p, subject)).join("")}
           ${renderBossMarker(boss, bossStateClass, subject)}
-          <div class="hub-avatar" id="hubAvatar" aria-hidden="true">${monsterSVG(gameState.getDisplayAvatar(), { size: 46 })}</div>
+          <div class="hub-avatar" id="hubAvatar" aria-hidden="true">${monsterSVG(gameState.getDisplayAvatar(), { size: 64 })}</div>
         </div>
       </div>
     </main>

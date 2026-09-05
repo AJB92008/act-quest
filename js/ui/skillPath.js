@@ -44,7 +44,7 @@ export function renderSkillPath(root, navigate, { skillId, subjectId }) {
     const ariaLabel = isBoss ? `Boss: ${bossName}` : `Lesson ${i + 1}`;
     return `
       <div class="path-node-wrap" style="left:${x}%;top:${y}px;">
-        ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 54 })}</div>` : ""}
+        ${isCurrent ? `<div class="path-mascot">${monsterSVG(gameState.getDisplayAvatar(), { size: 68 })}</div>` : ""}
         <button class="node-circle node-circle-small ${stateClass}" data-lesson="${i}" ${unlocked ? "" : "disabled"}
           aria-label="${ariaLabel}${done ? ", complete" : unlocked ? "" : ", locked"}"
           style="--node-color:${subject.color}">
