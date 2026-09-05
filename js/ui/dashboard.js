@@ -457,11 +457,6 @@ export function renderDashboard(root, navigate, params = {}) {
           <div class="progress-bar" role="progressbar" aria-valuenow="${Math.round(levelProgress.pct * 100)}" aria-valuemin="0" aria-valuemax="100" aria-label="Progress to level ${levelProgress.level + 1}"><div class="progress-fill" style="width:${Math.round(levelProgress.pct * 100)}%;background:var(--purple)"></div></div>
         </div>
       </div>
-      <div class="dash-quick-actions">
-        <button class="btn-secondary" data-practice-test>📝 Practice Test</button>
-        <button class="btn-secondary" data-essay>✍️ Writing</button>
-        <button class="btn-secondary" data-score-report>📄 Score Report</button>
-      </div>
       ${streakCalendarHTML()}
       ${achievementsPreviewHTML()}
       ${mistakeJournalPreviewHTML()}
@@ -527,9 +522,6 @@ export function renderDashboard(root, navigate, params = {}) {
   });
   root.querySelector("[data-practice-test-tab]")?.addEventListener("click", (e) => navigate("practiceTest", { testId: e.currentTarget.dataset.practiceTestTab }));
   root.querySelector("[data-choose-state]")?.addEventListener("click", () => navigate("statePicker", { returnTo: "dashboard" }));
-  root.querySelector("[data-practice-test]").addEventListener("click", () => navigate("practiceTest"));
-  root.querySelector("[data-essay]").addEventListener("click", () => navigate("essay"));
-  root.querySelector("[data-score-report]").addEventListener("click", () => navigate("scoreReport"));
   root.querySelector("[data-achievements]").addEventListener("click", () => navigate("achievements"));
   root.querySelector("[data-mistake-journal]").addEventListener("click", () => navigate("mistakeJournal"));
   root.querySelector("[data-study-plan]").addEventListener("click", () => navigate("studyPlan"));
