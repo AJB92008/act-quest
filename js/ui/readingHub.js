@@ -169,17 +169,17 @@ function renderLandBridge() {
 // already uses (see hubWorld.js's own renderLobeIsland) — just dark
 // coral and jagged rock instead of a bright zone fill, so the boss
 // reads as standing on its own scrap of land like every other zone
-// instead of floating over open water. Seeds (401/402) are arbitrary
-// fixed constants, not derived from anything — they only need to be
-// stable across renders, the same reasoning renderLobeIsland's own
-// `seed` argument follows.
+// instead of floating over open water. A single layer, not a base
+// shadow plus a smaller rock on top — the outer shadow blob's own
+// jitter range was too mild to read as rock at this size, so it just
+// looked like a plain dark oval; one layer with a wider jitter range
+// (below) reads as jagged instead. Seed (402) is an arbitrary fixed
+// constant, not derived from anything — it only needs to be stable
+// across renders, the same reasoning renderLobeIsland's own `seed`
+// argument follows.
 function renderBossIslet() {
-  const shadow = organicRingPoints(BOSS_POS, 152, 401, 22, [-0.1, 0.16]);
-  const rock = organicRingPoints(BOSS_POS, 104, 402, 16, [-0.14, 0.12]);
-  return `
-    <path d="${closedBlobPath(shadow)}" fill="#0d1b1f" opacity="0.92" />
-    <path d="${closedBlobPath(rock)}" fill="#2a1c2b" stroke="#4a2f3a" stroke-width="3" />
-  `;
+  const rock = organicRingPoints(BOSS_POS, 130, 402, 20, [-0.24, 0.18]);
+  return `<path d="${closedBlobPath(rock)}" fill="#2a1c2b" stroke="#4a2f3a" stroke-width="3" />`;
 }
 
 // Glowing bioluminescent veins across the islet's own rock, echoing the
