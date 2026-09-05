@@ -139,10 +139,18 @@
 // should; Detail Detective gets the deliberate opposite — no dominant
 // shape at all, just a dense sandy-floor mosaic of small anemones,
 // shells, and coral polyps covering the whole scene, rewarding a close
-// look the same way the skill itself does. The rest of the reef's
-// skills (Tide Pool Terrace, Lighthouse Point, Sunken Archive,
-// Driftwood Cove) don't have their own themes yet — see readingHub.js's
-// ZONES for what each of those covers. Add a
+// look the same way the skill itself does. Driftwood Cove (the reef's
+// last two skills) gets its own matching pair: Claim Check gets a
+// half-collapsed dock of weathered driftwood pylons in shallow water,
+// with one piece of actual evidence (a bottle, a key, an anchor, a
+// compass) washed up alongside every other stop — checking a claim
+// against something concrete, not generic scenery; Two Texts, One Story
+// gets two distinct currents, each carrying its own drifting log,
+// physically merging into one wider current partway down, the trail
+// itself crossing right at the confluence — two separate things
+// becoming one, rendered literally. Tide Pool Terrace, Lighthouse
+// Point, and Sunken Archive don't have their own themes yet — see
+// readingHub.js's ZONES for what each of those covers. Add a
 // new skill here (plus one line in skillPath.js's dispatch) rather
 // than writing a whole new file — that's the point of the shared
 // engine.
@@ -192,6 +200,8 @@ import { oddsEndsFlatsTheme } from "./lessonThemes/oddsEndsFlats.js";
 import { numberDetectiveFlatsTheme } from "./lessonThemes/numberDetectiveFlats.js";
 import { reefCrownTheme } from "./lessonThemes/reefCrown.js";
 import { coralMosaicTheme } from "./lessonThemes/coralMosaic.js";
+import { driftwoodLockerTheme } from "./lessonThemes/driftwoodLocker.js";
+import { confluenceCoveTheme } from "./lessonThemes/confluenceCove.js";
 
 export const LESSON_THEMES = {
   "en-idioms": plainsTheme,
@@ -239,6 +249,8 @@ export const LESSON_THEMES = {
   "ma-numbersense": numberDetectiveFlatsTheme,
   "re-mainidea": reefCrownTheme,
   "re-detail": coralMosaicTheme,
+  "re-claims": driftwoodLockerTheme,
+  "re-integrate": confluenceCoveTheme,
 };
 
 export function renderThemedLessonPath(root, navigate, params) {
