@@ -148,9 +148,27 @@
 // gets two distinct currents, each carrying its own drifting log,
 // physically merging into one wider current partway down, the trail
 // itself crossing right at the confluence — two separate things
-// becoming one, rendered literally. Tide Pool Terrace, Lighthouse
-// Point, and Sunken Archive don't have their own themes yet — see
-// readingHub.js's ZONES for what each of those covers. Add a
+// becoming one, rendered literally. Tide Pool Terrace gets its own
+// pair: Time Order gets a literal cascade — a chain of pools connected
+// by spill-channels, each a little larger than the last, water only
+// ever flowing one direction; Side by Side gets a pool sitting right
+// next to another pool at every stop, each holding different contents,
+// built to be read as a pair rather than individually. Lighthouse
+// Point: Cause & Effect gets a rock struck by breaking spray at every
+// stop — cause and effect drawn as one inseparable unit — under a
+// lighthouse standing over the whole scene as the one fixed thing every
+// pair traces back to; Word Watch gets a tideline of driftwood letter
+// tiles (meaningless alone, the same way a word means nothing pulled
+// out of its passage) watched over by recurring spyglasses. Sunken
+// Archive: Big Conclusions gets one large cracked urn whose shards,
+// scattered down the trail, still carry its own clay color and rim
+// pattern — proof on sight that scattered pieces still add up to one
+// whole; Voice & Method keeps a brass speaking trumpet (voice, with
+// real sound-wave rings) on one side of the trail and real navigation
+// tools — a compass, a spyglass, a logbook (method) — on the other,
+// the whole way down. That's all ten of Athenaeum Reef's skills — see
+// readingHub.js's ZONES for how each pair maps to that zone's own
+// legend entry. Add a
 // new skill here (plus one line in skillPath.js's dispatch) rather
 // than writing a whole new file — that's the point of the shared
 // engine.
@@ -202,6 +220,12 @@ import { reefCrownTheme } from "./lessonThemes/reefCrown.js";
 import { coralMosaicTheme } from "./lessonThemes/coralMosaic.js";
 import { driftwoodLockerTheme } from "./lessonThemes/driftwoodLocker.js";
 import { confluenceCoveTheme } from "./lessonThemes/confluenceCove.js";
+import { tidalCascadeTheme } from "./lessonThemes/tidalCascade.js";
+import { twinTidepoolsTheme } from "./lessonThemes/twinTidepools.js";
+import { beaconSweepTheme } from "./lessonThemes/beaconSweep.js";
+import { tidelineGlossaryTheme } from "./lessonThemes/tidelineGlossary.js";
+import { mosaicRuinsTheme } from "./lessonThemes/mosaicRuins.js";
+import { captainsQuartersTheme } from "./lessonThemes/captainsQuarters.js";
 
 export const LESSON_THEMES = {
   "en-idioms": plainsTheme,
@@ -251,6 +275,12 @@ export const LESSON_THEMES = {
   "re-detail": coralMosaicTheme,
   "re-claims": driftwoodLockerTheme,
   "re-integrate": confluenceCoveTheme,
+  "re-sequence": tidalCascadeTheme,
+  "re-compare": twinTidepoolsTheme,
+  "re-causeeffect": beaconSweepTheme,
+  "re-vocab": tidelineGlossaryTheme,
+  "re-generalize": mosaicRuinsTheme,
+  "re-voice": captainsQuartersTheme,
 };
 
 export function renderThemedLessonPath(root, navigate, params) {

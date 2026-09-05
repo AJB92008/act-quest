@@ -36,7 +36,9 @@ import {
 } from "./hubWorld.js";
 
 const SKILL_TRIGGER_RADIUS = 58;
-const LANDMARK_TRIGGER_RADIUS = 150;
+// Was 150 — see islandHub.js's own copy of this constant for why 90
+// (~2x the landmark's real 42px visual radius) is the right target.
+const LANDMARK_TRIGGER_RADIUS = 90;
 
 // Sized to stay clear of the boss's own dark clearing to the south
 // (BOSS_POS, well below RING.y + RING.lobeRadius + RING.ringRadius) and

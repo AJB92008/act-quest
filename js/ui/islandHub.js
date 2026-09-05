@@ -226,7 +226,12 @@ let goatClickTimestamps = [];
 // (2*58=116>111). 50px leaves real margin (2*50=100<111) while still
 // being bigger than Wordwood Isle's old 40px felt walking through it.
 const SKILL_TRIGGER_RADIUS = 50;
-const LANDMARK_TRIGGER_RADIUS = 150;
+// Was 150 — the visible button itself is only 84px wide (42px radius),
+// so that was ~3.6x the actual landmark, triggering well before it
+// looked like you'd reached it. 90 keeps the same ~2x-visual-radius
+// ratio the boss trigger already uses (BOSS_TRIGGER_RADIUS/hub-boss-marker
+// in hubWorld.js), forgiving without being oversized.
+const LANDMARK_TRIGGER_RADIUS = 90;
 
 // One long island, four differently-themed bands along its own spine
 // rather than four separate islets — keeps the whole thing walkable as a
