@@ -23,10 +23,13 @@ const MERGE_FRAC = 0.46; // how far down the two currents finish merging
 function computeCurrents(totalHeight) {
   const mergeY = totalHeight * MERGE_FRAC;
   const steps = 36;
-  const leftOuterX = 70;
+  // Flush with the canvas's own left/right edges (clamped so the wobble
+  // never pushes them past it) rather than inset from it — a river with
+  // a strip of dry sand between it and the frame boundary read as
+  // disconnected, like the water just stopped short of the top of the
+  // scene instead of continuing on past the frame.
   const leftInnerStart = 220;
   const rightInnerStart = COL_W - 220;
-  const rightOuterX = COL_W - 70;
   const midX = COL_W / 2;
 
   const left = { outer: [], inner: [] };
@@ -37,9 +40,9 @@ function computeCurrents(totalHeight) {
     const t = clamp(y / mergeY, 0, 1);
     const leftInnerX = leftInnerStart + (midX - leftInnerStart) * t;
     const rightInnerX = rightInnerStart + (midX - rightInnerStart) * t;
-    left.outer.push({ x: leftOuterX + wobble, y });
+    left.outer.push({ x: clamp(wobble, 0, leftInnerX - 10), y });
     left.inner.push({ x: leftInnerX + wobble * 0.4, y });
-    right.outer.push({ x: rightOuterX - wobble, y });
+    right.outer.push({ x: clamp(COL_W - wobble, rightInnerX + 10, COL_W), y });
     right.inner.push({ x: rightInnerX - wobble * 0.4, y });
   }
   return { left, right, mergeY };
